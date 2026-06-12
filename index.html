@@ -665,12 +665,12 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
     </div>
     <div style="display:flex;flex-direction:column;gap:10px">
       <label style="display:block;border:1.5px solid rgba(14,165,233,.25);border-radius:18px;padding:18px;cursor:pointer;background:#EFF6FF;display:flex;align-items:center;gap:14px">
-        <input type="file" accept="image/*,video/*" multiple style="display:none" onchange="handleImport(this,'Uber')">
+        <input type="file" multiple style="display:none" onchange="handleImport(this,'Uber')">
         <div style="width:44px;height:44px;border-radius:14px;background:rgba(14,165,233,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#0EA5E9" stroke-width="2"><path d="M7 17h10M6 17l1-6 3-4h4l3 4 1 6"/></svg></div>
         <div><div style="font-size:14px;font-weight:700;color:#0EA5E9">Importar do Uber</div><div style="font-size:12px;color:#64748B;margin-top:3px">Vários prints ou vídeo do histórico</div></div>
       </label>
       <label style="display:block;border:1.5px solid rgba(245,158,11,.25);border-radius:18px;padding:18px;cursor:pointer;background:#FFF7ED;display:flex;align-items:center;gap:14px">
-        <input type="file" accept="image/*,video/*" multiple style="display:none" onchange="handleImport(this,'99')">
+        <input type="file" multiple style="display:none" onchange="handleImport(this,'99')">
         <div style="width:44px;height:44px;border-radius:14px;background:rgba(245,158,11,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M7 17h10M6 17l1-6 3-4h4l3 4 1 6"/></svg></div>
         <div><div style="font-size:14px;font-weight:700;color:#F59E0B">Importar do 99</div><div style="font-size:12px;color:#64748B;margin-top:3px">Vários prints ou vídeo do histórico</div></div>
       </label>
@@ -1344,13 +1344,17 @@ async function processMultipleImports(files, plat) {
       allTrips.push(...trips);
     } catch(e) { console.warn('Erro print '+(i+1)+':', e); }
   }
+  const day = DB.day(S.curDate);
   const seen = new Set();
   const unique = allTrips.filter(t => {
-    const key = t.time+'_'+t.value;
+    const key = t.time+'_'+(t.value||0).toFixed(2);
     if (seen.has(key)) return false;
     seen.add(key); return true;
   });
-  window._pendingTrips = unique.map((t,i) => ({...t, _sel:true, _idx:i, platform:plat.toLowerCase()==='99'?'99':'uber'}));
+  window._pendingTrips = unique.map((t,i) => ({...t, _sel:true, _idx:i,
+    platform:plat.toLowerCase()==='99'?'99':'uber',
+    _exists: isTripDuplicate(t, day.trips) // pre-mark duplicates
+  }));
   showImportConfirm();
 }
 
@@ -1369,13 +1373,17 @@ async function processVideoImport(file, plat) {
         allTrips.push(...trips);
       } catch(e) { console.warn('Frame erro:', e); }
     }
-    const seen = new Set();
+    const dayV = DB.day(S.curDate);
+    const seenV = new Set();
     const unique = allTrips.filter(t => {
-      const key = t.time+'_'+t.value;
-      if (seen.has(key)) return false;
-      seen.add(key); return true;
+      const key = t.time+'_'+(t.value||0).toFixed(2);
+      if (seenV.has(key)) return false;
+      seenV.add(key); return true;
     });
-    window._pendingTrips = unique.map((t,i) => ({...t, _sel:true, _idx:i, platform:plat.toLowerCase()==='99'?'99':'uber'}));
+    const _dayV = DB.day(S.curDate);
+    window._pendingTrips = unique.map((t,i) => ({...t, _sel:true, _idx:i,
+      platform:plat.toLowerCase()==='99'?'99':'uber',
+      _dup: isTripDuplicate(t, _dayV.trips)}));
     showImportConfirm();
   } catch(e) {
     closeMo('mo-import-confirm');
@@ -1393,11 +1401,12 @@ async function extractVideoFrames(file) {
     const url    = URL.createObjectURL(file);
     const canvas = document.createElement('canvas');
     const ctx    = canvas.getContext('2d');
+    video.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0';
+    document.body.appendChild(video);
     video.src        = url;
     video.muted      = true;
     video.playsInline = true;
-    video.preload    = 'metadata';
-    video.crossOrigin = 'anonymous';
+    video.preload    = 'auto';
 
     video.onloadedmetadata = async () => {
       // Limit canvas size for performance
@@ -1413,9 +1422,11 @@ async function extractVideoFrames(file) {
           await new Promise(r => setTimeout(r, 500));
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
           const frame = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+          try{document.body.removeChild(video);}catch(e2){}
           URL.revokeObjectURL(url);
           resolve([frame]);
         } catch(e) {
+          try{document.body.removeChild(video);}catch(e2){}
           URL.revokeObjectURL(url);
           reject(new Error('Não foi possível ler o vídeo. Tente em formato MP4.'));
         }
@@ -1452,11 +1463,13 @@ async function extractVideoFrames(file) {
         } catch(e) { console.warn('Frame t='+time, e); }
       }
 
+      try{document.body.removeChild(video);}catch(e){}
       URL.revokeObjectURL(url);
       resolve(frames.length > 0 ? frames : []);
     };
 
     video.onerror = (e) => {
+      try{document.body.removeChild(video);}catch(e2){}
       URL.revokeObjectURL(url);
       const msg = e?.target?.error?.message || '';
       reject(new Error('Formato de vídeo não suportado. Use MP4 gravado pelo celular.\n' + msg));
@@ -1664,17 +1677,45 @@ function toggleImportTrip(i) {
   const sel = (window._pendingTrips||[]).filter(x=>x._sel).length;
   document.getElementById('ic-btn').textContent = 'Importar ('+sel+')';
 }
+
+// Detecta corrida duplicada (hora+valor, hora+km, valor+rota)
+function isTripDuplicate(newT, existing) {
+  return existing.some(t => {
+    const sameTime  = t.time && newT.time && t.time === newT.time;
+    const sameVal   = Math.abs((t.value||0)-(newT.value||0)) < 0.02;
+    const sameKm    = newT.km > 0 && t.km > 0 && Math.abs((t.km||0)-(newT.km||0)) < 0.5;
+    const sameRoute = t.origin && newT.origin &&
+      t.origin.toLowerCase().slice(0,8) === newT.origin.toLowerCase().slice(0,8) &&
+      t.dest && newT.dest &&
+      t.dest.toLowerCase().slice(0,8) === newT.dest.toLowerCase().slice(0,8);
+    if (sameTime && sameVal) return true;
+    if (sameTime && sameKm && newT.km > 0) return true;
+    if (sameVal && sameRoute) return true;
+    return false;
+  });
+}
 function confirmImport() {
-  const trips = (window._pendingTrips||[]).filter(t=>t._sel);
-  if (!trips.length) { closeMo('mo-import-confirm'); return; }
+  const selected = (window._pendingTrips||[]).filter(t=>t._sel);
+  if (!selected.length) { closeMo('mo-import-confirm'); return; }
   const day = DB.day(S.curDate);
-  trips.forEach(t => day.trips.push({id:DB.uid(), platform:t.platform||'uber', time:t.time||'', duration:t.duration||0, origin:t.origin||'', dest:t.dest||'', value:parseFloat(t.value)||0, km:parseFloat(t.km)||0}));
+  let added=0, skipped=0;
+  selected.forEach(t => {
+    if (isTripDuplicate(t, day.trips)) { skipped++; return; }
+    day.trips.push({id:DB.uid(), platform:t.platform||'uber', time:t.time||'',
+      duration:t.duration||0, origin:t.origin||'', dest:t.dest||'',
+      value:parseFloat(t.value)||0, km:parseFloat(t.km)||0,
+      category:'', surge:t.surge||false, airport:t.airport||false});
+    added++;
+  });
   DB.saveDay(day); closeMo('mo-import-confirm'); window._pendingTrips=null;
   if (S.sec==='jornada') renderJornada();
-  alert(trips.length+' corridas importadas!');
+  if (S.sec==='home') renderHome();
+  const msg = skipped>0
+    ? `${added} corrida${added!==1?'s':''} importada${added!==1?'s':''}. ${skipped} ignorada${skipped!==1?'s':''} (já existente${skipped!==1?'s':''}).`
+    : `${added} corrida${added!==1?'s':''} importada${added!==1?'s':''}!`;
+  alert(msg);
 }
 
-// ── GPS ───────────────────────────────────────────────────────
 function gpsAction() {
   if (S.gps.st === 'idle') { openMo('mo-gps-action'); return; }
   gpsPause();
