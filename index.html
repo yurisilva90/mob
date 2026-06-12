@@ -665,12 +665,12 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
     </div>
     <div style="display:flex;flex-direction:column;gap:10px">
       <label style="display:block;border:1.5px solid rgba(14,165,233,.25);border-radius:18px;padding:18px;cursor:pointer;background:#EFF6FF;display:flex;align-items:center;gap:14px">
-        <input type="file" accept="image/*,video/*" multiple style="display:none" onchange="handleImport(this,'Uber')" multiple accept="image/*,video/*">
+        <input type="file" accept="image/*,video/*" multiple style="display:none" onchange="handleImport(this,'Uber')">
         <div style="width:44px;height:44px;border-radius:14px;background:rgba(14,165,233,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#0EA5E9" stroke-width="2"><path d="M7 17h10M6 17l1-6 3-4h4l3 4 1 6"/></svg></div>
         <div><div style="font-size:14px;font-weight:700;color:#0EA5E9">Importar do Uber</div><div style="font-size:12px;color:#64748B;margin-top:3px">Vários prints ou vídeo do histórico</div></div>
       </label>
       <label style="display:block;border:1.5px solid rgba(245,158,11,.25);border-radius:18px;padding:18px;cursor:pointer;background:#FFF7ED;display:flex;align-items:center;gap:14px">
-        <input type="file" accept="image/*,video/*" multiple style="display:none" onchange="handleImport(this,'99')" multiple accept="image/*,video/*">
+        <input type="file" accept="image/*,video/*" multiple style="display:none" onchange="handleImport(this,'99')">
         <div style="width:44px;height:44px;border-radius:14px;background:rgba(245,158,11,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M7 17h10M6 17l1-6 3-4h4l3 4 1 6"/></svg></div>
         <div><div style="font-size:14px;font-weight:700;color:#F59E0B">Importar do 99</div><div style="font-size:12px;color:#64748B;margin-top:3px">Vários prints ou vídeo do histórico</div></div>
       </label>
@@ -1379,7 +1379,11 @@ async function processVideoImport(file, plat) {
     showImportConfirm();
   } catch(e) {
     closeMo('mo-import-confirm');
-    alert('Erro no vídeo: ' + e.message);
+    alert('Erro ao processar vídeo:
+' + e.message + '
+
+Dica: use vídeos MP4 curtos gravados pelo celular. Prints funcionam melhor para histórico do Uber.');
+    console.error('Video error:', e);
   }
 }
 
@@ -1389,22 +1393,75 @@ async function extractVideoFrames(file) {
     const url    = URL.createObjectURL(file);
     const canvas = document.createElement('canvas');
     const ctx    = canvas.getContext('2d');
-    video.src    = url; video.muted = true; video.playsInline = true;
+    video.src        = url;
+    video.muted      = true;
+    video.playsInline = true;
+    video.preload    = 'metadata';
+    video.crossOrigin = 'anonymous';
+
     video.onloadedmetadata = async () => {
-      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+      // Limit canvas size for performance
+      const MAX = 1080;
+      const ratio = Math.min(MAX / video.videoWidth, MAX / video.videoHeight, 1);
+      canvas.width  = Math.round(video.videoWidth  * ratio);
+      canvas.height = Math.round(video.videoHeight * ratio);
+
+      const duration = video.duration;
+      if (!isFinite(duration) || isNaN(duration) || duration <= 0) {
+        // Duration unknown — try capturing current frame
+        try {
+          await new Promise(r => setTimeout(r, 500));
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const frame = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+          URL.revokeObjectURL(url);
+          resolve([frame]);
+        } catch(e) {
+          URL.revokeObjectURL(url);
+          reject(new Error('Não foi possível ler o vídeo. Tente em formato MP4.'));
+        }
+        return;
+      }
+
+      const INTERVAL = 2; // frame every 2 seconds
       const times = [];
-      for (let t = 1; t < video.duration; t += 3) times.push(t);
+      for (let t = 0.5; t < duration; t += INTERVAL) times.push(parseFloat(t.toFixed(2)));
       if (!times.length) times.push(0);
+
       const frames = [];
       for (const time of times) {
-        await new Promise(r => {
-          video.currentTime = time;
-          video.onseeked = () => { ctx.drawImage(video,0,0); frames.push(canvas.toDataURL('image/jpeg',.75).split(',')[1]); r(); };
-        });
+        try {
+          await new Promise((res) => {
+            // Timeout fallback — some browsers never fire onseeked
+            const timer = setTimeout(() => {
+              try { ctx.drawImage(video, 0, 0, canvas.width, canvas.height); } catch(e) {}
+              res();
+            }, 4000);
+            video.currentTime = time;
+            video.onseeked = () => {
+              clearTimeout(timer);
+              try { ctx.drawImage(video, 0, 0, canvas.width, canvas.height); } catch(e) {}
+              res();
+            };
+          });
+          // Only keep frames with content (not blank/black)
+          const px = ctx.getImageData(0, 0, 20, 20).data;
+          const hasContent = Array.from(px).some(v => v > 10);
+          if (hasContent) {
+            frames.push(canvas.toDataURL('image/jpeg', 0.7).split(',')[1]);
+          }
+        } catch(e) { console.warn('Frame t='+time, e); }
       }
-      URL.revokeObjectURL(url); resolve(frames);
+
+      URL.revokeObjectURL(url);
+      resolve(frames.length > 0 ? frames : []);
     };
-    video.onerror = () => reject(new Error('Erro ao carregar vídeo')); video.load();
+
+    video.onerror = (e) => {
+      URL.revokeObjectURL(url);
+      const msg = e?.target?.error?.message || '';
+      reject(new Error('Formato de vídeo não suportado. Use MP4 gravado pelo celular.\n' + msg));
+    };
+    video.load();
   });
 }
 
