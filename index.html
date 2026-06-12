@@ -489,14 +489,9 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
       <div class="ag-field">
         <label class="ag-label">Tipo</label>
         <div class="ag-type-row">
-          <button class="ag-type-btn on" id="ag-t-normal" onclick="agSetEvType('normal')">Compromisso</button>
-          <button class="ag-type-btn" id="ag-t-jornada" onclick="agSetEvType('jornada')">Jornada</button>
-          <button class="ag-type-btn" id="ag-t-finance" onclick="agSetEvType('finance')">Financeiro</button>
+          <button class="ag-type-btn on" id="ag-t-operacional" onclick="agSetEvType('operacional')">Operacional</button>
+          <button class="ag-type-btn" id="ag-t-pessoal" onclick="agSetEvType('pessoal')">Pessoal</button>
         </div>
-      </div>
-      <div class="ag-field" id="ag-val-field" style="display:none">
-        <label class="ag-label">Valor (R$)</label>
-        <input class="ag-input" type="number" id="ag-valor" step="0.01" placeholder="0,00" inputmode="decimal" style="font-family:'DM Mono',monospace;font-weight:700">
       </div>
       <div class="ag-field">
         <label class="ag-label">Cor</label>
@@ -1870,7 +1865,7 @@ function renderAgTimeline() {
   const tl = document.getElementById('ag-timeline');
   if (!tl) return;
   const hours = [];
-  for (let h = 6; h <= 22; h++) {
+  for (let h = 0; h <= 23; h++) {
     hours.push(`<div class="ag-hour"><span>${p2(h)}:00</span><div class="ag-hlane"></div></div>`);
   }
   tl.innerHTML = hours.join('');
@@ -1918,7 +1913,7 @@ function renderAgTimeline() {
 function agTimeToY(timeStr) {
   if (!timeStr || timeStr === '—') return 0;
   const [h, m] = timeStr.split(':').map(Number);
-  return Math.max(0, (h - 6) * 64 + Math.round((m||0) * 64/60));
+  return Math.max(0, h * 64 + Math.round((m||0) * 64/60));
 }
 function agSetDate(d) {
   agSelDate = d;
@@ -1935,20 +1930,19 @@ function openNovoEv(date, time) {
   const tt = document.getElementById('ag-titulo'); if (tt) tt.value = '';
   const ob = document.getElementById('ag-obs');   if (ob) ob.value = '';
   const vi = document.getElementById('ag-valor'); if (vi) vi.value = '';
-  agEvType = 'normal'; agColor = '#22c55e';
-  ['normal','jornada','finance'].forEach(x => {
+  agEvType = 'operacional'; agColor = '#22c55e';
+  ['operacional','pessoal'].forEach(x => {
     const el = document.getElementById('ag-t-'+x); if(el) el.classList.toggle('on', x === agEvType);
   });
-  const vf = document.getElementById('ag-val-field'); if (vf) vf.style.display = 'none';
+
   document.querySelectorAll('.ag-color').forEach(el => el.classList.toggle('on', el.dataset.color === agColor));
   openMo('mo-novo-ev');
 }
 function agSetEvType(t) {
   agEvType = t;
-  ['normal','jornada','finance'].forEach(x => {
+  ['operacional','pessoal'].forEach(x => {
     const el = document.getElementById('ag-t-'+x); if(el) el.classList.toggle('on', x === t);
   });
-  const vf = document.getElementById('ag-val-field'); if (vf) vf.style.display = t === 'finance' ? 'block' : 'none';
 }
 function agSelColor(el) {
   agColor = el.dataset.color;
@@ -1967,7 +1961,7 @@ function saveEvento() {
     type:      agEvType,
     color:     agColor,
     notes:     document.getElementById('ag-obs')?.value   || '',
-    value:     parseFloat(document.getElementById('ag-valor')?.value) || null,
+    value:     null,
     paid:      false
   };
   const evs = DB.events(); evs.push(ev); DB.saveEvents(evs);
