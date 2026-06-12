@@ -135,6 +135,76 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .fin-action .ico{background:transparent}
 @keyframes vspin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
+
+/* ═══════════════════════════════════════════════════
+   AGENDA — CSS isolado (prefixo ag-)
+   ═══════════════════════════════════════════════════ */
+#sc-agenda{padding:0}
+.ag-wrap{padding:12px 16px 24px}
+.ag-tabs{height:52px;background:#eaf0f6;border:1px solid #dbe3ec;border-radius:28px;padding:5px;display:flex;margin-bottom:16px}
+.ag-tabs button{flex:1;border:0;background:transparent;color:#667085;font-size:14px;font-weight:700;border-radius:23px;cursor:pointer;touch-action:manipulation;font-family:Inter,system-ui,sans-serif}
+.ag-tabs button.on{background:#fff;color:#101828;box-shadow:0 8px 20px rgba(15,23,42,.08)}
+.ag-date-head{display:flex;align-items:center;justify-content:space-between;margin:8px 0 14px}
+.ag-date-head h1{font-size:22px;font-weight:800;letter-spacing:-.04em;line-height:1.1}
+.ag-date-head p{font-size:12px;font-weight:500;color:#667085;margin-top:4px}
+.ag-pill{background:#e6f5ff;color:#2592d9;border:0;border-radius:999px;padding:9px 15px;font-weight:700;font-size:13px;cursor:pointer;touch-action:manipulation;font-family:Inter,system-ui,sans-serif;white-space:nowrap}
+.ag-sec{font-size:11px;letter-spacing:.14em;font-weight:800;color:#6b778c;margin:20px 0 10px;text-transform:uppercase}
+.ag-item{background:#fff;border:1px solid rgba(15,23,42,.06);border-radius:24px;padding:14px;box-shadow:0 10px 28px rgba(15,23,42,.06);display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.ag-ico{width:48px;height:48px;border-radius:16px;display:flex;align-items:center;justify-content:center;flex:0 0 48px}
+.ag-ico svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round}
+.ag-ico.green{background:#e9fbef;color:#22c55e}.ag-ico.blue{background:#e8f5ff;color:#0ea5e9}.ag-ico.orange{background:#fff5df;color:#f59e0b}.ag-ico.red{background:#fdecef;color:#ef4444}.ag-ico.purple{background:#f1ecff;color:#8b5cf6}
+.ag-info{flex:1;min-width:0}
+.ag-ititle{font-size:15px;font-weight:700;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ag-imeta{font-size:12px;color:#667085;font-weight:500;line-height:1.4;margin-top:3px}
+.ag-ivalue{font-size:14px;font-weight:700;color:#344054;white-space:nowrap;flex-shrink:0}
+.ag-paybtn{border:0;background:#e9fbef;color:#16a34a;border-radius:999px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;font-family:Inter,system-ui,sans-serif;flex-shrink:0}
+.ag-paybtn.paid{background:#f3f4f6;color:#9ca3af}
+.ag-empty{padding:32px 16px;text-align:center;color:#94A3B8;font-size:13px;font-weight:500}
+/* Agenda Dia */
+.ag-strip{display:flex;gap:8px;overflow-x:auto;margin:0 -16px 14px;padding:0 16px 2px;scrollbar-width:none}
+.ag-strip::-webkit-scrollbar{display:none}
+.ag-chip{min-width:64px;height:76px;background:#fff;border:1px solid #e4eaf2;border-radius:22px;box-shadow:0 4px 12px rgba(15,23,42,.045);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;color:#667085;flex-shrink:0}
+.ag-chip span{font-size:11px;letter-spacing:.07em;text-transform:uppercase;font-weight:700}
+.ag-chip strong{font-size:22px;color:#101828;font-weight:800;margin-top:3px}
+.ag-chip.on{background:#0ea5e9;border-color:#0ea5e9;color:#fff}
+.ag-chip.on strong{color:#fff}
+.ag-chip.today-chip{border-color:#22c55e;color:#22c55e}
+.ag-chip.today-chip strong{color:#22c55e}
+.ag-timeline{position:relative;background:#fff;border:1px solid rgba(15,23,42,.06);border-radius:26px;box-shadow:0 10px 28px rgba(15,23,42,.06);overflow:hidden;margin-top:8px}
+.ag-hour{height:64px;border-bottom:1px solid #edf1f6;display:grid;grid-template-columns:64px 1fr}
+.ag-hour span{font-size:12px;color:#98a4b8;font-weight:600;padding:12px 10px;line-height:1}
+.ag-hlane{border-left:1px solid #edf1f6}
+.ag-journey{position:absolute;left:80px;right:14px;background:linear-gradient(180deg,rgba(34,197,94,.92),rgba(21,128,61,.88));border-radius:24px;box-shadow:0 16px 40px rgba(34,197,94,.22);color:#fff;padding:16px;z-index:2}
+.ag-journey h2{font-size:20px;font-weight:800;letter-spacing:-.04em}
+.ag-journey p{font-size:12px;font-weight:600;opacity:.9;margin-top:4px}
+.ag-float{position:absolute;left:98px;right:28px;background:#fff;border-radius:16px;padding:10px 12px;box-shadow:0 10px 24px rgba(15,23,42,.15);z-index:5;border-left:5px solid #f59e0b;min-height:44px}
+.ag-float.blue{border-left-color:#3b82f6}.ag-float.green{border-left-color:#22c55e}.ag-float.orange{border-left-color:#f59e0b}.ag-float.purple{border-left-color:#8b5cf6}.ag-float.red{border-left-color:#ef4444}
+.ag-float .ft{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ag-float .fm{font-size:11px;color:#667085;margin-top:2px}
+.ag-add-row{display:flex;gap:10px;margin-top:14px}
+.ag-addbtn{flex:1;height:50px;border:1.5px dashed #dbe3ec;border-radius:18px;background:#f8fafc;color:#667085;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation;font-family:Inter,system-ui,sans-serif;display:flex;align-items:center;justify-content:center;gap:7px}
+.ag-addbtn:active{background:#f1f5f9}
+/* Modal Novo Compromisso */
+#mo-novo-ev .mosh{border-radius:32px 32px 0 0;background:#f7f9fc}
+.ag-sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.ag-sheet-head h2{font-size:22px;font-weight:800;letter-spacing:-.04em}
+.ag-close{width:38px;height:38px;border:0;background:#fff;border-radius:14px;box-shadow:0 4px 12px rgba(15,23,42,.07);color:#344054;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.ag-form-card{background:#fff;border:1px solid rgba(15,23,42,.06);border-radius:26px;box-shadow:0 8px 24px rgba(15,23,42,.06);padding:16px;margin-top:14px}
+.ag-field{margin-bottom:13px}.ag-field:last-child{margin-bottom:0}
+.ag-label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.10em;color:#667085;font-weight:800;margin-bottom:7px}
+.ag-input{width:100%;height:50px;border:1.5px solid #e4eaf2;background:#f8fafc;border-radius:16px;padding:0 14px;font:600 15px Inter;color:#101828;outline:none;font-family:Inter,system-ui,sans-serif}
+.ag-input:focus{border-color:#0ea5e9;background:#fff}
+textarea.ag-input{height:80px;padding-top:13px;resize:none}
+.ag-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px}
+.ag-type-row{display:flex;gap:8px}
+.ag-type-btn{flex:1;height:42px;border:1.5px solid #e4eaf2;border-radius:14px;background:#f8fafc;color:#667085;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation;font-family:Inter,system-ui,sans-serif}
+.ag-type-btn.on{background:#e6f5ff;border-color:#bee3f8;color:#0ea5e9}
+.ag-color-row{display:flex;gap:10px}
+.ag-color{width:36px;height:36px;border-radius:14px;border:3px solid #fff;box-shadow:0 0 0 1.5px #dbe3ec,0 5px 12px rgba(15,23,42,.08);position:relative;cursor:pointer;touch-action:manipulation}
+.ag-color.on::after{content:'✓';position:absolute;right:-5px;top:-7px;width:18px;height:18px;border-radius:50%;background:#101828;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.ag-save{height:54px;border:0;border-radius:18px;background:#22c55e;color:#fff;font-size:15px;font-weight:800;width:100%;box-shadow:0 12px 26px rgba(34,197,94,.25);margin-top:4px;cursor:pointer;touch-action:manipulation;font-family:Inter,system-ui,sans-serif}
+.ag-save:active{opacity:.9}
+
 </style>
 </head>
 <body>
@@ -331,14 +401,119 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
   <div style="height:8px"></div>
 </div>
 
-<!-- ══ TELA AGENDA (placeholder) ════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════════════════════
+     TELA AGENDA — SmartMobi 1.1.0.0
+     Design: GPT  |  Funcionalidade: Claude
+     ═══════════════════════════════════════════════════════════ -->
 <div class="screen" id="sc-agenda">
-  <div style="padding:40px 24px;text-align:center">
-    <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#CBD5E1" stroke-width="1.5" style="margin-bottom:16px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-    <div style="font-size:18px;font-weight:700;color:#64748B;margin-bottom:8px">Agenda</div>
-    <div style="font-size:14px;color:#94A3B8">Em breve — design sendo finalizado</div>
+<div class="ag-wrap">
+
+  <!-- Tabs -->
+  <div class="ag-tabs">
+    <button class="on" id="ag-t-resumo" onclick="setAgView('resumo')">Resumo</button>
+    <button id="ag-t-dia" onclick="setAgView('dia')">Dia</button>
+    <button id="ag-t-cal" onclick="setAgView('cal')">Calendário</button>
+  </div>
+
+  <!-- ── RESUMO ── -->
+  <div id="ag-v-resumo">
+    <section class="ag-date-head">
+      <div><h1 id="ag-r-date">Carregando...</h1><p id="ag-r-dow">agenda da semana</p></div>
+      <button class="ag-pill" onclick="agGoToday()">Hoje</button>
+    </section>
+    <div id="ag-hoje-sec">
+      <div class="ag-sec">Hoje</div>
+      <div id="ag-hoje"></div>
+    </div>
+    <div id="ag-amanha-sec">
+      <div class="ag-sec">Amanhã</div>
+      <div id="ag-amanha"></div>
+    </div>
+    <div id="ag-prox-sec">
+      <div class="ag-sec">Próximos 7 dias</div>
+      <div id="ag-prox"></div>
+    </div>
+    <div class="ag-add-row">
+      <button class="ag-addbtn" onclick="openNovoEv(null,null)">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        Novo compromisso
+      </button>
+    </div>
+    <div style="height:12px"></div>
+  </div>
+
+  <!-- ── DIA ── -->
+  <div id="ag-v-dia" style="display:none">
+    <section class="ag-date-head">
+      <div><h1 id="ag-d-date">Carregando...</h1><p>Planejamento do dia</p></div>
+      <button class="ag-pill" onclick="agGoToday()">Hoje</button>
+    </section>
+    <div class="ag-strip" id="ag-strip"></div>
+    <div class="ag-add-row" style="margin-bottom:10px">
+      <button class="ag-addbtn" onclick="openNovoEv(agSelDate,null)">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        Adicionar no dia selecionado
+      </button>
+    </div>
+    <div class="ag-timeline" id="ag-timeline"></div>
+    <div style="height:12px"></div>
+  </div>
+
+  <!-- ── CALENDÁRIO (placeholder) ── -->
+  <div id="ag-v-cal" style="display:none">
+    <div style="padding:40px 16px;text-align:center">
+      <svg viewBox="0 0 24 24" width="52" height="52" fill="none" stroke="#CBD5E1" stroke-width="1.5" style="margin-bottom:16px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
+      <div style="font-size:18px;font-weight:700;color:#64748B;margin-bottom:8px">Calendário</div>
+      <div style="font-size:13px;color:#94A3B8">Design em finalização — em breve</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- ═══ MODAL: NOVO COMPROMISSO ═══════════════════════════════ -->
+<div class="mo" id="mo-novo-ev">
+  <div class="mosh">
+    <div class="moh"></div>
+    <div class="ag-sheet-head">
+      <h2>Novo compromisso</h2>
+      <button class="ag-close" onclick="closeMo('mo-novo-ev')">&#x2715;</button>
+    </div>
+    <div class="ag-form-card">
+      <div class="ag-field"><label class="ag-label">Título</label><input class="ag-input" id="ag-titulo" placeholder="Ex.: Revisão do veículo"></div>
+      <div class="ag-field"><label class="ag-label">Data</label><input class="ag-input" type="date" id="ag-data"></div>
+      <div class="ag-row2">
+        <div class="ag-field" style="margin-bottom:0"><label class="ag-label">Início</label><input class="ag-input" type="time" id="ag-inicio"></div>
+        <div class="ag-field" style="margin-bottom:0"><label class="ag-label">Fim</label><input class="ag-input" type="time" id="ag-fim"></div>
+      </div>
+      <div class="ag-field">
+        <label class="ag-label">Tipo</label>
+        <div class="ag-type-row">
+          <button class="ag-type-btn on" id="ag-t-normal" onclick="agSetEvType('normal')">Compromisso</button>
+          <button class="ag-type-btn" id="ag-t-jornada" onclick="agSetEvType('jornada')">Jornada</button>
+          <button class="ag-type-btn" id="ag-t-finance" onclick="agSetEvType('finance')">Financeiro</button>
+        </div>
+      </div>
+      <div class="ag-field" id="ag-val-field" style="display:none">
+        <label class="ag-label">Valor (R$)</label>
+        <input class="ag-input" type="number" id="ag-valor" step="0.01" placeholder="0,00" inputmode="decimal" style="font-family:'DM Mono',monospace;font-weight:700">
+      </div>
+      <div class="ag-field">
+        <label class="ag-label">Cor</label>
+        <div class="ag-color-row">
+          <div class="ag-color on" data-color="#22c55e" style="background:#22c55e" onclick="agSelColor(this)"></div>
+          <div class="ag-color" data-color="#3b82f6" style="background:#3b82f6" onclick="agSelColor(this)"></div>
+          <div class="ag-color" data-color="#f59e0b" style="background:#f59e0b" onclick="agSelColor(this)"></div>
+          <div class="ag-color" data-color="#8b5cf6" style="background:#8b5cf6" onclick="agSelColor(this)"></div>
+          <div class="ag-color" data-color="#ef4444" style="background:#ef4444" onclick="agSelColor(this)"></div>
+        </div>
+      </div>
+      <div class="ag-field"><label class="ag-label">Observação</label><textarea class="ag-input" id="ag-obs" placeholder="Detalhes opcionais"></textarea></div>
+      <button class="ag-save" onclick="saveEvento()">Salvar compromisso</button>
+    </div>
   </div>
 </div>
+
 
 <!-- ══ TELA MAIS ══════════════════════════════════════════════════════════ -->
 <div class="screen" id="sc-mais">
@@ -1556,6 +1731,278 @@ function savePerfil() {
 function setText(id, text) { const el=document.getElementById(id); if(el) el.textContent=text; }
 function setStyle(id, prop, val) { const el=document.getElementById(id); if(el) el.style[prop]=val; }
 
+// ============================================================
+// AGENDA — SmartMobi 1.1.0.0
+// ============================================================
+
+let agView    = 'resumo';
+let agSelDate = DB.today();
+let agEvType  = 'normal';
+let agColor   = '#22c55e';
+
+// ── ICON SVGs por tipo ──────────────────────────────────────
+const AG_ICONS = {
+  jornada:  '<svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M3 12h18"/></svg>',
+  finance:  '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/></svg>',
+  default:  '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+  car:      '<svg viewBox="0 0 24 24"><path d="M5 13l1.5-5A3 3 0 0 1 9.4 6h5.2a3 3 0 0 1 2.9 2l1.5 5"/><path d="M3 13h18v6H3z"/></svg>',
+  wrench:   '<svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5 5L3 18l3 3 6.7-6.7a4 4 0 0 0 5-5z"/></svg>',
+};
+
+function agIconFor(ev) {
+  if (ev.type === 'jornada')  return AG_ICONS.jornada;
+  if (ev.type === 'finance')  return AG_ICONS.finance;
+  return AG_ICONS.default;
+}
+function agColorClass(hex) {
+  const map = {'#22c55e':'green','#3b82f6':'blue','#f59e0b':'orange','#8b5cf6':'purple','#ef4444':'red'};
+  return map[hex] || 'blue';
+}
+
+// ── NAVIGATION ──────────────────────────────────────────────
+function setAgView(v) {
+  agView = v;
+  ['resumo','dia','cal'].forEach(x => {
+    const tabEl = document.getElementById('ag-t-'+x);
+    const viewEl = document.getElementById('ag-v-'+x);
+    if (tabEl) tabEl.classList.toggle('on', x === v);
+    if (viewEl) viewEl.style.display = x === v ? 'block' : 'none';
+  });
+  if (v === 'resumo') renderAgResumo();
+  if (v === 'dia')    renderAgDia();
+}
+function agGoToday() {
+  agSelDate = DB.today();
+  renderAgResumo();
+  if (agView === 'dia') renderAgDia();
+}
+
+// ── RESUMO ──────────────────────────────────────────────────
+function renderAgResumo() {
+  const today = DB.today();
+  const dt    = new Date(today + 'T12:00');
+  const dows  = ['domingo','segunda','terça','quarta','quinta','sexta','sábado'];
+  const ms    = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const dateEl = document.getElementById('ag-r-date');
+  if (dateEl) dateEl.textContent = p2(dt.getDate())+' '+ms[dt.getMonth()]+' '+dt.getFullYear();
+  const dowEl = document.getElementById('ag-r-dow');
+  if (dowEl) dowEl.textContent = dows[dt.getDay()] + ' · agenda da semana';
+
+  // Hoje
+  const todayEvs  = getEventsForDate(today);
+  const todaySess = DB.day(today).session;
+  const hojeEl    = document.getElementById('ag-hoje');
+  if (hojeEl) hojeEl.innerHTML = renderEvList([...todaySess ? [{id:'_sess_'+today,type:'jornada',title:'Jornada',date:today,timeStart:'—',timeEnd:'—',notes:todaySess.km.toFixed(1)+'km · '+formatElapsed(todaySess.elapsed),color:'#22c55e'}] : [], ...todayEvs]);
+
+  // Amanhã
+  const tmrw     = offsetDate(today, 1);
+  const tmrwEvs  = getEventsForDate(tmrw);
+  const tmrwSess = DB.day(tmrw).session;
+  const amanhaEl = document.getElementById('ag-amanha');
+  if (amanhaEl) amanhaEl.innerHTML = renderEvList([...tmrwSess ? [{id:'_sess_'+tmrw,type:'jornada',title:'Jornada',date:tmrw,timeStart:'—',timeEnd:'—',notes:tmrwSess.km.toFixed(1)+'km',color:'#22c55e'}] : [], ...tmrwEvs]);
+
+  // Próximos 7 dias
+  const proxEvs = [];
+  for (let i = 2; i <= 7; i++) {
+    const d  = offsetDate(today, i);
+    const dt2 = new Date(d+'T12:00');
+    const dayEvs = getEventsForDate(d);
+    const daySess = DB.day(d).session;
+    const all = [...daySess ? [{type:'jornada',title:'Jornada',date:d,color:'#22c55e',notes:daySess.km.toFixed(1)+'km'}] : [], ...dayEvs];
+    if (all.length) {
+      proxEvs.push(`<div style="font-size:11px;font-weight:700;color:#94A3B8;margin:12px 0 6px;text-transform:uppercase;letter-spacing:.08em">${p2(dt2.getDate())+'/'+p2(dt2.getMonth()+1)} · ${['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][dt2.getDay()]}</div>`);
+      proxEvs.push(renderEvList(all));
+    }
+  }
+  const proxEl = document.getElementById('ag-prox');
+  if (proxEl) proxEl.innerHTML = proxEvs.join('') || '<div class="ag-empty">Nenhum compromisso nos próximos 7 dias</div>';
+}
+
+function renderEvList(evs) {
+  if (!evs.length) return '<div class="ag-empty">Nenhum compromisso</div>';
+  return evs.map(ev => {
+    const cc = agColorClass(ev.color || '#3b82f6');
+    const isPaid = ev.paid;
+    const isFinance = ev.type === 'finance';
+    const timeTxt  = ev.timeStart ? (ev.timeStart !== '—' ? ev.timeStart + (ev.timeEnd && ev.timeEnd !== '—' ? ' → '+ev.timeEnd : '') : '') : '';
+    const metaTxt  = [timeTxt, ev.notes].filter(Boolean).join(' · ');
+    return `<div class="ag-item">
+      <div class="ag-ico ${cc}">${agIconFor(ev)}</div>
+      <div class="ag-info">
+        <div class="ag-ititle">${ev.title}</div>
+        ${metaTxt ? `<div class="ag-imeta">${metaTxt}</div>` : ''}
+      </div>
+      ${ev.value ? `<div class="ag-ivalue">R$ ${ev.value.toFixed(2)}</div>` : ''}
+      ${isFinance ? `<button class="ag-paybtn${isPaid?' paid':''}" onclick="togglePaid('${ev.id}')">${isPaid?'Pago':'Pagar'}</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── DIA ─────────────────────────────────────────────────────
+function renderAgDia() {
+  renderAgStrip();
+  renderAgTimeline();
+}
+
+function renderAgStrip() {
+  const today = DB.today();
+  const dt    = new Date(agSelDate+'T12:00');
+  // Show 7 days centered on selection
+  const dow   = (dt.getDay() + 6) % 7;
+  const strip = document.getElementById('ag-strip');
+  if (!strip) return;
+  const DL = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+  let html = '';
+  for (let i = -3; i <= 6; i++) {
+    const d = new Date(dt); d.setDate(dt.getDate() + i - dow);
+    const ds = d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+    const isOn    = ds === agSelDate;
+    const isToday = ds === today;
+    html += `<div class="ag-chip${isOn?' on':isToday?' today-chip':''}" onclick="agSetDate('${ds}')">
+      <span>${DL[(d.getDay()+6)%7]}</span>
+      <strong>${d.getDate()}</strong>
+    </div>`;
+  }
+  strip.innerHTML = html;
+}
+
+function renderAgTimeline() {
+  const tl = document.getElementById('ag-timeline');
+  if (!tl) return;
+  const hours = [];
+  for (let h = 6; h <= 22; h++) {
+    hours.push(`<div class="ag-hour"><span>${p2(h)}:00</span><div class="ag-hlane"></div></div>`);
+  }
+  tl.innerHTML = hours.join('');
+
+  const day  = DB.day(agSelDate);
+  const evs  = getEventsForDate(agSelDate);
+  // Journey block: from GPS session or jornada event
+  const sess = day.session;
+  const jEvs = evs.filter(e => e.type === 'jornada');
+  let jornStart = null, jornEnd = null, jornNotes = '';
+  if (sess) { jornStart = '08:00'; jornEnd = '22:00'; jornNotes = sess.km.toFixed(1)+'km registrados'; }
+  if (jEvs.length) { jornStart = jEvs[0].timeStart || '08:00'; jornEnd = jEvs[0].timeEnd || '20:00'; jornNotes = jEvs[0].notes || ''; }
+  if (jornStart) {
+    const top = agTimeToY(jornStart);
+    const bot = agTimeToY(jornEnd);
+    const ht  = Math.max(60, bot - top);
+    const jEl = document.createElement('div');
+    jEl.className = 'ag-journey';
+    jEl.style.cssText = `top:${top}px;height:${ht}px`;
+    jEl.innerHTML = `<h2>Jornada</h2><p>${jornStart} → ${jornEnd}${jornNotes?' · '+jornNotes:''}</p>`;
+    tl.appendChild(jEl);
+  }
+
+  // Float events (non-jornada)
+  evs.filter(e => e.type !== 'jornada' && e.timeStart && e.timeStart !== '—').forEach(ev => {
+    const top = agTimeToY(ev.timeStart);
+    const bot = ev.timeEnd && ev.timeEnd !== '—' ? agTimeToY(ev.timeEnd) : top + 48;
+    const ht  = Math.max(40, bot - top);
+    const cc  = agColorClass(ev.color || '#3b82f6');
+    const el  = document.createElement('div');
+    el.className = 'ag-float ' + cc;
+    el.style.cssText = `top:${top}px;height:${ht}px`;
+    el.innerHTML = `<div class="ft">${ev.title}</div><div class="fm">${ev.timeStart}${ev.timeEnd && ev.timeEnd !== '—'?' → '+ev.timeEnd:''}${ev.notes?' · '+ev.notes:''}</div>`;
+    tl.appendChild(el);
+  });
+
+  // Update date header
+  const dt = new Date(agSelDate+'T12:00');
+  const ms = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  const ds = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+  const ddEl = document.getElementById('ag-d-date');
+  if (ddEl) ddEl.textContent = ds[dt.getDay()]+', '+dt.getDate()+' de '+ms[dt.getMonth()];
+}
+
+function agTimeToY(timeStr) {
+  if (!timeStr || timeStr === '—') return 0;
+  const [h, m] = timeStr.split(':').map(Number);
+  return Math.max(0, (h - 6) * 64 + Math.round((m||0) * 64/60));
+}
+function agSetDate(d) {
+  agSelDate = d;
+  renderAgDia();
+}
+
+// ── NEW EVENT FORM ───────────────────────────────────────────
+function openNovoEv(date, time) {
+  const d = date || DB.today();
+  const t = time || p2(new Date().getHours())+':'+p2(new Date().getMinutes());
+  const di = document.getElementById('ag-data');  if (di) di.value = d;
+  const ti = document.getElementById('ag-inicio'); if (ti) ti.value = t;
+  const fi = document.getElementById('ag-fim');   if (fi) fi.value = '';
+  const tt = document.getElementById('ag-titulo'); if (tt) tt.value = '';
+  const ob = document.getElementById('ag-obs');   if (ob) ob.value = '';
+  const vi = document.getElementById('ag-valor'); if (vi) vi.value = '';
+  agEvType = 'normal'; agColor = '#22c55e';
+  ['normal','jornada','finance'].forEach(x => {
+    const el = document.getElementById('ag-t-'+x); if(el) el.classList.toggle('on', x === agEvType);
+  });
+  const vf = document.getElementById('ag-val-field'); if (vf) vf.style.display = 'none';
+  document.querySelectorAll('.ag-color').forEach(el => el.classList.toggle('on', el.dataset.color === agColor));
+  openMo('mo-novo-ev');
+}
+function agSetEvType(t) {
+  agEvType = t;
+  ['normal','jornada','finance'].forEach(x => {
+    const el = document.getElementById('ag-t-'+x); if(el) el.classList.toggle('on', x === t);
+  });
+  const vf = document.getElementById('ag-val-field'); if (vf) vf.style.display = t === 'finance' ? 'block' : 'none';
+}
+function agSelColor(el) {
+  agColor = el.dataset.color;
+  document.querySelectorAll('.ag-color').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+}
+function saveEvento() {
+  const title = document.getElementById('ag-titulo')?.value?.trim();
+  if (!title) { alert('Informe o título'); return; }
+  const ev = {
+    id:        DB.uid(),
+    title,
+    date:      document.getElementById('ag-data')?.value  || DB.today(),
+    timeStart: document.getElementById('ag-inicio')?.value || '',
+    timeEnd:   document.getElementById('ag-fim')?.value   || '',
+    type:      agEvType,
+    color:     agColor,
+    notes:     document.getElementById('ag-obs')?.value   || '',
+    value:     parseFloat(document.getElementById('ag-valor')?.value) || null,
+    paid:      false
+  };
+  const evs = DB.events(); evs.push(ev); DB.saveEvents(evs);
+  closeMo('mo-novo-ev');
+  if (agView === 'resumo') renderAgResumo();
+  if (agView === 'dia')    renderAgDia();
+}
+function togglePaid(id) {
+  const evs = DB.events();
+  const ev  = evs.find(e => e.id === id); if (!ev) return;
+  ev.paid = !ev.paid; DB.saveEvents(evs);
+  if (agView === 'resumo') renderAgResumo();
+}
+function delEvento(id) {
+  if (!confirm('Excluir compromisso?')) return;
+  DB.saveEvents(DB.events().filter(e => e.id !== id));
+  if (agView === 'resumo') renderAgResumo();
+  if (agView === 'dia')    renderAgDia();
+}
+
+// ── HELPERS ─────────────────────────────────────────────────
+function getEventsForDate(d) {
+  return DB.events().filter(e => e.date === d);
+}
+function offsetDate(base, days) {
+  const d = new Date(base+'T12:00'); d.setDate(d.getDate()+days);
+  return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+}
+function formatElapsed(secs) {
+  if (!secs) return '';
+  const h = Math.floor(secs/3600), m = Math.floor(secs%3600/60);
+  return (h ? h+'h' : '') + (m ? p2(m)+'min' : '') + ' online';
+}
+
+
 // ── INIT ──────────────────────────────────────────────────────
 const initCfg = DB.cfg();
 if (initCfg.name) { const el=document.getElementById('p-nome'); if(el) el.value=initCfg.name; }
@@ -1577,6 +2024,7 @@ renderHome();
 renderJornada();
 renderFin();
 updateFavBtn();
+renderAgResumo();
 
 </script>
 </body>
