@@ -529,11 +529,7 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
     <div class="field"><label class="lbl">Placa</label><input class="inp" type="text" id="p-placa" placeholder="ABC1D23"></div>
     <div class="field"><label class="lbl">Veículo</label><input class="inp" type="text" id="p-veiculo" placeholder="BYD Dolphin Mini 2024"></div>
     <div class="field"><label class="lbl">Meta mensal (R$)</label><input class="inp" type="number" id="p-meta" placeholder="9000" inputmode="decimal" style="font-family:'DM Mono',monospace;font-weight:700"></div>
-    <div class="field"><label class="lbl">API Key Anthropic (para importar com IA)</label>
-    <input class="inp" type="password" id="p-apikey" placeholder="sk-ant-..." style="font-family:monospace;font-size:12px">
-    <div style="font-size:11px;color:#94A3B8;margin-top:6px">Necessária para o recurso de importação por print. Obtida em console.anthropic.com</div>
-  </div>
-  <button class="btn-p" onclick="savePerfil()">Salvar</button>
+    <button class="btn-p" onclick="savePerfil()">Salvar</button>
   </div>
 </div>
 
@@ -1152,13 +1148,7 @@ function handleImport(input, plat) {
   processImportAI(file, plat);
 }
 async function processImportAI(file, plat) {
-  // Check for API key
-  const apiKey = DB.get('sm_api_key') || '';
-  if (!apiKey) {
-    closeMo('mo-import'); closeMo('mo-import-confirm');
-    alert('Configure sua API Key em Mais → Perfil para usar a importação com IA.\n\nObtenha a chave em: console.anthropic.com');
-    return;
-  }
+  // API via Cloudflare Worker proxy
   document.getElementById('ic-title').textContent = 'Analisando...';
   document.getElementById('ic-body').innerHTML = '<div style="text-align:center;padding:28px 16px"><div style="font-size:28px;animation:vspin 1s linear infinite;display:inline-block">&#9881;</div><div style="margin-top:12px;font-size:13px;color:#64748B;font-weight:500">Extraindo corridas com IA...<br><span style="font-size:11px;color:#94A3B8">Aguarde alguns segundos</span></div></div>';
   document.getElementById('ic-btn').style.display = 'none';
@@ -1175,16 +1165,13 @@ async function processImportAI(file, plat) {
     const prompt = isUber
       ? 'Esta imagem mostra o "Histórico de ganhos" do Uber para motoristas. Extraia CADA corrida visível. Ignore entradas de Missão (que mostram "Missão" ou "Mission" com R$ 0,00). Para cada corrida retorne: {"time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"Black","origin":"bairro curto","dest":"bairro curto","surge":false}. Campos: time=horário sem segundos, value=valor convertendo vírgula para ponto, km=distância numérica, duration=minutos inteiros (ex: 5min39seg=6), category=exatamente como aparece, origin/dest=apenas bairro ou rua curta, surge=true se aparecer tag verde "Aumentou". Retorne SOMENTE o JSON array sem markdown. Se não conseguir retorne [].'
       : 'Esta imagem mostra o histórico de corridas do app 99. Extraia CADA corrida visível com: {"time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"99Pop","origin":"bairro","dest":"bairro","surge":false}. Retorne SOMENTE o JSON array sem markdown. Se não conseguir retorne [].';
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch('https://smartmobi-proxy.yurisilva1990.workers.dev', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-6',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 1500,
         messages: [{
           role: 'user',
@@ -1340,8 +1327,7 @@ function openPerfil() {
   if (cfg.vehicle) {const el=document.getElementById('p-veiculo');if(el)el.value=cfg.vehicle;}
   const meta = DB.meta();
   if (meta.general) {const el=document.getElementById('p-meta');if(el)el.value=meta.general;}
-  const apiKey = DB.get('sm_api_key') || '';
-  if (apiKey) {const el=document.getElementById('p-apikey');if(el)el.value=apiKey;}
+
   openMo('mo-perfil');
 }
 function savePerfil() {
@@ -1350,14 +1336,12 @@ function savePerfil() {
   cfg.plate   = document.getElementById('p-placa')?.value || '';
   cfg.vehicle = document.getElementById('p-veiculo')?.value || '';
   const meta = DB.meta(); meta.general = parseFloat(document.getElementById('p-meta')?.value) || 0;
-  const apiKey = document.getElementById('p-apikey')?.value || '';
-  if (apiKey) DB.set('sm_api_key', apiKey);
+
   DB.saveCfg(cfg); DB.saveMeta(meta);
   closeMo('mo-perfil');
   renderMais();
   if (S.sec==='home') renderHome();
-  const saved = apiKey ? ' API Key salva!' : '';
-  alert('Perfil salvo!' + saved);
+  alert('Perfil salvo!');
 }
 
 // ── UTILS ─────────────────────────────────────────────────────
