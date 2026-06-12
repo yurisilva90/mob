@@ -765,6 +765,27 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
 </div>
 
 
+
+<!-- MODAL: Importar Histórico -->
+<div class="mo ctr" id="mo-hist-import">
+  <div class="sheet ctr" style="max-width:400px">
+    <div class="sheet-head"><h2>Importar Histórico</h2><button class="xbtn" onclick="closeMo('mo-hist-import')">&#x2715;</button></div>
+    <div style="background:#EFF6FF;border:1px solid rgba(14,165,233,.2);border-radius:16px;padding:12px 14px;font-size:12px;color:#0EA5E9;line-height:1.6;margin-bottom:16px;display:flex;gap:8px">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      <div>Selecione o arquivo <strong>smartmobi_historico_uber.json</strong> gerado pelo sistema. Corridas j&#225; existentes n&#227;o ser&#227;o duplicadas.</div>
+    </div>
+    <label style="display:flex;flex-direction:column;align-items:center;gap:10px;border:2px dashed #E2E8F0;border-radius:18px;padding:24px;cursor:pointer;background:#F8FAFC;margin-bottom:14px">
+      <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="#94A3B8" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8 12 3 7 8"/><path d="M12 3v12"/></svg>
+      <div style="font-size:14px;font-weight:700;color:#64748B">Selecionar arquivo .json</div>
+      <div style="font-size:11px;color:#94A3B8">Toque para abrir o gerenciador de arquivos</div>
+      <input type="file" accept=".json,application/json" style="display:none" onchange="loadHistFile(this)">
+    </label>
+    <div id="hist-progress" style="display:none">
+      <div style="background:#F1F5F9;border-radius:10px;height:8px;overflow:hidden;margin-bottom:8px"><div id="hist-bar" style="height:100%;background:linear-gradient(90deg,#0EA5E9,#22C55E);border-radius:10px;width:0%;transition:width .3s"></div></div>
+      <div style="font-size:12px;color:#64748B;text-align:center" id="hist-msg">Processando...</div>
+    </div>
+  </div>
+</div>
 </div>
 <script>
 // ============================================================
@@ -2267,6 +2288,75 @@ function agCalToday() {
   const dt = new Date(agCalSelDate+'T12:00');
   agCalY = dt.getFullYear(); agCalM = dt.getMonth();
   renderAgCal();
+}
+
+
+
+// ── IMPORTAR HISTÓRICO ────────────────────────────────────────────────────
+function openHistImport() { openMo('mo-hist-import'); }
+
+async function loadHistFile(input) {
+  if (!input.files[0]) return;
+  const file = input.files[0];
+  const progEl = document.getElementById('hist-progress');
+  const barEl  = document.getElementById('hist-bar');
+  const msgEl  = document.getElementById('hist-msg');
+  if (progEl) progEl.style.display = 'block';
+  if (msgEl) msgEl.textContent = 'Lendo arquivo...';
+
+  try {
+    const text = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result);
+      r.onerror = () => rej(r.error);
+      r.readAsText(file, 'utf-8');
+    });
+
+    const data = JSON.parse(text);
+    const keys = Object.keys(data).filter(k => k.startsWith('sm_day_'));
+    let added = 0, skipped = 0, days_count = keys.length;
+
+    for (let i = 0; i < keys.length; i++) {
+      const key    = keys[i];
+      const newDay = data[key];
+      const curDay = DB.get(key) || {date: newDay.date, trips:[], expenses:[], revenues:[], kmTotal:null, session:null};
+
+      // Add only non-duplicate trips
+      newDay.trips.forEach(t => {
+        const dup = curDay.trips.some(ex =>
+          ex.time === t.time && Math.abs((ex.value||0)-(t.value||0)) < 0.02
+        );
+        if (!dup) { curDay.trips.push(t); added++; }
+        else skipped++;
+      });
+
+      // Set kmTotal if not already set
+      if (!curDay.kmTotal && newDay.kmTotal) curDay.kmTotal = newDay.kmTotal;
+
+      DB.set(key, curDay);
+
+      // Update progress
+      const pct = Math.round((i+1)/days_count*100);
+      if (barEl) barEl.style.width = pct+'%';
+      if (msgEl) msgEl.textContent = `Importando... dia ${i+1} de ${days_count} (${pct}%)`;
+
+      // Yield to UI every 10 days
+      if (i % 10 === 0) await new Promise(r => setTimeout(r, 0));
+    }
+
+    if (msgEl) msgEl.textContent = `Concluído! ${added} corridas importadas, ${skipped} já existiam.`;
+    if (barEl) barEl.style.width = '100%';
+    setTimeout(() => {
+      closeMo('mo-hist-import');
+      if (S.sec === 'home')    renderHome();
+      if (S.sec === 'jornada') renderJornada();
+      alert(`Histórico importado com sucesso!\n${added} corridas adicionadas em ${days_count} dias.`);
+    }, 1200);
+
+  } catch(err) {
+    if (msgEl) msgEl.textContent = 'Erro: ' + err.message;
+    console.error(err);
+  }
 }
 
 
