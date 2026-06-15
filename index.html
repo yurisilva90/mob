@@ -615,6 +615,10 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
       <button class="btn-p" id="gps-pause-btn" style="background:#F59E0B;flex:1;margin-top:0" onclick="gpsPause()">Pausar</button>
       <button class="btn-p" style="background:#EF4444;flex:1;margin-top:0" onclick="gpsStop()">Encerrar</button>
     </div>
+    <div style="background:#FFF7ED;border:1px solid rgba(245,158,11,.25);border-radius:14px;padding:10px 14px;font-size:12px;color:#92400E;margin-bottom:10px;display:flex;gap:8px;align-items:flex-start">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#F59E0B" stroke-width="2" style="flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+      <span>Mantenha o <strong>SmartMobi aberto</strong> ou a <strong>tela ligada</strong> durante a jornada para não interromper o rastreamento.</span>
+    </div>
     <div style="margin-top:10px;padding:12px 14px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:16px;font-size:12px;color:#64748B;display:flex;gap:8px;align-items:flex-start" id="gps-note">
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#0EA5E9" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
       <span>O app usará o GPS do celular. Na primeira vez, toque em <strong>Permitir</strong> quando solicitado.</span>
@@ -1711,6 +1715,7 @@ function gpsStart() {
   }
   setText('gps-status-txt', 'Sessão em andamento');
   document.getElementById('gps-sess').style.display = 'flex';
+  requestWakeLock();
 }
 function gpsPause() {
   const g = S.gps;
@@ -1738,6 +1743,7 @@ function gpsStop() {
   DB.saveDay(day);
   const km = g.km;
   g.start=null; g.pausedMs=0; g.km=0; g.pts=[];
+  releaseWakeLock();
   closeMo('mo-gps-action');
   if (S.sec==='jornada') renderJornada();
   if (km > 0.1) setTimeout(() => alert('GPS encerrado. '+km.toFixed(1)+'km registrados.'), 300);
@@ -2261,6 +2267,40 @@ async function loadHistFile(input) {
     console.error(err);
   }
 }
+
+
+
+// ── WAKE LOCK (mantém GPS ativo em segundo plano) ─────────────────────────
+let _wakeLock = null;
+
+async function requestWakeLock() {
+  if (!('wakeLock' in navigator)) return;
+  try {
+    _wakeLock = await navigator.wakeLock.request('screen');
+    _wakeLock.addEventListener('release', () => {
+      _wakeLock = null;
+      // Se GPS ainda ativo, tenta reativar automaticamente
+      if (S.gps.st === 'running') requestWakeLock();
+    });
+    console.log('SmartMobi: Wake Lock ativado — GPS continua em segundo plano');
+  } catch(e) {
+    console.warn('Wake Lock não disponível:', e.message);
+  }
+}
+
+async function releaseWakeLock() {
+  if (_wakeLock) {
+    await _wakeLock.release();
+    _wakeLock = null;
+  }
+}
+
+// Reativa Wake Lock quando usuário volta pro app com GPS ativo
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible' && S.gps.st === 'running') {
+    await requestWakeLock();
+  }
+});
 
 
 // ── INIT ──────────────────────────────────────────────────────
