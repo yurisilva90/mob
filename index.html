@@ -265,7 +265,7 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
 <div class="scroll" id="main-scroll">
 
 <!-- ══ TELA LOGIN ══════════════════════════════════════════════════════════ -->
-<div class="screen" id="sc-login" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 24px;background:linear-gradient(160deg,#0F172A 0%,#0B2D5A 100%)">
+<div id="sc-login" style="display:none;position:fixed;inset:0;z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;background:linear-gradient(160deg,#0F172A 0%,#0B2D5A 100%);overflow-y:auto">
   <div style="width:72px;height:72px;background:#22C55E;border-radius:24px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 16px 40px rgba(34,197,94,.35)">
     <svg viewBox="0 0 36 36" width="40" height="40" fill="none"><text x="4" y="27" font-size="22" font-weight="800" fill="#fff" font-family="Inter,sans-serif">SM</text></svg>
   </div>
@@ -2428,6 +2428,11 @@ let _supaUser = null;
 let _isRegisterMode = false;
 
 async function authInit() {
+  // Esconde app inteiro até confirmar sessão
+  ['app-nav','app-header'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.style.display = 'none';
+  });
+  document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
   const { data: { session } } = await _SUPA.auth.getSession();
   if (session?.user) {
     _supaUser = session.user;
@@ -2450,14 +2455,25 @@ async function authInit() {
 }
 
 function showLogin() {
-  document.getElementById('sc-login').style.display = 'flex';
-  document.getElementById('app-nav').style.display = 'none';
-  document.querySelectorAll('.screen:not(#sc-login)').forEach(s => s.style.display = 'none');
+  const login = document.getElementById('sc-login');
+  if (login) { login.style.display = 'flex'; }
+  // Esconde tudo que não é login
+  ['app-nav','app-header'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.style.display = 'none';
+  });
+  document.querySelectorAll('.screen').forEach(s => {
+    if (s.id !== 'sc-login') s.style.display = 'none';
+  });
 }
 
 function showApp() {
-  document.getElementById('sc-login').style.display = 'none';
-  document.getElementById('app-nav').style.display = 'flex';
+  const login = document.getElementById('sc-login');
+  if (login) login.style.display = 'none';
+  const nav = document.getElementById('app-nav');
+  if (nav) nav.style.display = 'flex';
+  const hdr = document.getElementById('app-header');
+  if (hdr) hdr.style.display = '';
+  renderHome(); renderJornada(); renderFin(); updateFavBtn(); renderAgResumo();
   navTo('home');
 }
 
