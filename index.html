@@ -718,16 +718,42 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
       <div><strong>Como usar:</strong> tire um print do histórico completo do Uber ou 99 (com origem, destino e valor visíveis). A IA extrai todas as corridas automaticamente.</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px">
-      <label style="display:block;border:1.5px solid rgba(14,165,233,.25);border-radius:18px;padding:18px;cursor:pointer;background:#EFF6FF;display:flex;align-items:center;gap:14px">
-        <input type="file" multiple style="display:none" onchange="handleImport(this,'Uber')">
-        <div style="width:44px;height:44px;border-radius:14px;background:rgba(14,165,233,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#0EA5E9" stroke-width="2"><path d="M7 17h10M6 17l1-6 3-4h4l3 4 1 6"/></svg></div>
-        <div><div style="font-size:14px;font-weight:700;color:#0EA5E9">Importar do Uber</div><div style="font-size:12px;color:#64748B;margin-top:3px">Vários prints ou vídeo do histórico</div></div>
-      </label>
-      <label style="display:block;border:1.5px solid rgba(245,158,11,.25);border-radius:18px;padding:18px;cursor:pointer;background:#FFF7ED;display:flex;align-items:center;gap:14px">
-        <input type="file" multiple style="display:none" onchange="handleImport(this,'99')">
-        <div style="width:44px;height:44px;border-radius:14px;background:rgba(245,158,11,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M7 17h10M6 17l1-6 3-4h4l3 4 1 6"/></svg></div>
-        <div><div style="font-size:14px;font-weight:700;color:#F59E0B">Importar do 99</div><div style="font-size:12px;color:#64748B;margin-top:3px">Vários prints ou vídeo do histórico</div></div>
-      </label>
+      <!-- Uber -->
+      <div style="border:1.5px solid rgba(14,165,233,.25);border-radius:18px;padding:14px 16px;background:#EFF6FF;margin-bottom:2px">
+        <div style="font-size:13px;font-weight:700;color:#0EA5E9;margin-bottom:10px;display:flex;align-items:center;gap:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17h10M6 17l1-6 3-4h4l3 4 1 6"/></svg> Importar do Uber</div>
+        <div style="display:flex;gap:8px">
+          <label style="flex:1;height:44px;border-radius:14px;background:rgba(14,165,233,.15);display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:12px;font-weight:700;color:#0EA5E9">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M20 12c0-4.4-3.6-8-8-8s-8 3.6-8 8 3.6 8 8 8 8-3.6 8-8z"/></svg> Câmera
+            <input type="file" capture="environment" accept="image/*,video/*" style="display:none" onchange="handleImport(this,'Uber')">
+          </label>
+          <label style="flex:1;height:44px;border-radius:14px;background:rgba(14,165,233,.15);display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:12px;font-weight:700;color:#0EA5E9">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m3 9 4-4 4 4 4-4 4 4"/></svg> Galeria
+            <input type="file" multiple accept="image/*,video/*" style="display:none" onchange="handleImport(this,'Uber')">
+          </label>
+          <label style="flex:1;height:44px;border-radius:14px;background:rgba(14,165,233,.15);display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:12px;font-weight:700;color:#0EA5E9">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg> Arquivos
+            <input type="file" multiple style="display:none" onchange="handleImport(this,'Uber')">
+          </label>
+        </div>
+      </div>
+      <!-- 99 -->
+      <div style="border:1.5px solid rgba(245,158,11,.25);border-radius:18px;padding:14px 16px;background:#FFF7ED">
+        <div style="font-size:13px;font-weight:700;color:#F59E0B;margin-bottom:10px;display:flex;align-items:center;gap:8px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17h10M6 17l1-6 3-4h4l3 4 1 6"/></svg> Importar do 99</div>
+        <div style="display:flex;gap:8px">
+          <label style="flex:1;height:44px;border-radius:14px;background:rgba(245,158,11,.15);display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:12px;font-weight:700;color:#B45309">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M20 12c0-4.4-3.6-8-8-8s-8 3.6-8 8 3.6 8 8 8 8-3.6 8-8z"/></svg> Câmera
+            <input type="file" capture="environment" accept="image/*,video/*" style="display:none" onchange="handleImport(this,'99')">
+          </label>
+          <label style="flex:1;height:44px;border-radius:14px;background:rgba(245,158,11,.15);display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:12px;font-weight:700;color:#B45309">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m3 9 4-4 4 4 4-4 4 4"/></svg> Galeria
+            <input type="file" multiple accept="image/*,video/*" style="display:none" onchange="handleImport(this,'99')">
+          </label>
+          <label style="flex:1;height:44px;border-radius:14px;background:rgba(245,158,11,.15);display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:12px;font-weight:700;color:#B45309">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg> Arquivos
+            <input type="file" multiple style="display:none" onchange="handleImport(this,'99')">
+          </label>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1666,9 +1692,16 @@ function isTripDuplicate(newT, existing) {
       t.origin.toLowerCase().slice(0,8) === newT.origin.toLowerCase().slice(0,8) &&
       t.dest && newT.dest &&
       t.dest.toLowerCase().slice(0,8) === newT.dest.toLowerCase().slice(0,8);
+    // Mesmo valor + horários próximos (até 5 min) = duplicata
+    const nearTime = t.time && newT.time && (() => {
+      const [h1,m1] = t.time.split(':').map(Number);
+      const [h2,m2] = newT.time.split(':').map(Number);
+      return Math.abs((h1*60+m1)-(h2*60+m2)) <= 5;
+    })();
     if (sameTime && sameVal) return true;
     if (sameTime && sameKm && newT.km > 0) return true;
     if (sameVal && sameRoute) return true;
+    if (sameVal && nearTime && sameKm) return true;
     return false;
   });
 }
@@ -1678,6 +1711,10 @@ function confirmImport() {
   const day = DB.day(S.curDate);
   let added=0, skipped=0;
   selected.forEach(t => {
+    // Rejeita corridas claramente inválidas (0min E 0km mas tem valor)
+    const hasValue = parseFloat(t.value) > 0;
+    const isGhost  = (t.duration||0) === 0 && (parseFloat(t.km)||0) < 0.1 && hasValue;
+    if (isGhost) { skipped++; return; }
     if (isTripDuplicate(t, day.trips)) { skipped++; return; }
     day.trips.push({id:DB.uid(), platform:t.platform||'uber', time:t.time||'',
       duration:t.duration||0, origin:t.origin||'', dest:t.dest||'',
