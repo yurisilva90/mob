@@ -2558,7 +2558,18 @@ async function loginEnter() {
   lsErr('l-err','');
   if (!email||!pass) { lsErr('l-err','Preencha email e senha'); return; }
   lsBtn('l-btn-enter','Entrando...',true);
-  const { error } = await _SUPA.auth.signInWithPassword({ email, password: pass });
+  let signInResult;
+  try {
+    signInResult = await Promise.race([
+      _SUPA.auth.signInWithPassword({ email, password: pass }),
+      new Promise((_,rej) => setTimeout(() => rej(new Error('Tempo esgotado. Verifique sua conexão.')), 12000))
+    ]);
+  } catch(err) {
+    lsBtn('l-btn-enter','Entrar',false);
+    lsErr('l-err', err.message);
+    return;
+  }
+  const { error } = signInResult;
   lsBtn('l-btn-enter','Entrar',false);
   if (error) {
     const msgs = { 'Invalid login credentials':'Email ou senha incorretos', 'Email not confirmed':'Email não confirmado — contate o suporte' };
@@ -2581,11 +2592,22 @@ async function loginRegister() {
     options: { data: { name, phone } }
   });
   lsBtn('l-btn-reg','Criar conta',false);
-  if (error) { lsErr('r-err', error.message==='User already registered'?'Email já cadastrado. Faça login.':error.message); return; }
-  // Update profile with name and phone
+  if (error) { lsErr('r-err', error.message.includes('already registered')||error.message.includes('already been registered')?'Email já cadastrado. Tente entrar.':error.message.includes('Password')?'Senha deve ter pelo menos 6 caracteres':error.message); return; }
+  // Sucesso: atualiza perfil e navega
   if (data?.user) {
-    await _SUPA.from('profiles').upsert({ id:data.user.id, name, phone }, { onConflict:'id' });
-    const cfg=DB.cfg(); cfg.name=name; DB.saveCfg(cfg);
+    const cfg=DB.cfg(); cfg.name=name; cfg.phone=phone; DB.saveCfg(cfg);
+    try {
+      await _SUPA.from('profiles').upsert(
+        { id:data.user.id, name, phone },
+        { onConflict:'id' }
+      );
+    } catch(e) { console.warn('Profile upsert:', e); }
+    // Navega direto — não espera o onAuthStateChange
+    _supaUser = data.user;
+    showApp();
+  } else {
+    // Sem sessão: usuário pode precisar confirmar email
+    lsErr('r-err', 'Conta criada! Verifique seu email para confirmar.');
   }
 }
 
