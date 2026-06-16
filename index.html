@@ -266,42 +266,54 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
 
 <!-- ══ TELA LOGIN ══════════════════════════════════════════════════════════ -->
 <div id="sc-login" style="display:none;position:fixed;inset:0;z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;background:linear-gradient(160deg,#0F172A 0%,#0B2D5A 100%);overflow-y:auto">
-  <div style="width:72px;height:72px;background:#22C55E;border-radius:24px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 16px 40px rgba(34,197,94,.35)">
-    <svg viewBox="0 0 36 36" width="40" height="40" fill="none"><text x="4" y="27" font-size="22" font-weight="800" fill="#fff" font-family="Inter,sans-serif">SM</text></svg>
+
+  <!-- Logo -->
+  <div style="width:80px;height:80px;background:linear-gradient(135deg,#22C55E,#16A34A);border-radius:26px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 20px 48px rgba(34,197,94,.35)">
+    <span style="font-size:28px;font-weight:900;color:#fff;letter-spacing:-.04em;font-family:Inter,sans-serif">SM</span>
   </div>
-  <div style="font-size:28px;font-weight:800;color:#fff;letter-spacing:-.04em;margin-bottom:6px">SmartMobi</div>
-  <div style="font-size:14px;color:#94A3B8;margin-bottom:36px">Gestão financeira para motoristas</div>
+  <div style="font-size:30px;font-weight:800;color:#fff;letter-spacing:-.04em;margin-bottom:6px;font-family:Inter,sans-serif">SmartMobi</div>
+  <div style="font-size:14px;color:#64748B;margin-bottom:40px;font-family:Inter,sans-serif">Gestão financeira para motoristas</div>
+
   <div style="width:100%;max-width:360px">
-    <div id="login-step-email">
-      <div style="margin-bottom:12px">
-        <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px">Email</label>
-        <input id="login-email" type="email" inputmode="email" placeholder="seu@email.com"
-          style="width:100%;height:52px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);border-radius:16px;padding:0 16px;font-size:15px;color:#fff;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
-          onfocus="this.style.borderColor='#22C55E'" onblur="this.style.borderColor='rgba(255,255,255,.12)'">
-      </div>
-      <div style="margin-bottom:20px">
-        <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px">Senha</label>
-        <input id="login-pass" type="password" placeholder="Mínimo 6 caracteres"
-          style="width:100%;height:52px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);border-radius:16px;padding:0 16px;font-size:15px;color:#fff;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
-          onfocus="this.style.borderColor='#22C55E'" onblur="this.style.borderColor='rgba(255,255,255,.12)'"
-          onkeydown="if(event.key==='Enter')loginSubmit()">
-      </div>
-      <button onclick="loginSubmit()" id="login-btn"
-        style="width:100%;height:54px;background:#22C55E;border:0;border-radius:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Inter,sans-serif;box-shadow:0 12px 28px rgba(34,197,94,.3);margin-bottom:14px">
-        Entrar
+
+    <!-- Step 1: Email -->
+    <div id="lsA">
+      <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:8px;font-family:Inter,sans-serif">Seu email</label>
+      <input id="l-email" type="email" inputmode="email" placeholder="seuemail@gmail.com"
+        style="width:100%;height:54px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.07);border-radius:18px;padding:0 18px;font-size:16px;color:#fff;outline:none;font-family:Inter,sans-serif;box-sizing:border-box;margin-bottom:14px"
+        onfocus="this.style.borderColor='#22C55E'" onblur="this.style.borderColor='rgba(255,255,255,.1)'"
+        onkeydown="if(event.key==='Enter')loginSendOTP()">
+      <button onclick="loginSendOTP()" id="l-btn"
+        style="width:100%;height:56px;background:linear-gradient(135deg,#22C55E,#16A34A);border:0;border-radius:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Inter,sans-serif;box-shadow:0 14px 32px rgba(34,197,94,.3);margin-bottom:10px">
+        Entrar / Criar conta
       </button>
-      <button onclick="toggleRegister()" id="login-toggle"
-        style="width:100%;height:44px;background:transparent;border:1.5px solid rgba(255,255,255,.15);border-radius:14px;color:#94A3B8;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
-        Criar conta
-      </button>
-      <div id="login-name-wrap" style="display:none;margin-bottom:12px">
-        <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px">Nome</label>
-        <input id="login-name" type="text" placeholder="Seu nome completo"
-          style="width:100%;height:52px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);border-radius:16px;padding:0 16px;font-size:15px;color:#fff;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
-          onfocus="this.style.borderColor='#22C55E'" onblur="this.style.borderColor='rgba(255,255,255,.12)'">
-      </div>
-      <div id="login-error" style="color:#EF4444;font-size:13px;text-align:center;margin-top:10px;display:none"></div>
+      <div style="font-size:12px;color:#475569;text-align:center;font-family:Inter,sans-serif">Você receberá um código de 6 dígitos no email</div>
+      <div id="l-err1" style="color:#EF4444;font-size:13px;text-align:center;margin-top:10px;display:none;font-family:Inter,sans-serif"></div>
     </div>
+
+    <!-- Step 2: OTP code -->
+    <div id="lsB" style="display:none">
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:6px;font-family:Inter,sans-serif">Código enviado!</div>
+        <div style="font-size:13px;color:#64748B;font-family:Inter,sans-serif">Verifique seu email <span id="l-sent-to" style="color:#22C55E"></span></div>
+      </div>
+      <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:8px;font-family:Inter,sans-serif">Código de 6 dígitos</label>
+      <input id="l-otp" type="number" inputmode="numeric" placeholder="000000" maxlength="6"
+        style="width:100%;height:64px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.07);border-radius:18px;padding:0 18px;font-size:28px;font-weight:700;color:#fff;outline:none;font-family:'DM Mono',monospace;text-align:center;letter-spacing:.2em;box-sizing:border-box;margin-bottom:14px"
+        onfocus="this.style.borderColor='#22C55E'" onblur="this.style.borderColor='rgba(255,255,255,.1)'"
+        oninput="if(this.value.length===6)loginVerifyOTP()"
+        onkeydown="if(event.key==='Enter')loginVerifyOTP()">
+      <button onclick="loginVerifyOTP()" id="l-btn2"
+        style="width:100%;height:56px;background:linear-gradient(135deg,#22C55E,#16A34A);border:0;border-radius:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Inter,sans-serif;box-shadow:0 14px 32px rgba(34,197,94,.3);margin-bottom:12px">
+        Confirmar
+      </button>
+      <button onclick="document.getElementById('lsA').style.display='block';document.getElementById('lsB').style.display='none'"
+        style="width:100%;height:44px;background:transparent;border:1px solid rgba(255,255,255,.1);border-radius:14px;color:#64748B;font-size:13px;cursor:pointer;font-family:Inter,sans-serif">
+        ← Trocar email
+      </button>
+      <div id="l-err2" style="color:#EF4444;font-size:13px;text-align:center;margin-top:10px;display:none;font-family:Inter,sans-serif"></div>
+    </div>
+
   </div>
 </div>
 
@@ -2422,18 +2434,18 @@ function onNativeReady() {
 
 
 // ══════════════════════════════════════════════
-// SUPABASE AUTH
+// SUPABASE AUTH — OTP por email
 // ══════════════════════════════════════════════
 let _supaUser = null;
-let _isRegisterMode = false;
+let _otpEmail = '';
 
 async function authInit() {
-  // Esconde app inteiro até confirmar sessão
   ['app-nav','app-header'].forEach(id => {
     const el = document.getElementById(id); if(el) el.style.display = 'none';
   });
   document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
-  const { data: { session } } = await _SUPA.auth.getSession();
+
+  const { data:{ session } } = await _SUPA.auth.getSession();
   if (session?.user) {
     _supaUser = session.user;
     await loadProfile();
@@ -2441,7 +2453,6 @@ async function authInit() {
   } else {
     showLogin();
   }
-  // Listen for auth changes
   _SUPA.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session?.user) {
       _supaUser = session.user;
@@ -2455,101 +2466,81 @@ async function authInit() {
 }
 
 function showLogin() {
-  const login = document.getElementById('sc-login');
-  if (login) { login.style.display = 'flex'; }
-  // Esconde tudo que não é login
+  const el = document.getElementById('sc-login');
+  if (el) el.style.display = 'flex';
   ['app-nav','app-header'].forEach(id => {
-    const el = document.getElementById(id); if(el) el.style.display = 'none';
+    const e2 = document.getElementById(id); if(e2) e2.style.display = 'none';
   });
-  document.querySelectorAll('.screen').forEach(s => {
-    if (s.id !== 'sc-login') s.style.display = 'none';
-  });
+  document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
 }
 
 function showApp() {
-  const login = document.getElementById('sc-login');
-  if (login) login.style.display = 'none';
+  const el = document.getElementById('sc-login');
+  if (el) el.style.display = 'none';
   const nav = document.getElementById('app-nav');
   if (nav) nav.style.display = 'flex';
-  const hdr = document.getElementById('app-header');
-  if (hdr) hdr.style.display = '';
   renderHome(); renderJornada(); renderFin(); updateFavBtn(); renderAgResumo();
   navTo('home');
 }
 
-function toggleRegister() {
-  _isRegisterMode = !_isRegisterMode;
-  const nameWrap = document.getElementById('login-name-wrap');
-  const btn      = document.getElementById('login-btn');
-  const toggle   = document.getElementById('login-toggle');
-  if (nameWrap) nameWrap.style.display = _isRegisterMode ? 'block' : 'none';
-  if (btn)    btn.textContent    = _isRegisterMode ? 'Criar conta' : 'Entrar';
-  if (toggle) toggle.textContent = _isRegisterMode ? 'Já tenho conta' : 'Criar conta';
-}
-
-async function loginSubmit() {
-  const email = document.getElementById('login-email')?.value?.trim();
-  const pass  = document.getElementById('login-pass')?.value;
-  const name  = document.getElementById('login-name')?.value?.trim();
-  const errEl = document.getElementById('login-error');
-  const btn   = document.getElementById('login-btn');
-
-  if (!email || !pass) { showLoginError('Preencha email e senha'); return; }
-  if (pass.length < 6)  { showLoginError('Senha deve ter pelo menos 6 caracteres'); return; }
-
-  if (btn) { btn.textContent = 'Aguarde...'; btn.disabled = true; }
-
-  let error;
-  if (_isRegisterMode) {
-    const { error: e } = await _SUPA.auth.signUp({
-      email, password: pass,
-      options: { data: { name: name || '' } }
-    });
-    error = e;
-    if (!e) {
-      // Update profile name after signup
-      if (name) {
-        setTimeout(async () => {
-          const { data: { user } } = await _SUPA.auth.getUser();
-          if (user) await _SUPA.from('profiles').update({ name }).eq('id', user.id);
-        }, 1000);
-      }
-    }
-  } else {
-    const { error: e } = await _SUPA.auth.signInWithPassword({ email, password: pass });
-    error = e;
+async function loginSendOTP() {
+  const email = document.getElementById('l-email')?.value?.trim();
+  const err   = document.getElementById('l-err1');
+  const btn   = document.getElementById('l-btn');
+  if (!email || !email.includes('@')) {
+    if(err){err.textContent='Digite um email válido';err.style.display='block';}
+    return;
   }
-
+  if(err) err.style.display='none';
+  if(btn){btn.textContent='Enviando...';btn.disabled=true;}
+  _otpEmail = email;
+  const { error } = await _SUPA.auth.signInWithOtp({
+    email,
+    options: { shouldCreateUser: true }
+  });
+  if(btn){btn.textContent='Entrar / Criar conta';btn.disabled=false;}
   if (error) {
-    const msgs = {
-      'Invalid login credentials':    'Email ou senha incorretos',
-      'User already registered':      'Email já cadastrado. Tente entrar.',
-      'Email not confirmed':          'Confirme seu email antes de entrar',
-      'Password should be at least':  'Senha deve ter pelo menos 6 caracteres',
-    };
-    const msg = Object.keys(msgs).find(k => error.message?.includes(k));
-    showLoginError(msg ? msgs[msg] : error.message);
-    if (btn) { btn.textContent = _isRegisterMode ? 'Criar conta' : 'Entrar'; btn.disabled = false; }
+    if(err){err.textContent=error.message;err.style.display='block';}
+    return;
   }
+  document.getElementById('lsA').style.display = 'none';
+  document.getElementById('lsB').style.display = 'block';
+  const st = document.getElementById('l-sent-to');
+  if(st) st.textContent = email;
+  document.getElementById('l-otp')?.focus();
 }
 
-function showLoginError(msg) {
-  const el = document.getElementById('login-error');
-  if (el) { el.textContent = msg; el.style.display = 'block'; }
+async function loginVerifyOTP() {
+  const token = document.getElementById('l-otp')?.value?.trim();
+  const err   = document.getElementById('l-err2');
+  const btn   = document.getElementById('l-btn2');
+  if (!token || token.length < 6) {
+    if(err){err.textContent='Digite o código de 6 dígitos';err.style.display='block';}
+    return;
+  }
+  if(err) err.style.display='none';
+  if(btn){btn.textContent='Verificando...';btn.disabled=true;}
+  const { error } = await _SUPA.auth.verifyOtp({
+    email: _otpEmail,
+    token,
+    type: 'email'
+  });
+  if(btn){btn.textContent='Confirmar';btn.disabled=false;}
+  if (error) {
+    if(err){err.textContent='Código incorreto ou expirado. Tente novamente.';err.style.display='block';}
+    return;
+  }
+  // onAuthStateChange vai chamar showApp automaticamente
 }
 
 async function loadProfile() {
   if (!_supaUser) return;
   const { data } = await _SUPA.from('profiles').select('*').eq('id', _supaUser.id).single();
-  if (data) {
-    const cfg = DB.cfg();
-    if (data.name && !cfg.name) { cfg.name = data.name; DB.saveCfg(cfg); }
-  }
+  if (data?.name) { const cfg = DB.cfg(); if(!cfg.name){cfg.name=data.name;DB.saveCfg(cfg);} }
 }
 
-async function authSignOut() {
-  await _SUPA.auth.signOut();
-}
+async function authSignOut() { await _SUPA.auth.signOut(); }
+function toggleRegister() {}
 
 function getCurrentUser() { return _supaUser; }
 
