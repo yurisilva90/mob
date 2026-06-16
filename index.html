@@ -645,6 +645,61 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
 </div>
 
 
+<!-- ══ TELA METAS ══════════════════════════════════════════════════════════ -->
+<div class="screen" id="sc-metas">
+  <div style="padding:24px 16px">
+    <div style="font-size:24px;font-weight:800;letter-spacing:-.04em;margin-bottom:4px">Metas</div>
+    <div style="font-size:13px;color:#64748B;margin-bottom:24px">Defina e acompanhe seus objetivos</div>
+
+    <!-- Meta diária -->
+    <div style="background:#fff;border:1px solid rgba(15,23,42,.06);border-radius:24px;padding:18px;box-shadow:0 8px 24px rgba(15,23,42,.06);margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#94A3B8;margin-bottom:12px">Meta diária</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="font-size:13px;color:#64748B;width:100px">Receita (R$)</div>
+        <input type="number" id="meta-daily-rev" inputmode="decimal" placeholder="0,00"
+          style="flex:1;height:44px;border:1.5px solid #E2E8F0;border-radius:14px;padding:0 14px;font-size:15px;font-weight:700;font-family:'DM Mono',monospace;outline:none"
+          onfocus="this.style.borderColor='#22C55E'" onblur="this.style.borderColor='#E2E8F0'">
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:13px;color:#64748B;width:100px">Corridas</div>
+        <input type="number" id="meta-daily-trips" inputmode="numeric" placeholder="0"
+          style="flex:1;height:44px;border:1.5px solid #E2E8F0;border-radius:14px;padding:0 14px;font-size:15px;font-weight:700;font-family:'DM Mono',monospace;outline:none"
+          onfocus="this.style.borderColor='#22C55E'" onblur="this.style.borderColor='#E2E8F0'">
+      </div>
+    </div>
+
+    <!-- Meta semanal -->
+    <div style="background:#fff;border:1px solid rgba(15,23,42,.06);border-radius:24px;padding:18px;box-shadow:0 8px 24px rgba(15,23,42,.06);margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#94A3B8;margin-bottom:12px">Meta semanal</div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:13px;color:#64748B;width:100px">Receita (R$)</div>
+        <input type="number" id="meta-week-rev" inputmode="decimal" placeholder="0,00"
+          style="flex:1;height:44px;border:1.5px solid #E2E8F0;border-radius:14px;padding:0 14px;font-size:15px;font-weight:700;font-family:'DM Mono',monospace;outline:none"
+          onfocus="this.style.borderColor='#22C55E'" onblur="this.style.borderColor='#E2E8F0'">
+      </div>
+    </div>
+
+    <!-- Meta mensal -->
+    <div style="background:#fff;border:1px solid rgba(15,23,42,.06);border-radius:24px;padding:18px;box-shadow:0 8px 24px rgba(15,23,42,.06);margin-bottom:20px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#94A3B8;margin-bottom:12px">Meta mensal</div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="font-size:13px;color:#64748B;width:100px">Receita (R$)</div>
+        <input type="number" id="meta-month-rev" inputmode="decimal" placeholder="0,00"
+          style="flex:1;height:44px;border:1.5px solid #E2E8F0;border-radius:14px;padding:0 14px;font-size:15px;font-weight:700;font-family:'DM Mono',monospace;outline:none"
+          onfocus="this.style.borderColor='#22C55E'" onblur="this.style.borderColor='#E2E8F0'">
+      </div>
+    </div>
+
+    <button onclick="saveMetas()"
+      style="width:100%;height:54px;background:linear-gradient(135deg,#22C55E,#16A34A);border:0;border-radius:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Inter,sans-serif;box-shadow:0 14px 32px rgba(34,197,94,.25);margin-bottom:24px">
+      Salvar metas
+    </button>
+
+    <!-- Progresso hoje -->
+    <div id="metas-progress"></div>
+  </div>
+</div>
+
 <!-- ══ TELA MAIS ══════════════════════════════════════════════════════════ -->
 <div class="screen" id="sc-mais">
   <div style="padding:16px 16px 8px"><div style="font-size:22px;font-weight:800;letter-spacing:-.04em">Mais</div></div>
@@ -661,7 +716,7 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
 </div><!-- /scroll -->
 
 <!-- ════ NAV ════ -->
-<nav class="bottom" id="bottom-nav">
+<nav class="bottom" id="app-nav" style="display:flex">
   <div class="nav active" id="bn-home" onclick="navTo('home')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Início</span>
   </div>
@@ -866,6 +921,7 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
     <div class="field"><label class="lbl">Veículo</label><input class="inp" type="text" id="p-veiculo" placeholder="BYD Dolphin Mini 2024"></div>
     <div class="field"><label class="lbl">Meta mensal (R$)</label><input class="inp" type="number" id="p-meta" placeholder="9000" inputmode="decimal" style="font-family:'DM Mono',monospace;font-weight:700"></div>
     <button class="btn-p" onclick="savePerfil()">Salvar</button>
+    <button onclick="authSignOutBtn()" style="width:100%;height:48px;background:transparent;border:1.5px solid #EF4444;border-radius:18px;color:#EF4444;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;margin-top:10px">Sair da conta</button>
   </div>
 </div>
 
@@ -1909,7 +1965,7 @@ function openPerfil() {
 
   openMo('mo-perfil');
 }
-function savePerfil() {
+async function savePerfil() {
   const cfg = DB.cfg();
   cfg.name    = document.getElementById('p-nome')?.value || '';
   cfg.plate   = document.getElementById('p-placa')?.value || '';
@@ -2543,6 +2599,74 @@ async function authSignOut() { await _SUPA.auth.signOut(); }
 function toggleRegister() {}
 
 function getCurrentUser() { return _supaUser; }
+
+
+
+// ── METAS ────────────────────────────────────────────────────────────────
+function loadMetas() {
+  const m = DB.get('sm_metas') || {};
+  const set = (id, val) => { const el=document.getElementById(id); if(el&&val) el.value=val; };
+  set('meta-daily-rev',   m.dailyRev);
+  set('meta-daily-trips', m.dailyTrips);
+  set('meta-week-rev',    m.weekRev);
+  set('meta-month-rev',   m.monthRev);
+  renderMetasProgress(m);
+}
+
+function saveMetas() {
+  const g = id => parseFloat(document.getElementById(id)?.value) || 0;
+  const m = {
+    dailyRev:   g('meta-daily-rev'),
+    dailyTrips: g('meta-daily-trips'),
+    weekRev:    g('meta-week-rev'),
+    monthRev:   g('meta-month-rev'),
+  };
+  DB.set('sm_metas', m);
+  renderMetasProgress(m);
+  renderHome();
+  alert('Metas salvas!');
+}
+
+function renderMetasProgress(m) {
+  const el = document.getElementById('metas-progress');
+  if (!el) return;
+  const day  = DB.day(DB.today());
+  const rev  = day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0);
+  const exp  = day.expenses.reduce((s,e)=>s+(e.amount||0),0);
+  const net  = rev - exp;
+  const trips = day.trips.length;
+
+  const bar = (val, target, label, color) => {
+    if (!target) return '';
+    const pct = Math.min(100, Math.round(val/target*100));
+    return `<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:13px;font-weight:600;color:#344054">${label}</span>
+        <span style="font-size:13px;font-weight:700;color:${pct>=100?'#22C55E':'#64748B'}">${pct}%</span>
+      </div>
+      <div style="height:8px;background:#F1F5F9;border-radius:999px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${color};border-radius:999px;transition:width .3s"></div>
+      </div>
+      <div style="font-size:11px;color:#94A3B8;margin-top:4px">R$ ${val.toFixed(2)} de R$ ${target.toFixed(2)}</div>
+    </div>`;
+  };
+
+  const bars = [
+    bar(rev, m.dailyRev, 'Receita hoje', '#22C55E'),
+    m.dailyTrips ? `<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:13px;font-weight:600;color:#344054">Corridas hoje</span>
+        <span style="font-size:13px;font-weight:700;color:${trips>=(m.dailyTrips||0)?'#22C55E':'#64748B'}">${trips}/${m.dailyTrips}</span>
+      </div>
+      <div style="height:8px;background:#F1F5F9;border-radius:999px;overflow:hidden">
+        <div style="height:100%;width:${Math.min(100,Math.round(trips/(m.dailyTrips||1)*100))}%;background:#0EA5E9;border-radius:999px"></div>
+      </div></div>` : '',
+  ].filter(Boolean).join('');
+
+  el.innerHTML = bars ? `<div style="background:#fff;border:1px solid rgba(15,23,42,.06);border-radius:24px;padding:18px;box-shadow:0 8px 24px rgba(15,23,42,.06)">
+    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#94A3B8;margin-bottom:16px">Progresso hoje</div>
+    ${bars}</div>` : '';
+}
 
 
 // ── INIT ──────────────────────────────────────────────────────
