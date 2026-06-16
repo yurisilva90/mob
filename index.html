@@ -243,7 +243,18 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const _SUPA = supabase.createClient('https://jlsrpptslwfhmkvelaro.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impsc3JwcHRzbHdmaG1rdmVsYXJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NjYxNzIsImV4cCI6MjA4OTQ0MjE3Mn0.4gD4dKx05QaOAAkY1gAx2HuH_CN31Xg3kkDMdvZ4kh0');
+    const _SUPA = supabase.createClient(
+      'https://jlsrpptslwfhmkvelaro.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impsc3JwcHRzbHdmaG1rdmVsYXJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NjYxNzIsImV4cCI6MjA4OTQ0MjE3Mn0.4gD4dKx05QaOAAkY1gAx2HuH_CN31Xg3kkDMdvZ4kh0',
+      {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: false,
+          storage: window.localStorage
+        }
+      }
+    );
   </script>
 </head>
 <body>
@@ -2525,6 +2536,7 @@ let _supaUser = null;
 async function authInit() {
   ['app-nav','app-header'].forEach(id => { const el=document.getElementById(id);if(el)el.style.display='none'; });
   document.querySelectorAll('.screen').forEach(s => s.style.display='none');
+  await new Promise(r => setTimeout(r, 300));
   const { data:{ session } } = await _SUPA.auth.getSession();
   if (session?.user) { _supaUser=session.user; await loadProfile(); showApp(); }
   else showLogin();
@@ -2545,7 +2557,14 @@ function showLogin() {
 function showApp() {
   const el=document.getElementById('sc-login'); if(el)el.style.display='none';
   const nav=document.getElementById('app-nav'); if(nav)nav.style.display='flex';
-  renderHome(); renderJornada(); renderFin(); updateFavBtn(); renderAgResumo();
+  if(_supaUser && !DB.cfg().name && _supaUser.email){
+    const cfg=DB.cfg(); cfg.name=_supaUser.email.split('@')[0]; DB.saveCfg(cfg);
+  }
+  try{renderHome();}    catch(e){console.error('renderHome:',e);}
+  try{renderJornada();}  catch(e){console.error('renderJornada:',e);}
+  try{renderFin();}      catch(e){console.error('renderFin:',e);}
+  try{updateFavBtn();}   catch(e){console.error('updateFavBtn:',e);}
+  try{renderAgResumo();} catch(e){console.error('renderAgResumo:',e);}
   navTo('home');
 }
 
