@@ -2569,7 +2569,7 @@ async function authInit() {
 }
 
 function lsShow(id) {
-  ['lsLogin','lsReg'].forEach(x => { const el=document.getElementById(x);if(el)el.style.display=x===id?'block':'none'; });
+  ['lsLogin','lsReg','lsForgot'].forEach(x => { const el=document.getElementById(x);if(el)el.style.display=x===id?'block':'none'; });
 }
 function showLogin() {
   const el=document.getElementById('sc-login'); if(el)el.style.display='flex';
