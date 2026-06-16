@@ -241,6 +241,10 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
 .agcal-fab{position:sticky;bottom:80px;float:right;margin-right:0;width:52px;height:52px;border-radius:50%;background:#22c55e;border:none;color:#fff;font-size:26px;font-weight:300;cursor:pointer;touch-action:manipulation;box-shadow:0 10px 24px rgba(34,197,94,.3);display:flex;align-items:center;justify-content:center;line-height:1;margin-bottom:8px}
 
 </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const _SUPA = supabase.createClient('https://jlsrpptslwfhmkvelaro.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impsc3JwcHRzbHdmaG1rdmVsYXJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NjYxNzIsImV4cCI6MjA4OTQ0MjE3Mn0.4gD4dKx05QaOAAkY1gAx2HuH_CN31Xg3kkDMdvZ4kh0');
+  </script>
 </head>
 <body>
 <div class="app">
@@ -259,6 +263,47 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
 
 <!-- ════ SCROLL WRAPPER ════ -->
 <div class="scroll" id="main-scroll">
+
+<!-- ══ TELA LOGIN ══════════════════════════════════════════════════════════ -->
+<div class="screen" id="sc-login" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 24px;background:linear-gradient(160deg,#0F172A 0%,#0B2D5A 100%)">
+  <div style="width:72px;height:72px;background:#22C55E;border-radius:24px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 16px 40px rgba(34,197,94,.35)">
+    <svg viewBox="0 0 36 36" width="40" height="40" fill="none"><text x="4" y="27" font-size="22" font-weight="800" fill="#fff" font-family="Inter,sans-serif">SM</text></svg>
+  </div>
+  <div style="font-size:28px;font-weight:800;color:#fff;letter-spacing:-.04em;margin-bottom:6px">SmartMobi</div>
+  <div style="font-size:14px;color:#94A3B8;margin-bottom:36px">Gestão financeira para motoristas</div>
+  <div style="width:100%;max-width:360px">
+    <div id="login-step-email">
+      <div style="margin-bottom:12px">
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px">Email</label>
+        <input id="login-email" type="email" inputmode="email" placeholder="seu@email.com"
+          style="width:100%;height:52px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);border-radius:16px;padding:0 16px;font-size:15px;color:#fff;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
+          onfocus="this.style.borderColor='#22C55E'" onblur="this.style.borderColor='rgba(255,255,255,.12)'">
+      </div>
+      <div style="margin-bottom:20px">
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px">Senha</label>
+        <input id="login-pass" type="password" placeholder="Mínimo 6 caracteres"
+          style="width:100%;height:52px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);border-radius:16px;padding:0 16px;font-size:15px;color:#fff;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
+          onfocus="this.style.borderColor='#22C55E'" onblur="this.style.borderColor='rgba(255,255,255,.12)'"
+          onkeydown="if(event.key==='Enter')loginSubmit()">
+      </div>
+      <button onclick="loginSubmit()" id="login-btn"
+        style="width:100%;height:54px;background:#22C55E;border:0;border-radius:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Inter,sans-serif;box-shadow:0 12px 28px rgba(34,197,94,.3);margin-bottom:14px">
+        Entrar
+      </button>
+      <button onclick="toggleRegister()" id="login-toggle"
+        style="width:100%;height:44px;background:transparent;border:1.5px solid rgba(255,255,255,.15);border-radius:14px;color:#94A3B8;font-size:14px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif">
+        Criar conta
+      </button>
+      <div id="login-name-wrap" style="display:none;margin-bottom:12px">
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px">Nome</label>
+        <input id="login-name" type="text" placeholder="Seu nome completo"
+          style="width:100%;height:52px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);border-radius:16px;padding:0 16px;font-size:15px;color:#fff;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
+          onfocus="this.style.borderColor='#22C55E'" onblur="this.style.borderColor='rgba(255,255,255,.12)'">
+      </div>
+      <div id="login-error" style="color:#EF4444;font-size:13px;text-align:center;margin-top:10px;display:none"></div>
+    </div>
+  </div>
+</div>
 
 <!-- ══ TELA HOME ══════════════════════════════════════════════════════════ -->
 <div class="screen on" id="sc-home">
@@ -1813,6 +1858,7 @@ function hav(a,b,c,d) {
 }
 
 // ── PERFIL ────────────────────────────────────────────────────
+function authSignOutBtn() { if(confirm('Sair da conta?')) authSignOut(); }
 function openPerfil() {
   const cfg = DB.cfg();
   if (cfg.name) {const el=document.getElementById('p-nome');if(el)el.value=cfg.name;}
@@ -2374,6 +2420,124 @@ function onNativeReady() {
 }
 
 
+
+// ══════════════════════════════════════════════
+// SUPABASE AUTH
+// ══════════════════════════════════════════════
+let _supaUser = null;
+let _isRegisterMode = false;
+
+async function authInit() {
+  const { data: { session } } = await _SUPA.auth.getSession();
+  if (session?.user) {
+    _supaUser = session.user;
+    await loadProfile();
+    showApp();
+  } else {
+    showLogin();
+  }
+  // Listen for auth changes
+  _SUPA.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session?.user) {
+      _supaUser = session.user;
+      await loadProfile();
+      showApp();
+    } else if (event === 'SIGNED_OUT') {
+      _supaUser = null;
+      showLogin();
+    }
+  });
+}
+
+function showLogin() {
+  document.getElementById('sc-login').style.display = 'flex';
+  document.getElementById('app-nav').style.display = 'none';
+  document.querySelectorAll('.screen:not(#sc-login)').forEach(s => s.style.display = 'none');
+}
+
+function showApp() {
+  document.getElementById('sc-login').style.display = 'none';
+  document.getElementById('app-nav').style.display = 'flex';
+  navTo('home');
+}
+
+function toggleRegister() {
+  _isRegisterMode = !_isRegisterMode;
+  const nameWrap = document.getElementById('login-name-wrap');
+  const btn      = document.getElementById('login-btn');
+  const toggle   = document.getElementById('login-toggle');
+  if (nameWrap) nameWrap.style.display = _isRegisterMode ? 'block' : 'none';
+  if (btn)    btn.textContent    = _isRegisterMode ? 'Criar conta' : 'Entrar';
+  if (toggle) toggle.textContent = _isRegisterMode ? 'Já tenho conta' : 'Criar conta';
+}
+
+async function loginSubmit() {
+  const email = document.getElementById('login-email')?.value?.trim();
+  const pass  = document.getElementById('login-pass')?.value;
+  const name  = document.getElementById('login-name')?.value?.trim();
+  const errEl = document.getElementById('login-error');
+  const btn   = document.getElementById('login-btn');
+
+  if (!email || !pass) { showLoginError('Preencha email e senha'); return; }
+  if (pass.length < 6)  { showLoginError('Senha deve ter pelo menos 6 caracteres'); return; }
+
+  if (btn) { btn.textContent = 'Aguarde...'; btn.disabled = true; }
+
+  let error;
+  if (_isRegisterMode) {
+    const { error: e } = await _SUPA.auth.signUp({
+      email, password: pass,
+      options: { data: { name: name || '' } }
+    });
+    error = e;
+    if (!e) {
+      // Update profile name after signup
+      if (name) {
+        setTimeout(async () => {
+          const { data: { user } } = await _SUPA.auth.getUser();
+          if (user) await _SUPA.from('profiles').update({ name }).eq('id', user.id);
+        }, 1000);
+      }
+    }
+  } else {
+    const { error: e } = await _SUPA.auth.signInWithPassword({ email, password: pass });
+    error = e;
+  }
+
+  if (error) {
+    const msgs = {
+      'Invalid login credentials':    'Email ou senha incorretos',
+      'User already registered':      'Email já cadastrado. Tente entrar.',
+      'Email not confirmed':          'Confirme seu email antes de entrar',
+      'Password should be at least':  'Senha deve ter pelo menos 6 caracteres',
+    };
+    const msg = Object.keys(msgs).find(k => error.message?.includes(k));
+    showLoginError(msg ? msgs[msg] : error.message);
+    if (btn) { btn.textContent = _isRegisterMode ? 'Criar conta' : 'Entrar'; btn.disabled = false; }
+  }
+}
+
+function showLoginError(msg) {
+  const el = document.getElementById('login-error');
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
+}
+
+async function loadProfile() {
+  if (!_supaUser) return;
+  const { data } = await _SUPA.from('profiles').select('*').eq('id', _supaUser.id).single();
+  if (data) {
+    const cfg = DB.cfg();
+    if (data.name && !cfg.name) { cfg.name = data.name; DB.saveCfg(cfg); }
+  }
+}
+
+async function authSignOut() {
+  await _SUPA.auth.signOut();
+}
+
+function getCurrentUser() { return _supaUser; }
+
+
 // ── INIT ──────────────────────────────────────────────────────
 const initCfg = DB.cfg();
 if (initCfg.name) { const el=document.getElementById('p-nome'); if(el) el.value=initCfg.name; }
@@ -2391,12 +2555,8 @@ setType('receita');
 setScope('operacional');
 renderLancCats();
 // Render all screens
-renderHome();
-renderJornada();
-renderFin();
-updateFavBtn();
-renderAgResumo();
 agCalY=new Date().getFullYear();agCalM=new Date().getMonth();agCalSelDate=DB.today();
+authInit();
 
 </script>
 </body>
