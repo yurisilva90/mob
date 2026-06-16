@@ -2340,6 +2340,40 @@ document.addEventListener('visibilitychange', async () => {
 });
 
 
+
+// ── NATIVE OVERLAY BRIDGE ──────────────────────────────────────────────────
+// Chamado pelo app nativo quando uma corrida é capturada pelo Accessibility Service
+function receiveOverlayTrip(trip) {
+  if (!trip || !trip.value) return;
+  const day = DB.day(S.curDate);
+  if (isTripDuplicate(trip, day.trips)) return;
+  trip.id = trip.id || DB.uid();
+  day.trips.push(trip);
+  DB.saveDay(day);
+  if (S.sec === 'jornada') renderJornada();
+  if (S.sec === 'home')    renderHome();
+  // Vibração de confirmação
+  if (window.SmartMobiNative) SmartMobiNative.vibrate(80);
+}
+
+// Banner de configuração para o app nativo
+function showNativeBanner(msg) {
+  const existing = document.getElementById('native-banner');
+  if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.id = 'native-banner';
+  el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#0F172A;color:#fff;font-size:12px;font-weight:600;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px';
+  el.innerHTML = '<span>⚙ ' + msg + '</span><button onclick="SmartMobiNative&&SmartMobiNative.openA11ySettings()" style="background:#22C55E;border:0;color:#fff;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">Configurar</button>';
+  document.body.prepend(el);
+  setTimeout(() => el.remove(), 6000);
+}
+
+function onNativeReady() {
+  // App rodando como APK nativo
+  console.log('SmartMobi Native v' + (SmartMobiNative?.getVersion?.() || '?'));
+}
+
+
 // ── INIT ──────────────────────────────────────────────────────
 const initCfg = DB.cfg();
 if (initCfg.name) { const el=document.getElementById('p-nome'); if(el) el.value=initCfg.name; }
