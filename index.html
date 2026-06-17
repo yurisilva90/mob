@@ -1928,8 +1928,13 @@ function gpsAction() {
 function gpsStart() {
   const g = S.gps; g.st='running'; g.start=Date.now(); g.km=0; g.pts=[]; g.pausedMs=0;
   // Inicia floating widget nativo
-  if (window.SmartMobiNative && typeof SmartMobiNative.startFloating === 'function') {
-    try { SmartMobiNative.startFloating(g.start, 0, 'running'); } catch(e) {}
+  if (window.SmartMobiNative) {
+    try {
+      if (typeof SmartMobiNative.startFloating === 'function')
+        SmartMobiNative.startFloating(g.start, 0);
+      if (typeof SmartMobiNative.updateFloatingStatus === 'function')
+        SmartMobiNative.updateFloatingStatus('running');
+    } catch(e) {}
   }
   document.getElementById('gps-idle-btns').style.display = 'none';
   const ab = document.getElementById('gps-active-btns'); if (ab) ab.style.display='flex';
@@ -1946,6 +1951,12 @@ function gpsStart() {
         try { SmartMobiNative.updateFloating(g.km); } catch(e) {}
       }
     }, null, {enableHighAccuracy:true, maximumAge:3000, timeout:10000});
+  }
+  // Verifica permissão overlay
+  if (window.SmartMobiNative && typeof SmartMobiNative.hasOverlay === 'function') {
+    if (!SmartMobiNative.hasOverlay()) {
+      setTimeout(() => alert('Para ver a bolinha flutuante sobre o Uber:\nConfigurações → Apps → SmartMobi → Aparecer sobre outros apps → Ativar'), 500);
+    }
   }
   setText('gps-status-txt', 'Sessão em andamento');
   document.getElementById('gps-sess').style.display = 'flex';
