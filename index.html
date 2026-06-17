@@ -90,9 +90,65 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 
 /* ── Jornada screen extras ── */
 .daybar{display:flex;align-items:center;gap:10px;margin:4px 0 12px;padding:0 16px}.arrow{width:38px;height:38px;border-radius:14px;background:#fff;border:1px solid var(--line);box-shadow:0 3px 14px rgba(15,23,42,.06);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:20px;cursor:pointer;touch-action:manipulation}.datebox{flex:1;text-align:center}.datebox h1{font-size:19px;line-height:1.1;letter-spacing:-.04em}.datebox p{font-size:12px;color:var(--muted);margin-top:3px;font-weight:600}.today{font-size:10px;padding:2px 8px;border-radius:999px;background:rgba(14,165,233,.12);color:var(--blue);margin-left:5px}
-.live{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,rgba(34,197,94,.12),rgba(14,165,233,.06));border:1px solid rgba(34,197,94,.22);border-radius:22px;padding:14px;margin:0 16px 12px;box-shadow:0 3px 14px rgba(15,23,42,.06)}.pulse{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 0 5px rgba(34,197,94,.13);animation:pulse 2s infinite}.live strong{font-size:14px}.live span{font-size:12px;color:var(--muted)}.livekm{margin-left:auto;font-family:'DM Mono',monospace;color:var(--green2);font-weight:700;font-size:18px}
-@keyframes pulse{0%,100%{box-shadow:0 0 0 5px rgba(34,197,94,.13)}50%{box-shadow:0 0 0 8px rgba(34,197,94,.05)}}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 16px;margin-bottom:12px}.stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px 8px;text-align:center;box-shadow:0 3px 14px rgba(15,23,42,.06)}.stat .v{font-family:'DM Mono',monospace;font-size:15px;font-weight:700;white-space:nowrap}.stat .l{font-size:9px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-top:5px}.green{color:var(--green2)}.red{color:var(--red)}.blue{color:var(--blue)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px;margin-bottom:12px}.stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px 8px;text-align:center;box-shadow:0 3px 14px rgba(15,23,42,.06)}.stat .v{font-family:'DM Mono',monospace;font-size:15px;font-weight:700;white-space:nowrap}.stat .l{font-size:9px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-top:5px}.green{color:var(--green2)}.red{color:var(--red)}.blue{color:var(--blue)}
+
+/* ── Journey card (controles embutidos) ── */
+.journey{margin:0 16px 12px;border-radius:26px;padding:16px;color:#fff;box-shadow:0 18px 42px rgba(34,197,94,.18);transition:background .25s}
+.journey.idle{background:linear-gradient(135deg,#475569,#64748b)}
+.journey.ended{background:linear-gradient(135deg,#0c4a6e 0%,#0ea5e9 75%)}
+.journey.running{background:radial-gradient(circle at 18% 0%,rgba(255,255,255,.18),transparent 34%),linear-gradient(135deg,#15803d 0%,#22c55e 58%,#63e18b 100%)}
+.journey.paused{background:radial-gradient(circle at 18% 0%,rgba(255,255,255,.18),transparent 34%),linear-gradient(135deg,#b45309 0%,#f59e0b 70%)}
+.j-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px}
+.j-status{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:7px 10px;font-size:11px;font-weight:760;text-transform:uppercase;letter-spacing:.06em;flex:0 0 auto}
+.j-status i{width:8px;height:8px;border-radius:50%;background:#fff;flex-shrink:0}
+.journey.running .j-status i{animation:pulse2 2s infinite}
+@keyframes pulse2{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.5)}50%{box-shadow:0 0 0 5px rgba(255,255,255,0)}}
+.j-import{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:6px 11px;font-size:11px;font-weight:760;color:#fff;display:inline-flex;align-items:center;gap:5px;cursor:pointer;border:0;touch-action:manipulation}
+.j-import svg{width:13px;height:13px}
+.j-current{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+.j-current h2{font-family:'DM Mono',monospace;font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.j-current p{font-size:12px;font-weight:520;opacity:.88;margin-top:5px;min-height:15px}
+.j-km{font-size:12px;font-weight:620;text-align:right}
+.j-km strong{display:block;font-family:'DM Mono',monospace;font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.j-km span{display:block;margin-top:5px;opacity:.88}
+.j-metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px}
+.j-mini{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.16);border-radius:16px;padding:10px;text-align:center}
+.j-mini strong{display:block;font-family:'DM Mono',monospace;font-size:16px;font-weight:700}
+.j-mini span{display:block;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;opacity:.78;margin-top:3px}
+.j-metrics2{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px}
+.j-mini.sm{padding:7px 5px}
+.j-mini.sm strong{font-size:13px}
+.j-mini.sm span{font-size:8.5px}
+.j-actions{display:grid;gap:10px}
+.j-actions.two{grid-template-columns:1fr 1fr}
+.j-btn{height:48px;border:0;border-radius:16px;font-size:14px;font-weight:780;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;touch-action:manipulation;width:100%}
+.j-btn svg{width:17px;height:17px}
+.j-btn.solid-light{background:#fff;color:var(--green2)}
+.j-btn.solid-light.danger{color:var(--red)}
+.j-btn.ghost{background:rgba(15,23,42,.22);border:1px solid rgba(255,255,255,.25);color:#fff}
+.j-btn.start{background:#fff;color:var(--green2)}
+
+/* ── Metas do dia ── */
+.gbar{height:10px;background:#eef2f7;border-radius:999px;overflow:hidden}
+.gbar i{display:block;height:100%;border-radius:999px}
+.gbar.money i{background:linear-gradient(90deg,#8b5cf6,#0ea5e9)}
+.goal-item{border-bottom:1px solid #edf1f6;padding-bottom:13px;margin-bottom:13px}
+.goal-item:last-child{border-bottom:0;padding-bottom:0;margin-bottom:0}
+.goal-top{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:650;color:#344054;margin-bottom:8px}
+.goal-top span:last-child{color:var(--muted);font-weight:600}
+.goal-locked{display:flex;align-items:center;justify-content:space-between;background:#F8FAFC;border:1px dashed #D8E0EA;border-radius:14px;padding:10px 12px;cursor:pointer;touch-action:manipulation}
+.goal-locked span{font-size:12px;color:var(--muted);font-weight:600}
+.goal-locked b{font-size:12px;color:var(--blue);font-weight:800}
+
+/* ── Listas (sessões / corridas / lançamentos) ── */
+.li-row{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:20px;padding:12px;box-shadow:0 3px 14px rgba(15,23,42,.06)}
+.li-row+.li-row{margin-top:9px}
+.li-ico{width:38px;height:38px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex:0 0 38px}
+.li-ico svg{width:18px;height:18px;stroke-width:2;fill:none;stroke:currentColor}
+.li-ico.green{background:#ECFDF3;color:var(--green2)}.li-ico.red{background:#FEF2F2;color:var(--red)}
+.li-info{flex:1;min-width:0}.li-info h3{font-size:13.5px;font-weight:760}.li-info p{font-size:11.5px;color:var(--muted);margin-top:2px}
+.trip-title{font-size:12.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li-val{text-align:right;font-size:11px;color:var(--muted);font-weight:600;flex:0 0 auto}.li-val strong{display:block;color:var(--text);font-size:13.5px;font-weight:760;font-family:'DM Mono',monospace}
 .action{background:#fff;border:1px solid rgba(14,165,233,.18);box-shadow:0 3px 14px rgba(15,23,42,.06);border-radius:22px;padding:15px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;cursor:pointer;touch-action:manipulation}.action .glyph{width:42px;height:42px;border-radius:16px;background:rgba(14,165,233,.1);display:flex;align-items:center;justify-content:center;color:var(--blue)}.action h3{font-size:14px;font-weight:700}.action p{font-size:12px;color:var(--muted);margin-top:3px}.chev{margin-left:auto;color:#94A3B8;font-size:22px}
 .kmcard{background:#fff;border:1px solid var(--line);border-radius:24px;padding:16px;box-shadow:0 3px 14px rgba(15,23,42,.06)}.cardhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.cardhead h2{font-size:15px;letter-spacing:-.02em}.linkbtn{border:0;background:rgba(14,165,233,.1);color:var(--blue);border-radius:999px;padding:7px 12px;font-size:12px;font-weight:800;cursor:pointer;touch-action:manipulation}.row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}.row span{font-size:12px;color:var(--muted);font-weight:600}.row strong{font-family:'DM Mono',monospace;font-size:13px}.bar{height:10px;background:#E2E8F0;border-radius:999px;overflow:hidden;margin-top:12px}.fill{height:100%;background:linear-gradient(90deg,var(--green),var(--blue));border-radius:999px;transition:width .5s}.note{font-size:11px;color:var(--muted);text-align:center;margin-top:8px;font-weight:600}
 .section{display:flex;align-items:center;justify-content:space-between}.section h2{font-size:16px;font-weight:700}.add{border:0;background:rgba(14,165,233,.1);color:var(--blue);font-weight:800;border-radius:999px;padding:7px 12px;font-size:12px;cursor:pointer;touch-action:manipulation}.list{background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:0 3px 14px rgba(15,23,42,.06);overflow:hidden}.tag{width:38px;height:38px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0}
@@ -461,38 +517,50 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
       <button class="arrow" onclick="chgDay(1)">&#8250;</button>
     </div>
   </div>
-  <div class="live" id="gps-sess" style="display:none">
-    <div class="pulse"></div>
-    <div><strong id="gs-status">Sessão GPS ativa</strong><br><span id="gs-meta">Iniciando...</span></div>
-    <div class="livekm" id="gs-km">0,0 km</div>
+
+  <div class="journey idle" id="journey-card">
+    <div class="j-head">
+      <div class="j-status"><i></i><span id="jc-status-text">Iniciar</span></div>
+      <button class="j-import" onclick="openMo('mo-import')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Importar corridas</button>
+    </div>
+    <div class="j-current">
+      <div><h2 id="jc-timer">00:00:00</h2><p id="jc-sub">Nenhuma sessão iniciada</p></div>
+      <div class="j-km"><strong id="jc-km">0,0</strong><span>Km</span></div>
+    </div>
+    <div class="j-metrics">
+      <div class="j-mini"><strong id="jc-total">0h00</strong><span>Tempo total</span></div>
+      <div class="j-mini"><strong id="jc-kmtotal">0,0 km</strong><span>Km total</span></div>
+    </div>
+    <div class="j-metrics2">
+      <div class="j-mini sm"><strong id="jc-trips">0</strong><span>Corridas</span></div>
+      <div class="j-mini sm"><strong id="jc-kmativo">0,0</strong><span>Km ativo</span></div>
+      <div class="j-mini sm"><strong id="jc-kmdesl">0,0</strong><span>Km deslc.</span></div>
+    </div>
+    <div class="j-actions" id="jc-actions"></div>
   </div>
+
   <div class="stats" style="padding:0 16px">
     <div class="stat"><div class="v green" id="d-rev">R$0</div><div class="l">Receitas</div></div>
     <div class="stat"><div class="v red" id="d-exp">R$0</div><div class="l">Despesas</div></div>
-    <div class="stat"><div class="v blue" id="d-cnt">0</div><div class="l">Corridas</div></div>
-    <div class="stat"><div class="v" id="d-km">0km</div><div class="l">Ativo</div></div>
+    <div class="stat"><div class="v" id="d-net">R$0</div><div class="l">Resultado</div></div>
   </div>
-  <div style="padding:12px 16px 0">
-    <div class="action" onclick="openMo('mo-import')">
-      <div class="glyph"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8 12 3 7 8"/><path d="M12 3v12"/></svg></div>
-      <div><h3>Importar corridas</h3><p>Print ou vídeo do histórico Uber/99</p></div>
-      <div class="chev">&#8250;</div>
+
+  <div class="card" style="margin:0 16px 14px;padding:16px">
+    <div class="card-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <h2 style="font-size:15.5px;font-weight:760;letter-spacing:-.03em">Metas do dia</h2>
+      <span style="background:#EFF6FF;color:var(--blue2);border-radius:999px;padding:6px 10px;font-size:11px;font-weight:720">Planejado</span>
     </div>
+    <div id="metas-dia-stack"></div>
   </div>
-  <div class="kmcard" style="margin:12px 16px 0">
-    <div class="cardhead"><h2>Quilometragem do dia</h2><button class="linkbtn" onclick="openMo('mo-km')">+ Total manual</button></div>
-    <div class="row"><span>Km ativo das corridas</span><strong id="km-a">0,0 km</strong></div>
-    <div class="row"><span>Total rodado no dia</span><strong id="km-t">Não informado</strong></div>
-    <div class="row"><span>Deslocamento vazio</span><strong id="km-d">—</strong></div>
-    <div class="bar"><div class="fill" id="km-fill" style="width:0%"></div></div>
-    <div class="note" id="km-note">Informe o km total para calcular o deslocamento</div>
-  </div>
-  <div class="section" style="padding:16px 16px 8px"><h2>Corridas</h2><button class="add" onclick="openMo('mo-corrida')">+ Adicionar</button></div>
-  <div style="padding:0 16px"><div class="list" id="trips-list"><div class="empty">Nenhuma corrida registrada</div></div></div>
-  <div class="section" style="padding:16px 16px 8px"><h2>Despesas</h2><button class="add" onclick="openLanc('despesa')">+ Adicionar</button></div>
-  <div style="padding:0 16px"><div class="list" id="exp-list"><div class="empty">Nenhuma despesa registrada</div></div></div>
-  <div class="section" style="padding:16px 16px 8px"><h2>Receitas extras</h2><button class="add" onclick="openLanc('receita')">+ Adicionar</button></div>
-  <div style="padding:0 16px"><div class="list" id="rev-list"><div class="empty">Nenhuma receita extra registrada</div></div></div>
+
+  <div class="section" style="padding:0 16px 8px"><h2>Sessões do dia</h2></div>
+  <div style="padding:0 16px"><div id="sessions-list"><div class="empty">Nenhuma sessão registrada</div></div></div>
+
+  <div class="section" style="padding:16px 16px 8px"><h2>Corridas</h2><button class="add" onclick="toggleTripsView()" id="trips-toggle">Ver todas &#8250;</button></div>
+  <div style="padding:0 16px"><div id="trips-list"><div class="empty">Nenhuma corrida registrada</div></div></div>
+
+  <div class="section" style="padding:16px 16px 8px"><h2>Lançamentos</h2><button class="add" onclick="openLanc('receita')">+ Adicionar</button></div>
+  <div style="padding:0 16px"><div id="jorn-lanc-list"><div class="empty">Nenhum lançamento registrado</div></div></div>
   <div style="height:8px"></div>
 </div>
 
@@ -782,34 +850,6 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
 
 <!-- ════ MODAIS ════ -->
 
-<!-- GPS Action -->
-<div class="mo ctr" id="mo-gps-action">
-  <div class="sheet ctr">
-    <div class="sheet-head"><h2>Sessão GPS</h2><button class="xbtn" onclick="closeMo('mo-gps-action')">&#x2715;</button></div>
-    <div style="text-align:center;padding:8px 0 20px">
-      <div style="font-family:'DM Mono',monospace;font-size:52px;font-weight:700;letter-spacing:-.04em;margin-bottom:6px" id="gps-timer">00:00:00</div>
-      <div style="font-family:'DM Mono',monospace;font-size:28px;font-weight:600;color:#22C55E;margin-bottom:20px"><span id="gps-km-disp">0,0</span> km</div>
-      <div style="font-size:13px;color:#64748B;margin-bottom:20px" id="gps-status-txt">Pronto para iniciar</div>
-    </div>
-    <div id="gps-idle-btns"><button class="btn-p" style="background:#22C55E;box-shadow:0 8px 22px rgba(34,197,94,.25)" onclick="gpsStart()">Iniciar jornada</button></div>
-    <div id="gps-active-btns" style="display:none;flex-direction:column;gap:8px">
-      <div style="display:flex;gap:8px">
-        <button class="btn-p" id="gps-pause-btn" style="background:#F59E0B;flex:1;margin-top:0" onclick="gpsPause()">Pausar</button>
-        <button class="btn-p" style="background:#EF4444;flex:1;margin-top:0" onclick="confirmStop()">Encerrar</button>
-      </div>
-    </div>
-    <div style="background:#FFF7ED;border:1px solid rgba(245,158,11,.25);border-radius:14px;padding:10px 14px;font-size:12px;color:#92400E;margin-bottom:10px;display:flex;gap:8px;align-items:flex-start">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#F59E0B" stroke-width="2" style="flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
-      <span>Mantenha o <strong>SmartMobi aberto</strong> ou a <strong>tela ligada</strong> durante a jornada para não interromper o rastreamento.</span>
-    </div>
-    <div style="margin-top:10px;padding:12px 14px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:16px;font-size:12px;color:#64748B;display:flex;gap:8px;align-items:flex-start" id="gps-note">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#0EA5E9" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-      <span>O app usará o GPS do celular. Na primeira vez, toque em <strong>Permitir</strong> quando solicitado.</span>
-      <button onclick="this.closest('#gps-note').style.display='none'" style="border:none;background:none;color:#94A3B8;cursor:pointer;font-size:16px;line-height:1;flex-shrink:0">&#x2715;</button>
-    </div>
-  </div>
-</div>
-
 <!-- Lançamento (Receita / Despesa) -->
 <div class="mo" id="mo-lancamento">
   <div class="sheet">
@@ -1037,7 +1077,7 @@ const DB = {
   get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch(e) { return null; } },
   set: (k,v) => localStorage.setItem(k, JSON.stringify(v)),
   del: k => localStorage.removeItem(k),
-  day: d => DB.get('sm_day_'+d) || {date:d, trips:[], expenses:[], revenues:[], kmTotal:null, session:null},
+  day: d => { const x = DB.get('sm_day_'+d) || {date:d, trips:[], expenses:[], revenues:[], kmTotal:null, session:null}; if (!x.sessions) x.sessions = []; return x; },
   saveDay: d => DB.set('sm_day_'+d.date, d),
   events: () => DB.get('sm_events') || [],
   saveEvents: e => DB.set('sm_events', e),
@@ -1106,6 +1146,7 @@ let S = {
   lancScope: 'operacional',
   lancRecFreq: 'Semanal',
   corPlat: 'uber',
+  tripsExpanded: false,
   gps: {
     st: 'idle',  // idle | running | paused
     start: null, pausedMs: 0, pauseAt: null,
@@ -1316,6 +1357,9 @@ function chgDay(d) {
   S.curDate = dt.getFullYear()+'-'+p2(dt.getMonth()+1)+'-'+p2(dt.getDate());
   renderJornada();
 }
+function fmtHM(ms) { if (!ms) return '--:--'; const dd=new Date(ms); return p2(dd.getHours())+':'+p2(dd.getMinutes()); }
+function toggleTripsView() { S.tripsExpanded = !S.tripsExpanded; renderJornada(); }
+
 function renderJornada() {
   if (!S || !DB) return;
   if (!S.curDate) S.curDate = DB.today();
@@ -1329,62 +1373,153 @@ function renderJornada() {
   const day = DB.day(d);
   const rev = day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0);
   const exp = day.expenses.reduce((s,e)=>s+(e.amount||0),0);
-  const km  = day.trips.reduce((s,t)=>s+(t.km||0),0);
   setText('d-rev', DB.fRI(rev));
   setText('d-exp', DB.fRI(exp));
-  setText('d-cnt', day.trips.length);
-  setText('d-km', km.toFixed(1)+'km');
-  // KM section
-  setText('km-a', km.toFixed(1)+' km');
-  if (day.kmTotal) {
-    const dead = Math.max(0, day.kmTotal - km);
-    const pct  = day.kmTotal > 0 ? Math.round(km/day.kmTotal*100) : 0;
-    setText('km-t', day.kmTotal.toFixed(1)+' km');
-    setText('km-d', dead.toFixed(1)+' km');
-    setStyle('km-fill', 'width', pct+'%');
-    setText('km-note', pct+'% km ativo · '+(100-pct)+'% deslocamento vazio');
-  } else {
-    setText('km-t', 'Não informado');
-    setText('km-d', '—');
-    setStyle('km-fill', 'width', '0%');
-    setText('km-note', 'Informe o km total para calcular o deslocamento');
+  const netEl = document.getElementById('d-net');
+  if (netEl) { netEl.textContent = DB.fRI(rev-exp); netEl.className = 'v ' + (rev-exp>=0 ? 'green' : 'red'); }
+
+  renderJourneyCard(day, isToday);
+  renderMetasDoDia(day);
+
+  // Sessões do dia
+  const sessEl = document.getElementById('sessions-list');
+  if (sessEl) {
+    const finished = (day.sessions||[]).map((s,i)=>sessionItem('Sessão '+(i+1), s.start, s.end, s.km, s.elapsed, false));
+    const liveRow = (isToday && (S.gps.st==='running'||S.gps.st==='paused')) ? [sessionItem('Sessão atual', S.gps.start, null, S.gps.km, getElapsed(), true)] : [];
+    const rows = [...finished, ...liveRow];
+    sessEl.innerHTML = rows.length ? rows.join('') : '<div class="empty">Nenhuma sessão registrada</div>';
   }
-  // GPS banner
-  const gActive = (S.gps.st === 'running' || S.gps.st === 'paused') && isToday;
-  const sessEl = document.getElementById('gps-sess'); if (sessEl) sessEl.style.display = gActive ? 'flex' : 'none';
-  // Trip list
+  // Corridas (5 mais recentes, ou todas)
   const tEl = document.getElementById('trips-list');
-  if (tEl) tEl.innerHTML = day.trips.length ? day.trips.map(t => tripItem(t)).join('') : '<div class="empty">Nenhuma corrida registrada</div>';
-  // Expense list
-  const eEl = document.getElementById('exp-list');
-  if (eEl) eEl.innerHTML = day.expenses.length ? day.expenses.map(e => expItem(e)).join('') : '<div class="empty">Nenhuma despesa registrada</div>';
-  // Revenue list
-  const rEl = document.getElementById('rev-list');
-  if (rEl) rEl.innerHTML = day.revenues.length ? day.revenues.map(r => revItem(r)).join('') : '<div class="empty">Nenhuma receita extra registrada</div>';
+  const toggleBtn = document.getElementById('trips-toggle');
+  if (tEl) {
+    const all = day.trips.slice().reverse();
+    const show = S.tripsExpanded ? all : all.slice(0,5);
+    tEl.innerHTML = show.length ? show.map(t => tripItem(t)).join('') : '<div class="empty">Nenhuma corrida registrada</div>';
+  }
+  if (toggleBtn) {
+    toggleBtn.style.display = day.trips.length > 5 ? '' : 'none';
+    toggleBtn.innerHTML = S.tripsExpanded ? 'Ver menos' : 'Ver todas &#8250;';
+  }
+  // Lançamentos (receitas extras + despesas)
+  const lEl = document.getElementById('jorn-lanc-list');
+  if (lEl) {
+    const items = [
+      ...day.revenues.map(r=>Object.assign({},r,{_type:'receita'})),
+      ...day.expenses.map(e=>Object.assign({},e,{_type:'despesa'}))
+    ];
+    lEl.innerHTML = items.length ? items.map(it => lancItem(it)).join('') : '<div class="empty">Nenhum lançamento registrado</div>';
+  }
+}
+
+function renderJourneyCard(day, isToday) {
+  const jc = document.getElementById('journey-card');
+  if (!jc) return;
+  const g = S.gps;
+  const finished = day.sessions || [];
+  const finishedElapsed = finished.reduce((s,x)=>s+(x.elapsed||0),0);
+  const finishedKm = finished.reduce((s,x)=>s+(x.km||0),0);
+  const live = isToday && (g.st === 'running' || g.st === 'paused');
+  const liveElapsed = live ? getElapsed() : 0;
+  const liveKm = live ? g.km : 0;
+  const totalElapsed = finishedElapsed + liveElapsed;
+  const totalKm = finishedKm + liveKm;
+  const state = isToday ? g.st : 'idle';
+
+  let cls = 'idle';
+  if (state === 'running') cls = 'running';
+  else if (state === 'paused') cls = 'paused';
+  else if (finished.length > 0) cls = 'ended';
+  jc.className = 'journey ' + cls;
+
+  setText('jc-status-text',
+    state === 'running' ? 'Online' :
+    state === 'paused'  ? 'Pausado' :
+    finished.length > 0 ? 'Concluído' : 'Iniciar'
+  );
+  const th = Math.floor(liveElapsed/3600), tm = Math.floor(liveElapsed%3600/60), ts = liveElapsed%60;
+  setText('jc-timer', p2(th)+':'+p2(tm)+':'+p2(ts));
+  setText('jc-sub',
+    state === 'running' ? 'Sessão atual · iniciada '+fmtHM(g.start) :
+    state === 'paused'  ? 'Pausada às '+fmtHM(g.pa) :
+    finished.length > 0 ? finished.length+(finished.length===1?' sessão hoje':' sessões hoje') :
+    'Nenhuma sessão iniciada'
+  );
+  setText('jc-km', liveKm.toFixed(1));
+  const tth = Math.floor(totalElapsed/3600), ttm = Math.floor(totalElapsed%3600/60);
+  setText('jc-total', tth+'h'+p2(ttm));
+  setText('jc-kmtotal', totalKm.toFixed(1)+' km');
+  setText('jc-trips', day.trips.length);
+  const kmAtivo = day.trips.reduce((s,t)=>s+(t.km||0),0);
+  const kmDesl = Math.max(0, totalKm - kmAtivo);
+  setText('jc-kmativo', kmAtivo.toFixed(1));
+  setText('jc-kmdesl', kmDesl.toFixed(1));
+
+  const actions = document.getElementById('jc-actions');
+  if (!actions) return;
+  if (!isToday) {
+    actions.className = 'j-actions'; actions.innerHTML = '';
+  } else if (state === 'idle') {
+    const label = finished.length > 0 ? 'Nova sessão' : 'Iniciar jornada';
+    actions.className = 'j-actions';
+    actions.innerHTML = `<button class="j-btn start" onclick="gpsStart()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>${label}</button>`;
+  } else if (state === 'running') {
+    actions.className = 'j-actions two';
+    actions.innerHTML = '<button class="j-btn ghost" onclick="gpsPause()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H6v16h4z"/><path d="M18 4h-4v16h4z"/></svg>Pausar</button><button class="j-btn solid-light danger" onclick="confirmStop()"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>Encerrar</button>';
+  } else if (state === 'paused') {
+    actions.className = 'j-actions two';
+    actions.innerHTML = '<button class="j-btn solid-light" onclick="gpsPause()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>Retomar</button><button class="j-btn solid-light danger" onclick="confirmStop()"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>Encerrar</button>';
+  }
+}
+
+function renderMetasDoDia(day) {
+  const stack = document.getElementById('metas-dia-stack');
+  if (!stack) return;
+  const m = DB.get('sm_metas') || {};
+  const rev = day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0);
+  let html = '';
+  if (m.dailyRev) {
+    const pct = Math.min(100, Math.round(rev/m.dailyRev*100));
+    html += `<div class="goal-item"><div class="goal-top"><strong>Financeiro</strong><span>${DB.fRI(rev)} de ${DB.fRI(m.dailyRev)} · ${pct}%</span></div><div class="gbar money"><i style="width:${pct}%"></i></div></div>`;
+  } else {
+    html += `<div class="goal-item"><div class="goal-locked" onclick="navTo('metas')"><span>Financeiro — meta não definida</span><b>Configurar</b></div></div>`;
+  }
+  html += `<div class="goal-item"><div class="goal-locked" onclick="alert('Disponível em breve na tela Planejar Jornada.')"><span>Quilometragem — meta não definida</span><b>Configurar</b></div></div>`;
+  html += `<div class="goal-item" style="border-bottom:0;margin-bottom:0"><div class="goal-locked" onclick="alert('Disponível em breve na tela Planejar Jornada.')"><span>Tempo online — meta não definida</span><b>Configurar</b></div></div>`;
+  stack.innerHTML = html;
+}
+
+function sessionItem(label, startMs, endMs, km, elapsedSecs, live) {
+  const h = Math.floor((elapsedSecs||0)/3600), m = Math.floor((elapsedSecs||0)%3600/60);
+  const dur = (h?h+'h':'')+p2(m);
+  const range = fmtHM(startMs) + ' → ' + (endMs ? fmtHM(endMs) : (live ? 'Agora' : '—'));
+  const status = live ? (S.gps.st==='paused' ? 'Pausada' : 'Online') : 'Finalizada';
+  return `<div class="li-row">
+    <div class="li-ico green"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
+    <div class="li-info"><h3>${label}</h3><p>${range} · ${status}</p></div>
+    <div class="li-val"><strong>${dur}</strong>${(km||0).toFixed(1)} km</div>
+  </div>`;
 }
 function tripItem(t) {
-  const tags = {uber:'UB', '99':'99', particular:'PR'};
-  const colors = {uber:'rgba(14,165,233,.12)', '99':'rgba(245,158,11,.12)', particular:'rgba(139,92,246,.12)'};
-  const tColors = {uber:'#0EA5E9', '99':'#F59E0B', particular:'#7C3AED'};
-  const p = t.platform || 'uber';
-  return `<div class="item" style="display:flex;align-items:center;gap:11px;padding:13px 14px;border-bottom:1px solid #E2E8F0">
-    <div class="tag" style="background:${colors[p]};color:${tColors[p]}">${tags[p]||'?'}</div>
-    <div class="txt" style="flex:1;min-width:0"><h3 style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.origin||'—'}${t.dest?' → '+t.dest:''}</h3><p style="font-size:11px;color:#64748B;margin-top:3px">${t.time||'—'} · ${t.duration||0}min · ${(t.km||0).toFixed(1)}km</p></div>
-    <div style="font-family:'DM Mono',monospace;font-weight:700;font-size:14px;color:#16A34A">${DB.fR(t.value)}</div>
+  const plat = {uber:'Uber','99':'99',particular:'Particular'}[t.platform||'uber'] || 'Uber';
+  const dest = t.dest ? ' → '+t.dest : '';
+  return `<div class="li-row">
+    <div class="li-info"><h3 class="trip-title">${t.origin||'—'}${dest}</h3><p>${plat} · ${(t.km||0).toFixed(1)} km</p></div>
+    <div class="li-val"><strong>${DB.fR(t.value)}</strong></div>
   </div>`;
 }
-function expItem(e) {
-  return `<div class="item" style="display:flex;align-items:center;gap:11px;padding:13px 14px;border-bottom:1px solid #E2E8F0">
-    <div class="tag" style="background:rgba(239,68,68,.10);color:#EF4444;font-size:10px;font-weight:800">${(e.category||'DEP').slice(0,3).toUpperCase()}</div>
-    <div class="txt" style="flex:1;min-width:0"><h3 style="font-size:13px">${e.desc||e.category||'Despesa'}</h3><p style="font-size:11px;color:#64748B;margin-top:3px">${e.scope==='pessoal'?'Pessoal':'Operacional'} · ${e.date||''}</p></div>
-    <div style="font-family:'DM Mono',monospace;font-weight:700;font-size:14px;color:#EF4444">${DB.fR(e.amount)}</div>
-  </div>`;
-}
-function revItem(r) {
-  return `<div class="item" style="display:flex;align-items:center;gap:11px;padding:13px 14px;border-bottom:1px solid #E2E8F0">
-    <div class="tag" style="background:rgba(34,197,94,.10);color:#16A34A;font-size:10px;font-weight:800">REC</div>
-    <div class="txt" style="flex:1;min-width:0"><h3 style="font-size:13px">${r.desc||r.category||'Receita extra'}</h3><p style="font-size:11px;color:#64748B;margin-top:3px">${r.scope==='pessoal'?'Pessoal':'Operacional'} · ${r.date||''}</p></div>
-    <div style="font-family:'DM Mono',monospace;font-weight:700;font-size:14px;color:#16A34A">${DB.fR(r.amount)}</div>
+function lancItem(it) {
+  const isRec = it._type === 'receita';
+  const icoSvg = isRec
+    ? '<svg viewBox="0 0 24 24"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg>'
+    : '<svg viewBox="0 0 24 24"><path d="M4 3v18"/><path d="M4 14h12a4 4 0 0 0 0-8H4"/></svg>';
+  const title = it.desc || it.category || (isRec ? 'Receita extra' : 'Despesa');
+  const sub = (it.scope==='pessoal'?'Pessoal':'Operacional') + (it.date?' · '+it.date:'');
+  const val = isRec ? DB.fR(it.amount) : '-'+DB.fR(it.amount);
+  return `<div class="li-row">
+    <div class="li-ico ${isRec?'green':'red'}">${icoSvg}</div>
+    <div class="li-info"><h3>${title}</h3><p>${sub}</p></div>
+    <div class="li-val"><strong>${val}</strong>${isRec?'Entrada':'Saída'}</div>
   </div>`;
 }
 
@@ -1993,11 +2128,14 @@ function confirmImport() {
 }
 
 function gpsAction() {
-  if (S.gps.st === 'idle') { openMo('mo-gps-action'); return; }
+  if (S.gps.st === 'idle') { gpsStart(); return; }
   gpsPause();
 }
 function gpsStart() {
-  const g = S.gps; g.st='running'; g.start=Date.now(); g.km=0; g.pts=[]; g.pausedMs=0;
+  const g = S.gps; g.st='running'; g.start=Date.now(); g.km=0; g.pts=[]; g.pausedMs=0; g.pa=null;
+  const day0 = DB.day(DB.today());
+  g.baseKm = (day0.sessions||[]).reduce((s,x)=>s+(x.km||0),0);
+  g.baseElapsed = (day0.sessions||[]).reduce((s,x)=>s+(x.elapsed||0),0);
   // Inicia floating widget nativo
   if (window.SmartMobiNative) {
     try {
@@ -2007,8 +2145,6 @@ function gpsStart() {
         SmartMobiNative.updateFloatingStatus('running');
     } catch(e) {}
   }
-  document.getElementById('gps-idle-btns').style.display = 'none';
-  const ab = document.getElementById('gps-active-btns'); if (ab) ab.style.display='flex';
   updateGpsBtn('running');
   g.ti = setInterval(gpsUpdate, 1000);
   if (navigator.geolocation) {
@@ -2016,8 +2152,8 @@ function gpsStart() {
       const {latitude:la, longitude:lo} = pos.coords;
       if (g.pts.length) { const L=g.pts[g.pts.length-1]; g.km += hav(L[0],L[1],la,lo); }
       g.pts.push([la,lo]);
-      setText('gps-km-disp', g.km.toFixed(1));
-      setText('gs-km', g.km.toFixed(1)+' km');
+      setText('jc-km', g.km.toFixed(1));
+      setText('jc-kmtotal', (g.baseKm+g.km).toFixed(1)+' km');
       if (window.SmartMobiNative && typeof SmartMobiNative.updateFloating === 'function') {
         try { SmartMobiNative.updateFloating(g.km); } catch(e) {}
       }
@@ -2029,9 +2165,8 @@ function gpsStart() {
       setTimeout(() => alert('Para ver a bolinha flutuante sobre o Uber:\nConfigurações → Apps → SmartMobi → Aparecer sobre outros apps → Ativar'), 500);
     }
   }
-  setText('gps-status-txt', 'Sessão em andamento');
-  document.getElementById('gps-sess').style.display = 'flex';
   requestWakeLock();
+  if (S.sec === 'jornada') renderJornada();
 }
 
 function confirmStop() {
@@ -2042,7 +2177,6 @@ function gpsPause() {
   const g = S.gps;
   if (g.st === 'running') {
     g.st='paused'; g.pa=Date.now();
-    setText('gps-pause-btn', 'Retomar');
     updateGpsBtn('paused');
     if (window.SmartMobiNative?.updateFloatingStatus) try { SmartMobiNative.updateFloatingStatus('paused'); } catch(e) {}
     if (window.SmartMobiNative?.pauseGpsService) try { SmartMobiNative.pauseGpsService(); } catch(e) {}
@@ -2050,32 +2184,32 @@ function gpsPause() {
     g.pausedMs += Date.now()-g.pa; g.st='running'; g.pa=null;
     if (window.SmartMobiNative?.updateFloatingStatus) try { SmartMobiNative.updateFloatingStatus('running'); } catch(e) {}
     if (window.SmartMobiNative?.resumeGpsService) try { SmartMobiNative.resumeGpsService(); } catch(e) {}
-    setText('gps-pause-btn', 'Pausar');
     updateGpsBtn('running');
   }
+  if (S.sec === 'jornada') renderJornada();
 }
 function gpsStop() {
   const g = S.gps; g.st='idle';
   if (g.wid) navigator.geolocation.clearWatch(g.wid);
   clearInterval(g.ti);
-  // Para floating widget
   if (window.SmartMobiNative && typeof SmartMobiNative.stopFloating === 'function') {
     try { SmartMobiNative.stopFloating(); } catch(e) {}
   }
-  document.getElementById('gps-idle-btns').style.display = '';
-  const ab = document.getElementById('gps-active-btns'); if (ab) ab.style.display='none';
   updateGpsBtn('idle');
-  document.getElementById('gps-sess').style.display='none';
   const day = DB.day(DB.today());
-  day.session = {km: g.km, elapsed: getElapsed()};
-  if (!day.kmTotal && g.km > 0.1) day.kmTotal = parseFloat(g.km.toFixed(1));
+  const elapsed = getElapsed();
+  if (!day.sessions) day.sessions = [];
+  day.sessions.push({ start: g.start, end: Date.now(), km: g.km, elapsed: elapsed });
+  const totalKm = day.sessions.reduce((s,x)=>s+(x.km||0),0);
+  const totalElapsed = day.sessions.reduce((s,x)=>s+(x.elapsed||0),0);
+  day.session = { km: totalKm, elapsed: totalElapsed }; // compat com Agenda
+  if (!day.kmTotal && totalKm > 0.1) day.kmTotal = parseFloat(totalKm.toFixed(1));
   DB.saveDay(day);
   const km = g.km;
-  g.start=null; g.pausedMs=0; g.km=0; g.pts=[];
+  g.start=null; g.pausedMs=0; g.km=0; g.pts=[]; g.baseKm=0; g.baseElapsed=0; g.pa=null;
   releaseWakeLock();
-  closeMo('mo-gps-action');
   if (S.sec==='jornada') renderJornada();
-  if (km > 0.1) setTimeout(() => alert('GPS encerrado. '+km.toFixed(1)+'km registrados.'), 300);
+  if (km > 0.1) setTimeout(() => alert('Jornada encerrada. '+km.toFixed(1)+'km registrados.'), 300);
 }
 function getElapsed() {
   const g = S.gps; if (!g.start) return 0;
@@ -2084,8 +2218,10 @@ function getElapsed() {
 }
 function gpsUpdate() {
   const el = getElapsed(), h=Math.floor(el/3600), m=Math.floor(el%3600/60), s=el%60;
-  setText('gps-timer', p2(h)+':'+p2(m)+':'+p2(s));
-  setText('gs-meta', p2(h)+'h'+p2(m)+'m online');
+  setText('jc-timer', p2(h)+':'+p2(m)+':'+p2(s));
+  const total = (S.gps.baseElapsed||0) + el;
+  const th=Math.floor(total/3600), tm=Math.floor(total%3600/60);
+  setText('jc-total', th+'h'+p2(tm));
 }
 function updateGpsBtn(state) {
   const btn = document.getElementById('gps-btn');
@@ -2913,8 +3049,8 @@ function nativeSyncGps(km, startMs, pausedMs) {
   S.gps.km = km;
   S.gps.start = startMs || S.gps.start;
   S.gps.pausedMs = pausedMs || 0;
-  setText('gps-km-disp', km.toFixed(1));
-  setText('gs-km', km.toFixed(1) + ' km');
+  setText('jc-km', km.toFixed(1));
+  setText('jc-kmtotal', ((S.gps.baseKm||0)+km).toFixed(1)+' km');
   if (window.SmartMobiNative?.updateFloating) {
     try { SmartMobiNative.updateFloating(km); } catch(e) {}
   }
