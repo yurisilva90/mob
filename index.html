@@ -784,9 +784,11 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
       <div style="font-size:13px;color:#64748B;margin-bottom:20px" id="gps-status-txt">Pronto para iniciar</div>
     </div>
     <div id="gps-idle-btns"><button class="btn-p" style="background:#22C55E;box-shadow:0 8px 22px rgba(34,197,94,.25)" onclick="gpsStart()">Iniciar jornada</button></div>
-    <div id="gps-active-btns" style="display:none;gap:10px">
-      <button class="btn-p" id="gps-pause-btn" style="background:#F59E0B;flex:1;margin-top:0" onclick="gpsPause()">Pausar</button>
-      <button class="btn-p" style="background:#EF4444;flex:1;margin-top:0" onclick="gpsStop()">Encerrar</button>
+    <div id="gps-active-btns" style="display:none;flex-direction:column;gap:8px">
+      <div style="display:flex;gap:8px">
+        <button class="btn-p" id="gps-pause-btn" style="background:#F59E0B;flex:1;margin-top:0" onclick="gpsPause()">Pausar</button>
+        <button class="btn-p" style="background:#EF4444;flex:1;margin-top:0" onclick="confirmStop()">Encerrar</button>
+      </div>
     </div>
     <div style="background:#FFF7ED;border:1px solid rgba(245,158,11,.25);border-radius:14px;padding:10px 14px;font-size:12px;color:#92400E;margin-bottom:10px;display:flex;gap:8px;align-items:flex-start">
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#F59E0B" stroke-width="2" style="flex-shrink:0;margin-top:1px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg>
@@ -1126,10 +1128,13 @@ const MODULE_ICONS_COLOR = {blue:'#0EA5E9', purple:'#7C3AED', green:'#22C55E', o
 
 // ── NAVIGATION ────────────────────────────────────────────────
 function navTo(sec) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('on');
+    s.style.display = '';  // limpa inline style para CSS funcionar
+  });
   document.querySelectorAll('.nav').forEach(n => n.classList.remove('active'));
   const sc = document.getElementById('sc-'+sec);
-  if (sc) sc.classList.add('on');
+  if (sc) { sc.classList.add('on'); sc.style.display = 'block'; }
   // Map sub-screens to their nav parent
   const navMap = {financeiro:'fav', lancamentos:'fav', agenda:'fav', metas:'mais'};
   const navId = navMap[sec] || sec;
@@ -1916,7 +1921,7 @@ function gpsStart() {
   const g = S.gps; g.st='running'; g.start=Date.now(); g.km=0; g.pts=[]; g.pausedMs=0;
   // Inicia floating widget nativo
   if (window.SmartMobiNative && typeof SmartMobiNative.startFloating === 'function') {
-    try { SmartMobiNative.startFloating(g.start, 0); } catch(e) {}
+    try { SmartMobiNative.startFloating(g.start, 0, 'running'); } catch(e) {}
   }
   document.getElementById('gps-idle-btns').style.display = 'none';
   const ab = document.getElementById('gps-active-btns'); if (ab) ab.style.display='flex';
@@ -1938,14 +1943,21 @@ function gpsStart() {
   document.getElementById('gps-sess').style.display = 'flex';
   requestWakeLock();
 }
+
+function confirmStop() {
+  if (confirm('Encerrar a jornada agora?')) gpsStop();
+}
+
 function gpsPause() {
   const g = S.gps;
   if (g.st === 'running') {
     g.st='paused'; g.pa=Date.now();
     setText('gps-pause-btn', 'Retomar');
     updateGpsBtn('paused');
+    if (window.SmartMobiNative?.updateFloatingStatus) try { SmartMobiNative.updateFloatingStatus('paused'); } catch(e) {}
   } else if (g.st === 'paused') {
     g.pausedMs += Date.now()-g.pa; g.st='running'; g.pa=null;
+    if (window.SmartMobiNative?.updateFloatingStatus) try { SmartMobiNative.updateFloatingStatus('running'); } catch(e) {}
     setText('gps-pause-btn', 'Pausar');
     updateGpsBtn('running');
   }
