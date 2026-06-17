@@ -1955,9 +1955,11 @@ function gpsPause() {
     setText('gps-pause-btn', 'Retomar');
     updateGpsBtn('paused');
     if (window.SmartMobiNative?.updateFloatingStatus) try { SmartMobiNative.updateFloatingStatus('paused'); } catch(e) {}
+    if (window.SmartMobiNative?.pauseGpsService) try { SmartMobiNative.pauseGpsService(); } catch(e) {}
   } else if (g.st === 'paused') {
     g.pausedMs += Date.now()-g.pa; g.st='running'; g.pa=null;
     if (window.SmartMobiNative?.updateFloatingStatus) try { SmartMobiNative.updateFloatingStatus('running'); } catch(e) {}
+    if (window.SmartMobiNative?.resumeGpsService) try { SmartMobiNative.resumeGpsService(); } catch(e) {}
     setText('gps-pause-btn', 'Pausar');
     updateGpsBtn('running');
   }
@@ -2810,6 +2812,21 @@ async function loginForgot() {
       msgEl.style.color = '#22C55E';
       msgEl.textContent = 'Link enviado! Verifique seu email ' + email + ' e clique no link para redefinir a senha.';
     }
+  }
+}
+
+
+
+// Chamada pelo nativo ao voltar ao foreground — sincroniza GPS
+function nativeSyncGps(km, startMs, pausedMs) {
+  if (!S || !S.gps || S.gps.st === 'idle') return;
+  S.gps.km = km;
+  S.gps.start = startMs || S.gps.start;
+  S.gps.pausedMs = pausedMs || 0;
+  setText('gps-km-disp', km.toFixed(1));
+  setText('gs-km', km.toFixed(1) + ' km');
+  if (window.SmartMobiNative?.updateFloating) {
+    try { SmartMobiNative.updateFloating(km); } catch(e) {}
   }
 }
 
