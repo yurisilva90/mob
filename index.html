@@ -739,16 +739,6 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
           <button class="ag-type-btn" id="ag-t-pessoal" onclick="agSetEvType('pessoal')">Pessoal</button>
         </div>
       </div>
-      <div class="ag-field">
-        <label class="ag-label">Cor</label>
-        <div class="ag-color-row">
-          <div class="ag-color on" data-color="#22c55e" style="background:#22c55e" onclick="agSelColor(this)"></div>
-          <div class="ag-color" data-color="#3b82f6" style="background:#3b82f6" onclick="agSelColor(this)"></div>
-          <div class="ag-color" data-color="#f59e0b" style="background:#f59e0b" onclick="agSelColor(this)"></div>
-          <div class="ag-color" data-color="#8b5cf6" style="background:#8b5cf6" onclick="agSelColor(this)"></div>
-          <div class="ag-color" data-color="#ef4444" style="background:#ef4444" onclick="agSelColor(this)"></div>
-        </div>
-      </div>
       <div class="ag-field"><label class="ag-label">Observação</label><textarea class="ag-input" id="ag-obs" placeholder="Detalhes opcionais"></textarea></div>
       <button class="ag-save" onclick="saveEvento()">Salvar compromisso</button>
     </div>
@@ -2241,12 +2231,20 @@ function persistGps() {
   });
 }
 function restoreGpsSession() {
+  const g = S.gps;
+  // Já está rodando nesta instância do app (ex: showApp() foi chamado de novo
+  // pelo Supabase reemitindo SIGNED_IN ao voltar do background) — não faz nada,
+  // senão sobrescreve o km/timer atuais com o último snapshot salvo e duplica
+  // o watchPosition/setInterval, fazendo o km "resetar"/contar dobrado.
+  if (g.ti) return;
   const saved = DB.get('sm_gps_session');
   if (!saved || (saved.st !== 'running' && saved.st !== 'paused')) return;
   // Sessão muito antiga (app ficou fechado por mais de 16h) — não tenta retomar
   const ageMs = Date.now() - (saved.start || 0);
   if (!saved.start || ageMs > 16*3600*1000) { DB.del('sm_gps_session'); return; }
-  const g = S.gps;
+  // Limpeza defensiva — garante que não sobra nenhum watcher/timer órfão
+  if (g.wid) { try{ navigator.geolocation.clearWatch(g.wid); }catch(e){} }
+  if (g.ti) clearInterval(g.ti);
   g.st = saved.st; g.start = saved.start; g.pausedMs = saved.pausedMs || 0; g.pa = saved.pa || null;
   g.km = saved.km || 0; g.pts = saved.lastPt ? [saved.lastPt] : [];
   g.baseKm = saved.baseKm || 0; g.baseElapsed = saved.baseElapsed || 0;
@@ -2325,7 +2323,8 @@ function setStyle(id, prop, val) { const el=document.getElementById(id); if(el) 
 let agView    = 'resumo';
 let agSelDate = DB.today();
 let agEvType  = 'normal';
-let agColor   = '#22c55e';
+let agColor   = '#3B82F6';
+const EV_TYPE_COLOR = { operacional: '#3B82F6', pessoal: '#7C3AED' };
 
 // ── ICON SVGs por tipo ──────────────────────────────────────
 const AG_ICONS = {
@@ -2342,7 +2341,7 @@ function agIconFor(ev) {
   return AG_ICONS.default;
 }
 function agColorClass(hex) {
-  const map = {'#22c55e':'green','#3b82f6':'blue','#f59e0b':'orange','#8b5cf6':'purple','#ef4444':'red'};
+  const map = {'#22c55e':'green', '#3B82F6':'blue', '#7C3AED':'purple'};
   return map[hex] || 'blue';
 }
 
@@ -2523,24 +2522,18 @@ function openNovoEv(date, time) {
   const tt = document.getElementById('ag-titulo'); if (tt) tt.value = '';
   const ob = document.getElementById('ag-obs');   if (ob) ob.value = '';
   const vi = document.getElementById('ag-valor'); if (vi) vi.value = '';
-  agEvType = 'operacional'; agColor = '#22c55e';
+  agEvType = 'operacional'; agColor = EV_TYPE_COLOR.operacional;
   ['operacional','pessoal'].forEach(x => {
     const el = document.getElementById('ag-t-'+x); if(el) el.classList.toggle('on', x === agEvType);
   });
-
-  document.querySelectorAll('.ag-color').forEach(el => el.classList.toggle('on', el.dataset.color === agColor));
   openMo('mo-novo-ev');
 }
 function agSetEvType(t) {
   agEvType = t;
+  agColor = EV_TYPE_COLOR[t] || EV_TYPE_COLOR.operacional;
   ['operacional','pessoal'].forEach(x => {
     const el = document.getElementById('ag-t-'+x); if(el) el.classList.toggle('on', x === t);
   });
-}
-function agSelColor(el) {
-  agColor = el.dataset.color;
-  document.querySelectorAll('.ag-color').forEach(c => c.classList.remove('on'));
-  el.classList.add('on');
 }
 function saveEvento() {
   const title = document.getElementById('ag-titulo')?.value?.trim();
