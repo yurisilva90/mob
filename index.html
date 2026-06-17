@@ -1216,6 +1216,7 @@ function getHomeDays() {
   return days;
 }
 function renderHome() {
+  if (!S || !DB || !getHomeDays) return;
   const days = getHomeDays().map(d => DB.day(d));
   const rev   = days.reduce((s,d) => s + d.trips.reduce((a,t)=>a+(t.value||0),0) + d.revenues.reduce((a,r)=>a+(r.amount||0),0), 0);
   const exp   = days.reduce((s,d) => s + d.expenses.reduce((a,e)=>a+(e.amount||0),0), 0);
@@ -1309,6 +1310,8 @@ function chgDay(d) {
   renderJornada();
 }
 function renderJornada() {
+  if (!S || !DB) return;
+  if (!S.curDate) S.curDate = DB.today();
   const today = DB.today(), d = S.curDate, isToday = d === today;
   const dt    = new Date(d+'T12:00');
   const dows  = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
@@ -1911,6 +1914,10 @@ function gpsAction() {
 }
 function gpsStart() {
   const g = S.gps; g.st='running'; g.start=Date.now(); g.km=0; g.pts=[]; g.pausedMs=0;
+  // Inicia floating widget nativo
+  if (window.SmartMobiNative && typeof SmartMobiNative.startFloating === 'function') {
+    try { SmartMobiNative.startFloating(g.start, 0); } catch(e) {}
+  }
   document.getElementById('gps-idle-btns').style.display = 'none';
   const ab = document.getElementById('gps-active-btns'); if (ab) ab.style.display='flex';
   updateGpsBtn('running');
@@ -1922,6 +1929,9 @@ function gpsStart() {
       g.pts.push([la,lo]);
       setText('gps-km-disp', g.km.toFixed(1));
       setText('gs-km', g.km.toFixed(1)+' km');
+      if (window.SmartMobiNative && typeof SmartMobiNative.updateFloating === 'function') {
+        try { SmartMobiNative.updateFloating(g.km); } catch(e) {}
+      }
     }, null, {enableHighAccuracy:true, maximumAge:3000, timeout:10000});
   }
   setText('gps-status-txt', 'Sessão em andamento');
@@ -1944,6 +1954,10 @@ function gpsStop() {
   const g = S.gps; g.st='idle';
   if (g.wid) navigator.geolocation.clearWatch(g.wid);
   clearInterval(g.ti);
+  // Para floating widget
+  if (window.SmartMobiNative && typeof SmartMobiNative.stopFloating === 'function') {
+    try { SmartMobiNative.stopFloating(); } catch(e) {}
+  }
   document.getElementById('gps-idle-btns').style.display = '';
   const ab = document.getElementById('gps-active-btns'); if (ab) ab.style.display='none';
   updateGpsBtn('idle');
@@ -2563,8 +2577,23 @@ async function authInit() {
   if (session?.user) { _supaUser=session.user; await loadProfile(); showApp(); }
   else showLogin();
   _SUPA.auth.onAuthStateChange(async (ev, session) => {
-    if (ev==='SIGNED_IN' && session?.user) { _supaUser=session.user; await loadProfile(); showApp(); }
-    else if (ev==='SIGNED_OUT') { _supaUser=null; showLogin(); }
+    if (ev==='SIGNED_IN' && session?.user) {
+      _supaUser = session.user;
+      // Salva tokens no storage nativo (persiste mesmo com app morto)
+      if (window.SmartMobiNative?.saveSession) {
+        try { SmartMobiNative.saveSession(JSON.stringify({
+          access_token: session.access_token,
+          refresh_token: session.refresh_token
+        })); } catch(e) {}
+      }
+      await loadProfile(); showApp();
+    } else if (ev==='SIGNED_OUT') {
+      _supaUser = null;
+      if (window.SmartMobiNative?.saveSession) {
+        try { SmartMobiNative.saveSession(''); } catch(e) {}
+      }
+      showLogin();
+    }
   });
 }
 
