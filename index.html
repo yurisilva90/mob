@@ -49,9 +49,11 @@ html,body{height:100%;background:var(--bg);font-family:Inter,system-ui,-apple-sy
 .nav.active{background:#F8FAFC;color:var(--blue);box-shadow:0 2px 10px rgba(15,23,42,.06)}
 .nav svg{width:21px;height:21px;flex-shrink:0}
 .center{width:72px;display:flex;justify-content:center}
-.start{width:66px;height:66px;border-radius:50%;background:#22C55E;border:5px solid var(--bg);box-shadow:0 12px 30px rgba(34,197,94,.34);margin-top:-32px;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;touch-action:manipulation;transition:all .2s}
-.start.run{background:#EF4444;box-shadow:0 12px 30px rgba(239,68,68,.34)}
-.start.psd{background:#0EA5E9;box-shadow:0 12px 30px rgba(14,165,233,.34)}
+.start{width:66px;height:66px;border-radius:50%;background:#64748B;border:5px solid var(--bg);box-shadow:0 12px 30px rgba(100,116,139,.34);margin-top:-32px;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;touch-action:manipulation;transition:all .2s}
+.start svg{fill:none!important}
+.start.running{background:#22C55E;box-shadow:0 12px 30px rgba(34,197,94,.34)}
+.start.paused{background:#F59E0B;box-shadow:0 12px 30px rgba(245,158,11,.34)}
+.start.ended{background:#0EA5E9;box-shadow:0 12px 30px rgba(14,165,233,.34)}
 .start svg{width:20px;height:20px;flex-shrink:0}.start span{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}
 /* Modal */
 .mo{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:flex-end;z-index:200;backdrop-filter:blur(4px)}
@@ -829,13 +831,13 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
   <div class="nav active" id="bn-home" onclick="navTo('home')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Início</span>
   </div>
-  <div class="nav" id="bn-jornada" onclick="navTo('jornada')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span>Jornada</span>
+  <div class="nav" id="bn-agenda" onclick="navTo('agenda')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span>Agenda</span>
   </div>
-  <div class="center">
-    <div class="start" id="gps-btn" onclick="gpsAction()">
-      <svg viewBox="0 0 24 24" id="gps-icon" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-      <span id="gps-lbl">Iniciar</span>
+  <div class="center" id="bn-jornada">
+    <div class="start" id="gps-btn" onclick="navTo('jornada')">
+      <svg viewBox="0 0 24 24" id="gps-icon" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l1.4-4.2A3 3 0 0 1 9.2 7h5.6a3 3 0 0 1 2.8 1.8L19 13"/><path d="M4 13h16v5H4z"/><circle cx="7.5" cy="18" r="1.4" fill="currentColor"/><circle cx="16.5" cy="18" r="1.4" fill="currentColor"/></svg>
+      <span id="gps-lbl">Jornada</span>
     </div>
   </div>
   <div class="nav" id="bn-fav" onclick="navToFav()">
@@ -1179,7 +1181,7 @@ function navTo(sec) {
   const sc = document.getElementById('sc-'+sec);
   if (sc) { sc.classList.add('on'); sc.style.display = 'block'; }
   // Map sub-screens to their nav parent
-  const navMap = {financeiro:'fav', lancamentos:'fav', agenda:'fav', metas:'mais'};
+  const navMap = {financeiro:'fav', lancamentos:'fav', metas:'mais'};
   const navId = navMap[sec] || sec;
   const bn = document.getElementById('bn-'+navId);
   if (bn) bn.classList.add('active');
@@ -2145,7 +2147,8 @@ function gpsStart() {
         SmartMobiNative.updateFloatingStatus('running');
     } catch(e) {}
   }
-  updateGpsBtn('running');
+  syncNavButton();
+  persistGps();
   g.ti = setInterval(gpsUpdate, 1000);
   if (navigator.geolocation) {
     g.wid = navigator.geolocation.watchPosition(pos => {
@@ -2154,6 +2157,7 @@ function gpsStart() {
       g.pts.push([la,lo]);
       setText('jc-km', g.km.toFixed(1));
       setText('jc-kmtotal', (g.baseKm+g.km).toFixed(1)+' km');
+      persistGps();
       if (window.SmartMobiNative && typeof SmartMobiNative.updateFloating === 'function') {
         try { SmartMobiNative.updateFloating(g.km); } catch(e) {}
       }
@@ -2177,15 +2181,16 @@ function gpsPause() {
   const g = S.gps;
   if (g.st === 'running') {
     g.st='paused'; g.pa=Date.now();
-    updateGpsBtn('paused');
+    syncNavButton();
     if (window.SmartMobiNative?.updateFloatingStatus) try { SmartMobiNative.updateFloatingStatus('paused'); } catch(e) {}
     if (window.SmartMobiNative?.pauseGpsService) try { SmartMobiNative.pauseGpsService(); } catch(e) {}
   } else if (g.st === 'paused') {
     g.pausedMs += Date.now()-g.pa; g.st='running'; g.pa=null;
     if (window.SmartMobiNative?.updateFloatingStatus) try { SmartMobiNative.updateFloatingStatus('running'); } catch(e) {}
     if (window.SmartMobiNative?.resumeGpsService) try { SmartMobiNative.resumeGpsService(); } catch(e) {}
-    updateGpsBtn('running');
+    syncNavButton();
   }
+  persistGps();
   if (S.sec === 'jornada') renderJornada();
 }
 function gpsStop() {
@@ -2195,7 +2200,6 @@ function gpsStop() {
   if (window.SmartMobiNative && typeof SmartMobiNative.stopFloating === 'function') {
     try { SmartMobiNative.stopFloating(); } catch(e) {}
   }
-  updateGpsBtn('idle');
   const day = DB.day(DB.today());
   const elapsed = getElapsed();
   if (!day.sessions) day.sessions = [];
@@ -2205,6 +2209,8 @@ function gpsStop() {
   day.session = { km: totalKm, elapsed: totalElapsed }; // compat com Agenda
   if (!day.kmTotal && totalKm > 0.1) day.kmTotal = parseFloat(totalKm.toFixed(1));
   DB.saveDay(day);
+  syncNavButton();
+  DB.del('sm_gps_session');
   const km = g.km;
   g.start=null; g.pausedMs=0; g.km=0; g.pts=[]; g.baseKm=0; g.baseElapsed=0; g.pa=null;
   releaseWakeLock();
@@ -2223,17 +2229,59 @@ function gpsUpdate() {
   const th=Math.floor(total/3600), tm=Math.floor(total%3600/60);
   setText('jc-total', th+'h'+p2(tm));
 }
+
+// ── PERSISTÊNCIA DA SESSÃO GPS (sobrevive a reload do WebView) ─────────────
+function persistGps() {
+  const g = S.gps;
+  if (g.st === 'idle') { DB.del('sm_gps_session'); return; }
+  const lastPt = g.pts && g.pts.length ? g.pts[g.pts.length-1] : null;
+  DB.set('sm_gps_session', {
+    st: g.st, start: g.start, pausedMs: g.pausedMs, pa: g.pa,
+    km: g.km, lastPt, baseKm: g.baseKm, baseElapsed: g.baseElapsed
+  });
+}
+function restoreGpsSession() {
+  const saved = DB.get('sm_gps_session');
+  if (!saved || (saved.st !== 'running' && saved.st !== 'paused')) return;
+  // Sessão muito antiga (app ficou fechado por mais de 16h) — não tenta retomar
+  const ageMs = Date.now() - (saved.start || 0);
+  if (!saved.start || ageMs > 16*3600*1000) { DB.del('sm_gps_session'); return; }
+  const g = S.gps;
+  g.st = saved.st; g.start = saved.start; g.pausedMs = saved.pausedMs || 0; g.pa = saved.pa || null;
+  g.km = saved.km || 0; g.pts = saved.lastPt ? [saved.lastPt] : [];
+  g.baseKm = saved.baseKm || 0; g.baseElapsed = saved.baseElapsed || 0;
+  syncNavButton();
+  g.ti = setInterval(gpsUpdate, 1000);
+  if (navigator.geolocation) {
+    g.wid = navigator.geolocation.watchPosition(pos => {
+      const {latitude:la, longitude:lo} = pos.coords;
+      if (g.pts.length) { const L=g.pts[g.pts.length-1]; g.km += hav(L[0],L[1],la,lo); }
+      g.pts.push([la,lo]);
+      setText('jc-km', g.km.toFixed(1));
+      setText('jc-kmtotal', (g.baseKm+g.km).toFixed(1)+' km');
+      persistGps();
+      if (window.SmartMobiNative && typeof SmartMobiNative.updateFloating === 'function') {
+        try { SmartMobiNative.updateFloating(g.km); } catch(e) {}
+      }
+    }, null, {enableHighAccuracy:true, maximumAge:3000, timeout:10000});
+  }
+  if (g.st === 'running') requestWakeLock();
+  if (window.SmartMobiNative && typeof SmartMobiNative.updateFloatingStatus === 'function') {
+    try { SmartMobiNative.updateFloatingStatus(g.st); } catch(e) {}
+  }
+}
+function syncNavButton() {
+  const g = S.gps;
+  let cls = 'idle';
+  if (g.st === 'running') cls = 'running';
+  else if (g.st === 'paused') cls = 'paused';
+  else if ((DB.day(DB.today()).sessions||[]).length > 0) cls = 'ended';
+  updateGpsBtn(cls);
+}
 function updateGpsBtn(state) {
   const btn = document.getElementById('gps-btn');
-  const ico = document.getElementById('gps-icon');
-  const lbl = document.getElementById('gps-lbl');
   if (!btn) return;
-  btn.className = 'start' + (state==='running'?' run':state==='paused'?' psd':'');
-  if (lbl) lbl.textContent = state==='running'?'Pausar':state==='paused'?'Retomar':'Iniciar';
-  if (ico) {
-    if (state==='running') ico.innerHTML='<path d="M6 19h4V5H6zm8-14v14h4V5z"/>';
-    else ico.innerHTML='<path d="M8 5v14l11-7z"/>';
-  }
+  btn.className = 'start' + (state && state !== 'idle' ? ' '+state : '');
 }
 function hav(a,b,c,d) {
   const R=6371, dA=(c-a)*Math.PI/180, dB=(d-b)*Math.PI/180;
@@ -2852,7 +2900,9 @@ function showApp() {
     const cfg=DB.cfg(); cfg.name=_supaUser.email.split('@')[0]; DB.saveCfg(cfg);
   }
   try{renderHome();}    catch(e){console.error('renderHome:',e);}
+  try{restoreGpsSession();} catch(e){console.error('restoreGpsSession:',e);}
   try{renderJornada();}  catch(e){console.error('renderJornada:',e);}
+  try{syncNavButton();}  catch(e){console.error('syncNavButton:',e);}
   try{renderFin();}      catch(e){console.error('renderFin:',e);}
   try{updateFavBtn();}   catch(e){console.error('updateFavBtn:',e);}
   try{renderAgResumo();} catch(e){console.error('renderAgResumo:',e);}
