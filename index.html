@@ -748,7 +748,7 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
   <div style="padding:20px 16px 8px"><div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Configurações</div></div>
   <div style="padding:0 16px;display:flex;flex-direction:column;gap:8px">
     <div class="mais-item" onclick="openPerfil()"><div class="mais-ico blue"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg></div><div><div class="mais-t">Perfil</div><div class="mais-s" id="mais-perfil-sub">Configure nome, placa e veículo</div></div><div class="mais-arr">›</div></div>
-    <div class="mais-item" onclick="openMo('mo-cats')"><div class="mais-ico orange"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h8"/></svg></div><div><div class="mais-t">Categorias</div><div class="mais-s">Gerencie categorias de despesa</div></div><div class="mais-arr">›</div></div>
+    <div class="mais-item" onclick="openMo('mo-cats');renderCatsModal()"><div class="mais-ico orange"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h8"/></svg></div><div><div class="mais-t">Categorias</div><div class="mais-s">Gerencie categorias de despesa</div></div><div class="mais-arr">›</div></div>
     <div class="mais-item" onclick="openMo('mo-suporte')"><div class="mais-ico purple"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg></div><div><div class="mais-t">Suporte</div><div class="mais-s">Ajuda e feedback</div></div><div class="mais-arr">›</div></div>
   </div>
   <div style="height:24px"></div>
@@ -1019,17 +1019,11 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
     <div class="moh"></div>
     <div class="sheet-head" style="padding:0 0 12px"><h2>Categorias</h2><button class="xbtn" onclick="closeMo('mo-cats')">&#x2715;</button></div>
     <div style="font-size:13px;color:#64748B;margin-bottom:14px">Gerencie suas categorias de despesa e receita.</div>
-    <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:16px;padding:14px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94A3B8;margin-bottom:10px">Despesa Operacional</div>
-      <div id="cats-veh"></div>
-    </div>
-    <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:16px;padding:14px;margin-bottom:12px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94A3B8;margin-bottom:10px">Receita</div>
-      <div id="cats-rec"></div>
-    </div>
+    <div id="cats-groups"></div>
     <button class="btn-p" onclick="closeMo('mo-cats')">Fechar</button>
   </div>
 </div>
+
 
 </div>
 <script>
@@ -1553,6 +1547,83 @@ const CAT_ICONS = {
   briefcase:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"/></svg>',
   plus:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>'
 };
+
+// ── GESTÃO DE CATEGORIAS ────────────────────────────────────────────────
+const CAT_GROUP_LABELS = {
+  despesa_operacional: 'Despesa Operacional',
+  despesa_pessoal:      'Despesa Pessoal',
+  receita_operacional:  'Receita Operacional',
+  receita_pessoal:      'Receita Pessoal'
+};
+let catAddState = { key: null, icon: 'plus' };
+
+function renderCatsModal() {
+  const el = document.getElementById('cats-groups');
+  if (!el) return;
+  catAddState = { key: null, icon: 'plus' };
+  el.innerHTML = Object.keys(CAT_GROUP_LABELS).map(catGroupHtml).join('');
+}
+
+function catGroupHtml(key) {
+  const cats = DB.cats(key) || DEFAULT_CATS[key] || [];
+  const isAdding = catAddState.key === key;
+  const rows = cats.map((c, i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #EEF2F6">
+      <div style="width:34px;height:34px;border-radius:10px;background:#fff;border:1px solid #E2E8F0;display:flex;align-items:center;justify-content:center;color:#475569;flex-shrink:0">${CAT_ICONS[c.icon]||CAT_ICONS.plus}</div>
+      <div style="flex:1;font-size:14px;font-weight:600;color:#1E293B">${c.l}</div>
+      <button onclick="catRemove('${key}',${i})" style="width:28px;height:28px;border-radius:8px;border:0;background:#FEF2F2;color:#EF4444;font-size:14px;cursor:pointer;flex-shrink:0">&#x2715;</button>
+    </div>`).join('') || '<div style="font-size:13px;color:#94A3B8;padding:8px 0">Nenhuma categoria ainda.</div>';
+
+  const addForm = isAdding ? `
+    <div style="margin-top:10px;background:#fff;border:1.5px solid #22C55E;border-radius:14px;padding:12px">
+      <input id="cat-new-name" type="text" placeholder="Nome da categoria"
+        style="width:100%;height:42px;border:1px solid #E2E8F0;border-radius:10px;padding:0 12px;font-size:14px;margin-bottom:10px;box-sizing:border-box;outline:none">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94A3B8;margin-bottom:8px">Escolha um ícone</div>
+      <div id="cat-icon-picker" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        ${Object.keys(CAT_ICONS).map(ic => `
+          <button onclick="catPickIcon('${ic}')" data-ic="${ic}"
+            style="width:38px;height:38px;border-radius:10px;border:1.5px solid ${catAddState.icon===ic?'#22C55E':'#E2E8F0'};background:${catAddState.icon===ic?'#F0FDF4':'#fff'};color:${catAddState.icon===ic?'#16A34A':'#64748B'};display:flex;align-items:center;justify-content:center;cursor:pointer">${CAT_ICONS[ic]}</button>
+        `).join('')}
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="catCancelAdd()" style="flex:1;height:40px;border-radius:10px;border:1px solid #E2E8F0;background:#fff;color:#64748B;font-size:13px;font-weight:600;cursor:pointer">Cancelar</button>
+        <button onclick="catConfirmAdd('${key}')" style="flex:1;height:40px;border-radius:10px;border:0;background:#22C55E;color:#fff;font-size:13px;font-weight:700;cursor:pointer">Adicionar</button>
+      </div>
+    </div>` : `
+    <button onclick="catStartAdd('${key}')"
+      style="width:100%;height:40px;margin-top:8px;border-radius:10px;border:1.5px dashed #CBD5E1;background:transparent;color:#64748B;font-size:13px;font-weight:600;cursor:pointer">+ Nova categoria</button>`;
+
+  return `
+    <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:16px;padding:14px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94A3B8;margin-bottom:6px">${CAT_GROUP_LABELS[key]}</div>
+      <div>${rows}</div>
+      ${addForm}
+    </div>`;
+}
+
+function catStartAdd(key) { catAddState = { key, icon: 'plus' }; renderCatsModal(); }
+function catCancelAdd()   { catAddState = { key: null, icon: 'plus' }; renderCatsModal(); }
+function catPickIcon(ic)  { catAddState.icon = ic; renderCatsModal(); }
+
+function catConfirmAdd(key) {
+  const input = document.getElementById('cat-new-name');
+  const name = input?.value?.trim();
+  if (!name) { alert('Digite o nome da categoria'); return; }
+  const cats = DB.cats(key) || DEFAULT_CATS[key] || [];
+  cats.push({ id: DB.uid(), l: name, icon: catAddState.icon });
+  DB.saveCats(key, cats);
+  catAddState = { key: null, icon: 'plus' };
+  renderCatsModal();
+}
+
+function catRemove(key, idx) {
+  const cats = DB.cats(key) || DEFAULT_CATS[key] || [];
+  if (!confirm(`Remover a categoria "${cats[idx]?.l}"?`)) return;
+  cats.splice(idx, 1);
+  DB.saveCats(key, cats);
+  renderCatsModal();
+}
+
 function renderLancCats() {
   const key = S.lancType + '_' + S.lancScope;
   const cats = DB.cats(key) || DEFAULT_CATS[key] || [];
