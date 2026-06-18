@@ -74,7 +74,7 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .btn-p{width:100%;height:54px;border:none;border-radius:18px;background:var(--blue);color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Inter,system-ui,sans-serif;box-shadow:0 8px 22px rgba(14,165,233,.25);margin-top:8px;touch-action:manipulation}
 .btn-p:active{opacity:.9;transform:scale(.99)}
 .btn-s{width:100%;height:48px;border:1.5px solid var(--line);border-radius:16px;background:#F8FAFC;color:var(--text);font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,system-ui,sans-serif;margin-top:8px}
-.kmadj-step{height:62px;width:38px;border:1.5px solid var(--line);border-radius:14px;background:#F8FAFC;color:#334155;font-size:11px;font-weight:800;cursor:pointer;touch-action:manipulation;flex-shrink:0;font-family:Inter,system-ui,sans-serif}
+.kmadj-step{height:34px;width:54px;border:1.5px solid var(--line);border-radius:12px;background:#F8FAFC;color:#334155;font-size:12px;font-weight:800;cursor:pointer;touch-action:manipulation;flex-shrink:0;font-family:Inter,system-ui,sans-serif}
 .empty{padding:24px;text-align:center;color:var(--muted);font-size:13px;font-weight:500}
 
 
@@ -124,7 +124,7 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .km-edit-btn{width:18px;height:18px;border-radius:50%;border:0;background:rgba(255,255,255,.22);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;flex-shrink:0;padding:0}
 .j-actions{display:grid;gap:10px}
 .j-actions.two{grid-template-columns:1fr 1fr}
-.j-actions.single{display:block;text-align:center;margin-top:2px}
+.j-actions.single{display:grid;justify-content:center}
 .j-btn{height:48px;border:0;border-radius:16px;font-size:14px;font-weight:780;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;touch-action:manipulation;width:100%}
 .j-btn svg{width:17px;height:17px}
 .j-btn.solid-light{background:#fff;color:var(--green2)}
@@ -950,16 +950,20 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
 <div class="mo ctr" id="mo-km-adjust">
   <div class="sheet ctr">
     <div class="sheet-head"><h2>Ajustar km total</h2><button class="xbtn" onclick="closeMo('mo-km-adjust')">&#x2715;</button></div>
-    <div style="font-size:12.5px;color:#64748B;margin-bottom:18px;line-height:1.4">O GPS pode ter uma margem de erro. Ajuste pra bater com o que você rodou de verdade.</div>
-    <div style="display:flex;align-items:center;justify-content:center;gap:5px;margin-bottom:8px">
-      <button class="kmadj-step" onclick="kmAdjStep(-10)">-10</button>
-      <button class="kmadj-step" onclick="kmAdjStep(-1)">-1</button>
-      <button class="kmadj-step" onclick="kmAdjStep(-0.5)">-0,5</button>
+    <div style="font-size:12.5px;color:#64748B;margin-bottom:18px;line-height:1.4">Você pode ajustar o km total rodado hoje sempre que precisar.</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button class="kmadj-step" onclick="kmAdjStep(-10)">-10</button>
+        <button class="kmadj-step" onclick="kmAdjStep(-1)">-1</button>
+        <button class="kmadj-step" onclick="kmAdjStep(-0.5)">-0,5</button>
+      </div>
       <input id="kmadj-val" type="number" inputmode="decimal" step="0.1"
-        style="width:96px;height:62px;text-align:center;font-size:21px;font-family:'DM Mono',monospace;font-weight:700;border:1.5px solid #E2E8F0;border-radius:16px;background:#F8FAFC;color:#0F172A;outline:none;box-sizing:border-box;flex-shrink:0">
-      <button class="kmadj-step" onclick="kmAdjStep(0.5)">+0,5</button>
-      <button class="kmadj-step" onclick="kmAdjStep(1)">+1</button>
-      <button class="kmadj-step" onclick="kmAdjStep(10)">+10</button>
+        style="width:118px;height:114px;text-align:center;font-size:28px;font-family:'DM Mono',monospace;font-weight:700;border:1.5px solid #E2E8F0;border-radius:18px;background:#F8FAFC;color:#0F172A;outline:none;box-sizing:border-box;flex-shrink:0">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button class="kmadj-step" onclick="kmAdjStep(0.5)">+0,5</button>
+        <button class="kmadj-step" onclick="kmAdjStep(1)">+1</button>
+        <button class="kmadj-step" onclick="kmAdjStep(10)">+10</button>
+      </div>
     </div>
     <button class="btn-p" onclick="saveKmAdjust()">Confirmar</button>
   </div>
@@ -1661,7 +1665,7 @@ function sessionItem(label, startMs, endMs, km, elapsedSecs, live) {
   const range = fmtHM(startMs) + ' → ' + (endMs ? fmtHM(endMs) : (live ? 'Agora' : '—'));
   const status = live ? (S.gps.st==='paused' ? 'Pausada' : 'Online') : 'Finalizada';
   return `<div class="li-row">
-    <div class="li-ico green"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
+    <div class="li-ico green"><svg viewBox="0 0 24 24"><path d="M5 13l1.4-4.2A3 3 0 0 1 9.2 7h5.6a3 3 0 0 1 2.8 1.8L19 13"/><path d="M4 13h16v5H4z"/><circle cx="7.5" cy="18" r="1.2" fill="currentColor"/><circle cx="16.5" cy="18" r="1.2" fill="currentColor"/></svg></div>
     <div class="li-info"><h3>${label}</h3><p>${range} · ${status}</p></div>
     <div class="li-val"><strong>${dur}</strong>${(km||0).toFixed(1)} km</div>
   </div>`;
@@ -1676,10 +1680,11 @@ function tripItem(t) {
 }
 function lancItem(it) {
   const isRec = it._type === 'receita';
-  const icoSvg = isRec
-    ? '<svg viewBox="0 0 24 24"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg>'
-    : '<svg viewBox="0 0 24 24"><path d="M4 3v18"/><path d="M4 14h12a4 4 0 0 0 0-8H4"/></svg>';
-  const title = it.desc || it.category || (isRec ? 'Receita extra' : 'Despesa');
+  const catKey = (it._type || 'despesa') + '_' + (it.scope || 'operacional');
+  const cats = DB.cats(catKey) || DEFAULT_CATS[catKey] || [];
+  const cat = cats.find(c => c.id === it.category);
+  const icoSvg = CAT_ICONS[cat?.icon] || CAT_ICONS.plus;
+  const title = it.desc || it.categoryLabel || it.category || (isRec ? 'Receita extra' : 'Despesa');
   const sub = (it.scope==='pessoal'?'Pessoal':'Operacional') + (it.date?' · '+it.date:'');
   const val = isRec ? DB.fR(it.amount) : '-'+DB.fR(it.amount);
   return `<div class="li-row">
@@ -2406,6 +2411,23 @@ function showToast(msg, ms) {
   document.body.appendChild(el);
   setTimeout(() => el.remove(), ms || 3200);
 }
+function showEndJourneyToast(km) {
+  const existing = document.getElementById('app-toast-center'); if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.id = 'app-toast-center';
+  el.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(15,23,42,.35)';
+  el.innerHTML = `
+    <div style="background:#fff;border-radius:26px;padding:36px 28px;max-width:320px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(15,23,42,.25)">
+      <div style="width:68px;height:68px;border-radius:50%;background:#ECFDF3;color:#16A34A;display:flex;align-items:center;justify-content:center;margin:0 auto 18px">
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+      </div>
+      <div style="font-size:18px;font-weight:800;color:#0F172A;margin-bottom:6px">Jornada encerrada</div>
+      <div style="font-size:14.5px;color:#64748B">${km.toFixed(1)} km registrados</div>
+    </div>`;
+  document.body.appendChild(el);
+  el.addEventListener('click', () => el.remove());
+  setTimeout(() => el.remove(), 3500);
+}
 function showConfirmToast(msg, onConfirm, confirmLabel, cancelLabel) {
   const existing = document.getElementById('app-toast'); if (existing) existing.remove();
   const el = document.createElement('div');
@@ -2458,7 +2480,7 @@ function gpsStop() {
   g.start=null; g.pausedMs=0; g.km=0; g.pts=[]; g.baseKm=0; g.baseElapsed=0; g.pa=null;
   releaseWakeLock();
   if (S.sec==='jornada') renderJornada();
-  if (km > 0.1) setTimeout(() => showToast('Jornada encerrada. '+km.toFixed(1)+'km registrados.'), 300);
+  if (km > 0.1) setTimeout(() => showEndJourneyToast(km), 300);
 }
 function getElapsed() {
   const g = S.gps; if (!g.start) return 0;
