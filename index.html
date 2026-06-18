@@ -1622,8 +1622,11 @@ function pjSaveEntry() {
   const moneyGoal = parseFloat(document.getElementById('pj-money')?.value||0) || null;
   const kmGoal = parseFloat(document.getElementById('pj-km')?.value||0) || null;
   const plans = DB.planJornada();
-  plans.push({ id: DB.uid(), days: pjSelDays.slice(), moneyGoal, kmGoal, schedules: validSched });
+  const entry = { id: DB.uid(), days: pjSelDays.slice(), moneyGoal, kmGoal, schedules: validSched };
+  plans.push(entry);
   DB.savePlanJornada(plans);
+  SYNC.push('plan_jornada', { id: entry.id, days: entry.days, money_goal: entry.moneyGoal,
+    km_goal: entry.kmGoal, schedules: entry.schedules });
   pjSelDays = []; pjSchedules = [];
   document.querySelectorAll('.pj-day').forEach(b => b.classList.remove('on'));
   const mEl = document.getElementById('pj-money'); if (mEl) mEl.value = '';
@@ -1636,6 +1639,7 @@ function pjSaveEntry() {
 function pjRemoveEntry(id) {
   if (!confirm('Remover essa jornada planejada?')) return;
   DB.savePlanJornada(DB.planJornada().filter(p => p.id !== id));
+  SYNC.del('plan_jornada', { id });
   renderPjList();
   renderMetasDoDia(DB.day(S.curDate));
 }
@@ -1918,6 +1922,7 @@ function catConfirmAdd(key) {
   const cats = DB.cats(key) || DEFAULT_CATS[key] || [];
   cats.push({ id: DB.uid(), l: name, icon: catAddState.icon });
   DB.saveCats(key, cats);
+  SYNC.pushCats(key);
   catAddState = { key: null, icon: 'plus' };
   renderCatsModal();
 }
@@ -1927,6 +1932,7 @@ function catRemove(key, idx) {
   if (!confirm(`Remover a categoria "${cats[idx]?.l}"?`)) return;
   cats.splice(idx, 1);
   DB.saveCats(key, cats);
+  SYNC.pushCats(key);
   renderCatsModal();
 }
 
@@ -1967,6 +1973,11 @@ function saveLanc() {
   if (S.lancType === 'receita') day.revenues.push(entry);
   else day.expenses.push(entry);
   DB.saveDay(day);
+  SYNC.push(S.lancType === 'receita' ? 'revenues' : 'expenses', {
+    id: entry.id, date: entry.date, category: entry.category, category_label: entry.categoryLabel,
+    amount: entry.amount, description: entry.desc, scope: entry.scope,
+    recorrente: entry.recorrente, freq: entry.freq
+  });
   closeMo('mo-lancamento');
   document.getElementById('l-valor').value = '';
   document.getElementById('l-desc').value = '';
@@ -1987,15 +1998,19 @@ function saveCorrida() {
   const val = parseFloat(document.getElementById('c-val')?.value || 0);
   if (!val) { alert('Informe o valor'); return; }
   const day = DB.day(S.curDate);
-  day.trips.push({
+  const trip = {
     id: DB.uid(), platform: S.corPlat,
     time:     document.getElementById('c-time')?.value || '',
     duration: parseInt(document.getElementById('c-dur')?.value) || 0,
     origin:   document.getElementById('c-orig')?.value || '',
     dest:     document.getElementById('c-dest')?.value || '',
     value: val, km: parseFloat(document.getElementById('c-km')?.value) || 0
-  });
+  };
+  day.trips.push(trip);
   DB.saveDay(day);
+  SYNC.push('trips', { id: trip.id, date: S.curDate, platform: trip.platform, time: trip.time || null,
+    duration: trip.duration, origin: trip.origin, dest: trip.dest, value: trip.value, km: trip.km,
+    category: '', surge: false, airport: false, source: 'manual' });
   closeMo('mo-corrida');
   ['c-val','c-km','c-orig','c-dest','c-dur'].forEach(id => { const el=document.getElementById(id); if(el)el.value=''; });
   renderJornada();
@@ -2036,6 +2051,7 @@ function saveKmAdjust() {
   const day = DB.day(S.curDate);
   day.kmAdjust = parseFloat((newTotal - kmAdjBase).toFixed(2));
   DB.saveDay(day);
+  SYNC.push('day_meta', { date: S.curDate, km_adjust: day.kmAdjust, km_total_legacy: day.kmTotal ?? null });
   closeMo('mo-km-adjust');
   renderJornada();
   showToast('Km total ajustado.');
@@ -2309,19 +2325,26 @@ function confirmImport() {
   if (!selected.length) { closeMo('mo-import-confirm'); return; }
   const day = DB.day(S.curDate);
   let added=0, skipped=0;
+  const toPush = [];
   selected.forEach(t => {
     // Rejeita corridas claramente inválidas (0min E 0km mas tem valor)
     const hasValue = parseFloat(t.value) > 0;
     const isGhost  = (t.duration||0) === 0 && (parseFloat(t.km)||0) < 0.1 && hasValue;
     if (isGhost) { skipped++; return; }
     if (isTripDuplicate(t, day.trips)) { skipped++; return; }
-    day.trips.push({id:DB.uid(), platform:t.platform||'uber', time:t.time||'',
+    const trip = {id:DB.uid(), platform:t.platform||'uber', time:t.time||'',
       duration:t.duration||0, origin:t.origin||'', dest:t.dest||'',
       value:parseFloat(t.value)||0, km:parseFloat(t.km)||0,
-      category:'', surge:t.surge||false, airport:t.airport||false});
+      category:'', surge:t.surge||false, airport:t.airport||false};
+    day.trips.push(trip);
+    toPush.push(trip);
     added++;
   });
   DB.saveDay(day); closeMo('mo-import-confirm'); window._pendingTrips=null;
+  toPush.forEach(trip => SYNC.push('trips', { id: trip.id, date: S.curDate, platform: trip.platform,
+    time: trip.time || null, duration: trip.duration, origin: trip.origin, dest: trip.dest,
+    value: trip.value, km: trip.km, category: trip.category, surge: trip.surge, airport: trip.airport,
+    source: 'import_ai' }));
   if (S.sec==='jornada') renderJornada();
   if (S.sec==='home') renderHome();
   const msg = skipped>0
@@ -2341,14 +2364,14 @@ function gpsOnPosition(pos) {
   const now = Date.now();
   // Fix de baixa precisão (comum em túnel, garagem, prédios altos) — ignora totalmente,
   // não usa como referência pra não distorcer a próxima medição.
-  if (accuracy != null && accuracy > 35) return;
+  if (accuracy != null && accuracy > 25) return;
   const ref = g.pts.length ? g.pts[g.pts.length - 1] : null;
   if (ref) {
     const d = hav(ref[0], ref[1], la, lo); // km
     const distM = d * 1000;
     // Piso de ruído: GPS "tremido" parado ou no trânsito não pode contar como deslocamento.
     // Quanto pior a precisão do fix, maior o movimento exigido pra confiar nele.
-    const noiseFloorM = Math.max(8, accuracy || 15);
+    const noiseFloorM = Math.max(10, accuracy || 15);
     if (distM >= noiseFloorM) {
       // Rejeita saltos com velocidade implausível (glitch/teleporte de GPS)
       const dtH = g.lastFixTime ? (now - g.lastFixTime) / 3600000 : null;
@@ -2469,12 +2492,15 @@ function gpsStop() {
   const day = DB.day(DB.today());
   const elapsed = getElapsed();
   if (!day.sessions) day.sessions = [];
-  day.sessions.push({ start: g.start, end: Date.now(), km: g.km, elapsed: elapsed });
+  const sess = { id: DB.uid(), start: g.start, end: Date.now(), km: g.km, elapsed: elapsed };
+  day.sessions.push(sess);
   const totalKm = day.sessions.reduce((s,x)=>s+(x.km||0),0);
   const totalElapsed = day.sessions.reduce((s,x)=>s+(x.elapsed||0),0);
   day.session = { km: totalKm, elapsed: totalElapsed }; // compat com Agenda
   if (!day.kmTotal && totalKm > 0.1) day.kmTotal = parseFloat(totalKm.toFixed(1));
   DB.saveDay(day);
+  SYNC.push('sessions', { id: sess.id, date: DB.today(), start_ms: sess.start, end_ms: sess.end,
+    km: sess.km, elapsed_secs: sess.elapsed });
   syncNavButton();
   DB.del('sm_gps_session');
   const km = g.km;
@@ -3237,6 +3263,11 @@ function receiveOverlayTrip(trip) {
   trip.id = trip.id || DB.uid();
   day.trips.push(trip);
   DB.saveDay(day);
+  SYNC.push('trips', { id: trip.id, date: S.curDate, platform: trip.platform || 'uber',
+    time: trip.time || null, duration: trip.duration || 0, origin: trip.origin || '',
+    dest: trip.dest || '', value: parseFloat(trip.value) || 0, km: parseFloat(trip.km) || 0,
+    category: trip.category || '', surge: trip.surge || false, airport: trip.airport || false,
+    source: 'overlay' });
   if (S.sec === 'jornada') renderJornada();
   if (S.sec === 'home')    renderHome();
   // Vibração de confirmação
@@ -3266,6 +3297,111 @@ function onNativeReady() {
 // SUPABASE AUTH — email + senha
 // ══════════════════════════════════════════════
 let _supaUser = null;
+
+// ── SINCRONIZAÇÃO COM SUPABASE ──────────────────────────────────────────
+// Push: grava cada alteração local também na nuvem (silencioso, não trava a UI).
+// Pull: no primeiro boot logado, busca tudo da nuvem e mescla no localStorage,
+// pra dados sobreviverem a troca de aparelho ou reinstalação.
+const SYNC = {
+  async push(table, row) {
+    if (!_supaUser) return;
+    try {
+      await _SUPA.from(table).upsert(Object.assign({}, row, {
+        user_id: _supaUser.id, synced_at: new Date().toISOString()
+      }));
+    } catch (e) { console.error('SYNC.push', table, e); }
+  },
+  async del(table, match) {
+    if (!_supaUser) return;
+    try {
+      let q = _SUPA.from(table).delete();
+      Object.entries(match).forEach(([k, v]) => { q = q.eq(k, v); });
+      await q;
+    } catch (e) { console.error('SYNC.del', table, e); }
+  },
+  async pushCats(key) {
+    if (!_supaUser) return;
+    try {
+      await _SUPA.from('categories').upsert({
+        user_id: _supaUser.id, cat_key: key, items: DB.cats(key) || DEFAULT_CATS[key] || [],
+        synced_at: new Date().toISOString()
+      });
+    } catch (e) { console.error('SYNC.pushCats', e); }
+  },
+  async pullAll() {
+    if (!_supaUser) return;
+    const uid = _supaUser.id;
+    try {
+      const [trips, expenses, revenues, sessions, planJ, cats, dayMeta] = await Promise.all([
+        _SUPA.from('trips').select('*').eq('user_id', uid),
+        _SUPA.from('expenses').select('*').eq('user_id', uid),
+        _SUPA.from('revenues').select('*').eq('user_id', uid),
+        _SUPA.from('sessions').select('*').eq('user_id', uid),
+        _SUPA.from('plan_jornada').select('*').eq('user_id', uid),
+        _SUPA.from('categories').select('*').eq('user_id', uid),
+        _SUPA.from('day_meta').select('*').eq('user_id', uid)
+      ]);
+      const byDate = {};
+      const ensure = d => byDate[d] || (byDate[d] = DB.day(d));
+
+      (trips.data || []).forEach(t => {
+        const day = ensure(t.date);
+        if (!day.trips.find(x => x.id === t.id)) day.trips.push({
+          id: t.id, platform: t.platform || 'uber', time: (t.time || '').slice(0, 5),
+          duration: t.duration || 0, origin: t.origin || '', dest: t.dest || '',
+          value: parseFloat(t.value) || 0, km: parseFloat(t.km) || 0,
+          category: t.category || '', surge: t.surge || false, airport: t.airport || false
+        });
+      });
+      (expenses.data || []).forEach(e => {
+        const day = ensure(e.date);
+        if (!day.expenses.find(x => x.id === e.id)) day.expenses.push({
+          id: e.id, category: e.category || '', categoryLabel: e.category_label || '',
+          desc: e.description || '', amount: parseFloat(e.amount) || 0, date: e.date,
+          scope: e.scope || 'operacional', recorrente: e.recorrente || false, freq: e.freq || null
+        });
+      });
+      (revenues.data || []).forEach(r => {
+        const day = ensure(r.date);
+        if (!day.revenues.find(x => x.id === r.id)) day.revenues.push({
+          id: r.id, category: r.category || '', categoryLabel: r.category_label || '',
+          desc: r.description || '', amount: parseFloat(r.amount) || 0, date: r.date,
+          scope: r.scope || 'operacional', recorrente: r.recorrente || false, freq: r.freq || null
+        });
+      });
+      (sessions.data || []).forEach(s => {
+        const day = ensure(s.date);
+        if (!day.sessions) day.sessions = [];
+        if (!day.sessions.find(x => x.id === s.id)) day.sessions.push({
+          id: s.id, start: Number(s.start_ms), end: s.end_ms ? Number(s.end_ms) : null,
+          km: parseFloat(s.km) || 0, elapsed: s.elapsed_secs || 0
+        });
+      });
+      (dayMeta.data || []).forEach(m => {
+        const day = ensure(m.date);
+        day.kmAdjust = parseFloat(m.km_adjust) || 0;
+        if (m.km_total_legacy != null) day.kmTotal = parseFloat(m.km_total_legacy);
+      });
+      Object.values(byDate).forEach(day => DB.saveDay(day));
+
+      if (planJ.data && planJ.data.length) {
+        const local = DB.planJornada();
+        planJ.data.forEach(p => {
+          if (!local.find(x => x.id === p.id)) local.push({
+            id: p.id, days: p.days || [],
+            moneyGoal: p.money_goal != null ? parseFloat(p.money_goal) : null,
+            kmGoal: p.km_goal != null ? parseFloat(p.km_goal) : null,
+            schedules: p.schedules || []
+          });
+        });
+        DB.savePlanJornada(local);
+      }
+      (cats.data || []).forEach(c => {
+        if (!DB.get('sm_cats_' + c.cat_key)) DB.saveCats(c.cat_key, c.items || []);
+      });
+    } catch (e) { console.error('SYNC.pullAll', e); }
+  }
+};
 
 async function authInit() {
   ['app-nav','app-header'].forEach(id => { const el=document.getElementById(id);if(el)el.style.display='none'; });
@@ -3304,11 +3440,14 @@ function showLogin() {
   document.querySelectorAll('.screen').forEach(s=>s.style.display='none');
 }
 let _appBooted = false;
-function showApp() {
+async function showApp() {
   const el=document.getElementById('sc-login'); if(el)el.style.display='none';
   const nav=document.getElementById('app-nav'); if(nav)nav.style.display='flex';
   if(_supaUser && !DB.cfg().name && _supaUser.email){
     const cfg=DB.cfg(); cfg.name=_supaUser.email.split('@')[0]; DB.saveCfg(cfg);
+  }
+  if (!_appBooted) {
+    try { await SYNC.pullAll(); } catch(e) { console.error('pullAll boot:', e); }
   }
   try{renderHome();}    catch(e){console.error('renderHome:',e);}
   try{restoreGpsSession();} catch(e){console.error('restoreGpsSession:',e);}
