@@ -327,6 +327,63 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
 .agcal-empty{padding:20px;text-align:center;color:#94A3B8;font-size:13px;border-top:1px solid #f1f5f9}
 .agcal-fab{position:sticky;bottom:80px;float:right;margin-right:0;width:52px;height:52px;border-radius:50%;background:#22c55e;border:none;color:#fff;font-size:26px;font-weight:300;cursor:pointer;touch-action:manipulation;box-shadow:0 10px 24px rgba(34,197,94,.3);display:flex;align-items:center;justify-content:center;line-height:1;margin-bottom:8px}
 
+/* ── HOME GRAFICOS (hg-) ────────────────────────────────────────── */
+.hg-period-card{background:radial-gradient(circle at 16% 0%,rgba(255,255,255,.16),transparent 34%),radial-gradient(circle at 92% 88%,rgba(34,197,94,.18),transparent 34%),linear-gradient(135deg,#0f172a 0%,#0b2d5a 48%,#0ea5e9 100%);color:#fff;border-radius:32px;padding:18px;box-shadow:0 22px 54px rgba(14,165,233,.22),inset 0 1px 0 rgba(255,255,255,.16)}
+.hg-period-top{display:flex;align-items:center;margin-bottom:20px}
+.hg-period-tabs{height:40px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:4px;display:flex;gap:4px;flex:1;margin-right:10px}
+.hg-period-tabs button{flex:1;border:0;background:transparent;color:rgba(255,255,255,.76);font-size:12px;font-weight:720;border-radius:999px;cursor:pointer;font-family:Inter,system-ui,sans-serif}
+.hg-period-tabs button.active{background:#fff;color:#101828;box-shadow:0 8px 18px rgba(15,23,42,.08)}
+.hg-filter-btn{width:40px;height:40px;border:1px solid rgba(255,255,255,.2);border-radius:15px;background:rgba(255,255,255,.12);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.hg-filter-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.hg-main-value{text-align:center;margin-bottom:18px}
+.hg-main-value label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.14em;font-weight:720;opacity:.72;margin-bottom:8px}
+.hg-main-value h1{font-size:40px;line-height:1;font-weight:800;letter-spacing:-.04em}
+.hg-main-value p{font-size:13px;font-weight:520;opacity:.78;margin-top:7px}
+.hg-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.hg-metric{background:rgba(255,255,255,.115);border:1px solid rgba(255,255,255,.15);border-radius:18px;padding:10px 7px;text-align:center}
+.hg-metric strong{display:block;font-size:15px;font-weight:760;font-family:'DM Mono',monospace}
+.hg-metric span{display:block;font-size:9.5px;font-weight:720;text-transform:uppercase;letter-spacing:.055em;opacity:.74;margin-top:4px}
+.hg-goals{margin-top:14px;background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.15);border-radius:18px;padding:11px;display:flex;flex-direction:column;gap:11px}
+.hg-goal-row{display:flex;justify-content:space-between;font-size:12px;font-weight:650;opacity:.88;margin-bottom:7px}
+.hg-goal-bar{height:14px;background:rgba(255,255,255,.20);border-radius:999px;overflow:hidden}
+.hg-goal-bar i{display:block;height:100%;border-radius:999px}
+.hg-goal-bar.money i{background:linear-gradient(90deg,#f59e0b,#22c55e)}
+.hg-goal-bar.time i{background:linear-gradient(90deg,#0ea5e9,#22c55e)}
+.hg-goal-bar.km i{background:linear-gradient(90deg,#8b5cf6,#0ea5e9)}
+.hg-goal-locked{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:650;opacity:.85;cursor:pointer}
+.hg-goal-locked b{color:#fff;text-decoration:underline;font-weight:760}
+.hg-chart-card{background:#fff;border:1px solid rgba(15,23,42,.055);border-radius:26px;box-shadow:0 12px 32px rgba(15,23,42,.065);padding:16px}
+.hg-chart-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
+.hg-chart-head h2{font-size:16.5px;font-weight:760;letter-spacing:-.025em;color:#101828}
+.hg-chart-head p{font-size:12px;color:#667085;font-weight:500;margin-top:3px;line-height:1.35}
+.hg-mini-tabs,.hg-category-tabs{height:34px;background:#eaf0f6;border:1px solid #dbe3ec;border-radius:999px;padding:3px;display:flex;gap:3px;flex:0 0 auto}
+.hg-mini-tabs button,.hg-category-tabs button{min-width:48px;border:0;background:transparent;color:#667085;font-size:11px;font-weight:720;border-radius:999px;padding:0 10px;cursor:pointer;font-family:Inter,system-ui,sans-serif}
+.hg-mini-tabs button.active,.hg-category-tabs button.active{background:#fff;color:#101828;box-shadow:0 6px 14px rgba(15,23,42,.06)}
+.hg-category-tabs{margin:2px 0 15px}.hg-category-tabs button{flex:1}
+.hg-bar-chart{height:154px;display:flex;align-items:end;gap:7px;padding:8px 2px 0;overflow-x:auto}
+.hg-bar-col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:7px}
+.hg-bar{width:100%;max-width:18px;border-radius:4px 4px 0 0;background:#0ea5e9;min-height:2px}
+.hg-bar-col span{font-size:10px;color:#667085;font-weight:650;white-space:nowrap}
+.hg-bar-chart.hour .hg-bar{max-width:10px;background:#22c55e}
+.hg-bar-chart.month .hg-bar{max-width:16px;background:#8b5cf6}
+.hg-bar-empty{width:100%;text-align:center;font-size:12px;color:#94A3B8;padding:50px 0}
+.hg-pie-wrap{display:grid;grid-template-columns:118px 1fr;gap:16px;align-items:center;padding-top:4px}
+.hg-pie{width:118px;height:118px;border-radius:50%;position:relative;box-shadow:inset 0 0 0 1px rgba(15,23,42,.05);flex-shrink:0}
+.hg-pie:after{content:"";position:absolute;inset:30px;background:#fff;border-radius:50%}
+.hg-pie-list{display:flex;flex-direction:column;gap:8px}
+.hg-pie-item{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:#344054;font-weight:650}
+.hg-pie-item div{display:flex;align-items:center;gap:7px}
+.hg-pie-item i{width:9px;height:9px;border-radius:50%;display:block;flex-shrink:0}
+.hg-pie-item strong{font-size:12.5px;color:#101828}
+.hg-category-panel{display:flex;flex-direction:column;gap:11px;margin-top:14px}
+.hg-cat-row{display:grid;grid-template-columns:86px 1fr 44px;gap:10px;align-items:center}
+.hg-cat-name{font-size:12px;color:#344054;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hg-cat-value{text-align:right;font-size:12px;color:#101828;font-weight:720}
+.hg-cat-track{height:12px;background:#eef2f7;border-radius:999px;overflow:hidden}
+.hg-cat-track i{display:block;height:100%;border-radius:999px}
+.hg-filter-row{display:flex;gap:8px}
+.hg-filter-row input{flex:1;height:44px;border:1.5px solid #E2E8F0;border-radius:12px;padding:0 12px;font-size:13px;font-family:Inter,system-ui,sans-serif}
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
@@ -466,56 +523,68 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
   <div style="padding:0 16px">
     <div class="ad"><div class="adtag">PUBLI</div><div class="adtext" id="ad-text">Seguro para motoristas · Porto Seguro</div><div class="adbtn">Ver</div></div>
   </div>
-  <section class="hero" style="margin:12px 16px 0">
-    <div class="period">
-      <div class="seg">
-        <button id="hp-w" class="on" onclick="setHomePeriod('w')">Semana</button>
-        <button id="hp-m" onclick="setHomePeriod('m')">Mês</button>
-        <button id="hp-y" onclick="setHomePeriod('y')">Ano</button>
+  <section class="hg-period-card" style="margin:12px 16px 0">
+    <div class="hg-period-top">
+      <div class="hg-period-tabs">
+        <button id="hg-tab-w" class="active" onclick="setHomePeriod('w')">Semana</button>
+        <button id="hg-tab-m" onclick="setHomePeriod('m')">Mês</button>
+        <button id="hg-tab-y" onclick="setHomePeriod('y')">Ano</button>
       </div>
-      <div class="filter"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18"/><path d="M6 12h12"/><path d="M10 19h4"/></svg></div>
+      <button class="hg-filter-btn" onclick="openHgFilter()"><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/></svg></button>
     </div>
-    <div class="kicker" id="h-kicker">Faturamento</div>
-    <div class="amount" id="h-amount">R$ 0,00</div>
-    <div class="sub" id="h-sub">0 corridas · 0,0 km</div>
-    <div class="metrics">
-      <div class="mrow">
-        <div class="metric"><div class="mv" id="h-rpkm">—</div><div class="ml">R$/Km</div></div>
-        <div class="metric"><div class="mv" id="h-rphr">—</div><div class="ml">R$/Hora</div></div>
-        <div class="metric"><div class="mv" id="h-trips">0</div><div class="ml">Corridas</div></div>
-      </div>
-      <div class="mrow">
-        <div class="metric"><div class="mv bad" id="h-exp">R$ 0</div><div class="ml">Despesas</div></div>
-        <div class="metric"><div class="mv good" id="h-profit">R$ 0</div><div class="ml">Lucro</div></div>
-        <div class="metric"><div class="mv" id="h-pct">0%</div><div class="ml">% Lucro</div></div>
-      </div>
+    <div class="hg-main-value">
+      <label>Faturamento</label>
+      <h1 id="hg-amount">R$ 0</h1>
+      <p id="hg-sub">0 corridas · 0,0 km</p>
     </div>
-    <div class="goalbar"><div class="goalfill" id="h-goalfill" style="width:0%"></div></div>
-    <div class="goaltext" id="h-goaltext">Configure sua meta em Mais → Metas</div>
+    <div class="hg-metrics">
+      <div class="hg-metric"><strong id="hg-rpkm">—</strong><span>R$/Km</span></div>
+      <div class="hg-metric"><strong id="hg-rphr">—</strong><span>R$/Hora</span></div>
+      <div class="hg-metric"><strong id="hg-trips">0</strong><span>Corridas</span></div>
+      <div class="hg-metric"><strong id="hg-exp">R$ 0</strong><span>Despesas</span></div>
+      <div class="hg-metric"><strong id="hg-profit">R$ 0</strong><span>Lucro</span></div>
+      <div class="hg-metric"><strong id="hg-pct">0%</strong><span>% Lucro</span></div>
+    </div>
+    <div class="hg-goals" id="hg-goals"></div>
   </section>
-  <section class="chart" style="margin:14px 16px 0">
-    <div class="chead"><div class="ctitle">Resultado por Dia</div><div class="mini-tabs"><span class="on">Dia</span><span>Semana</span></div></div>
-    <div class="bars medium" id="chart-day">
-      <div class="baritem"><div class="col" style="height:0%" id="bar-0"></div><div class="lbl" id="lbl-0">SEG</div></div>
-      <div class="baritem"><div class="col" style="height:0%" id="bar-1"></div><div class="lbl" id="lbl-1">TER</div></div>
-      <div class="baritem"><div class="col alt" style="height:0%" id="bar-2"></div><div class="lbl" id="lbl-2">QUA</div></div>
-      <div class="baritem"><div class="col" style="height:0%" id="bar-3"></div><div class="lbl" id="lbl-3">QUI</div></div>
-      <div class="baritem"><div class="col" style="height:0%" id="bar-4"></div><div class="lbl" id="lbl-4">SEX</div></div>
-      <div class="baritem"><div class="col" style="height:0%" id="bar-5"></div><div class="lbl" id="lbl-5">SAB</div></div>
-      <div class="baritem"><div class="col" style="height:0%" id="bar-6"></div><div class="lbl" id="lbl-6">DOM</div></div>
+
+  <section class="hg-chart-card" style="margin:14px 16px 0">
+    <div class="hg-chart-head"><div><h2>Resultado por Dia</h2><p>Alterna entre dias da semana e semanas do mês.</p></div>
+      <div class="hg-mini-tabs"><button class="active" id="hg-dia-d" onclick="setHgDiaMode('d')">Dia</button><button id="hg-dia-w" onclick="setHgDiaMode('w')">Semana</button></div>
+    </div>
+    <div class="hg-bar-chart" id="hg-chart-dia"></div>
+  </section>
+
+  <section class="hg-chart-card" style="margin:14px 16px 0">
+    <div class="hg-chart-head"><div><h2>Resultado por Hora</h2><p>Horários zerados ficam ocultos.</p></div>
+      <div class="hg-mini-tabs"><button class="active" id="hg-hora-h" onclick="setHgHoraMode('h')">Hora</button><button id="hg-hora-t" onclick="setHgHoraMode('t')">Turno</button></div>
+    </div>
+    <div class="hg-bar-chart hour" id="hg-chart-hora"></div>
+  </section>
+
+  <section class="hg-chart-card" style="margin:14px 16px 0">
+    <div class="hg-chart-head"><div><h2>Resultado por Mês</h2><p>Evolução mensal ou anual.</p></div>
+      <div class="hg-mini-tabs"><button class="active" id="hg-mes-m" onclick="setHgMesMode('m')">Mês</button><button id="hg-mes-y" onclick="setHgMesMode('y')">Ano</button></div>
+    </div>
+    <div class="hg-bar-chart month" id="hg-chart-mes"></div>
+  </section>
+
+  <section class="hg-chart-card" style="margin:14px 16px 0">
+    <div class="hg-chart-head"><div><h2>Plataformas</h2><p>Distribuição por app ou origem.</p></div></div>
+    <div class="hg-pie-wrap">
+      <div class="hg-pie" id="hg-pie-plat"></div>
+      <div class="hg-pie-list" id="hg-pie-plat-list"></div>
     </div>
   </section>
-  <section class="chart" style="margin:14px 16px 0">
-    <div class="chead"><div class="ctitle">Receitas e Custos</div><div class="mini-tabs"><span class="on">Receitas</span><span>Despesas</span></div></div>
-    <div class="pie-wrap">
-      <div class="pie"></div>
-      <div class="list" id="pie-list">
-        <div class="li"><span>Uber</span><b id="pie-uber">R$ 0</b></div>
-        <div class="li"><span>99</span><b id="pie-99">R$ 0</b></div>
-        <div class="li"><span>Particular</span><b id="pie-priv">R$ 0</b></div>
-      </div>
+
+  <section class="hg-chart-card" style="margin:14px 16px 0">
+    <div class="hg-chart-head"><div><h2>Receitas x Despesas</h2><p>Distribuição por categoria conforme o tipo selecionado.</p></div></div>
+    <div class="hg-category-tabs"><button class="active" id="hg-rd-receita" onclick="setHgRevDesp('receita')">Receitas</button><button id="hg-rd-despesa" onclick="setHgRevDesp('despesa')">Despesas</button></div>
+    <div class="hg-pie-wrap">
+      <div class="hg-pie" id="hg-pie-cat"></div>
+      <div class="hg-pie-list" id="hg-pie-cat-list"></div>
     </div>
-    <div class="legend"><div class="leg"><i class="dot"></i>Uber</div><div class="leg"><i class="dot g"></i>99</div><div class="leg"><i class="dot o"></i>Custos</div></div>
+    <div class="hg-category-panel" id="hg-cat-panel"></div>
   </section>
   <section class="entries" style="margin:14px 16px 0">
     <div class="eheader"><h3>Últimos lançamentos</h3><button onclick="navTo('lancamentos')">Ver tudo</button></div>
@@ -947,6 +1016,18 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
 </div>
 
 <!-- Ajustar Km (GPS impreciso) -->
+<div class="mo ctr" id="mo-hg-filter">
+  <div class="sheet ctr">
+    <div class="sheet-head"><h2>Período personalizado</h2><button class="xbtn" onclick="closeMo('mo-hg-filter')">&#x2715;</button></div>
+    <div style="font-size:12.5px;color:#64748B;margin-bottom:16px;line-height:1.4">Escolha um intervalo de datas pra ver o resumo só desse período.</div>
+    <div class="hg-filter-row" style="margin-bottom:18px">
+      <input id="hg-filter-start" type="date">
+      <input id="hg-filter-end" type="date">
+    </div>
+    <button class="btn-p" onclick="applyHgFilter()">Aplicar</button>
+  </div>
+</div>
+
 <div class="mo ctr" id="mo-km-adjust">
   <div class="sheet ctr">
     <div class="sheet-head"><h2>Ajustar km total</h2><button class="xbtn" onclick="closeMo('mo-km-adjust')">&#x2715;</button></div>
@@ -1181,6 +1262,8 @@ const DEFAULT_CATS = {
 let S = {
   sec: 'home',
   homePeriod: 'w',
+  hgCustomStart: null, hgCustomEnd: null,
+  hgDiaMode: 'd', hgHoraMode: 'h', hgMesMode: 'm', hgRevDesp: 'receita',
   finPer: 'month',
   finScope: 'all',
   lancFilter: 'all',
@@ -1290,15 +1373,35 @@ function updateFavBtn() {
 function setHomePeriod(p) {
   S.homePeriod = p;
   ['w','m','y'].forEach(x => {
-    const el = document.getElementById('hp-'+x);
-    if (el) el.classList.toggle('on', x === p);
+    const el = document.getElementById('hg-tab-'+x);
+    if (el) el.classList.toggle('active', x === p);
   });
-  renderHome();
+  renderHomeGraphs();
+}
+function openHgFilter() {
+  const sEl = document.getElementById('hg-filter-start'), eEl = document.getElementById('hg-filter-end');
+  if (sEl) sEl.value = S.hgCustomStart || DB.today();
+  if (eEl) eEl.value = S.hgCustomEnd || DB.today();
+  openMo('mo-hg-filter');
+}
+function applyHgFilter() {
+  const s = document.getElementById('hg-filter-start')?.value;
+  const e = document.getElementById('hg-filter-end')?.value;
+  if (!s || !e || s > e) { alert('Escolha um intervalo de datas válido'); return; }
+  S.hgCustomStart = s; S.hgCustomEnd = e; S.homePeriod = 'custom';
+  ['w','m','y'].forEach(x => { const el = document.getElementById('hg-tab-'+x); if (el) el.classList.toggle('active', false); });
+  closeMo('mo-hg-filter');
+  renderHomeGraphs();
 }
 function getHomeDays() {
   const today = new Date();
   const fmt = d => d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
   const p = S.homePeriod;
+  if (p === 'custom' && S.hgCustomStart && S.hgCustomEnd) {
+    const days = [];
+    for (let d = new Date(S.hgCustomStart+'T12:00'); fmt(d) <= S.hgCustomEnd; d.setDate(d.getDate()+1)) days.push(fmt(new Date(d)));
+    return days;
+  }
   if (p === 'w') {
     const dow = (today.getDay() + 6) % 7;
     return Array.from({length: dow+1}, (_,i) => { const d=new Date(today); d.setDate(today.getDate()-dow+i); return fmt(d); });
@@ -1314,9 +1417,59 @@ function getHomeDays() {
   for (let d = new Date(start); d <= today; d.setDate(d.getDate()+1)) days.push(fmt(new Date(d)));
   return days;
 }
-function renderHome() {
+const HG_PALETTE = ['#0ea5e9','#22c55e','#8b5cf6','#f59e0b','#ef4444','#14b8a6','#64748b'];
+function hgBuildPie(items, pieElId, listElId, valueFmt) {
+  const filtered = items.filter(i => i.value > 0.001);
+  const pieEl = document.getElementById(pieElId);
+  const listEl = document.getElementById(listElId);
+  if (!filtered.length) {
+    if (pieEl) pieEl.style.background = '#EEF2F7';
+    if (listEl) listEl.innerHTML = '<div style="font-size:12px;color:#94A3B8">Sem dados nesse período</div>';
+    return;
+  }
+  const total = filtered.reduce((s,i)=>s+i.value,0);
+  let acc = 0;
+  const stops = filtered.map((it,i) => {
+    const color = it.color || HG_PALETTE[i % HG_PALETTE.length];
+    const from = acc, pct = it.value/total*100;
+    acc += pct;
+    return color+' '+from.toFixed(2)+'% '+acc.toFixed(2)+'%';
+  }).join(', ');
+  if (pieEl) pieEl.style.background = 'conic-gradient('+stops+')';
+  if (listEl) listEl.innerHTML = filtered.map((it,i) => {
+    const color = it.color || HG_PALETTE[i % HG_PALETTE.length];
+    const pct = Math.round(it.value/total*100);
+    return '<div class="hg-pie-item"><div><i style="background:'+color+'"></i>'+it.label+'</div><strong>'+(valueFmt ? valueFmt(it.value) : pct+'%')+'</strong></div>';
+  }).join('');
+}
+function hgCatPanelHtml(items) {
+  const filtered = items.filter(i=>i.value>0.001);
+  if (!filtered.length) return '<div style="font-size:12px;color:#94A3B8;text-align:center;padding:10px 0">Sem dados nesse período</div>';
+  const total = filtered.reduce((s,i)=>s+i.value,0);
+  const max = Math.max(...filtered.map(i=>i.value));
+  return filtered.map((it,i) => {
+    const color = it.color || HG_PALETTE[i % HG_PALETTE.length];
+    const pct = Math.round(it.value/total*100);
+    const w = Math.max(4, Math.round(it.value/max*100));
+    return '<div class="hg-cat-row"><div class="hg-cat-name">'+it.label+'</div><div class="hg-cat-track"><i style="width:'+w+'%;background:'+color+'"></i></div><div class="hg-cat-value">'+pct+'%</div></div>';
+  }).join('');
+}
+function hgBarsHtml(data) {
+  const items = data.filter(d => d.value > 0.001);
+  if (!items.length) return '<div class="hg-bar-empty">Sem dados nesse período</div>';
+  const max = Math.max(...items.map(d=>d.value), 1);
+  return items.map(d => '<div class="hg-bar-col"><div class="hg-bar" style="height:'+Math.max(4,Math.round(d.value/max*124))+'px" title="'+DB.fRI(d.value)+'"></div><span>'+d.label+'</span></div>').join('');
+}
+function hgGroupBy(items, keyFn, valFn) {
+  const m = {};
+  items.forEach(it => { const k = keyFn(it); m[k] = (m[k]||0) + valFn(it); });
+  return m;
+}
+
+function renderHomeGraphs() {
   if (!S || !DB || !getHomeDays) return;
-  const days = getHomeDays().map(d => DB.day(d));
+  const dates = getHomeDays();
+  const days = dates.map(d => DB.day(d));
   const rev   = days.reduce((s,d) => s + d.trips.reduce((a,t)=>a+(t.value||0),0) + d.revenues.reduce((a,r)=>a+(r.amount||0),0), 0);
   const exp   = days.reduce((s,d) => s + d.expenses.reduce((a,e)=>a+(e.amount||0),0), 0);
   const km    = days.reduce((s,d) => s + d.trips.reduce((a,t)=>a+(t.km||0),0), 0);
@@ -1325,61 +1478,28 @@ function renderHome() {
   const profit = rev - exp;
   const pctL   = rev > 0 ? Math.round(profit/rev*100) : 0;
 
-  setText('h-amount', DB.fR(rev));
-  setText('h-sub', tc+' corridas · '+km.toFixed(1)+' km');
-  setText('h-rpkm', km > 0 ? DB.fR(rev/km) : '—');
-  setText('h-rphr', hrs > 0 ? DB.fR(rev/hrs) : '—');
-  setText('h-trips', tc);
-  setText('h-exp', DB.fRI(exp));
-  setText('h-profit', DB.fRI(profit));
-  setText('h-pct', pctL+'%');
+  setText('hg-amount', DB.fR(rev));
+  setText('hg-sub', tc+' corrida'+(tc!==1?'s':'')+' · '+km.toFixed(1)+' km');
+  setText('hg-rpkm', km > 0 ? DB.fR(rev/km) : '—');
+  setText('hg-rphr', hrs > 0 ? DB.fR(rev/hrs) : '—');
+  setText('hg-trips', tc);
+  setText('hg-exp', DB.fRI(exp));
+  setText('hg-profit', DB.fRI(profit));
+  setText('hg-pct', pctL+'%');
 
-  // Goal bar
-  const meta = DB.meta();
-  const goal = meta.general || DB.cfg().goal || 0;
-  if (goal) {
-    const pct = Math.min(100, Math.round(rev/goal*100));
-    setStyle('h-goalfill', 'width', pct+'%');
-    setText('h-goaltext', pct+'% da meta · alvo: '+DB.fRI(goal));
-  } else {
-    setText('h-goaltext', '');
-    const gtEl = document.getElementById('h-goaltext');
-    if (gtEl) gtEl.innerHTML = '<a onclick="navTo(\'mais\')" style="color:rgba(255,255,255,.85);text-decoration:underline;cursor:pointer;font-weight:600">Configure sua meta em Mais → Metas</a>';
-  }
+  renderHgGoals(dates, days, rev);
+  renderHgChartDia();
+  renderHgChartHora();
+  renderHgChartMes();
+  renderHgPlatformPie(days);
+  renderHgCatPie(days);
 
-  // Weekly bar chart (current week)
-  const weekDays = [];
-  const today = new Date();
-  const dow = (today.getDay() + 6) % 7;
-  const lbls = ['SEG','TER','QUA','QUI','SEX','SAB','DOM'];
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(today); d.setDate(today.getDate() - dow + i);
-    weekDays.push(DB.day(d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())));
-  }
-  const weekVals = weekDays.map(d => d.trips.reduce((a,t)=>a+(t.value||0),0) + d.revenues.reduce((a,r)=>a+(r.amount||0),0));
-  const maxVal = Math.max(...weekVals, 1);
-  weekVals.forEach((v, i) => {
-    const barEl = document.getElementById('bar-'+i);
-    if (barEl) barEl.style.height = Math.round(v/maxVal*90+5)+'%';
-    const lblEl = document.getElementById('lbl-'+i);
-    if (lblEl) lblEl.textContent = lbls[i];
-  });
-
-  // Source chart (Uber, 99, Particular)
-  const allTrips = days.flatMap(d => d.trips);
-  const uberR = allTrips.filter(t=>t.platform==='uber').reduce((s,t)=>s+(t.value||0),0);
-  const p99R  = allTrips.filter(t=>t.platform==='99').reduce((s,t)=>s+(t.value||0),0);
-  const privR = allTrips.filter(t=>t.platform==='particular').reduce((s,t)=>s+(t.value||0),0);
-  setText('pie-uber', DB.fRI(uberR));
-  setText('pie-99',   DB.fRI(p99R));
-  setText('pie-priv', DB.fRI(privR));
-
-  // Last entries
+  // Últimos lançamentos
   const allEntries = days.flatMap(d => [
     ...d.trips.map(t=>({...t, _type:'corrida', _date:d.date})),
     ...d.expenses.map(e=>({...e, _type:'despesa', _date:d.date})),
     ...d.revenues.map(r=>({...r, _type:'receita', _date:d.date}))
-  ]).sort((a,b) => (b._date+b.time||'').localeCompare(a._date+a.time||'')).slice(0,5);
+  ]).sort((a,b) => (b._date+(b.time||'')).localeCompare(a._date+(a.time||''))).slice(0,5);
 
   const entriesEl = document.getElementById('home-entries');
   if (entriesEl) {
@@ -1389,6 +1509,215 @@ function renderHome() {
       entriesEl.innerHTML = allEntries.map(e => entryCard(e)).join('');
     }
   }
+}
+function renderHome() { renderHomeGraphs(); }
+
+// ── Metas do período (financeiro, km, tempo online — vem do Planejar Jornada) ──
+function renderHgGoals(dates, days, rev) {
+  const el = document.getElementById('hg-goals');
+  if (!el) return;
+  const plans = DB.planJornada();
+  let moneyGoal = 0, kmGoal = 0, timeGoalMin = 0, hasAnyPlan = false;
+  dates.forEach(dt => {
+    const dow = new Date(dt+'T12:00').getDay();
+    plans.filter(p => p.days && p.days.includes(dow)).forEach(p => {
+      hasAnyPlan = true;
+      moneyGoal += p.moneyGoal || 0;
+      kmGoal += p.kmGoal || 0;
+      timeGoalMin += (p.schedules||[]).reduce((s,b)=>s+agMinutesBetween(b.start,b.end),0);
+    });
+  });
+  const isToday = d => d === DB.today();
+  const liveOn = S.gps.st==='running' || S.gps.st==='paused';
+  const kmReal = days.reduce((s,d,i) => {
+    const liveKm = (liveOn && isToday(dates[i])) ? S.gps.km : 0;
+    return s + (d.sessions||[]).reduce((a,x)=>a+(x.km||0),0) + liveKm + (d.kmAdjust||0);
+  }, 0);
+  const elapsedReal = days.reduce((s,d,i) => {
+    const liveEl = (liveOn && isToday(dates[i])) ? getElapsed() : 0;
+    return s + (d.sessions||[]).reduce((a,x)=>a+(x.elapsed||0),0) + liveEl;
+  }, 0);
+  const timeRealMin = Math.round(elapsedReal/60);
+
+  let html = '';
+  if (moneyGoal > 0) {
+    const pct = Math.min(100, Math.round(rev/moneyGoal*100));
+    html += '<div><div class="hg-goal-row"><span>Meta financeira</span><span>'+DB.fRI(rev)+' / '+DB.fRI(moneyGoal)+' · '+pct+'%</span></div><div class="hg-goal-bar money"><i style="width:'+pct+'%"></i></div></div>';
+  } else {
+    html += '<div class="hg-goal-locked" onclick="openPlanJornada()"><span>Meta financeira não definida</span><b>Planejar</b></div>';
+  }
+  if (timeGoalMin > 0) {
+    const pct = Math.min(100, Math.round(timeRealMin/timeGoalMin*100));
+    html += '<div><div class="hg-goal-row"><span>Tempo online</span><span>'+Math.floor(timeRealMin/60)+'h'+p2(timeRealMin%60)+' / '+Math.floor(timeGoalMin/60)+'h'+p2(timeGoalMin%60)+' · '+pct+'%</span></div><div class="hg-goal-bar time"><i style="width:'+pct+'%"></i></div></div>';
+  } else {
+    html += '<div class="hg-goal-locked" onclick="openPlanJornada()"><span>Tempo online não definido</span><b>Planejar</b></div>';
+  }
+  if (kmGoal > 0) {
+    const pct = Math.min(100, Math.round(kmReal/kmGoal*100));
+    html += '<div><div class="hg-goal-row"><span>Quilometragem</span><span>'+kmReal.toFixed(1)+' / '+kmGoal.toFixed(0)+' km · '+pct+'%</span></div><div class="hg-goal-bar km"><i style="width:'+pct+'%"></i></div></div>';
+  } else {
+    html += '<div class="hg-goal-locked" onclick="openPlanJornada()"><span>Quilometragem não definida</span><b>Planejar</b></div>';
+  }
+  el.innerHTML = html;
+}
+
+// ── Resultado por Dia (Dia: semana atual · Semana: últimas 8 semanas do mês) ──
+function setHgDiaMode(m) {
+  S.hgDiaMode = m;
+  ['d','w'].forEach(x => { const e=document.getElementById('hg-dia-'+x); if(e) e.classList.toggle('active', x===m); });
+  renderHgChartDia();
+}
+function renderHgChartDia() {
+  const el = document.getElementById('hg-chart-dia');
+  if (!el) return;
+  const today = new Date();
+  if (S.hgDiaMode === 'd') {
+    const lbls = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+    const dow = (today.getDay()+6)%7;
+    const data = lbls.map((l,i) => {
+      const d = new Date(today); d.setDate(today.getDate()-dow+i);
+      const day = DB.day(d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate()));
+      const v = day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0);
+      return {label:l, value:v};
+    });
+    el.innerHTML = hgBarsHtml(data);
+  } else {
+    const data = [];
+    for (let w = 7; w >= 0; w--) {
+      const end = new Date(today); end.setDate(today.getDate() - w*7);
+      const dow = (end.getDay()+6)%7;
+      const start = new Date(end); start.setDate(end.getDate()-dow);
+      let v = 0;
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
+        const day = DB.day(d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate()));
+        v += day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0);
+      }
+      data.push({label: p2(start.getDate())+'/'+p2(start.getMonth()+1), value: v});
+    }
+    el.innerHTML = hgBarsHtml(data);
+  }
+}
+
+// ── Resultado por Hora (Hora: por hora do dia · Turno: 4 turnos) — dados do mês atual ──
+function setHgHoraMode(m) {
+  S.hgHoraMode = m;
+  ['h','t'].forEach(x => { const e=document.getElementById('hg-hora-'+x); if(e) e.classList.toggle('active', x===m); });
+  renderHgChartHora();
+}
+function renderHgChartHora() {
+  const el = document.getElementById('hg-chart-hora');
+  if (!el) return;
+  const today = new Date();
+  const monthDays = Array.from({length: today.getDate()}, (_,i) => DB.day(today.getFullYear()+'-'+p2(today.getMonth()+1)+'-'+p2(i+1)));
+  const allTrips = monthDays.flatMap(d => d.trips).filter(t => t.time);
+  if (S.hgHoraMode === 'h') {
+    const byHour = hgGroupBy(allTrips, t => parseInt(t.time.split(':')[0]), t => t.value||0);
+    const data = Object.keys(byHour).sort((a,b)=>a-b).map(h => ({label: h+'h', value: byHour[h]}));
+    el.innerHTML = hgBarsHtml(data);
+  } else {
+    const turnos = [
+      {label:'Madrugada', test:h=>h>=0&&h<6},
+      {label:'Manhã',     test:h=>h>=6&&h<12},
+      {label:'Tarde',     test:h=>h>=12&&h<18},
+      {label:'Noite',     test:h=>h>=18&&h<24}
+    ];
+    const data = turnos.map(t => ({
+      label: t.label,
+      value: allTrips.filter(tr => t.test(parseInt(tr.time.split(':')[0]))).reduce((s,tr)=>s+(tr.value||0),0)
+    }));
+    el.innerHTML = hgBarsHtml(data);
+  }
+}
+
+// ── Resultado por Mês (Mês: últimos 6 meses · Ano: últimos 5 anos) ──
+function setHgMesMode(m) {
+  S.hgMesMode = m;
+  ['m','y'].forEach(x => { const e=document.getElementById('hg-mes-'+x); if(e) e.classList.toggle('active', x===m); });
+  renderHgChartMes();
+}
+function renderHgChartMes() {
+  const el = document.getElementById('hg-chart-mes');
+  if (!el) return;
+  const today = new Date();
+  const mesesLbl = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  if (S.hgMesMode === 'm') {
+    const data = [];
+    for (let m = 5; m >= 0; m--) {
+      const ref = new Date(today.getFullYear(), today.getMonth()-m, 1);
+      const daysInMonth = (ref.getMonth()===today.getMonth() && ref.getFullYear()===today.getFullYear()) ? today.getDate() : new Date(ref.getFullYear(), ref.getMonth()+1, 0).getDate();
+      let v = 0;
+      for (let i = 1; i <= daysInMonth; i++) {
+        const day = DB.day(ref.getFullYear()+'-'+p2(ref.getMonth()+1)+'-'+p2(i));
+        v += day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0);
+      }
+      data.push({label: mesesLbl[ref.getMonth()], value: v});
+    }
+    el.innerHTML = hgBarsHtml(data);
+  } else {
+    const data = [];
+    for (let y = 4; y >= 0; y--) {
+      const year = today.getFullYear() - y;
+      const isCurrent = year === today.getFullYear();
+      const end = isCurrent ? today : new Date(year, 11, 31);
+      let v = 0;
+      for (let d = new Date(year,0,1); d <= end; d.setDate(d.getDate()+1)) {
+        const day = DB.day(d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate()));
+        v += day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0);
+      }
+      data.push({label: String(year), value: v});
+    }
+    el.innerHTML = hgBarsHtml(data);
+  }
+}
+
+// ── Plataformas (fixo, sem tabs) ──
+function renderHgPlatformPie(days) {
+  const allTrips = days.flatMap(d => d.trips);
+  const uberR = allTrips.filter(t=>t.platform==='uber').reduce((s,t)=>s+(t.value||0),0);
+  const p99R  = allTrips.filter(t=>t.platform==='99').reduce((s,t)=>s+(t.value||0),0);
+  const privR = allTrips.filter(t=>t.platform==='particular').reduce((s,t)=>s+(t.value||0),0);
+  const outR  = allTrips.filter(t=>!['uber','99','particular'].includes(t.platform)).reduce((s,t)=>s+(t.value||0),0);
+  hgBuildPie([
+    {label:'Uber', value:uberR, color:'#0ea5e9'},
+    {label:'99', value:p99R, color:'#22c55e'},
+    {label:'Particular', value:privR, color:'#8b5cf6'},
+    {label:'Outros', value:outR, color:'#f59e0b'}
+  ], 'hg-pie-plat', 'hg-pie-plat-list');
+}
+
+// ── Receitas x Despesas (com tabs) ──
+function setHgRevDesp(m) {
+  S.hgRevDesp = m;
+  ['receita','despesa'].forEach(x => { const e=document.getElementById('hg-rd-'+x); if(e) e.classList.toggle('active', x===m); });
+  renderHgCatPie(getHomeDays().map(d => DB.day(d)));
+}
+function renderHgCatPie(days) {
+  let items;
+  if (S.hgRevDesp === 'receita') {
+    const allTrips = days.flatMap(d => d.trips);
+    const byPlat = [
+      {label:'Uber', value: allTrips.filter(t=>t.platform==='uber').reduce((s,t)=>s+(t.value||0),0)},
+      {label:'99', value: allTrips.filter(t=>t.platform==='99').reduce((s,t)=>s+(t.value||0),0)},
+      {label:'Particular', value: allTrips.filter(t=>t.platform==='particular').reduce((s,t)=>s+(t.value||0),0)}
+    ];
+    const allRev = days.flatMap(d => d.revenues);
+    const byCat = hgGroupBy(allRev, r => r.categoryLabel || r.category || 'Outros', r => r.amount||0);
+    const catItems = Object.keys(byCat).map(k => ({label:k, value: byCat[k]}));
+    items = byPlat.concat(catItems);
+  } else {
+    const allExp = days.flatMap(d => d.expenses);
+    const byCat = hgGroupBy(allExp, e => e.categoryLabel || e.category || 'Outros', e => e.amount||0);
+    items = Object.keys(byCat).map(k => ({label:k, value: byCat[k]}));
+  }
+  items.sort((a,b) => b.value - a.value);
+  if (items.length > 6) {
+    const top = items.slice(0,6);
+    const restSum = items.slice(6).reduce((s,i)=>s+i.value,0);
+    items = top.concat(restSum > 0 ? [{label:'Outros', value: restSum}] : []);
+  }
+  hgBuildPie(items, 'hg-pie-cat', 'hg-pie-cat-list', v => DB.fRI(v));
+  const panelEl = document.getElementById('hg-cat-panel');
+  if (panelEl) panelEl.innerHTML = hgCatPanelHtml(items);
 }
 function entryCard(e) {
   const isRev  = e._type === 'corrida' || e._type === 'receita';
