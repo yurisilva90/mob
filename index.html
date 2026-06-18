@@ -75,6 +75,7 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .btn-p{width:100%;height:54px;border:none;border-radius:18px;background:var(--blue);color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Inter,system-ui,sans-serif;box-shadow:0 8px 22px rgba(14,165,233,.25);margin-top:8px;touch-action:manipulation}
 .btn-p:active{opacity:.9;transform:scale(.99)}
 .btn-s{width:100%;height:48px;border:1.5px solid var(--line);border-radius:16px;background:#F8FAFC;color:var(--text);font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,system-ui,sans-serif;margin-top:8px}
+.kmadj-step{height:62px;width:38px;border:1.5px solid var(--line);border-radius:14px;background:#F8FAFC;color:#334155;font-size:11px;font-weight:800;cursor:pointer;touch-action:manipulation;flex-shrink:0;font-family:Inter,system-ui,sans-serif}
 .empty{padding:24px;text-align:center;color:var(--muted);font-size:13px;font-weight:500}
 
 
@@ -121,6 +122,7 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .j-mini.sm{padding:7px 5px}
 .j-mini.sm strong{font-size:13px}
 .j-mini.sm span{font-size:8.5px}
+.km-edit-btn{width:18px;height:18px;border-radius:50%;border:0;background:rgba(255,255,255,.22);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;flex-shrink:0;padding:0}
 .j-actions{display:grid;gap:10px}
 .j-actions.two{grid-template-columns:1fr 1fr}
 .j-actions.single{display:block;text-align:center;margin-top:2px}
@@ -555,7 +557,15 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
     </div>
     <div class="j-metrics">
       <div class="j-mini"><strong id="jc-total">0h00</strong><span>Tempo total</span></div>
-      <div class="j-mini"><strong id="jc-kmtotal">0,0 km</strong><span>Km total</span></div>
+      <div class="j-mini">
+        <div style="display:flex;align-items:center;justify-content:center;gap:5px">
+          <strong id="jc-kmtotal">0,0 km</strong>
+          <button class="km-edit-btn" onclick="openKmAdjust()" aria-label="Editar km total">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+          </button>
+        </div>
+        <span>Km total</span>
+      </div>
     </div>
     <div class="j-metrics2">
       <div class="j-mini sm"><strong id="jc-trips">0</strong><span>Corridas</span></div>
@@ -942,6 +952,25 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
     <div style="font-size:12px;color:#64748B;text-align:center;margin-bottom:16px">O sistema calcula o deslocamento vazio automaticamente</div>
     <button class="btn-p" onclick="saveKm()">Confirmar</button>
     <button class="btn-s" onclick="closeMo('mo-km')">Cancelar</button>
+  </div>
+</div>
+
+<!-- Ajustar Km (GPS impreciso) -->
+<div class="mo ctr" id="mo-km-adjust">
+  <div class="sheet ctr">
+    <div class="sheet-head"><h2>Ajustar km total</h2><button class="xbtn" onclick="closeMo('mo-km-adjust')">&#x2715;</button></div>
+    <div style="font-size:12.5px;color:#64748B;margin-bottom:18px;line-height:1.4">O GPS pode ter uma margem de erro. Ajuste pra bater com o que você rodou de verdade.</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:5px;margin-bottom:8px">
+      <button class="kmadj-step" onclick="kmAdjStep(-10)">-10</button>
+      <button class="kmadj-step" onclick="kmAdjStep(-1)">-1</button>
+      <button class="kmadj-step" onclick="kmAdjStep(-0.5)">-0,5</button>
+      <input id="kmadj-val" type="number" inputmode="decimal" step="0.1"
+        style="width:96px;height:62px;text-align:center;font-size:21px;font-family:'DM Mono',monospace;font-weight:700;border:1.5px solid #E2E8F0;border-radius:16px;background:#F8FAFC;color:#0F172A;outline:none;box-sizing:border-box;flex-shrink:0">
+      <button class="kmadj-step" onclick="kmAdjStep(0.5)">+0,5</button>
+      <button class="kmadj-step" onclick="kmAdjStep(1)">+1</button>
+      <button class="kmadj-step" onclick="kmAdjStep(10)">+10</button>
+    </div>
+    <button class="btn-p" onclick="saveKmAdjust()">Confirmar</button>
   </div>
 </div>
 
@@ -1455,7 +1484,7 @@ function renderJourneyCard(day, isToday) {
   const liveElapsed = live ? getElapsed() : 0;
   const liveKm = live ? g.km : 0;
   const totalElapsed = finishedElapsed + liveElapsed;
-  const totalKm = finishedKm + liveKm;
+  const totalKm = finishedKm + liveKm + (day.kmAdjust || 0);
   const state = isToday ? g.st : 'idle';
 
   let cls = 'idle';
@@ -1517,7 +1546,7 @@ function renderMetasDoDia(day) {
   const rev = day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0);
   const isToday = day.date === DB.today();
   const liveOn = isToday && (S.gps.st==='running'||S.gps.st==='paused');
-  const totalKm = (day.sessions||[]).reduce((s,x)=>s+(x.km||0),0) + (liveOn ? S.gps.km : 0);
+  const totalKm = (day.sessions||[]).reduce((s,x)=>s+(x.km||0),0) + (liveOn ? S.gps.km : 0) + (day.kmAdjust || 0);
   const totalElapsed = (day.sessions||[]).reduce((s,x)=>s+(x.elapsed||0),0) + (liveOn ? getElapsed() : 0);
   const dow = new Date(day.date+'T12:00').getDay();
   const plan = DB.planJornada().find(p => p.days && p.days.includes(dow));
@@ -1971,6 +2000,38 @@ function saveKm() {
   if (!v) { alert('Informe o valor'); return; }
   const day = DB.day(S.curDate); day.kmTotal = v; DB.saveDay(day);
   closeMo('mo-km'); renderJornada();
+}
+
+// ── AJUSTE MANUAL DE KM (corrige imprecisão do GPS) ─────────────
+let kmAdjBase = 0;
+function openKmAdjust() {
+  const day = DB.day(S.curDate);
+  const isToday = S.curDate === DB.today();
+  const live = isToday && (S.gps.st === 'running' || S.gps.st === 'paused');
+  const liveKm = live ? S.gps.km : 0;
+  const finishedKm = (day.sessions || []).reduce((s,x)=>s+(x.km||0),0);
+  kmAdjBase = finishedKm + liveKm;
+  const current = kmAdjBase + (day.kmAdjust || 0);
+  const inp = document.getElementById('kmadj-val');
+  if (inp) inp.value = current.toFixed(1);
+  openMo('mo-km-adjust');
+}
+function kmAdjStep(delta) {
+  const inp = document.getElementById('kmadj-val');
+  if (!inp) return;
+  const v = Math.max(0, (parseFloat(inp.value) || 0) + delta);
+  inp.value = v.toFixed(1);
+}
+function saveKmAdjust() {
+  const inp = document.getElementById('kmadj-val');
+  const newTotal = parseFloat(inp?.value);
+  if (isNaN(newTotal) || newTotal < 0) { alert('Valor inválido'); return; }
+  const day = DB.day(S.curDate);
+  day.kmAdjust = parseFloat((newTotal - kmAdjBase).toFixed(2));
+  DB.saveDay(day);
+  closeMo('mo-km-adjust');
+  renderJornada();
+  showToast('Km total ajustado.');
 }
 
 // ── IMPORT AI ─────────────────────────────────────────────────
