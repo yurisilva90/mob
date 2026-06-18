@@ -2336,6 +2336,7 @@ function gpsAction() {
 }
 function gpsOnPosition(pos) {
   const g = S.gps;
+  if (g.st === 'paused') return; // pausado nao conta km nem avanca referencia
   const { latitude: la, longitude: lo, accuracy } = pos.coords;
   const now = Date.now();
   // Fix de baixa precisão (comum em túnel, garagem, prédios altos) — ignora totalmente,
@@ -2445,7 +2446,7 @@ function showConfirmToast(msg, onConfirm, confirmLabel, cancelLabel) {
 function gpsPause() {
   const g = S.gps;
   if (g.st === 'running') {
-    g.st='paused'; g.pa=Date.now();
+    g.st='paused'; g.pa=Date.now(); g.pts=[]; g.lastFixTime=null;
     syncNavButton();
     if (window.SmartMobiNative?.updateFloatingStatus) try { SmartMobiNative.updateFloatingStatus('paused'); } catch(e) {}
     if (window.SmartMobiNative?.pauseGpsService) try { SmartMobiNative.pauseGpsService(); } catch(e) {}
