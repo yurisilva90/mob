@@ -249,7 +249,8 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .ag-card.online{background:#22C55E}
 .ag-card.pessoal{background:#7C3AED;cursor:grab}
 .ag-card.operacional{background:#3B82F6;cursor:grab}
-.ag-draghandle{position:absolute;top:4px;left:50%;transform:translateX(-50%);width:26px;height:4px;border-radius:2px;background:rgba(255,255,255,.5);cursor:grab;z-index:4;touch-action:none}
+.ag-card[data-ev-id]{cursor:grab;touch-action:none}
+.ag-card[data-ev-id].dragging{cursor:grabbing}
 .ag-rsz{position:absolute;left:0;right:0;height:14px;z-index:5;touch-action:none}
 .ag-rsz.top{top:-4px;cursor:ns-resize}
 .ag-rsz.bot{bottom:-4px;cursor:ns-resize}
@@ -258,7 +259,7 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .ag-addbtn{flex:1;height:50px;border:1.5px dashed #dbe3ec;border-radius:18px;background:#f8fafc;color:#667085;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation;font-family:Inter,system-ui,sans-serif;display:flex;align-items:center;justify-content:center;gap:7px}
 .ag-addbtn:active{background:#f1f5f9}
 /* Modal Novo Compromisso */
-#mo-novo-ev .mosh{border-radius:32px 32px 0 0;background:#f7f9fc}
+#mo-novo-ev .sheet{border-radius:32px 32px 0 0;background:#f7f9fc}
 .ag-sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
 .ag-sheet-head h2{font-size:22px;font-weight:800;letter-spacing:-.04em}
 .ag-close{width:38px;height:38px;border:0;background:#fff;border-radius:14px;box-shadow:0 4px 12px rgba(15,23,42,.07);color:#344054;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
@@ -753,8 +754,8 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
 
 <!-- ═══ MODAL: NOVO COMPROMISSO ═══════════════════════════════ -->
 <div class="mo" id="mo-novo-ev">
-  <div class="mosh">
-    <div class="moh"></div>
+  <div class="sheet">
+    <div class="sheet-handle"></div>
     <div class="ag-sheet-head">
       <h2 id="ag-sheet-title">Novo compromisso</h2>
       <button class="ag-close" onclick="closeMo('mo-novo-ev')">&#x2715;</button>
@@ -780,15 +781,19 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
   </div>
 </div>
 
-<!-- Planejar Jornada -->
-<div class="mo" id="mo-plan-jornada">
-  <div class="mosh">
-    <div class="moh"></div>
-    <div class="ag-sheet-head">
-      <h2>Planejar jornada</h2>
-      <button class="ag-close" onclick="closeMo('mo-plan-jornada')">&#x2715;</button>
+
+
+
+<!-- ══ TELA METAS ══════════════════════════════════════════════════════════ -->
+<div class="screen" id="sc-planejar-jornada">
+  <div class="wrap">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+      <button onclick="navTo('mais')" style="width:36px;height:36px;border-radius:14px;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;color:#334155;cursor:pointer;flex-shrink:0">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div style="font-size:20px;font-weight:800;letter-spacing:-.04em">Planejar jornada</div>
     </div>
-    <div class="ag-form-card">
+    <div class="ag-form-card" style="margin-top:0">
       <div class="ag-field">
         <label class="ag-label">Selecione o dia</label>
         <div class="pj-days">
@@ -815,66 +820,10 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
       </div>
       <button class="ag-save" onclick="pjSaveEntry()">Salvar jornada</button>
     </div>
-    <div class="ag-form-card" style="margin-top:14px">
+    <div class="ag-form-card" style="margin-bottom:24px">
       <label class="ag-label" style="margin-bottom:10px;display:block">Jornadas planejadas</label>
       <div id="pj-list"><div class="empty">Nenhuma jornada planejada ainda</div></div>
     </div>
-  </div>
-</div>
-
-
-<!-- ══ TELA METAS ══════════════════════════════════════════════════════════ -->
-<div class="screen" id="sc-metas">
-  <div style="padding:24px 16px">
-    <div style="font-size:24px;font-weight:800;letter-spacing:-.04em;margin-bottom:4px">Metas</div>
-    <div style="font-size:13px;color:#64748B;margin-bottom:24px">Defina e acompanhe seus objetivos</div>
-
-    <!-- Meta diária -->
-    <div style="background:#fff;border:1px solid rgba(15,23,42,.06);border-radius:24px;padding:18px;box-shadow:0 8px 24px rgba(15,23,42,.06);margin-bottom:14px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#94A3B8;margin-bottom:12px">Meta diária</div>
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-        <div style="font-size:13px;color:#64748B;width:100px">Receita (R$)</div>
-        <input type="number" id="meta-daily-rev" inputmode="decimal" placeholder="0,00"
-          style="flex:1;height:44px;border:1.5px solid #E2E8F0;border-radius:14px;padding:0 14px;font-size:15px;font-weight:700;font-family:'DM Mono',monospace;outline:none"
-          onfocus="this.style.borderColor='#22C55E'" onblur="this.style.borderColor='#E2E8F0'">
-      </div>
-      <div style="display:flex;align-items:center;gap:12px">
-        <div style="font-size:13px;color:#64748B;width:100px">Corridas</div>
-        <input type="number" id="meta-daily-trips" inputmode="numeric" placeholder="0"
-          style="flex:1;height:44px;border:1.5px solid #E2E8F0;border-radius:14px;padding:0 14px;font-size:15px;font-weight:700;font-family:'DM Mono',monospace;outline:none"
-          onfocus="this.style.borderColor='#22C55E'" onblur="this.style.borderColor='#E2E8F0'">
-      </div>
-    </div>
-
-    <!-- Meta semanal -->
-    <div style="background:#fff;border:1px solid rgba(15,23,42,.06);border-radius:24px;padding:18px;box-shadow:0 8px 24px rgba(15,23,42,.06);margin-bottom:14px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#94A3B8;margin-bottom:12px">Meta semanal</div>
-      <div style="display:flex;align-items:center;gap:12px">
-        <div style="font-size:13px;color:#64748B;width:100px">Receita (R$)</div>
-        <input type="number" id="meta-week-rev" inputmode="decimal" placeholder="0,00"
-          style="flex:1;height:44px;border:1.5px solid #E2E8F0;border-radius:14px;padding:0 14px;font-size:15px;font-weight:700;font-family:'DM Mono',monospace;outline:none"
-          onfocus="this.style.borderColor='#22C55E'" onblur="this.style.borderColor='#E2E8F0'">
-      </div>
-    </div>
-
-    <!-- Meta mensal -->
-    <div style="background:#fff;border:1px solid rgba(15,23,42,.06);border-radius:24px;padding:18px;box-shadow:0 8px 24px rgba(15,23,42,.06);margin-bottom:20px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#94A3B8;margin-bottom:12px">Meta mensal</div>
-      <div style="display:flex;align-items:center;gap:12px">
-        <div style="font-size:13px;color:#64748B;width:100px">Receita (R$)</div>
-        <input type="number" id="meta-month-rev" inputmode="decimal" placeholder="0,00"
-          style="flex:1;height:44px;border:1.5px solid #E2E8F0;border-radius:14px;padding:0 14px;font-size:15px;font-weight:700;font-family:'DM Mono',monospace;outline:none"
-          onfocus="this.style.borderColor='#22C55E'" onblur="this.style.borderColor='#E2E8F0'">
-      </div>
-    </div>
-
-    <button onclick="saveMetas()"
-      style="width:100%;height:54px;background:linear-gradient(135deg,#22C55E,#16A34A);border:0;border-radius:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Inter,sans-serif;box-shadow:0 14px 32px rgba(34,197,94,.25);margin-bottom:24px">
-      Salvar metas
-    </button>
-
-    <!-- Progresso hoje -->
-    <div id="metas-progress"></div>
   </div>
 </div>
 
@@ -1124,8 +1073,8 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
 </div>
 <!-- MODAL: Categorias -->
 <div class="mo" id="mo-cats">
-  <div class="mosh">
-    <div class="moh"></div>
+  <div class="sheet">
+    <div class="sheet-handle"></div>
     <div class="sheet-head" style="padding:0 0 12px"><h2>Categorias</h2><button class="xbtn" onclick="closeMo('mo-cats')">&#x2715;</button></div>
     <div style="font-size:13px;color:#64748B;margin-bottom:14px">Gerencie suas categorias de despesa e receita.</div>
     <div id="cats-groups"></div>
@@ -1233,8 +1182,8 @@ const MODULES = [
     icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M17 7H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg>'},
   {id:'agenda', label:'Agenda', sub:'Compromissos e planejamento', color:'purple',
     icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>'},
-  {id:'metas', label:'Metas', sub:'Defina e acompanhe metas financeiras', color:'green',
-    icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>'},
+  {id:'planejar-jornada', label:'Planejar jornada', sub:'Defina dias, metas e horários de trabalho', color:'green',
+    icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>'},
   {id:'lancamentos', label:'Lançamentos', sub:'Histórico de receitas e despesas', color:'orange',
     icon:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2Z"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>'},
 ];
@@ -1252,7 +1201,7 @@ function navTo(sec) {
   const sc = document.getElementById('sc-'+sec);
   if (sc) { sc.classList.add('on'); sc.style.display = 'block'; }
   // Map sub-screens to their nav parent
-  const navMap = {financeiro:'fav', lancamentos:'fav', metas:'mais'};
+  const navMap = {financeiro:'fav', lancamentos:'fav', 'planejar-jornada':'mais'};
   const navId = navMap[sec] || sec;
   const bn = document.getElementById('bn-'+navId);
   if (bn) bn.classList.add('active');
@@ -1549,7 +1498,7 @@ function renderJourneyCard(day, isToday) {
   if (!isToday) {
     actions.className = 'j-actions'; actions.innerHTML = '';
   } else if (state === 'idle') {
-    const label = finished.length > 0 ? 'Nova sessão' : 'Iniciar jornada';
+    const label = 'Iniciar jornada';
     actions.className = 'j-actions single';
     actions.innerHTML = `<button class="j-btn start" onclick="gpsStart()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>${label}</button>`;
   } else if (state === 'running') {
@@ -1585,7 +1534,7 @@ function renderMetasDoDia(day) {
     const pct = Math.min(100, Math.round(rev/moneyGoal*100));
     html += `<div class="goal-item"><div class="goal-top"><strong>Financeiro</strong><span>${DB.fRI(rev)} de ${DB.fRI(moneyGoal)} · ${pct}%</span></div><div class="gbar money"><i style="width:${pct}%"></i></div></div>`;
   } else {
-    html += `<div class="goal-item"><div class="goal-locked" onclick="navTo('metas')"><span>Financeiro — meta não definida</span><b>Configurar</b></div></div>`;
+    html += `<div class="goal-item"><div class="goal-locked" onclick="openPlanJornada()"><span>Financeiro — meta não definida</span><b>Planejar</b></div></div>`;
   }
   if (plan && plan.kmGoal) {
     const pct = Math.min(100, Math.round(totalKm/plan.kmGoal*100));
@@ -1615,7 +1564,7 @@ function openPlanJornada() {
   const kEl = document.getElementById('pj-km'); if (kEl) kEl.value = '';
   renderPjSchedules();
   renderPjList();
-  openMo('mo-plan-jornada');
+  navTo('planejar-jornada');
 }
 function pjToggleDay(d) {
   const i = pjSelDays.indexOf(d);
@@ -2662,7 +2611,7 @@ function renderAgStrip() {
   if (!strip) return;
   const DL = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
   let html = '';
-  for (let i = -3; i <= 6; i++) {
+  for (let i = 0; i <= 6; i++) {
     const d = new Date(dt); d.setDate(dt.getDate() + i - dow);
     const ds = d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
     const isOn    = ds === agSelDate;
@@ -2745,7 +2694,7 @@ function agAddCard(tl, top, ht, typeClass, title, meta, evId) {
   el.innerHTML = `<div class="ft">${title}</div><div class="fm">${meta}</div>`;
   if (evId) {
     el.dataset.evId = evId;
-    el.innerHTML += `<div class="ag-draghandle"></div><div class="ag-rsz top"></div><div class="ag-rsz bot"></div>`;
+    el.innerHTML += `<div class="ag-rsz top"></div><div class="ag-rsz bot"></div>`;
   }
   tl.appendChild(el);
   return el;
@@ -2769,11 +2718,10 @@ function agYToTime(px) {
   return p2(Math.floor(mins/60))+':'+p2(mins%60);
 }
 function agTimelineDown(e) {
-  const handle = e.target.closest('.ag-draghandle, .ag-rsz');
-  if (!handle) return;
-  const card = handle.closest('.ag-card');
-  if (!card || !card.dataset.evId) return;
-  const mode = handle.classList.contains('ag-draghandle') ? 'move' : (handle.classList.contains('top') ? 'top' : 'bot');
+  const rsz = e.target.closest('.ag-rsz');
+  const card = e.target.closest('.ag-card[data-ev-id]');
+  if (!card) return;
+  const mode = rsz ? (rsz.classList.contains('top') ? 'top' : 'bot') : 'move';
   card._wasDragged = false;
   _agDrag = {
     card, mode,
@@ -3372,71 +3320,6 @@ function getCurrentUser() { return _supaUser; }
 
 
 
-// ── METAS ────────────────────────────────────────────────────────────────
-function loadMetas() {
-  const m = DB.get('sm_metas') || {};
-  const set = (id, val) => { const el=document.getElementById(id); if(el&&val) el.value=val; };
-  set('meta-daily-rev',   m.dailyRev);
-  set('meta-daily-trips', m.dailyTrips);
-  set('meta-week-rev',    m.weekRev);
-  set('meta-month-rev',   m.monthRev);
-  renderMetasProgress(m);
-}
-
-function saveMetas() {
-  const g = id => parseFloat(document.getElementById(id)?.value) || 0;
-  const m = {
-    dailyRev:   g('meta-daily-rev'),
-    dailyTrips: g('meta-daily-trips'),
-    weekRev:    g('meta-week-rev'),
-    monthRev:   g('meta-month-rev'),
-  };
-  DB.set('sm_metas', m);
-  renderMetasProgress(m);
-  renderHome();
-  alert('Metas salvas!');
-}
-
-function renderMetasProgress(m) {
-  const el = document.getElementById('metas-progress');
-  if (!el) return;
-  const day  = DB.day(DB.today());
-  const rev  = day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0);
-  const exp  = day.expenses.reduce((s,e)=>s+(e.amount||0),0);
-  const net  = rev - exp;
-  const trips = day.trips.length;
-
-  const bar = (val, target, label, color) => {
-    if (!target) return '';
-    const pct = Math.min(100, Math.round(val/target*100));
-    return `<div style="margin-bottom:14px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-        <span style="font-size:13px;font-weight:600;color:#344054">${label}</span>
-        <span style="font-size:13px;font-weight:700;color:${pct>=100?'#22C55E':'#64748B'}">${pct}%</span>
-      </div>
-      <div style="height:8px;background:#F1F5F9;border-radius:999px;overflow:hidden">
-        <div style="height:100%;width:${pct}%;background:${color};border-radius:999px;transition:width .3s"></div>
-      </div>
-      <div style="font-size:11px;color:#94A3B8;margin-top:4px">R$ ${val.toFixed(2)} de R$ ${target.toFixed(2)}</div>
-    </div>`;
-  };
-
-  const bars = [
-    bar(rev, m.dailyRev, 'Receita hoje', '#22C55E'),
-    m.dailyTrips ? `<div style="margin-bottom:14px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-        <span style="font-size:13px;font-weight:600;color:#344054">Corridas hoje</span>
-        <span style="font-size:13px;font-weight:700;color:${trips>=(m.dailyTrips||0)?'#22C55E':'#64748B'}">${trips}/${m.dailyTrips}</span>
-      </div>
-      <div style="height:8px;background:#F1F5F9;border-radius:999px;overflow:hidden">
-        <div style="height:100%;width:${Math.min(100,Math.round(trips/(m.dailyTrips||1)*100))}%;background:#0EA5E9;border-radius:999px"></div>
-      </div></div>` : '',
-  ].filter(Boolean).join('');
-
-  el.innerHTML = bars ? `<div style="background:#fff;border:1px solid rgba(15,23,42,.06);border-radius:24px;padding:18px;box-shadow:0 8px 24px rgba(15,23,42,.06)">
-    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#94A3B8;margin-bottom:16px">Progresso hoje</div>
-    ${bars}</div>` : '';
-}
 
 
 
