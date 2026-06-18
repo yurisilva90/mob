@@ -2270,6 +2270,41 @@ function gpsAction() {
   if (S.gps.st === 'idle') { gpsStart(); return; }
   gpsPause();
 }
+function gpsOnPosition(pos) {
+  const g = S.gps;
+  const { latitude: la, longitude: lo, accuracy } = pos.coords;
+  const now = Date.now();
+  // Fix de baixa precisão (comum em túnel, garagem, prédios altos) — ignora totalmente,
+  // não usa como referência pra não distorcer a próxima medição.
+  if (accuracy != null && accuracy > 35) return;
+  const ref = g.pts.length ? g.pts[g.pts.length - 1] : null;
+  if (ref) {
+    const d = hav(ref[0], ref[1], la, lo); // km
+    const distM = d * 1000;
+    // Piso de ruído: GPS "tremido" parado ou no trânsito não pode contar como deslocamento.
+    // Quanto pior a precisão do fix, maior o movimento exigido pra confiar nele.
+    const noiseFloorM = Math.max(8, accuracy || 15);
+    if (distM >= noiseFloorM) {
+      // Rejeita saltos com velocidade implausível (glitch/teleporte de GPS)
+      const dtH = g.lastFixTime ? (now - g.lastFixTime) / 3600000 : null;
+      const speedKmh = dtH && dtH > 0 ? d / dtH : 0;
+      if (!dtH || speedKmh < 180) g.km += d;
+      // Só avança a referência quando o movimento foi validado — assim deslocamento
+      // lento (trânsito parado andando aos poucos) ainda acumula corretamente.
+      g.pts.push([la, lo]);
+      g.lastFixTime = now;
+    }
+  } else {
+    g.pts.push([la, lo]);
+    g.lastFixTime = now;
+  }
+  setText('jc-km', g.km.toFixed(1));
+  setText('jc-kmtotal', (g.baseKm + g.km).toFixed(1) + ' km');
+  persistGps();
+  if (window.SmartMobiNative && typeof SmartMobiNative.updateFloating === 'function') {
+    try { SmartMobiNative.updateFloating(g.km); } catch(e) {}
+  }
+}
 function gpsStart() {
   const g = S.gps; g.st='running'; g.start=Date.now(); g.km=0; g.pts=[]; g.pausedMs=0; g.pa=null;
   const day0 = DB.day(DB.today());
@@ -2288,17 +2323,7 @@ function gpsStart() {
   persistGps();
   g.ti = setInterval(gpsUpdate, 1000);
   if (navigator.geolocation) {
-    g.wid = navigator.geolocation.watchPosition(pos => {
-      const {latitude:la, longitude:lo} = pos.coords;
-      if (g.pts.length) { const L=g.pts[g.pts.length-1]; g.km += hav(L[0],L[1],la,lo); }
-      g.pts.push([la,lo]);
-      setText('jc-km', g.km.toFixed(1));
-      setText('jc-kmtotal', (g.baseKm+g.km).toFixed(1)+' km');
-      persistGps();
-      if (window.SmartMobiNative && typeof SmartMobiNative.updateFloating === 'function') {
-        try { SmartMobiNative.updateFloating(g.km); } catch(e) {}
-      }
-    }, null, {enableHighAccuracy:true, maximumAge:3000, timeout:10000});
+    g.wid = navigator.geolocation.watchPosition(gpsOnPosition, null, {enableHighAccuracy:true, maximumAge:3000, timeout:10000});
   }
   // Verifica permissão overlay
   if (window.SmartMobiNative && typeof SmartMobiNative.hasOverlay === 'function') {
@@ -2420,17 +2445,7 @@ function restoreGpsSession() {
   syncNavButton();
   g.ti = setInterval(gpsUpdate, 1000);
   if (navigator.geolocation) {
-    g.wid = navigator.geolocation.watchPosition(pos => {
-      const {latitude:la, longitude:lo} = pos.coords;
-      if (g.pts.length) { const L=g.pts[g.pts.length-1]; g.km += hav(L[0],L[1],la,lo); }
-      g.pts.push([la,lo]);
-      setText('jc-km', g.km.toFixed(1));
-      setText('jc-kmtotal', (g.baseKm+g.km).toFixed(1)+' km');
-      persistGps();
-      if (window.SmartMobiNative && typeof SmartMobiNative.updateFloating === 'function') {
-        try { SmartMobiNative.updateFloating(g.km); } catch(e) {}
-      }
-    }, null, {enableHighAccuracy:true, maximumAge:3000, timeout:10000});
+    g.wid = navigator.geolocation.watchPosition(gpsOnPosition, null, {enableHighAccuracy:true, maximumAge:3000, timeout:10000});
   }
   if (g.st === 'running') requestWakeLock();
   if (window.SmartMobiNative && typeof SmartMobiNative.updateFloatingStatus === 'function') {
