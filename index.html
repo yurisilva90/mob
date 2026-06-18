@@ -564,13 +564,13 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
     <div id="metas-dia-stack"></div>
   </div>
 
-  <div class="section" style="padding:0 16px 8px"><h2>Sessões do dia</h2></div>
+  <div class="section" style="padding:0 16px 8px"><h2>Sessões do dia</h2><button class="add" onclick="toggleSessionsView()" id="sessions-toggle" style="display:none">Ver todas &#8250;</button></div>
   <div style="padding:0 16px"><div id="sessions-list"><div class="empty">Nenhuma sessão registrada</div></div></div>
 
   <div class="section" style="padding:16px 16px 8px"><h2>Corridas</h2><button class="add" onclick="toggleTripsView()" id="trips-toggle">Ver todas &#8250;</button></div>
   <div style="padding:0 16px"><div id="trips-list"><div class="empty">Nenhuma corrida registrada</div></div></div>
 
-  <div class="section" style="padding:16px 16px 8px"><h2>Lançamentos</h2><button class="add" onclick="openLanc('receita')">+ Adicionar</button></div>
+  <div class="section" style="padding:16px 16px 8px"><h2>Lançamentos</h2><div style="display:flex;gap:8px;align-items:center"><button class="add" onclick="toggleLancView()" id="lanc-toggle" style="display:none">Ver todas &#8250;</button><button class="add" onclick="openLanc('receita')">+ Adicionar</button></div></div>
   <div style="padding:0 16px"><div id="jorn-lanc-list"><div class="empty">Nenhum lançamento registrado</div></div></div>
   <div style="height:8px"></div>
 </div>
@@ -1157,6 +1157,8 @@ let S = {
   lancRecFreq: 'Semanal',
   corPlat: 'uber',
   tripsExpanded: false,
+  sessionsExpanded: false,
+  lancExpanded: false,
   gps: {
     st: 'idle',  // idle | running | paused
     start: null, pausedMs: 0, pauseAt: null,
@@ -1369,6 +1371,8 @@ function chgDay(d) {
 }
 function fmtHM(ms) { if (!ms) return '--:--'; const dd=new Date(ms); return p2(dd.getHours())+':'+p2(dd.getMinutes()); }
 function toggleTripsView() { S.tripsExpanded = !S.tripsExpanded; renderJornada(); }
+function toggleSessionsView() { S.sessionsExpanded = !S.sessionsExpanded; renderJornada(); }
+function toggleLancView() { S.lancExpanded = !S.lancExpanded; renderJornada(); }
 
 function renderJornada() {
   if (!S || !DB) return;
@@ -1391,13 +1395,21 @@ function renderJornada() {
   renderJourneyCard(day, isToday);
   renderMetasDoDia(day);
 
-  // Sessões do dia
+  // Sessões do dia (3 mais recentes, ou todas — sessão atual sempre aparece)
   const sessEl = document.getElementById('sessions-list');
+  const sessToggleBtn = document.getElementById('sessions-toggle');
   if (sessEl) {
-    const finished = (day.sessions||[]).map((s,i)=>sessionItem('Sessão '+(i+1), s.start, s.end, s.km, s.elapsed, false));
+    const total = (day.sessions||[]).length;
+    const finishedAll = (day.sessions||[]).slice().reverse()
+      .map((s,i)=>sessionItem('Sessão '+(total-i), s.start, s.end, s.km, s.elapsed, false));
+    const finishedShown = S.sessionsExpanded ? finishedAll : finishedAll.slice(0,3);
     const liveRow = (isToday && (S.gps.st==='running'||S.gps.st==='paused')) ? [sessionItem('Sessão atual', S.gps.start, null, S.gps.km, getElapsed(), true)] : [];
-    const rows = [...finished, ...liveRow];
+    const rows = [...liveRow, ...finishedShown];
     sessEl.innerHTML = rows.length ? rows.join('') : '<div class="empty">Nenhuma sessão registrada</div>';
+  }
+  if (sessToggleBtn) {
+    sessToggleBtn.style.display = (day.sessions||[]).length > 3 ? '' : 'none';
+    sessToggleBtn.innerHTML = S.sessionsExpanded ? 'Ver menos' : 'Ver todas &#8250;';
   }
   // Corridas (5 mais recentes, ou todas)
   const tEl = document.getElementById('trips-list');
@@ -1411,14 +1423,20 @@ function renderJornada() {
     toggleBtn.style.display = day.trips.length > 5 ? '' : 'none';
     toggleBtn.innerHTML = S.tripsExpanded ? 'Ver menos' : 'Ver todas &#8250;';
   }
-  // Lançamentos (receitas extras + despesas)
+  // Lançamentos (5 mais recentes, ou todos)
   const lEl = document.getElementById('jorn-lanc-list');
+  const lancToggleBtn = document.getElementById('lanc-toggle');
   if (lEl) {
     const items = [
       ...day.revenues.map(r=>Object.assign({},r,{_type:'receita'})),
       ...day.expenses.map(e=>Object.assign({},e,{_type:'despesa'}))
     ];
-    lEl.innerHTML = items.length ? items.map(it => lancItem(it)).join('') : '<div class="empty">Nenhum lançamento registrado</div>';
+    const show = S.lancExpanded ? items : items.slice(0,5);
+    lEl.innerHTML = show.length ? show.map(it => lancItem(it)).join('') : '<div class="empty">Nenhum lançamento registrado</div>';
+    if (lancToggleBtn) {
+      lancToggleBtn.style.display = items.length > 5 ? '' : 'none';
+      lancToggleBtn.innerHTML = S.lancExpanded ? 'Ver menos' : 'Ver todas &#8250;';
+    }
   }
 }
 
@@ -2182,7 +2200,29 @@ function gpsStart() {
 }
 
 function confirmStop() {
-  if (confirm('Encerrar a jornada agora?')) gpsStop();
+  showConfirmToast('Encerrar a jornada agora?', gpsStop, 'Encerrar', 'Cancelar');
+}
+function showToast(msg, ms) {
+  const existing = document.getElementById('app-toast'); if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.id = 'app-toast';
+  el.style.cssText = 'position:fixed;left:50%;bottom:calc(var(--bottom) + var(--safe-bottom) + 14px);transform:translateX(-50%);width:min(394px,92vw);background:#0F172A;color:#fff;font-size:13.5px;font-weight:600;padding:14px 16px;border-radius:16px;box-shadow:0 16px 36px rgba(15,23,42,.3);z-index:9999;text-align:center;line-height:1.4';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), ms || 3200);
+}
+function showConfirmToast(msg, onConfirm, confirmLabel, cancelLabel) {
+  const existing = document.getElementById('app-toast'); if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.id = 'app-toast';
+  el.style.cssText = 'position:fixed;left:50%;bottom:calc(var(--bottom) + var(--safe-bottom) + 14px);transform:translateX(-50%);width:min(394px,92vw);background:#0F172A;color:#fff;font-size:13.5px;font-weight:600;padding:14px 16px;border-radius:16px;box-shadow:0 16px 36px rgba(15,23,42,.3);z-index:9999;display:flex;flex-direction:column;gap:10px';
+  el.innerHTML = '<span>'+msg+'</span><div style="display:flex;gap:8px;justify-content:flex-end">'
+    + '<button id="app-toast-cancel" style="background:rgba(255,255,255,.14);border:0;color:#fff;border-radius:10px;padding:8px 14px;font-size:12.5px;font-weight:800;cursor:pointer">'+(cancelLabel||'Cancelar')+'</button>'
+    + '<button id="app-toast-ok" style="background:#EF4444;border:0;color:#fff;border-radius:10px;padding:8px 14px;font-size:12.5px;font-weight:800;cursor:pointer">'+(confirmLabel||'OK')+'</button>'
+    + '</div>';
+  document.body.appendChild(el);
+  document.getElementById('app-toast-cancel').onclick = () => el.remove();
+  document.getElementById('app-toast-ok').onclick = () => { el.remove(); onConfirm(); };
 }
 
 function gpsPause() {
@@ -2223,7 +2263,7 @@ function gpsStop() {
   g.start=null; g.pausedMs=0; g.km=0; g.pts=[]; g.baseKm=0; g.baseElapsed=0; g.pa=null;
   releaseWakeLock();
   if (S.sec==='jornada') renderJornada();
-  if (km > 0.1) setTimeout(() => alert('Jornada encerrada. '+km.toFixed(1)+'km registrados.'), 300);
+  if (km > 0.1) setTimeout(() => showToast('Jornada encerrada. '+km.toFixed(1)+'km registrados.'), 300);
 }
 function getElapsed() {
   const g = S.gps; if (!g.start) return 0;
@@ -3056,6 +3096,7 @@ function showLogin() {
   ['app-nav','app-header'].forEach(id=>{ const e=document.getElementById(id);if(e)e.style.display='none'; });
   document.querySelectorAll('.screen').forEach(s=>s.style.display='none');
 }
+let _appBooted = false;
 function showApp() {
   const el=document.getElementById('sc-login'); if(el)el.style.display='none';
   const nav=document.getElementById('app-nav'); if(nav)nav.style.display='flex';
@@ -3069,7 +3110,10 @@ function showApp() {
   try{renderFin();}      catch(e){console.error('renderFin:',e);}
   try{updateFavBtn();}   catch(e){console.error('updateFavBtn:',e);}
   try{renderAgResumo();} catch(e){console.error('renderAgResumo:',e);}
-  navTo('home');
+  // Só navega pra Home no primeiro boot. O Supabase reemite SIGNED_IN sempre que
+  // o app volta de segundo plano, o que chamava showApp() de novo e forçava a
+  // tela de volta pra Home mesmo a pessoa estando em outra tela (ex: Jornada).
+  if (!_appBooted) { _appBooted = true; navTo('home'); }
 }
 
 function lsErr(id, msg) { const el=document.getElementById(id);if(el){el.textContent=msg;el.style.display=msg?'block':'none';} }
