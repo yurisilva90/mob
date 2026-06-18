@@ -123,12 +123,13 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .j-mini.sm span{font-size:8.5px}
 .j-actions{display:grid;gap:10px}
 .j-actions.two{grid-template-columns:1fr 1fr}
+.j-actions.single{display:flex;justify-content:center}
 .j-btn{height:48px;border:0;border-radius:16px;font-size:14px;font-weight:780;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;touch-action:manipulation;width:100%}
 .j-btn svg{width:17px;height:17px}
 .j-btn.solid-light{background:#fff;color:var(--green2)}
 .j-btn.solid-light.danger{color:var(--red)}
 .j-btn.ghost{background:rgba(15,23,42,.22);border:1px solid rgba(255,255,255,.25);color:#fff}
-.j-btn.start{background:#fff;color:var(--green2)}
+.j-btn.start{background:#fff;color:var(--green2);width:auto;padding:0 32px;font-size:15px}
 
 /* ── Metas do dia ── */
 .gbar{height:10px;background:#eef2f7;border-radius:999px;overflow:hidden}
@@ -1489,7 +1490,7 @@ function renderJourneyCard(day, isToday) {
     actions.className = 'j-actions'; actions.innerHTML = '';
   } else if (state === 'idle') {
     const label = finished.length > 0 ? 'Nova sessão' : 'Iniciar jornada';
-    actions.className = 'j-actions';
+    actions.className = 'j-actions single';
     actions.innerHTML = `<button class="j-btn start" onclick="gpsStart()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>${label}</button>`;
   } else if (state === 'running') {
     actions.className = 'j-actions two';
