@@ -362,13 +362,9 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
 <div class="scroll" id="main-scroll">
 
 <!-- ══ TELA LOGIN ══════════════════════════════════════════════════════════ -->
-<div id="sc-login" style="display:none;position:fixed;inset:0;z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;background:linear-gradient(160deg,#0F172A 0%,#0B2D5A 100%);overflow-y:auto">
+<div id="sc-login" style="display:none;position:fixed;inset:0;z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;background:#fff;overflow-y:auto">
 
-  <div style="width:80px;height:80px;background:linear-gradient(135deg,#22C55E,#16A34A);border-radius:26px;display:flex;align-items:center;justify-content:center;margin-bottom:18px;box-shadow:0 20px 48px rgba(34,197,94,.35)">
-    <span style="font-size:28px;font-weight:900;color:#fff;letter-spacing:-.04em;font-family:Inter,sans-serif">SM</span>
-  </div>
-  <div style="font-size:28px;font-weight:800;color:#fff;letter-spacing:-.04em;margin-bottom:4px;font-family:Inter,sans-serif">SmartMobi</div>
-  <div style="font-size:13px;color:#64748B;margin-bottom:36px;font-family:Inter,sans-serif">Gestão financeira para motoristas</div>
+  <img src="icon-512.png" alt="SmartMobi" style="width:108px;height:108px;object-fit:contain;margin-bottom:28px">
 
   <div style="width:100%;max-width:360px">
 
@@ -377,15 +373,15 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
       <div style="margin-bottom:12px">
         <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:Inter,sans-serif">Email</label>
         <input id="l-email" type="email" inputmode="email" placeholder="seuemail@gmail.com"
-          style="width:100%;height:52px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.07);border-radius:16px;padding:0 16px;font-size:15px;color:#fff;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
-          onfocus="this.style.borderColor='#22C55E'" onblur="this.style.borderColor='rgba(255,255,255,.1)'">
+          style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:16px;padding:0 16px;font-size:15px;color:#0F172A;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
+          onfocus="this.style.borderColor='#0C44BA'" onblur="this.style.borderColor='#E2E8F0'">
       </div>
       <div style="margin-bottom:6px">
         <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:Inter,sans-serif">Senha</label>
         <div style="position:relative">
           <input id="l-pass" type="password" placeholder="Sua senha"
-            style="width:100%;height:52px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.07);border-radius:16px;padding:0 48px 0 16px;font-size:15px;color:#fff;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
-            onfocus="this.style.borderColor='#22C55E'" onblur="this.style.borderColor='rgba(255,255,255,.1)'"
+            style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:16px;padding:0 48px 0 16px;font-size:15px;color:#0F172A;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
+            onfocus="this.style.borderColor='#0C44BA'" onblur="this.style.borderColor='#E2E8F0'"
             onkeydown="if(event.key==='Enter')loginEnter()">
           <button type="button" onclick="togglePass('l-pass',this)"
             style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;color:#64748B;font-size:18px;line-height:1;padding:4px">👁</button>
@@ -398,7 +394,7 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
         </button>
       </div>
       <button onclick="loginEnter()" id="l-btn-enter"
-        style="width:100%;height:54px;background:linear-gradient(135deg,#22C55E,#16A34A);border:0;border-radius:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Inter,sans-serif;box-shadow:0 14px 32px rgba(34,197,94,.28);margin-bottom:16px">
+        style="width:100%;height:54px;background:#0C44BA;border:0;border-radius:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Inter,sans-serif;box-shadow:0 14px 32px rgba(12,68,186,.28);margin-bottom:16px">
         Entrar
       </button>
       <div id="l-err" style="color:#EF4444;font-size:13px;text-align:center;margin-bottom:12px;display:none;font-family:Inter,sans-serif"></div>
@@ -413,38 +409,38 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
     <!-- CRIAR CONTA -->
     <div id="lsReg" style="display:none">
       <button onclick="lsShow('lsLogin')" style="background:transparent;border:0;color:#64748B;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;margin-bottom:20px;padding:0">← Voltar</button>
-      <div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:20px;font-family:Inter,sans-serif">Criar conta</div>
+      <div style="font-size:18px;font-weight:800;color:#0F172A;margin-bottom:20px;font-family:Inter,sans-serif">Criar conta</div>
       <div style="margin-bottom:12px">
         <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:Inter,sans-serif">Nome completo</label>
         <input id="r-name" type="text" placeholder="Seu nome"
-          style="width:100%;height:52px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.07);border-radius:16px;padding:0 16px;font-size:15px;color:#fff;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
-          onfocus="this.style.borderColor='#22C55E'" onblur="this.style.borderColor='rgba(255,255,255,.1)'">
+          style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:16px;padding:0 16px;font-size:15px;color:#0F172A;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
+          onfocus="this.style.borderColor='#0C44BA'" onblur="this.style.borderColor='#E2E8F0'">
       </div>
       <div style="margin-bottom:12px">
         <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:Inter,sans-serif">Email</label>
         <input id="r-email" type="email" inputmode="email" placeholder="seuemail@gmail.com"
-          style="width:100%;height:52px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.07);border-radius:16px;padding:0 16px;font-size:15px;color:#fff;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
-          onfocus="this.style.borderColor='#22C55E'" onblur="this.style.borderColor='rgba(255,255,255,.1)'">
+          style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:16px;padding:0 16px;font-size:15px;color:#0F172A;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
+          onfocus="this.style.borderColor='#0C44BA'" onblur="this.style.borderColor='#E2E8F0'">
       </div>
       <div style="margin-bottom:12px">
         <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:Inter,sans-serif">Celular (WhatsApp)</label>
         <input id="r-phone" type="tel" inputmode="tel" placeholder="(21) 99999-9999"
-          style="width:100%;height:52px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.07);border-radius:16px;padding:0 16px;font-size:15px;color:#fff;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
-          onfocus="this.style.borderColor='#22C55E'" onblur="this.style.borderColor='rgba(255,255,255,.1)'">
+          style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:16px;padding:0 16px;font-size:15px;color:#0F172A;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
+          onfocus="this.style.borderColor='#0C44BA'" onblur="this.style.borderColor='#E2E8F0'">
       </div>
       <div style="margin-bottom:22px">
         <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:Inter,sans-serif">Senha</label>
         <div style="position:relative">
           <input id="r-pass" type="password" placeholder="Mínimo 6 caracteres"
-            style="width:100%;height:52px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.07);border-radius:16px;padding:0 48px 0 16px;font-size:15px;color:#fff;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
-            onfocus="this.style.borderColor='#22C55E'" onblur="this.style.borderColor='rgba(255,255,255,.1)'"
+            style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:16px;padding:0 48px 0 16px;font-size:15px;color:#0F172A;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
+            onfocus="this.style.borderColor='#0C44BA'" onblur="this.style.borderColor='#E2E8F0'"
             onkeydown="if(event.key==='Enter')loginRegister()">
           <button type="button" onclick="togglePass('r-pass',this)"
             style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;color:#64748B;font-size:18px;line-height:1;padding:4px">👁</button>
         </div>
       </div>
       <button onclick="loginRegister()" id="l-btn-reg"
-        style="width:100%;height:54px;background:linear-gradient(135deg,#22C55E,#16A34A);border:0;border-radius:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Inter,sans-serif;box-shadow:0 14px 32px rgba(34,197,94,.28)">
+        style="width:100%;height:54px;background:#0C44BA;border:0;border-radius:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Inter,sans-serif;box-shadow:0 14px 32px rgba(12,68,186,.28)">
         Criar conta
       </button>
       <div id="r-err" style="color:#EF4444;font-size:13px;text-align:center;margin-top:12px;display:none;font-family:Inter,sans-serif"></div>
@@ -453,17 +449,17 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
     <!-- ESQUECI SENHA -->
     <div id="lsForgot" style="display:none">
       <button onclick="lsShow('lsLogin')" style="background:transparent;border:0;color:#64748B;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;margin-bottom:20px;padding:0">← Voltar</button>
-      <div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:8px;font-family:Inter,sans-serif">Recuperar senha</div>
+      <div style="font-size:18px;font-weight:800;color:#0F172A;margin-bottom:8px;font-family:Inter,sans-serif">Recuperar senha</div>
       <div style="font-size:13px;color:#64748B;margin-bottom:20px;font-family:Inter,sans-serif">Enviaremos um link de redefinição para seu email.</div>
       <div style="margin-bottom:20px">
         <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:Inter,sans-serif">Email</label>
         <input id="f-email" type="email" inputmode="email" placeholder="seuemail@gmail.com"
-          style="width:100%;height:52px;border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.07);border-radius:16px;padding:0 16px;font-size:15px;color:#fff;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
-          onfocus="this.style.borderColor='#22C55E'" onblur="this.style.borderColor='rgba(255,255,255,.1)'"
+          style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:16px;padding:0 16px;font-size:15px;color:#0F172A;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
+          onfocus="this.style.borderColor='#0C44BA'" onblur="this.style.borderColor='#E2E8F0'"
           onkeydown="if(event.key==='Enter')loginForgot()">
       </div>
       <button onclick="loginForgot()" id="l-btn-forgot"
-        style="width:100%;height:54px;background:linear-gradient(135deg,#22C55E,#16A34A);border:0;border-radius:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Inter,sans-serif;box-shadow:0 14px 32px rgba(34,197,94,.28)">
+        style="width:100%;height:54px;background:#0C44BA;border:0;border-radius:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Inter,sans-serif;box-shadow:0 14px 32px rgba(12,68,186,.28)">
         Enviar link
       </button>
       <div id="f-msg" style="font-size:13px;text-align:center;margin-top:12px;display:none;font-family:Inter,sans-serif"></div>
