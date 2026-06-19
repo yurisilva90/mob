@@ -157,6 +157,7 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .trip-title{font-size:12.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .li-val{text-align:right;font-size:11px;color:var(--muted);font-weight:600;flex:0 0 auto}.li-val strong{display:block;color:var(--text);font-size:13.5px;font-weight:760;font-family:'DM Mono',monospace}
 .li-extra{display:flex;gap:6px;margin-top:5px}.chip{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px;font-family:'DM Mono',monospace;letter-spacing:-.01em}.chip svg{flex-shrink:0}.chip-d{background:#FFF7ED;color:#F59E0B}.chip-g{background:#F5F3FF;color:#7C3AED}
+.sw{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0}.sw input{opacity:0;width:0;height:0;position:absolute}.sw .trk{position:absolute;inset:0;background:#E2E8F0;border-radius:99px;transition:.2s;cursor:pointer}.sw .trk:before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}.sw input:checked + .trk{background:#22C55E}.sw input:checked + .trk:before{transform:translateX(20px)}
 .action{background:#fff;border:1px solid rgba(14,165,233,.18);box-shadow:0 3px 14px rgba(15,23,42,.06);border-radius:22px;padding:15px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;cursor:pointer;touch-action:manipulation}.action .glyph{width:42px;height:42px;border-radius:16px;background:rgba(14,165,233,.1);display:flex;align-items:center;justify-content:center;color:var(--blue)}.action h3{font-size:14px;font-weight:700}.action p{font-size:12px;color:var(--muted);margin-top:3px}.chev{margin-left:auto;color:#94A3B8;font-size:22px}
 .kmcard{background:#fff;border:1px solid var(--line);border-radius:24px;padding:16px;box-shadow:0 3px 14px rgba(15,23,42,.06)}.cardhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.cardhead h2{font-size:15px;letter-spacing:-.02em}.linkbtn{border:0;background:rgba(14,165,233,.1);color:var(--blue);border-radius:999px;padding:7px 12px;font-size:12px;font-weight:800;cursor:pointer;touch-action:manipulation}.row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}.row span{font-size:12px;color:var(--muted);font-weight:600}.row strong{font-family:'DM Mono',monospace;font-size:13px}.bar{height:10px;background:#E2E8F0;border-radius:999px;overflow:hidden;margin-top:12px}.fill{height:100%;background:linear-gradient(90deg,var(--green),var(--blue));border-radius:999px;transition:width .5s}.note{font-size:11px;color:var(--muted);text-align:center;margin-top:8px;font-weight:600}
 .section{display:flex;align-items:center;justify-content:space-between}.section h2{font-size:16px;font-weight:700}.add{border:0;background:rgba(14,165,233,.1);color:var(--blue);font-weight:800;border-radius:999px;padding:7px 12px;font-size:12px;cursor:pointer;touch-action:manipulation}.list{background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:0 3px 14px rgba(15,23,42,.06);overflow:hidden}.tag{width:38px;height:38px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0}
@@ -1217,6 +1218,10 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
     <div class="field"><label class="lbl">Placa</label><input class="inp" type="text" id="p-placa" placeholder="ABC1D23"></div>
     <div class="field"><label class="lbl">Veículo</label><input class="inp" type="text" id="p-veiculo" placeholder="BYD Dolphin Mini 2024"></div>
     <div class="field"><label class="lbl">Meta mensal (R$)</label><input class="inp" type="number" id="p-meta" placeholder="9000" inputmode="decimal" style="font-family:'DM Mono',monospace;font-weight:700"></div>
+    <div class="field" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div style="flex:1"><label class="lbl" style="margin-bottom:2px;display:block">Bolinha flutuante</label><div style="font-size:11px;color:#94A3B8;line-height:1.4">Mostra o cronômetro e km sobre outros apps durante a jornada</div></div>
+      <label class="sw"><input type="checkbox" id="p-overlay" onchange="toggleOverlayPref(this)"><span class="trk"></span></label>
+    </div>
     <button class="btn-p" onclick="savePerfil()">Salvar</button>
     <button onclick="authSignOutBtn()" style="width:100%;height:48px;background:transparent;border:1.5px solid #EF4444;border-radius:18px;color:#EF4444;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;margin-top:10px">Sair da conta</button>
   </div>
@@ -3082,8 +3087,8 @@ function gpsStart() {
   const day0 = DB.day(DB.today());
   g.baseKm = (day0.sessions||[]).reduce((s,x)=>s+(x.km||0),0);
   g.baseElapsed = (day0.sessions||[]).reduce((s,x)=>s+(x.elapsed||0),0);
-  // Inicia floating widget nativo
-  if (window.SmartMobiNative) {
+  // Inicia floating widget nativo (se o usuário não tiver desativado)
+  if (window.SmartMobiNative && DB.cfg().overlayEnabled !== false) {
     try {
       if (typeof SmartMobiNative.startFloating === 'function')
         SmartMobiNative.startFloating(g.start, 0);
@@ -3294,8 +3299,27 @@ function openPerfil() {
   if (cfg.vehicle) {const el=document.getElementById('p-veiculo');if(el)el.value=cfg.vehicle;}
   const meta = DB.meta();
   if (meta.general) {const el=document.getElementById('p-meta');if(el)el.value=meta.general;}
+  const ovEl = document.getElementById('p-overlay');
+  if (ovEl) ovEl.checked = cfg.overlayEnabled !== false;
 
   openMo('mo-perfil');
+}
+function toggleOverlayPref(el) {
+  const cfg = DB.cfg();
+  cfg.overlayEnabled = el.checked;
+  DB.saveCfg(cfg);
+  if (!window.SmartMobiNative) return;
+  try {
+    if (el.checked) {
+      // Se a jornada já estiver rolando, mostra a bolinha na hora, sem esperar o próximo sync.
+      if (S.gps.st === 'running' || S.gps.st === 'paused') {
+        SmartMobiNative.startFloating?.(S.gps.start, S.gps.km || 0);
+        SmartMobiNative.updateFloatingStatus?.(S.gps.st);
+      }
+    } else {
+      SmartMobiNative.hideFloatingOnly?.();
+    }
+  } catch(e) {}
 }
 async function savePerfil() {
   const cfg = DB.cfg();
@@ -4300,8 +4324,14 @@ function nativeSyncGps(km, startMs, pausedMs) {
   S.gps.pausedMs = pausedMs || 0;
   setText('jc-km', km.toFixed(1));
   setText('jc-kmtotal', ((S.gps.baseKm||0)+km).toFixed(1)+' km');
-  if (window.SmartMobiNative?.updateFloating) {
-    try { SmartMobiNative.updateFloating(km); } catch(e) {}
+  // Garante que a bolinha flutuante volte a aparecer se o Android tiver fechado o app
+  // e perdido o overlay enquanto a jornada continuava ativa em segundo plano.
+  // startFloating já é seguro de chamar de novo: se a bolinha já existe, só atualiza o km.
+  if (window.SmartMobiNative && DB.cfg().overlayEnabled !== false) {
+    try {
+      if (typeof SmartMobiNative.startFloating === 'function') SmartMobiNative.startFloating(S.gps.start, km);
+      if (typeof SmartMobiNative.updateFloatingStatus === 'function') SmartMobiNative.updateFloatingStatus(S.gps.st === 'paused' ? 'paused' : 'running');
+    } catch(e) {}
   }
 }
 
