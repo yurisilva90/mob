@@ -156,6 +156,7 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .li-info{flex:1;min-width:0}.li-info h3{font-size:13.5px;font-weight:760}.li-info p{font-size:11.5px;color:var(--muted);margin-top:2px}
 .trip-title{font-size:12.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .li-val{text-align:right;font-size:11px;color:var(--muted);font-weight:600;flex:0 0 auto}.li-val strong{display:block;color:var(--text);font-size:13.5px;font-weight:760;font-family:'DM Mono',monospace}
+.li-extra{display:flex;gap:6px;margin-top:5px}.chip{font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px;font-family:'DM Mono',monospace;letter-spacing:-.01em}.chip-d{background:#FFF7ED;color:#F59E0B}.chip-g{background:#F5F3FF;color:#7C3AED}
 .action{background:#fff;border:1px solid rgba(14,165,233,.18);box-shadow:0 3px 14px rgba(15,23,42,.06);border-radius:22px;padding:15px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;cursor:pointer;touch-action:manipulation}.action .glyph{width:42px;height:42px;border-radius:16px;background:rgba(14,165,233,.1);display:flex;align-items:center;justify-content:center;color:var(--blue)}.action h3{font-size:14px;font-weight:700}.action p{font-size:12px;color:var(--muted);margin-top:3px}.chev{margin-left:auto;color:#94A3B8;font-size:22px}
 .kmcard{background:#fff;border:1px solid var(--line);border-radius:24px;padding:16px;box-shadow:0 3px 14px rgba(15,23,42,.06)}.cardhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.cardhead h2{font-size:15px;letter-spacing:-.02em}.linkbtn{border:0;background:rgba(14,165,233,.1);color:var(--blue);border-radius:999px;padding:7px 12px;font-size:12px;font-weight:800;cursor:pointer;touch-action:manipulation}.row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}.row span{font-size:12px;color:var(--muted);font-weight:600}.row strong{font-family:'DM Mono',monospace;font-size:13px}.bar{height:10px;background:#E2E8F0;border-radius:999px;overflow:hidden;margin-top:12px}.fill{height:100%;background:linear-gradient(90deg,var(--green),var(--blue));border-radius:999px;transition:width .5s}.note{font-size:11px;color:var(--muted);text-align:center;margin-top:8px;font-weight:600}
 .section{display:flex;align-items:center;justify-content:space-between}.section h2{font-size:16px;font-weight:700}.add{border:0;background:rgba(14,165,233,.1);color:var(--blue);font-weight:800;border-radius:999px;padding:7px 12px;font-size:12px;cursor:pointer;touch-action:manipulation}.list{background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:0 3px 14px rgba(15,23,42,.06);overflow:hidden}.tag{width:38px;height:38px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0}
@@ -1282,6 +1283,12 @@ const DB = {
   fRI: v => 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0}),
 };
 function p2(n) { return String(n).padStart(2,'0'); }
+// Formata duração em minutos: "5m", "32m", "1h05m" (sem zero à esquerda quando é só minutos).
+function fmtDur(totalMin) {
+  const min = Math.max(0, Math.round(totalMin || 0));
+  const h = Math.floor(min / 60), m = min % 60;
+  return (h > 0 ? h + 'h' + p2(m) : String(m)) + 'm';
+}
 
 // ── DEFAULT CATEGORIES ────────────────────────────────────────
 const DEFAULT_CATS = {
@@ -2058,8 +2065,7 @@ function renderPjList() {
 }
 
 function sessionItem(label, startMs, endMs, km, elapsedSecs, live) {
-  const h = Math.floor((elapsedSecs||0)/3600), m = Math.floor((elapsedSecs||0)%3600/60);
-  const dur = (h?h+'h':'')+p2(m);
+  const dur = fmtDur((elapsedSecs||0)/60);
   const range = fmtHM(startMs) + ' → ' + (endMs ? fmtHM(endMs) : (live ? 'Agora' : '—'));
   const status = live ? (S.gps.st==='paused' ? 'Pausada' : 'Online') : 'Finalizada';
   return `<div class="li-row">
@@ -2071,8 +2077,13 @@ function sessionItem(label, startMs, endMs, km, elapsedSecs, live) {
 function tripItem(t) {
   const plat = {uber:'Uber','99':'99',particular:'Particular'}[t.platform||'uber'] || 'Uber';
   const dest = t.dest ? ' → '+t.dest : '';
+  const dur = t.duration ? ' · '+fmtDur(t.duration) : '';
+  const extras = [];
+  if (t.dinamico > 0) extras.push(`<span class="chip chip-d">D= ${DB.fR(t.dinamico)}</span>`);
+  if (t.tip > 0) extras.push(`<span class="chip chip-g">G= ${DB.fR(t.tip)}</span>`);
+  const extraRow = extras.length ? `<div class="li-extra">${extras.join('')}</div>` : '';
   return `<div class="li-row">
-    <div class="li-info"><h3 class="trip-title">${t.origin||'—'}${dest}</h3><p>${plat} · ${(t.km||0).toFixed(1)} km</p></div>
+    <div class="li-info"><h3 class="trip-title">${t.origin||'—'}${dest}</h3><p>${plat} · ${(t.km||0).toFixed(1)} km${dur}</p>${extraRow}</div>
     <div class="li-val"><strong>${DB.fR(t.value)}</strong></div>
   </div>`;
 }
@@ -2805,6 +2816,8 @@ function uzBuildTrips(rows) {
       category: r['global_product_name'] || '',
       surge: r['is_surged'] === 'true',
       airport: r['is_airport_trip'] === 'true',
+      // valor da tarifa dinâmica, já incluso no "value" — mostrado separado só pra detalhar a corrida.
+      dinamico: r['surge_fare_local'] ? uzRound2(Math.max(0, uzNum(r['surge_fare_local']))) : 0,
     });
   }
   return trips;
@@ -2933,11 +2946,12 @@ async function confirmUberZipImport() {
       const trip = { id: DB.uid(), platform: 'uber', time: t.time,
         duration: t.duration || 0, origin: '', dest: '', value: t.value, km: t.km || 0,
         category: t.category || '', surge: !!t.surge, airport: !!t.airport,
-        source: 'import_uber_zip' };
+        dinamico: t.dinamico || 0, source: 'import_uber_zip' };
       day.trips.push(trip);
       SYNC.push('trips', { id: trip.id, date, platform: trip.platform, time: trip.time || null,
         duration: trip.duration, origin: trip.origin, dest: trip.dest, value: trip.value, km: trip.km,
-        category: trip.category, surge: trip.surge, airport: trip.airport, source: trip.source });
+        category: trip.category, surge: trip.surge, airport: trip.airport, dinamico: trip.dinamico,
+        source: trip.source });
     });
     DB.saveDay(day);
     if (i % 15 === 0) await new Promise(r => setTimeout(r, 0));
@@ -3948,7 +3962,8 @@ const SYNC = {
           id: t.id, platform: t.platform || 'uber', time: (t.time || '').slice(0, 5),
           duration: t.duration || 0, origin: t.origin || '', dest: t.dest || '',
           value: parseFloat(t.value) || 0, km: parseFloat(t.km) || 0,
-          category: t.category || '', surge: t.surge || false, airport: t.airport || false
+          category: t.category || '', surge: t.surge || false, airport: t.airport || false,
+          dinamico: parseFloat(t.dinamico) || 0, tip: parseFloat(t.tip) || 0
         });
       });
       (expenses.data || []).forEach(e => {
