@@ -386,6 +386,8 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
 
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
     const _SUPA = supabase.createClient(
       'https://jlsrpptslwfhmkvelaro.supabase.co',
@@ -1077,6 +1079,13 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
             <input type="file" multiple style="display:none" onchange="handleImport(this,'Uber')">
           </label>
         </div>
+        <label style="margin-top:8px;height:48px;border-radius:14px;background:linear-gradient(135deg,#0EA5E9,#16A34A);display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;font-size:12.5px;font-weight:700;color:#fff;box-shadow:0 8px 18px rgba(14,165,233,.3);position:relative">
+          <span style="position:absolute;top:-8px;right:-6px;background:#F59E0B;color:#fff;font-size:8.5px;font-weight:900;padding:3px 6px;border-radius:999px;letter-spacing:.02em">NOVO</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8 12 3 7 8"/><path d="M12 3v12"/></svg>
+          Histórico oficial do Uber (.zip)
+          <input type="file" accept=".zip" style="display:none" onchange="handleUberZipFile(this)">
+        </label>
+        <div style="font-size:11px;color:#94A3B8;margin-top:8px;line-height:1.5">Baixe em: app Uber → Conta → Configurações de privacidade → "Solicitar meus dados". Você recebe um e-mail com o arquivo .zip.</div>
       </div>
       <!-- 99 -->
       <div style="border:1.5px solid rgba(245,158,11,.25);border-radius:18px;padding:14px 16px;background:#FFF7ED">
@@ -1112,6 +1121,62 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
     </div>
   </div>
 </div>
+
+<!-- Uber ZIP: processando + resultado -->
+<div class="mo ctr" id="mo-uberzip">
+  <div class="sheet ctr" style="max-width:400px">
+    <div id="uz-proc" style="padding:50px 20px;text-align:center">
+      <div style="font-size:32px;display:inline-block;animation:uzspin 1.1s linear infinite">&#9881;</div>
+      <div id="uz-proc-step" style="font-size:14px;font-weight:800;margin-top:16px">Lendo arquivo...</div>
+      <div id="uz-proc-sub" style="font-size:12px;color:#64748B;margin-top:5px">Isso só leva alguns segundos</div>
+      <div style="height:8px;background:#EEF2F7;border-radius:99px;overflow:hidden;margin-top:20px">
+        <div id="uz-proc-bar" style="height:100%;background:linear-gradient(90deg,#0EA5E9,#22C55E);border-radius:99px;width:8%;transition:width .4s"></div>
+      </div>
+    </div>
+
+    <div id="uz-res" style="display:none">
+      <div style="text-align:center;padding:4px 0 16px">
+        <div style="width:52px;height:52px;border-radius:16px;background:#ECFDF3;color:#16A34A;display:flex;align-items:center;justify-content:center;margin:0 auto 10px">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        </div>
+        <div style="font-size:16px;font-weight:800;letter-spacing:-.02em">Histórico conferido</div>
+        <div id="uz-res-sub" style="font-size:12px;color:#64748B;margin-top:3px"></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="border:1px solid #E2E8F0;border-radius:16px;padding:11px 12px;background:#fff">
+          <span style="color:#64748B;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em">Novas pra importar</span>
+          <strong id="uz-k-novas" style="display:block;font-family:'DM Mono',monospace;font-size:18px;color:#16A34A;margin-top:4px">0</strong>
+        </div>
+        <div style="border:1px solid #E2E8F0;border-radius:16px;padding:11px 12px;background:#fff">
+          <span style="color:#64748B;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em">Já existiam</span>
+          <strong id="uz-k-dup" style="display:block;font-family:'DM Mono',monospace;font-size:18px;color:#64748B;margin-top:4px">0</strong>
+        </div>
+        <div style="border:1px solid #E2E8F0;border-radius:16px;padding:11px 12px;background:#fff">
+          <span style="color:#64748B;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em">Valor das novas</span>
+          <strong id="uz-k-valor" style="display:block;font-family:'DM Mono',monospace;font-size:18px;margin-top:4px">R$ 0</strong>
+        </div>
+        <div style="border:1px solid #E2E8F0;border-radius:16px;padding:11px 12px;background:#fff">
+          <span style="color:#64748B;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em">Período</span>
+          <strong id="uz-k-periodo" style="display:block;font-size:12.5px;margin-top:5px">—</strong>
+        </div>
+      </div>
+
+      <div id="uz-dup-callout" style="margin-top:10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:14px;padding:11px 12px;display:none;gap:9px;align-items:flex-start">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#94A3B8" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <p id="uz-dup-text" style="font-size:11px;color:#64748B;line-height:1.5;margin:0"></p>
+      </div>
+
+      <div id="uz-neg-warn" style="margin-top:8px;font-size:11px;color:#B45309;display:none"></div>
+
+      <div style="display:flex;gap:8px;margin-top:18px">
+        <button class="btn-s" onclick="closeMo('mo-uberzip')" style="margin-top:0">Cancelar</button>
+        <button class="btn-p" id="uz-confirm-btn" onclick="confirmUberZipImport()" style="margin-top:0">Importar</button>
+      </div>
+    </div>
+  </div>
+</div>
+<style>@keyframes uzspin{to{transform:rotate(360deg)}}</style>
 
 <!-- Perfil -->
 <div class="mo" id="mo-perfil">
@@ -2680,6 +2745,265 @@ function confirmImport() {
     ? `${added} corrida${added!==1?'s':''} importada${added!==1?'s':''}. ${skipped} ignorada${skipped!==1?'s':''} (já existente${skipped!==1?'s':''}).`
     : `${added} corrida${added!==1?'s':''} importada${added!==1?'s':''}!`;
   alert(msg);
+}
+
+// ══════════════════════════════════════════════
+// IMPORTAÇÃO: histórico oficial do Uber (.zip)
+// Lê driver_payments-0.csv + driver_lifetime_trips-0.csv, casa pagamento
+// com corrida por horário, e compara com o histórico local pra não duplicar.
+// ══════════════════════════════════════════════
+const UZ_MATCH_WINDOW_MS = 50 * 60 * 60 * 1000; // pagamento pode liquidar até ~50h depois
+
+function uzRound2(n) { return Math.round(n * 100) / 100; }
+
+// Aceita "10.50" e "10,50" — exportações da Uber variam o separador por região/locale.
+function uzNum(raw) {
+  if (raw == null || raw === '') return 0;
+  return parseFloat(String(raw).replace(',', '.')) || 0;
+}
+
+function uzParseTs(raw) {
+  if (!raw) return null;
+  let clean = String(raw).replace('Z', '').replace('T', ' ');
+  if (clean.includes('.')) clean = clean.split('.')[0];
+  const m = clean.match(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})$/);
+  if (!m) return null;
+  const [, dateStr, timeStr] = m;
+  const epochMs = Date.parse(dateStr + 'T' + timeStr + 'Z'); // só pra comparar diferenças, não é UTC real
+  if (Number.isNaN(epochMs)) return null;
+  return { dateStr, timeStr: timeStr.slice(0, 5), epochMs };
+}
+
+function uzLowerBound(arr, target) {
+  let lo = 0, hi = arr.length;
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (arr[mid] < target) lo = mid + 1; else hi = mid; }
+  return lo;
+}
+function uzUpperBound(arr, target) {
+  let lo = 0, hi = arr.length;
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (arr[mid] <= target) lo = mid + 1; else hi = mid; }
+  return lo;
+}
+
+function uzGroupPayments(rows) {
+  const groups = new Map();
+  for (const r of rows) {
+    const uuid = r['Trip UUID'];
+    if (!uuid) continue;
+    if (!groups.has(uuid)) groups.set(uuid, []);
+    groups.get(uuid).push(r);
+  }
+  const payments = [];
+  for (const [uuid, rs] of groups) {
+    let value = 0, tip = 0, promo = 0, ts = null;
+    for (const r of rs) {
+      const amt = uzNum(r['Local Amount']);
+      const cat = r['Category'];
+      if (cat !== 'cash_collected') value += amt;
+      if (cat === 'tip') tip += amt;
+      if (cat === 'existing_driver_incentive') promo += amt;
+      const parts = uzParseTs(r['Local Timestamp']);
+      if (parts && (!ts || parts.epochMs < ts.epochMs)) ts = parts;
+    }
+    if (!ts) continue;
+    payments.push({ id: uuid, value: uzRound2(value), tip: uzRound2(tip), promo: uzRound2(promo), ts });
+  }
+  return payments;
+}
+
+function uzBuildTrips(rows) {
+  const trips = [];
+  for (const r of rows) {
+    const begin = uzParseTs(r['begintrip_timestamp_local']) || uzParseTs(r['request_timestamp_local']);
+    const drop  = uzParseTs(r['dropoff_timestamp_local']) || begin;
+    if (!begin || !drop) continue;
+    trips.push({
+      begin, drop,
+      km: r['trip_distance_miles'] ? uzRound2(uzNum(r['trip_distance_miles']) * 1.60934) : null,
+      // o app guarda duração em MINUTOS (a IA de import por foto também usa minutos);
+      // o export da Uber vem em segundos, por isso a divisão por 60 aqui.
+      duration: r['trip_duration_seconds'] ? Math.round(uzNum(r['trip_duration_seconds']) / 60) : null,
+      category: r['global_product_name'] || '',
+      surge: r['is_surged'] === 'true',
+      airport: r['is_airport_trip'] === 'true',
+      used: false,
+    });
+  }
+  trips.sort((a, b) => a.drop.epochMs - b.drop.epochMs);
+  return trips;
+}
+
+function uzMatch(payments, trips) {
+  payments.sort((a, b) => a.ts.epochMs - b.ts.epochMs);
+  const dropTimes = trips.map(t => t.drop.epochMs);
+  const out = [];
+  for (const p of payments) {
+    const lo = uzLowerBound(dropTimes, p.ts.epochMs - UZ_MATCH_WINDOW_MS);
+    const hi = uzUpperBound(dropTimes, p.ts.epochMs);
+    let best = null, bestDelta = Infinity;
+    for (let i = lo; i < hi; i++) {
+      const t = trips[i]; if (t.used) continue;
+      const d = Math.abs(p.ts.epochMs - t.drop.epochMs);
+      if (d < bestDelta) { best = t; bestDelta = d; }
+    }
+    let dateStr, timeStr, km = null, duration = null, category = '', surge = false, airport = false;
+    if (best) {
+      best.used = true;
+      dateStr = best.begin.dateStr; timeStr = best.begin.timeStr;
+      km = best.km; duration = best.duration; category = best.category; surge = best.surge; airport = best.airport;
+    } else {
+      dateStr = p.ts.dateStr; timeStr = p.ts.timeStr;
+    }
+    // A tabela trips exige value >= 0; ajustes/reembolsos raros que deixariam o total
+    // negativo são zerados aqui em vez de travar a importação inteira no upload.
+    const value = Math.max(0, p.value);
+    out.push({ tripUuid: p.id, date: dateStr, time: timeStr, value, tip: Math.max(0, p.tip),
+      promo: Math.max(0, p.promo), km, duration, category, surge, airport, _negAdjusted: p.value < 0 });
+  }
+  return out;
+}
+
+function uzFindEntry(zip, suffix) {
+  const f = Object.values(zip.files).find(x => !x.dir && x.name.endsWith(suffix));
+  if (!f) throw new Error('Não encontrei "' + suffix + '" no zip. Confira se é o arquivo certo da Uber.');
+  return f;
+}
+
+let _uzResult = null;
+
+async function handleUberZipFile(input) {
+  const file = input.files[0]; if (!file) return;
+  input.value = '';
+  openMo('mo-uberzip');
+  document.getElementById('uz-proc').style.display = 'block';
+  document.getElementById('uz-res').style.display = 'none';
+  const stepEl = document.getElementById('uz-proc-step');
+  const subEl  = document.getElementById('uz-proc-sub');
+  const barEl  = document.getElementById('uz-proc-bar');
+  const setStep = (msg, pct) => { if (stepEl) stepEl.textContent = msg; if (barEl) barEl.style.width = pct + '%'; };
+
+  try {
+    setStep('Lendo arquivo .zip...', 10);
+    const zip = await JSZip.loadAsync(file);
+    const paymentsEntry = uzFindEntry(zip, 'driver_payments-0.csv');
+    const tripsEntry     = uzFindEntry(zip, 'driver_lifetime_trips-0.csv');
+
+    setStep('Lendo corridas e pagamentos...', 30);
+    const [paymentsCsv, tripsCsv] = await Promise.all([
+      paymentsEntry.async('string'), tripsEntry.async('string')
+    ]);
+    const paymentsRows = Papa.parse(paymentsCsv, { header: true, skipEmptyLines: true }).data;
+    const tripsRows     = Papa.parse(tripsCsv, { header: true, skipEmptyLines: true }).data;
+
+    setStep('Casando pagamentos com corridas...', 55);
+    await new Promise(r => setTimeout(r, 0));
+    const payments = uzGroupPayments(paymentsRows);
+    if (!payments.length) throw new Error('Não encontrei nenhum pagamento no CSV. Pode ser que os nomes das colunas sejam diferentes do esperado — me envia o cabeçalho do arquivo pra eu ajustar.');
+    const trips   = uzBuildTrips(tripsRows);
+    const records = uzMatch(payments, trips);
+
+    setStep('Comparando com seu histórico...', 75);
+    await new Promise(r => setTimeout(r, 0));
+
+    let added = 0, dup = 0, negAdjusted = 0, totalValue = 0, totalTip = 0, totalPromo = 0;
+    let minDate = null, maxDate = null;
+    const toImport = [];
+    const dayCache = {};
+    for (const r of records) {
+      if (r._negAdjusted) negAdjusted++;
+      if (!minDate || r.date < minDate) minDate = r.date;
+      if (!maxDate || r.date > maxDate) maxDate = r.date;
+      if (!dayCache[r.date]) dayCache[r.date] = DB.day(r.date);
+      const day = dayCache[r.date];
+      const isDup = day.trips.some(t => t.time === r.time && Math.abs((t.value || 0) - r.value) < 0.02)
+        || toImport.some(t => t.date === r.date && t.time === r.time && Math.abs(t.value - r.value) < 0.02);
+      if (isDup) { dup++; continue; }
+      added++; totalValue += r.value; totalTip += r.tip; totalPromo += r.promo;
+      toImport.push(r);
+    }
+
+    setStep('Pronto!', 100);
+    _uzResult = { toImport, added, dup, negAdjusted, totalValue: uzRound2(totalValue),
+      totalTip: uzRound2(totalTip), totalPromo: uzRound2(totalPromo), minDate, maxDate, totalFound: records.length };
+
+    setTimeout(() => uzShowResult(_uzResult), 350);
+
+  } catch (err) {
+    console.error('uberZipImport', err);
+    setStep('Erro ao processar', 0);
+    if (subEl) subEl.textContent = err.message || 'Tente novamente.';
+  }
+}
+
+function uzFmtDate(d) {
+  if (!d) return '—';
+  const [y, m, dd] = d.split('-');
+  return dd + '/' + m + '/' + y.slice(2);
+}
+
+function uzShowResult(res) {
+  document.getElementById('uz-proc').style.display = 'none';
+  document.getElementById('uz-res').style.display = 'block';
+  document.getElementById('uz-res-sub').textContent = res.totalFound + ' corridas encontradas no arquivo do Uber';
+  document.getElementById('uz-k-novas').textContent = res.added;
+  document.getElementById('uz-k-dup').textContent = res.dup;
+  document.getElementById('uz-k-valor').textContent = DB.fR(res.totalValue);
+  document.getElementById('uz-k-periodo').textContent = res.minDate ? (uzFmtDate(res.minDate) + ' – ' + uzFmtDate(res.maxDate)) : '—';
+
+  const callout = document.getElementById('uz-dup-callout');
+  if (res.dup > 0) {
+    callout.style.display = 'flex';
+    document.getElementById('uz-dup-text').innerHTML =
+      '<b>' + res.dup + ' corrida' + (res.dup !== 1 ? 's' : '') + ' não ' + (res.dup !== 1 ? 'serão' : 'será') + ' duplicada' + (res.dup !== 1 ? 's' : '') + '.</b> ' +
+      (res.dup !== 1 ? 'Elas batem' : 'Ela bate') + ' em horário e valor com corridas que você já tinha lançado.';
+  } else {
+    callout.style.display = 'none';
+  }
+
+  const warnEl = document.getElementById('uz-neg-warn');
+  if (res.negAdjusted > 0) {
+    warnEl.style.display = 'block';
+    warnEl.textContent = res.negAdjusted + ' corrida' + (res.negAdjusted !== 1 ? 's' : '') + ' tinha' + (res.negAdjusted !== 1 ? 'm' : '') + ' ajuste/reembolso maior que o ganho — valor zerado pra não travar a importação.';
+  } else {
+    warnEl.style.display = 'none';
+  }
+
+  const btn = document.getElementById('uz-confirm-btn');
+  if (res.added === 0) { btn.textContent = 'Nada pra importar'; btn.disabled = true; btn.style.opacity = .5; }
+  else { btn.textContent = 'Importar ' + res.added + ' corrida' + (res.added !== 1 ? 's' : ''); btn.disabled = false; btn.style.opacity = 1; }
+}
+
+async function confirmUberZipImport() {
+  const res = _uzResult;
+  if (!res || !res.added) { closeMo('mo-uberzip'); return; }
+  const byDate = {};
+  res.toImport.forEach(r => { (byDate[r.date] || (byDate[r.date] = [])).push(r); });
+
+  const dates = Object.keys(byDate);
+  for (let i = 0; i < dates.length; i++) {
+    const date = dates[i];
+    const day = DB.day(date);
+    byDate[date].forEach(r => {
+      const trip = { id: 'uberz_' + r.tripUuid, platform: 'uber', time: r.time,
+        duration: r.duration || 0, origin: '', dest: '', value: r.value, km: r.km || 0,
+        category: r.category || '', surge: !!r.surge, airport: !!r.airport,
+        tip: r.tip || 0, promo: r.promo || 0, source: 'import_uber_zip' };
+      day.trips.push(trip);
+      SYNC.push('trips', { id: trip.id, date, platform: trip.platform, time: trip.time || null,
+        duration: trip.duration, origin: trip.origin, dest: trip.dest, value: trip.value, km: trip.km,
+        category: trip.category, surge: trip.surge, airport: trip.airport, tip: trip.tip, promo: trip.promo,
+        source: trip.source });
+    });
+    DB.saveDay(day);
+    if (i % 15 === 0) await new Promise(r => setTimeout(r, 0));
+  }
+
+  closeMo('mo-uberzip');
+  closeMo('mo-import');
+  _uzResult = null;
+  if (S.sec === 'jornada') renderJornada();
+  if (S.sec === 'home') renderHome();
+  alert(res.added + ' corrida' + (res.added !== 1 ? 's' : '') + ' importada' + (res.added !== 1 ? 's' : '') + ' do histórico do Uber!');
 }
 
 function gpsAction() {
