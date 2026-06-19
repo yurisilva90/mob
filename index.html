@@ -156,7 +156,7 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .li-info{flex:1;min-width:0}.li-info h3{font-size:13.5px;font-weight:760}.li-info p{font-size:11.5px;color:var(--muted);margin-top:2px}
 .trip-title{font-size:12.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .li-val{text-align:right;font-size:11px;color:var(--muted);font-weight:600;flex:0 0 auto}.li-val strong{display:block;color:var(--text);font-size:13.5px;font-weight:760;font-family:'DM Mono',monospace}
-.li-extra{display:flex;gap:6px;margin-top:5px}.chip{font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px;font-family:'DM Mono',monospace;letter-spacing:-.01em}.chip-d{background:#FFF7ED;color:#F59E0B}.chip-g{background:#F5F3FF;color:#7C3AED}
+.li-extra{display:flex;gap:6px;margin-top:5px}.chip{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px;font-family:'DM Mono',monospace;letter-spacing:-.01em}.chip svg{flex-shrink:0}.chip-d{background:#FFF7ED;color:#F59E0B}.chip-g{background:#F5F3FF;color:#7C3AED}
 .action{background:#fff;border:1px solid rgba(14,165,233,.18);box-shadow:0 3px 14px rgba(15,23,42,.06);border-radius:22px;padding:15px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;cursor:pointer;touch-action:manipulation}.action .glyph{width:42px;height:42px;border-radius:16px;background:rgba(14,165,233,.1);display:flex;align-items:center;justify-content:center;color:var(--blue)}.action h3{font-size:14px;font-weight:700}.action p{font-size:12px;color:var(--muted);margin-top:3px}.chev{margin-left:auto;color:#94A3B8;font-size:22px}
 .kmcard{background:#fff;border:1px solid var(--line);border-radius:24px;padding:16px;box-shadow:0 3px 14px rgba(15,23,42,.06)}.cardhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.cardhead h2{font-size:15px;letter-spacing:-.02em}.linkbtn{border:0;background:rgba(14,165,233,.1);color:var(--blue);border-radius:999px;padding:7px 12px;font-size:12px;font-weight:800;cursor:pointer;touch-action:manipulation}.row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}.row span{font-size:12px;color:var(--muted);font-weight:600}.row strong{font-family:'DM Mono',monospace;font-size:13px}.bar{height:10px;background:#E2E8F0;border-radius:999px;overflow:hidden;margin-top:12px}.fill{height:100%;background:linear-gradient(90deg,var(--green),var(--blue));border-radius:999px;transition:width .5s}.note{font-size:11px;color:var(--muted);text-align:center;margin-top:8px;font-weight:600}
 .section{display:flex;align-items:center;justify-content:space-between}.section h2{font-size:16px;font-weight:700}.add{border:0;background:rgba(14,165,233,.1);color:var(--blue);font-weight:800;border-radius:999px;padding:7px 12px;font-size:12px;cursor:pointer;touch-action:manipulation}.list{background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:0 3px 14px rgba(15,23,42,.06);overflow:hidden}.tag{width:38px;height:38px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0}
@@ -2109,8 +2109,8 @@ function tripItem(t) {
   const dest = t.dest ? ' → '+t.dest : '';
   const dur = t.duration ? ' · '+fmtDur(t.duration) : '';
   const extras = [];
-  if (t.dinamico > 0) extras.push(`<span class="chip chip-d">D= ${DB.fR(t.dinamico)}</span>`);
-  if (t.tip > 0) extras.push(`<span class="chip chip-g">G= ${DB.fR(t.tip)}</span>`);
+  if (t.dinamico > 0) extras.push(`<span class="chip chip-d"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg> D= ${DB.fR(t.dinamico)}</span>`);
+  if (t.tip > 0) extras.push(`<span class="chip chip-g"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.5 4.05 3 5.5l7 7Z"/></svg> G= ${DB.fR(t.tip)}</span>`);
   const extraRow = extras.length ? `<div class="li-extra">${extras.join('')}</div>` : '';
   return `<div class="li-row">
     <div class="li-info"><h3 class="trip-title">${t.origin||'—'}${dest}</h3><p>${plat} · ${(t.km||0).toFixed(1)} km${dur}</p>${extraRow}</div>
@@ -2700,8 +2700,8 @@ async function extractTripsFromImage(file, plat) {
 async function extractTripsFromBase64(b64, mt, plat) {
   const isUber = plat.toLowerCase() === 'uber';
   const prompt = isUber
-    ? 'Esta imagem mostra o "Histórico de ganhos" do Uber motorista. Extraia CADA corrida. Ignore Missão (R$ 0,00). Retorne SOMENTE JSON array: [{"time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"Black","origin":"bairro","dest":"bairro","surge":false}]. duration=minutos inteiros. Se vazio retorne [].'
-    : 'Histórico do 99. Extraia CADA corrida. Retorne SOMENTE JSON array: [{"time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"99Pop","origin":"bairro","dest":"bairro","surge":false}]. Se vazio retorne [].';
+    ? 'Esta imagem mostra o "Histórico de ganhos" do Uber motorista, com uma linha divisória entre cada corrida (mesmo no modo escuro). Extraia CADA corrida, mas SÓ quando ela aparecer COMPLETA na imagem (com a linha divisória acima e abaixo) — se uma corrida estiver cortada no topo ou na base da imagem (incompleta), IGNORE essa corrida, não tente adivinhar ou completar com dados de outra. Ignore Missão (R$ 0,00). Abaixo do valor principal de cada corrida pode aparecer "Valor extra" (ícone de mão/coração — é a gorjeta do passageiro) e/ou "Preço dinâmico" (ícone de raio) — extraia os dois valores quando existirem, cada um com seu próprio R$. IGNORE completamente a linha "Dinheiro recebido" (ícone de câmera/foto) — ela não soma nada no resultado, só indica que a corrida foi paga em dinheiro. Retorne SOMENTE JSON array: [{"time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"Black","origin":"bairro","dest":"bairro","dinamico":0.00,"gorjeta":0.00}]. duration=minutos inteiros. dinamico e gorjeta ficam 0.00 quando não aparecerem na corrida. Se vazio retorne [].'
+    : 'Histórico do 99, com uma linha divisória entre cada corrida (mesmo no modo escuro). Extraia CADA corrida, mas SÓ quando ela aparecer COMPLETA na imagem (linha divisória acima e abaixo) — se estiver cortada no topo ou na base, IGNORE essa corrida. Se aparecerem valores de tarifa dinâmica ou gorjeta separados do valor principal, extraia os dois. Retorne SOMENTE JSON array: [{"time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"99Pop","origin":"bairro","dest":"bairro","dinamico":0.00,"gorjeta":0.00}]. dinamico e gorjeta ficam 0.00 quando não aparecerem. Se vazio retorne [].';
   const resp = await fetch('https://smartmobi-proxy.yurisilva1990.workers.dev', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({model:'claude-haiku-4-5-20251001', max_tokens:1500,
@@ -2711,10 +2711,14 @@ async function extractTripsFromBase64(b64, mt, plat) {
   const data = await resp.json();
   const raw  = ((data.content?.[0]?.text)||'[]').replace(/```json|```/g,'').trim();
   const arr  = JSON.parse(raw);
-  return Array.isArray(arr) ? arr.map(t => ({...t,
-    value:parseFloat(String(t.value||0).replace(',','.'))||0,
-    km:parseFloat(String(t.km||0).replace(',','.'))||0,
-    duration:parseInt(t.duration)||0, surge:!!t.surge})) : [];
+  return Array.isArray(arr) ? arr.map(t => {
+    const dinamico = parseFloat(String(t.dinamico||0).replace(',','.'))||0;
+    const tip = parseFloat(String(t.gorjeta||0).replace(',','.'))||0;
+    return {...t,
+      value:parseFloat(String(t.value||0).replace(',','.'))||0,
+      km:parseFloat(String(t.km||0).replace(',','.'))||0,
+      duration:parseInt(t.duration)||0, dinamico, tip, surge: dinamico > 0 };
+  }) : [];
 }
 
 
@@ -2748,12 +2752,17 @@ function showImportConfirm() {
   if (!trips.length) { closeMo('mo-import-confirm'); showToast('Nenhuma corrida detectada.', 'info'); return; }
   document.getElementById('ic-title').textContent = 'Corridas detectadas ('+trips.length+')';
   document.getElementById('ic-btn').style.display = ''; document.getElementById('ic-btn').textContent = 'Importar ('+trips.length+')';
-  document.getElementById('ic-body').innerHTML = '<div style="background:#fff;border-radius:16px;overflow:hidden;border:1px solid #E2E8F0">' + trips.map((t,i) =>
-    `<div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid #E2E8F0;cursor:pointer" onclick="toggleImportTrip(${i})">
+  document.getElementById('ic-body').innerHTML = '<div style="background:#fff;border-radius:16px;overflow:hidden;border:1px solid #E2E8F0">' + trips.map((t,i) => {
+    const ex = [];
+    if (t.dinamico > 0) ex.push(`<span class="chip chip-d"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg> D= ${DB.fR(t.dinamico)}</span>`);
+    if (t.tip > 0) ex.push(`<span class="chip chip-g"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.5 4.05 3 5.5l7 7Z"/></svg> G= ${DB.fR(t.tip)}</span>`);
+    const exRow = ex.length ? `<div class="li-extra" style="margin-top:4px">${ex.join('')}</div>` : '';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid #E2E8F0;cursor:pointer" onclick="toggleImportTrip(${i})">
       <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${t._sel?'#22C55E':'#E2E8F0'};background:${t._sel?'#22C55E':'transparent'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0" id="ict-${i}">${t._sel?'✓':''}</div>
-      <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.origin||'—'} → ${t.dest||'—'}</div><div style="font-size:10px;color:#64748B;margin-top:2px">${t.time||'—'} · ${t.duration||0}min${t.km?' · '+t.km+'km':''}</div></div>
+      <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.origin||'—'} → ${t.dest||'—'}</div><div style="font-size:10px;color:#64748B;margin-top:2px">${t.time||'—'} · ${t.duration||0}min${t.km?' · '+t.km+'km':''}</div>${exRow}</div>
       <div style="font-family:'DM Mono',monospace;font-weight:700;font-size:14px;color:#16A34A;flex-shrink:0">R$${(t.value||0).toFixed(2)}</div>
-    </div>`).join('') + '</div>';
+    </div>`;
+  }).join('') + '</div>';
 }
 function toggleImportTrip(i) {
   const t = (window._pendingTrips||[])[i]; if (!t) return;
@@ -2802,7 +2811,8 @@ function confirmImport() {
     const trip = {id:DB.uid(), platform:t.platform||'uber', time:t.time||'',
       duration:t.duration||0, origin:t.origin||'', dest:t.dest||'',
       value:parseFloat(t.value)||0, km:parseFloat(t.km)||0,
-      category:'', surge:t.surge||false, airport:t.airport||false};
+      category:'', surge:t.surge||false, airport:t.airport||false,
+      dinamico:parseFloat(t.dinamico)||0, tip:parseFloat(t.tip)||0};
     day.trips.push(trip);
     toPush.push(trip);
     added++;
@@ -2811,7 +2821,7 @@ function confirmImport() {
   toPush.forEach(trip => SYNC.push('trips', { id: trip.id, date: S.curDate, platform: trip.platform,
     time: trip.time || null, duration: trip.duration, origin: trip.origin, dest: trip.dest,
     value: trip.value, km: trip.km, category: trip.category, surge: trip.surge, airport: trip.airport,
-    source: 'import_ai' }));
+    dinamico: trip.dinamico, tip: trip.tip, source: 'import_ai' }));
   if (S.sec==='jornada') renderJornada();
   if (S.sec==='home') renderHome();
   const msg = skipped>0
