@@ -1280,7 +1280,7 @@ const DB = {
   uid: () => Date.now().toString(36) + Math.random().toString(36).slice(2,5),
   today: () => { const d=new Date(); return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate()); },
   fR: v => 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}),
-  fRI: v => 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0}),
+  fRI: v => 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}),
 };
 function p2(n) { return String(n).padStart(2,'0'); }
 // Formata duração em minutos: "5m", "32m", "1h05m" (sem zero à esquerda quando é só minutos).
@@ -1459,7 +1459,7 @@ function openHgFilter() {
 function applyHgFilter() {
   const s = document.getElementById('hg-filter-start')?.value;
   const e = document.getElementById('hg-filter-end')?.value;
-  if (!s || !e || s > e) { alert('Escolha um intervalo de datas válido'); return; }
+  if (!s || !e || s > e) { showToast('Escolha um intervalo de datas válido', 'error'); return; }
   S.hgCustomStart = s; S.hgCustomEnd = e; S.homePeriod = 'custom';
   ['w','m','y'].forEach(x => { const el = document.getElementById('hg-tab-'+x); if (el) el.classList.toggle('active', false); });
   closeMo('mo-hg-filter');
@@ -2018,7 +2018,7 @@ function renderPjSchedules() {
   `).join('');
 }
 function pjSaveEntry() {
-  if (!pjSelDays.length) { alert('Selecione ao menos um dia'); return; }
+  if (!pjSelDays.length) { showToast('Selecione ao menos um dia', 'error'); return; }
   const validSched = pjSchedules.filter(s => s.start && s.end);
   const moneyGoal = parseFloat(document.getElementById('pj-money')?.value||0) || null;
   const kmGoal = parseFloat(document.getElementById('pj-km')?.value||0) || null;
@@ -2038,11 +2038,12 @@ function pjSaveEntry() {
   showToast('Jornada planejada salva!');
 }
 function pjRemoveEntry(id) {
-  if (!confirm('Remover essa jornada planejada?')) return;
-  DB.savePlanJornada(DB.planJornada().filter(p => p.id !== id));
-  SYNC.del('plan_jornada', { id });
-  renderPjList();
-  renderMetasDoDia(DB.day(S.curDate));
+  showConfirm('Remover essa jornada planejada?', () => {
+    DB.savePlanJornada(DB.planJornada().filter(p => p.id !== id));
+    SYNC.del('plan_jornada', { id });
+    renderPjList();
+    renderMetasDoDia(DB.day(S.curDate));
+  });
 }
 function renderPjList() {
   const el = document.getElementById('pj-list');
@@ -2323,7 +2324,7 @@ function catPickIcon(ic)  { catAddState.icon = ic; renderCatsModal(); }
 function catConfirmAdd(key) {
   const input = document.getElementById('cat-new-name');
   const name = input?.value?.trim();
-  if (!name) { alert('Digite o nome da categoria'); return; }
+  if (!name) { showToast('Digite o nome da categoria', 'error'); return; }
   const cats = DB.cats(key) || DEFAULT_CATS[key] || [];
   cats.push({ id: DB.uid(), l: name, icon: catAddState.icon });
   DB.saveCats(key, cats);
@@ -2334,11 +2335,12 @@ function catConfirmAdd(key) {
 
 function catRemove(key, idx) {
   const cats = DB.cats(key) || DEFAULT_CATS[key] || [];
-  if (!confirm(`Remover a categoria "${cats[idx]?.l}"?`)) return;
-  cats.splice(idx, 1);
-  DB.saveCats(key, cats);
-  SYNC.pushCats(key);
-  renderCatsModal();
+  showConfirm(`Remover a categoria "${cats[idx]?.l}"?`, () => {
+    cats.splice(idx, 1);
+    DB.saveCats(key, cats);
+    SYNC.pushCats(key);
+    renderCatsModal();
+  });
 }
 
 function renderLancCats() {
@@ -2363,7 +2365,7 @@ function setFreq(btn) {
 }
 function saveLanc() {
   const val = parseFloat(document.getElementById('l-valor')?.value || 0);
-  if (!val) { alert('Informe o valor'); return; }
+  if (!val) { showToast('Informe o valor', 'error'); return; }
   const key  = S.lancType + '_' + S.lancScope;
   const cats = DB.cats(key) || DEFAULT_CATS[key] || [];
   const cat  = cats[lancCatSel];
@@ -2401,7 +2403,7 @@ function setCorPlat(p) {
 }
 function saveCorrida() {
   const val = parseFloat(document.getElementById('c-val')?.value || 0);
-  if (!val) { alert('Informe o valor'); return; }
+  if (!val) { showToast('Informe o valor', 'error'); return; }
   const day = DB.day(S.curDate);
   const trip = {
     id: DB.uid(), platform: S.corPlat,
@@ -2424,7 +2426,7 @@ function saveCorrida() {
 // ── KM FORM ───────────────────────────────────────────────────
 function saveKm() {
   const v = parseFloat(document.getElementById('km-inp')?.value);
-  if (!v) { alert('Informe o valor'); return; }
+  if (!v) { showToast('Informe o valor', 'error'); return; }
   const day = DB.day(S.curDate); day.kmTotal = v; DB.saveDay(day);
   closeMo('mo-km'); renderJornada();
 }
@@ -2452,7 +2454,7 @@ function kmAdjStep(delta) {
 function saveKmAdjust() {
   const inp = document.getElementById('kmadj-val');
   const newTotal = parseFloat(inp?.value);
-  if (isNaN(newTotal) || newTotal < 0) { alert('Valor inválido'); return; }
+  if (isNaN(newTotal) || newTotal < 0) { showToast('Valor inválido', 'error'); return; }
   const day = DB.day(S.curDate);
   day.kmAdjust = parseFloat((newTotal - kmAdjBase).toFixed(2));
   DB.saveDay(day);
@@ -2539,7 +2541,7 @@ async function processVideoImport(file, plat) {
     showImportConfirm();
   } catch(e) {
     closeMo('mo-import-confirm');
-    alert('Erro ao processar vídeo: ' + e.message + '. Use MP4 ou prints do histórico.');
+    showToast('Erro ao processar vídeo: ' + e.message + '. Use MP4 ou prints do histórico.', 'error');
     console.error('Video error:', e);
   }
 }
@@ -2683,7 +2685,7 @@ function mergeTrips(existing, newTrips) {
 
 function showImportConfirm() {
   const trips = window._pendingTrips || [];
-  if (!trips.length) { closeMo('mo-import-confirm'); alert('Nenhuma corrida detectada.'); return; }
+  if (!trips.length) { closeMo('mo-import-confirm'); showToast('Nenhuma corrida detectada.', 'info'); return; }
   document.getElementById('ic-title').textContent = 'Corridas detectadas ('+trips.length+')';
   document.getElementById('ic-btn').style.display = ''; document.getElementById('ic-btn').textContent = 'Importar ('+trips.length+')';
   document.getElementById('ic-body').innerHTML = '<div style="background:#fff;border-radius:16px;overflow:hidden;border:1px solid #E2E8F0">' + trips.map((t,i) =>
@@ -2755,7 +2757,7 @@ function confirmImport() {
   const msg = skipped>0
     ? `${added} corrida${added!==1?'s':''} importada${added!==1?'s':''}. ${skipped} ignorada${skipped!==1?'s':''} (já existente${skipped!==1?'s':''}).`
     : `${added} corrida${added!==1?'s':''} importada${added!==1?'s':''}!`;
-  alert(msg);
+  showToast(msg, skipped > 0 ? 'info' : 'success');
 }
 
 // ══════════════════════════════════════════════
@@ -2962,7 +2964,7 @@ async function confirmUberZipImport() {
   _uzResult = null;
   if (S.sec === 'jornada') renderJornada();
   if (S.sec === 'home') renderHome();
-  alert(res.added + ' corrida' + (res.added !== 1 ? 's' : '') + ' importada' + (res.added !== 1 ? 's' : '') + ' do histórico do Uber!');
+  showToast(res.added + ' corrida' + (res.added !== 1 ? 's' : '') + ' importada' + (res.added !== 1 ? 's' : '') + ' do histórico do Uber!', 'success');
 }
 
 function gpsAction() {
@@ -3028,7 +3030,7 @@ function gpsStart() {
   // Verifica permissão overlay
   if (window.SmartMobiNative && typeof SmartMobiNative.hasOverlay === 'function') {
     if (!SmartMobiNative.hasOverlay()) {
-      setTimeout(() => alert('Para ver a bolinha flutuante sobre o Uber:\nConfigurações → Apps → SmartMobi → Aparecer sobre outros apps → Ativar'), 500);
+      setTimeout(() => showToast('Para ver a bolinha flutuante sobre o Uber:\nConfigurações → Apps → SmartMobi → Aparecer sobre outros apps → Ativar', 'info'), 500);
     }
   }
   requestWakeLock();
@@ -3036,16 +3038,29 @@ function gpsStart() {
 }
 
 function confirmStop() {
-  showConfirmToast('Encerrar a jornada agora?', gpsStop, 'Encerrar', 'Cancelar');
+  showConfirm('Encerrar a jornada agora?', gpsStop, { confirmLabel: 'Encerrar', cancelLabel: 'Cancelar' });
 }
-function showToast(msg, ms) {
-  const existing = document.getElementById('app-toast'); if (existing) existing.remove();
+function showToast(msg, type) {
+  const existing = document.getElementById('app-toast-center'); if (existing) existing.remove();
+  const icons = {
+    success: { bg: '#ECFDF3', color: '#16A34A', svg: '<path d="M20 6 9 17l-5-5"/>' },
+    error:   { bg: '#FEF2F2', color: '#EF4444', svg: '<circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>' },
+    info:    { bg: '#EFF6FF', color: '#0EA5E9', svg: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>' },
+  };
+  const ic = icons[type] || icons.success;
   const el = document.createElement('div');
-  el.id = 'app-toast';
-  el.style.cssText = 'position:fixed;left:50%;bottom:calc(var(--bottom) + var(--safe-bottom) + 14px);transform:translateX(-50%);width:min(394px,92vw);background:#0F172A;color:#fff;font-size:13.5px;font-weight:600;padding:14px 16px;border-radius:16px;box-shadow:0 16px 36px rgba(15,23,42,.3);z-index:9999;text-align:center;line-height:1.4';
-  el.textContent = msg;
+  el.id = 'app-toast-center';
+  el.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(15,23,42,.35)';
+  el.innerHTML = `
+    <div style="background:#fff;border-radius:26px;padding:32px 26px;max-width:320px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(15,23,42,.25)">
+      <div style="width:60px;height:60px;border-radius:50%;background:${ic.bg};color:${ic.color};display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">${ic.svg}</svg>
+      </div>
+      <div style="font-size:15.5px;font-weight:700;color:#0F172A;line-height:1.45;white-space:pre-line">${msg}</div>
+    </div>`;
   document.body.appendChild(el);
-  setTimeout(() => el.remove(), ms || 3200);
+  el.addEventListener('click', () => el.remove());
+  setTimeout(() => { if (document.getElementById('app-toast-center') === el) el.remove(); }, 3400);
 }
 function showEndJourneyToast(km) {
   const existing = document.getElementById('app-toast-center'); if (existing) existing.remove();
@@ -3064,18 +3079,28 @@ function showEndJourneyToast(km) {
   el.addEventListener('click', () => el.remove());
   setTimeout(() => el.remove(), 3500);
 }
-function showConfirmToast(msg, onConfirm, confirmLabel, cancelLabel) {
-  const existing = document.getElementById('app-toast'); if (existing) existing.remove();
+// Confirmação central (substitui o confirm() nativo do navegador), com a identidade visual do app.
+function showConfirm(msg, onConfirm, opts) {
+  opts = opts || {};
+  const existing = document.getElementById('app-toast-center'); if (existing) existing.remove();
+  const danger = opts.danger !== false;
   const el = document.createElement('div');
-  el.id = 'app-toast';
-  el.style.cssText = 'position:fixed;left:50%;bottom:calc(var(--bottom) + var(--safe-bottom) + 14px);transform:translateX(-50%);width:min(394px,92vw);background:#0F172A;color:#fff;font-size:13.5px;font-weight:600;padding:14px 16px;border-radius:16px;box-shadow:0 16px 36px rgba(15,23,42,.3);z-index:9999;display:flex;flex-direction:column;gap:10px';
-  el.innerHTML = '<span>'+msg+'</span><div style="display:flex;gap:8px;justify-content:flex-end">'
-    + '<button id="app-toast-cancel" style="background:rgba(255,255,255,.14);border:0;color:#fff;border-radius:10px;padding:8px 14px;font-size:12.5px;font-weight:800;cursor:pointer">'+(cancelLabel||'Cancelar')+'</button>'
-    + '<button id="app-toast-ok" style="background:#EF4444;border:0;color:#fff;border-radius:10px;padding:8px 14px;font-size:12.5px;font-weight:800;cursor:pointer">'+(confirmLabel||'OK')+'</button>'
-    + '</div>';
+  el.id = 'app-toast-center';
+  el.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(15,23,42,.35)';
+  el.innerHTML = `
+    <div style="background:#fff;border-radius:26px;padding:30px 26px 22px;max-width:320px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(15,23,42,.25)">
+      <div style="width:56px;height:56px;border-radius:50%;background:${danger ? '#FEF2F2' : '#EFF6FF'};color:${danger ? '#EF4444' : '#0EA5E9'};display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+      </div>
+      <div style="font-size:15.5px;font-weight:700;color:#0F172A;line-height:1.4;margin-bottom:20px;white-space:pre-line">${msg}</div>
+      <div style="display:flex;gap:8px">
+        <button id="app-confirm-cancel" style="flex:1;height:46px;border:1.5px solid #E2E8F0;background:#F8FAFC;color:#0F172A;border-radius:14px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit">${opts.cancelLabel || 'Cancelar'}</button>
+        <button id="app-confirm-ok" style="flex:1;height:46px;border:0;background:${danger ? '#EF4444' : '#16A34A'};color:#fff;border-radius:14px;font-size:13.5px;font-weight:800;cursor:pointer;font-family:inherit">${opts.confirmLabel || 'Confirmar'}</button>
+      </div>
+    </div>`;
   document.body.appendChild(el);
-  document.getElementById('app-toast-cancel').onclick = () => el.remove();
-  document.getElementById('app-toast-ok').onclick = () => { el.remove(); onConfirm(); };
+  document.getElementById('app-confirm-cancel').onclick = () => el.remove();
+  document.getElementById('app-confirm-ok').onclick = () => { el.remove(); onConfirm(); };
 }
 
 function gpsPause() {
@@ -3191,7 +3216,7 @@ function hav(a,b,c,d) {
 }
 
 // ── PERFIL ────────────────────────────────────────────────────
-function authSignOutBtn() { if(confirm('Sair da conta?')) authSignOut(); }
+function authSignOutBtn() { showConfirm('Sair da conta?', authSignOut, { confirmLabel: 'Sair' }); }
 function openPerfil() {
   const cfg = DB.cfg();
   if (cfg.name) {const el=document.getElementById('p-nome');if(el)el.value=cfg.name;}
@@ -3213,7 +3238,7 @@ async function savePerfil() {
   closeMo('mo-perfil');
   renderMais();
   if (S.sec==='home') renderHome();
-  alert('Perfil salvo!');
+  showToast('Perfil salvo!', 'success');
 }
 
 // ── UTILS ─────────────────────────────────────────────────────
@@ -3570,12 +3595,13 @@ function openEditEv(id) {
 }
 function delEventoFromModal() {
   if (!agEditingId) return;
-  if (!confirm('Excluir compromisso?')) return;
-  DB.saveEvents(DB.events().filter(e => e.id !== agEditingId));
-  agEditingId = null;
-  closeMo('mo-novo-ev');
-  if (agView === 'resumo') renderAgResumo();
-  if (agView === 'dia')    renderAgDia();
+  showConfirm('Excluir compromisso?', () => {
+    DB.saveEvents(DB.events().filter(e => e.id !== agEditingId));
+    agEditingId = null;
+    closeMo('mo-novo-ev');
+    if (agView === 'resumo') renderAgResumo();
+    if (agView === 'dia')    renderAgDia();
+  });
 }
 function agSetEvType(t) {
   agEvType = t;
@@ -3586,7 +3612,7 @@ function agSetEvType(t) {
 }
 function saveEvento() {
   const title = document.getElementById('ag-titulo')?.value?.trim();
-  if (!title) { alert('Informe o título'); return; }
+  if (!title) { showToast('Informe o título', 'error'); return; }
   const fields = {
     title,
     date:      document.getElementById('ag-data')?.value  || DB.today(),
@@ -3617,10 +3643,11 @@ function togglePaid(id) {
   if (agView === 'resumo') renderAgResumo();
 }
 function delEvento(id) {
-  if (!confirm('Excluir compromisso?')) return;
-  DB.saveEvents(DB.events().filter(e => e.id !== id));
-  if (agView === 'resumo') renderAgResumo();
-  if (agView === 'dia')    renderAgDia();
+  showConfirm('Excluir compromisso?', () => {
+    DB.saveEvents(DB.events().filter(e => e.id !== id));
+    if (agView === 'resumo') renderAgResumo();
+    if (agView === 'dia')    renderAgDia();
+  });
 }
 
 // ── HELPERS ─────────────────────────────────────────────────
@@ -3821,7 +3848,7 @@ async function loadHistFile(input) {
       closeMo('mo-hist-import');
       if (S.sec === 'home')    renderHome();
       if (S.sec === 'jornada') renderJornada();
-      alert(`Histórico importado com sucesso!\n${added} corridas adicionadas em ${days_count} dias.`);
+      showToast(`Histórico importado com sucesso!\n${added} corridas adicionadas em ${days_count} dias.`, 'success');
     }, 1200);
 
   } catch(err) {
