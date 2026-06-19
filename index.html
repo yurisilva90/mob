@@ -2944,7 +2944,7 @@ async function confirmUberZipImport() {
     const day = DB.day(date);
     byDate[date].forEach(t => {
       const trip = { id: DB.uid(), platform: 'uber', time: t.time,
-        duration: t.duration || 0, origin: '', dest: '', value: t.value, km: t.km || 0,
+        duration: t.duration || 0, origin: 'Importação Uber', dest: '', value: t.value, km: t.km || 0,
         category: t.category || '', surge: !!t.surge, airport: !!t.airport,
         dinamico: t.dinamico || 0, source: 'import_uber_zip' };
       day.trips.push(trip);
