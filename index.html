@@ -163,6 +163,9 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .section{display:flex;align-items:center;justify-content:space-between}.section h2{font-size:16px;font-weight:700}.add{border:0;background:rgba(14,165,233,.1);color:var(--blue);font-weight:800;border-radius:999px;padding:7px 12px;font-size:12px;cursor:pointer;touch-action:manipulation}.list{background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:0 3px 14px rgba(15,23,42,.06);overflow:hidden}.tag{width:38px;height:38px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0}
 /* ── Lançamentos form extras ── */
 .type-switch,.scope-switch{display:flex;background:#EAF0F6;border:1px solid rgba(15,23,42,.06);padding:4px;border-radius:18px}.type-btn,.scope-btn{flex:1;border:none;background:transparent;color:var(--muted);padding:11px 8px;border-radius:14px;font-size:14px;font-weight:900;cursor:pointer;touch-action:manipulation}.type-btn.active,.scope-btn.active{background:#fff;color:var(--text);box-shadow:0 4px 12px rgba(15,23,42,.08)}
+.pchip{flex-shrink:0;border:1.5px solid var(--line);background:#fff;color:var(--muted);font-size:11.5px;font-weight:700;padding:7px 13px;border-radius:999px;cursor:pointer;touch-action:manipulation;font-family:Inter,system-ui,sans-serif}.pchip.active{background:var(--text);color:#fff;border-color:var(--text)}
+.del-btn{width:30px;height:30px;border-radius:10px;background:#FEF2F2;color:#EF4444;border:0;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;touch-action:manipulation}
+.day-sep{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:16px 4px 8px}.day-sep:first-child{margin-top:0}
 .amount-card{border-radius:30px;padding:24px 20px 22px;color:#fff;box-shadow:0 10px 26px rgba(15,23,42,.07);margin-bottom:14px;cursor:text}.amount-card.receita{background:linear-gradient(135deg,#16A34A,#22C55E)}.amount-card.despesa{background:linear-gradient(135deg,#DC2626,#EF4444)}.amount-label{font-size:12px;text-transform:uppercase;letter-spacing:.12em;font-weight:900;opacity:.78;margin-bottom:8px}.amount-input-wrap{display:flex;align-items:flex-end;gap:8px}.currency{font-size:24px;font-weight:900;opacity:.9;padding-bottom:7px}.amount-input{width:100%;border:none;outline:none;background:transparent;color:#fff;font-size:52px;line-height:1;font-weight:900;letter-spacing:-.06em;font-family:Inter,system-ui,sans-serif}.amount-input::placeholder{color:rgba(255,255,255,.55)}
 .cat-wrap{margin:0 -16px;padding-left:16px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}.cat-wrap::-webkit-scrollbar{display:none}.cat-rail{display:grid;grid-auto-flow:column;grid-template-rows:repeat(2,76px);grid-auto-columns:82px;gap:8px;padding-right:16px}.cat{border:1.5px solid var(--line);background:#fff;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;color:#334155;cursor:pointer;touch-action:manipulation}.cat.active{border-color:var(--blue);background:rgba(14,165,233,.08);color:var(--blue)}.cat svg{width:23px;height:23px}.cat span{font-size:10px;font-weight:900;line-height:1;text-align:center}
 .recurring{background:#fff;border:1px solid rgba(15,23,42,.07);border-radius:24px;box-shadow:0 3px 14px rgba(15,23,42,.06);overflow:hidden}.rec-row{display:flex;align-items:center;justify-content:space-between;padding:15px 16px}.rec-title{font-size:14px;font-weight:900}.rec-sub{font-size:12px;color:var(--muted);margin-top:3px}.toggle{width:50px;height:30px;border:none;border-radius:999px;background:#CBD5E1;position:relative;cursor:pointer;transition:.2s}.toggle::after{content:"";position:absolute;width:24px;height:24px;border-radius:50%;background:#fff;top:3px;left:3px;box-shadow:0 2px 6px rgba(15,23,42,.2);transition:.2s}.toggle.on{background:var(--blue)}.toggle.on::after{left:23px}.freq{display:none;gap:8px;padding:0 16px 16px}.freq.show{display:flex}.freq button{flex:1;height:40px;border-radius:14px;border:1.5px solid var(--line);background:#F8FAFC;color:var(--muted);font-size:12px;font-weight:900;cursor:pointer;touch-action:manipulation}.freq button.active{background:rgba(14,165,233,.10);border-color:var(--blue);color:var(--blue)}.save{width:100%;height:56px;border:none;border-radius:20px;color:#fff;font-size:16px;font-weight:900;box-shadow:0 12px 26px rgba(15,23,42,.12);cursor:pointer;touch-action:manipulation;font-family:Inter,system-ui,sans-serif}.save.receita{background:var(--green)}.save.despesa{background:var(--red)}
@@ -665,7 +668,7 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
   <div class="section" style="padding:0 16px 8px"><h2>Sessões do dia</h2><button class="add" onclick="toggleSessionsView()" id="sessions-toggle" style="display:none">Ver todas &#8250;</button></div>
   <div style="padding:0 16px"><div id="sessions-list"><div class="empty">Nenhuma sessão registrada</div></div></div>
 
-  <div class="section" style="padding:16px 16px 8px"><h2>Corridas</h2><button class="add" onclick="toggleTripsView()" id="trips-toggle">Ver todas &#8250;</button></div>
+  <div class="section" style="padding:16px 16px 8px"><h2>Corridas</h2><button class="add" onclick="navTo('corridas')" id="trips-toggle">Ver todas &#8250;</button></div>
   <div style="padding:0 16px"><div id="trips-list"><div class="empty">Nenhuma corrida registrada</div></div></div>
 
   <div class="section" style="padding:16px 16px 8px"><h2>Lançamentos</h2><div style="display:flex;gap:8px;align-items:center"><button class="add" onclick="toggleLancView()" id="lanc-toggle" style="display:none">Ver todas &#8250;</button><button class="add" onclick="openLanc('receita')">+ Adicionar</button></div></div>
@@ -737,6 +740,36 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
   </div>
   <div style="padding:0 16px"><div id="lanc-list"><div class="empty">Nenhum lançamento</div></div></div>
   <div style="height:8px"></div>
+</div>
+
+<!-- ══ TELA CORRIDAS ═══════════════════════════════════════════════════ -->
+<div class="screen" id="sc-corridas">
+  <div style="display:flex;align-items:center;gap:10px;padding:14px 16px 6px">
+    <button onclick="navTo('jornada')" style="width:32px;height:32px;border-radius:10px;background:#F1F5F9;border:0;display:flex;align-items:center;justify-content:center;color:#0F172A;cursor:pointer;flex-shrink:0"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+    <h2 style="font-size:17px;letter-spacing:-.02em;flex:1">Corridas</h2>
+    <span id="cor-cnt" style="font-size:11.5px;color:#64748B;font-weight:700">0 corridas</span>
+  </div>
+  <div style="padding:10px 16px 4px">
+    <div class="type-switch" id="cor-plat-switch">
+      <button class="type-btn active" onclick="setCorridasPlat('all')">Todas</button>
+      <button class="type-btn" onclick="setCorridasPlat('uber')">Uber</button>
+      <button class="type-btn" onclick="setCorridasPlat('99')">99</button>
+      <button class="type-btn" onclick="setCorridasPlat('particular')">Particular</button>
+    </div>
+    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px" id="cor-per-row">
+      <button class="pchip active" onclick="setCorridasPeriod('hoje')">Hoje</button>
+      <button class="pchip" onclick="setCorridasPeriod('7d')">7 dias</button>
+      <button class="pchip" onclick="setCorridasPeriod('30d')">30 dias</button>
+      <button class="pchip" onclick="setCorridasPeriod('mes')">Este mês</button>
+      <button class="pchip" onclick="setCorridasPeriod('tudo')">Tudo</button>
+    </div>
+  </div>
+  <div style="display:flex;background:#fff;border-top:1px solid #E2E8F0;padding:11px 16px" id="cor-summary">
+    <div style="flex:1;text-align:center"><span style="display:block;font-size:9.5px;color:#64748B;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Total</span><strong id="cor-sum-val" style="font-family:'DM Mono',monospace;font-size:14px">R$ 0,00</strong></div>
+    <div style="flex:1;text-align:center"><span style="display:block;font-size:9.5px;color:#64748B;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Km</span><strong id="cor-sum-km" style="font-family:'DM Mono',monospace;font-size:14px">0,0</strong></div>
+    <div style="flex:1;text-align:center"><span style="display:block;font-size:9.5px;color:#64748B;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Corridas</span><strong id="cor-sum-n" style="font-family:'DM Mono',monospace;font-size:14px">0</strong></div>
+  </div>
+  <div style="padding:14px 16px 30px" id="cor-list"></div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
@@ -1301,6 +1334,7 @@ const DB = {
   del: k => localStorage.removeItem(k),
   day: d => { const x = DB.get('sm_day_'+d) || {date:d, trips:[], expenses:[], revenues:[], kmTotal:null, session:null}; if (!x.sessions) x.sessions = []; return x; },
   saveDay: d => DB.set('sm_day_'+d.date, d),
+  allDates: () => Object.keys(localStorage).filter(k => k.startsWith('sm_day_')).map(k => k.slice(7)).sort(),
   events: () => DB.get('sm_events') || [],
   saveEvents: e => DB.set('sm_events', e),
   planJornada: () => DB.get('sm_plan_jornada') || [],
@@ -1378,6 +1412,8 @@ let S = {
   lancScope: 'operacional',
   lancRecFreq: 'Semanal',
   corPlat: 'uber',
+  corridasPeriod: 'hoje',
+  corridasPlat: 'all',
   tripsExpanded: false,
   sessionsExpanded: false,
   lancExpanded: false,
@@ -1411,7 +1447,7 @@ function navTo(sec) {
   const sc = document.getElementById('sc-'+sec);
   if (sc) { sc.classList.add('on'); sc.style.display = 'block'; }
   // Map sub-screens to their nav parent
-  const navMap = {financeiro:'fav', lancamentos:'fav', 'planejar-jornada':'mais'};
+  const navMap = {financeiro:'fav', lancamentos:'fav', 'planejar-jornada':'mais', corridas:'jornada'};
   const navId = navMap[sec] || sec;
   const bn = document.getElementById('bn-'+navId);
   if (bn) bn.classList.add('active');
@@ -1422,6 +1458,7 @@ function navTo(sec) {
   if (sec === 'jornada')    renderJornada();
   if (sec === 'financeiro') renderFin();
   if (sec === 'lancamentos') renderLancamentos();
+  if (sec === 'corridas')   renderCorridas();
   if (sec === 'mais')       renderMais();
 }
 function openSuporte() {
@@ -1845,6 +1882,103 @@ function chgDay(d) {
 }
 function fmtHM(ms) { if (!ms) return '--:--'; const dd=new Date(ms); return p2(dd.getHours())+':'+p2(dd.getMinutes()); }
 function toggleTripsView() { S.tripsExpanded = !S.tripsExpanded; renderJornada(); }
+
+// ── TELA CORRIDAS (lista dedicada, com filtro de período/plataforma e exclusão) ──
+function getCorridasDays() {
+  const today = new Date();
+  const fmt = d => d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+  const p = S.corridasPeriod;
+  if (p === 'hoje') return [fmt(today)];
+  if (p === '7d' || p === '30d') {
+    const n = p === '7d' ? 7 : 30, out = [];
+    for (let i=0;i<n;i++) { const d=new Date(today); d.setDate(d.getDate()-i); out.push(fmt(d)); }
+    return out;
+  }
+  if (p === 'mes') {
+    return Array.from({length: today.getDate()}, (_,i) => fmt(new Date(today.getFullYear(), today.getMonth(), i+1)));
+  }
+  return DB.allDates(); // 'tudo'
+}
+function setCorridasPeriod(p) {
+  S.corridasPeriod = p;
+  document.querySelectorAll('#cor-per-row .pchip').forEach(b => b.classList.remove('active'));
+  const idx = ['hoje','7d','30d','mes','tudo'].indexOf(p);
+  const btn = document.querySelectorAll('#cor-per-row .pchip')[idx];
+  if (btn) btn.classList.add('active');
+  renderCorridas();
+}
+function setCorridasPlat(p) {
+  S.corridasPlat = p;
+  document.querySelectorAll('#cor-plat-switch .type-btn').forEach(b => b.classList.remove('active'));
+  const idx = ['all','uber','99','particular'].indexOf(p);
+  const btn = document.querySelectorAll('#cor-plat-switch .type-btn')[idx];
+  if (btn) btn.classList.add('active');
+  renderCorridas();
+}
+function renderCorridas() {
+  const dates = getCorridasDays().slice().sort().reverse(); // mais recente primeiro
+  const platFilter = t => S.corridasPlat === 'all' || (t.platform||'uber') === S.corridasPlat;
+  let totalVal = 0, totalKm = 0, totalN = 0;
+  const groups = [];
+  dates.forEach(d => {
+    const day = DB.day(d);
+    const trips = (day.trips||[]).filter(platFilter).slice().sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+    if (!trips.length) return;
+    trips.forEach(t => { totalVal += (t.value||0); totalKm += (t.km||0); totalN++; });
+    groups.push({ date: d, trips });
+  });
+  setText('cor-cnt', totalN + (totalN===1?' corrida':' corridas'));
+  setText('cor-sum-val', DB.fR(totalVal));
+  setText('cor-sum-km', totalKm.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}));
+  setText('cor-sum-n', totalN);
+
+  const listEl = document.getElementById('cor-list');
+  if (!listEl) return;
+  if (!groups.length) {
+    listEl.innerHTML = `<div class="empty" style="text-align:center;padding:50px 20px;color:#64748B">
+      <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.6" style="color:#94A3B8;margin-bottom:10px"><path d="M5 17h14M6 17l1-6 3-4h4l3 4 1 6"/><circle cx="9" cy="20" r="1.4" fill="currentColor"/><circle cx="17" cy="20" r="1.4" fill="currentColor"/></svg>
+      <div style="font-weight:700;font-size:14px;color:#0F172A;margin-bottom:4px">Nenhuma corrida encontrada</div>
+      <div style="font-size:12.5px">Tente mudar o período ou a plataforma do filtro</div>
+    </div>`;
+    return;
+  }
+  const todayStr = DB.today();
+  const fmtSep = d => {
+    if (d === todayStr) return 'Hoje · ' + d.split('-').reverse().slice(0,2).join('/');
+    return d.split('-').reverse().slice(0,2).join('/') + '/' + d.slice(0,4);
+  };
+  listEl.innerHTML = groups.map(g => {
+    const rows = g.trips.map(t => {
+      const plat = {uber:'Uber','99':'99',particular:'Particular'}[t.platform||'uber'] || 'Uber';
+      const dest = t.dest ? ' → '+t.dest : '';
+      const dur = t.duration ? ' · '+fmtDur(t.duration) : '';
+      const extras = [];
+      if (t.dinamico > 0) extras.push(`<span class="chip chip-d"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg> D= ${DB.fR(t.dinamico)}</span>`);
+      if (t.tip > 0) extras.push(`<span class="chip chip-g"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.5 4.05 3 5.5l7 7Z"/></svg> G= ${DB.fR(t.tip)}</span>`);
+      const extraRow = extras.length ? `<div class="li-extra">${extras.join('')}</div>` : '';
+      return `<div class="li-row">
+        <div class="li-info"><h3 class="trip-title">${t.origin||'—'}${dest}</h3><p>${plat} · ${(t.km||0).toFixed(1)} km${dur}</p>${extraRow}</div>
+        <div class="li-val"><strong>${DB.fR(t.value)}</strong></div>
+        <button class="del-btn" onclick="confirmDeleteTrip('${g.date}','${t.id}')" aria-label="Excluir corrida"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button>
+      </div>`;
+    }).join('');
+    return `<div class="day-sep">${fmtSep(g.date)}</div>${rows}`;
+  }).join('');
+}
+function confirmDeleteTrip(date, id) {
+  const day = DB.day(date);
+  const t = (day.trips||[]).find(x => x.id === id);
+  if (!t) return;
+  const dest = t.dest ? ' → '+t.dest : '';
+  showConfirm(`Excluir essa corrida?\n${DB.fR(t.value)} · ${t.origin||'—'}${dest}`, () => {
+    day.trips = day.trips.filter(x => x.id !== id);
+    DB.saveDay(day);
+    SYNC.del('trips', { id });
+    renderCorridas();
+    if (date === S.curDate) { renderJornada(); }
+    showToast('Corrida excluída.');
+  }, { confirmLabel: 'Excluir' });
+}
 function toggleSessionsView() { S.sessionsExpanded = !S.sessionsExpanded; renderJornada(); }
 function toggleLancView() { S.lancExpanded = !S.lancExpanded; renderJornada(); }
 
