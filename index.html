@@ -2749,10 +2749,13 @@ function confirmImport() {
 
 // ══════════════════════════════════════════════
 // IMPORTAÇÃO: histórico oficial do Uber (.zip)
-// Lê driver_payments-0.csv + driver_lifetime_trips-0.csv, casa pagamento
-// com corrida por horário, e compara com o histórico local pra não duplicar.
+// driver_lifetime_trips-0.csv já traz, por corrida, o valor líquido
+// (driver_upfront_fare_local), km e duração — usamos direto daí, sem
+// tentar casar com driver_payments por horário (testado com um export
+// real: o casamento por horário troca valores entre corridas vizinhas).
+// driver_payments-0.csv só é usado pra somar gorjeta/incentivo do
+// período inteiro, como informação, sem tentar atribuir por corrida.
 // ══════════════════════════════════════════════
-const UZ_MATCH_WINDOW_MS = 50 * 60 * 60 * 1000; // pagamento pode liquidar até ~50h depois
 
 function uzRound2(n) { return Math.round(n * 100) / 100; }
 
@@ -2769,98 +2772,42 @@ function uzParseTs(raw) {
   const m = clean.match(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})$/);
   if (!m) return null;
   const [, dateStr, timeStr] = m;
-  const epochMs = Date.parse(dateStr + 'T' + timeStr + 'Z'); // só pra comparar diferenças, não é UTC real
-  if (Number.isNaN(epochMs)) return null;
-  return { dateStr, timeStr: timeStr.slice(0, 5), epochMs };
+  return { dateStr, timeStr: timeStr.slice(0, 5) };
 }
 
-function uzLowerBound(arr, target) {
-  let lo = 0, hi = arr.length;
-  while (lo < hi) { const mid = (lo + hi) >> 1; if (arr[mid] < target) lo = mid + 1; else hi = mid; }
-  return lo;
-}
-function uzUpperBound(arr, target) {
-  let lo = 0, hi = arr.length;
-  while (lo < hi) { const mid = (lo + hi) >> 1; if (arr[mid] <= target) lo = mid + 1; else hi = mid; }
-  return lo;
-}
-
-function uzGroupPayments(rows) {
-  const groups = new Map();
+// Soma gorjeta e incentivo/promoção do período inteiro (informativo, não por corrida).
+function uzAggregatePayments(rows) {
+  let tip = 0, promo = 0;
   for (const r of rows) {
-    const uuid = r['Trip UUID'];
-    if (!uuid) continue;
-    if (!groups.has(uuid)) groups.set(uuid, []);
-    groups.get(uuid).push(r);
+    const amt = uzNum(r['Local Amount']);
+    if (r['Category'] === 'tip') tip += amt;
+    if (r['Category'] === 'existing_driver_incentive') promo += amt;
   }
-  const payments = [];
-  for (const [uuid, rs] of groups) {
-    let value = 0, tip = 0, promo = 0, ts = null;
-    for (const r of rs) {
-      const amt = uzNum(r['Local Amount']);
-      const cat = r['Category'];
-      if (cat !== 'cash_collected') value += amt;
-      if (cat === 'tip') tip += amt;
-      if (cat === 'existing_driver_incentive') promo += amt;
-      const parts = uzParseTs(r['Local Timestamp']);
-      if (parts && (!ts || parts.epochMs < ts.epochMs)) ts = parts;
-    }
-    if (!ts) continue;
-    payments.push({ id: uuid, value: uzRound2(value), tip: uzRound2(tip), promo: uzRound2(promo), ts });
-  }
-  return payments;
+  return { tip: uzRound2(tip), promo: uzRound2(promo) };
 }
 
+// Monta as corridas concluídas direto do driver_lifetime_trips. Corridas canceladas
+// (status diferente de 'completed') são ignoradas — não são corridas de fato.
 function uzBuildTrips(rows) {
   const trips = [];
   for (const r of rows) {
+    if (r['status'] !== 'completed') continue;
     const begin = uzParseTs(r['begintrip_timestamp_local']) || uzParseTs(r['request_timestamp_local']);
-    const drop  = uzParseTs(r['dropoff_timestamp_local']) || begin;
-    if (!begin || !drop) continue;
+    if (!begin) continue;
+    const value = uzNum(r['driver_upfront_fare_local']) || uzNum(r['original_fare_local']);
     trips.push({
-      begin, drop,
-      km: r['trip_distance_miles'] ? uzRound2(uzNum(r['trip_distance_miles']) * 1.60934) : null,
+      date: begin.dateStr, time: begin.timeStr,
+      value: uzRound2(Math.max(0, value)),
+      km: r['trip_distance_miles'] ? uzRound2(uzNum(r['trip_distance_miles']) * 1.60934) : 0,
       // o app guarda duração em MINUTOS (a IA de import por foto também usa minutos);
       // o export da Uber vem em segundos, por isso a divisão por 60 aqui.
-      duration: r['trip_duration_seconds'] ? Math.round(uzNum(r['trip_duration_seconds']) / 60) : null,
+      duration: r['trip_duration_seconds'] ? Math.round(uzNum(r['trip_duration_seconds']) / 60) : 0,
       category: r['global_product_name'] || '',
       surge: r['is_surged'] === 'true',
       airport: r['is_airport_trip'] === 'true',
-      used: false,
     });
   }
-  trips.sort((a, b) => a.drop.epochMs - b.drop.epochMs);
   return trips;
-}
-
-function uzMatch(payments, trips) {
-  payments.sort((a, b) => a.ts.epochMs - b.ts.epochMs);
-  const dropTimes = trips.map(t => t.drop.epochMs);
-  const out = [];
-  for (const p of payments) {
-    const lo = uzLowerBound(dropTimes, p.ts.epochMs - UZ_MATCH_WINDOW_MS);
-    const hi = uzUpperBound(dropTimes, p.ts.epochMs);
-    let best = null, bestDelta = Infinity;
-    for (let i = lo; i < hi; i++) {
-      const t = trips[i]; if (t.used) continue;
-      const d = Math.abs(p.ts.epochMs - t.drop.epochMs);
-      if (d < bestDelta) { best = t; bestDelta = d; }
-    }
-    let dateStr, timeStr, km = null, duration = null, category = '', surge = false, airport = false;
-    if (best) {
-      best.used = true;
-      dateStr = best.begin.dateStr; timeStr = best.begin.timeStr;
-      km = best.km; duration = best.duration; category = best.category; surge = best.surge; airport = best.airport;
-    } else {
-      dateStr = p.ts.dateStr; timeStr = p.ts.timeStr;
-    }
-    // A tabela trips exige value >= 0; ajustes/reembolsos raros que deixariam o total
-    // negativo são zerados aqui em vez de travar a importação inteira no upload.
-    const value = Math.max(0, p.value);
-    out.push({ tripUuid: p.id, date: dateStr, time: timeStr, value, tip: Math.max(0, p.tip),
-      promo: Math.max(0, p.promo), km, duration, category, surge, airport, _negAdjusted: p.value < 0 });
-  }
-  return out;
 }
 
 function uzFindEntry(zip, suffix) {
@@ -2888,43 +2835,41 @@ async function handleUberZipFile(input) {
     const paymentsEntry = uzFindEntry(zip, 'driver_payments-0.csv');
     const tripsEntry     = uzFindEntry(zip, 'driver_lifetime_trips-0.csv');
 
-    setStep('Lendo corridas e pagamentos...', 30);
+    setStep('Lendo corridas...', 35);
     const [paymentsCsv, tripsCsv] = await Promise.all([
       paymentsEntry.async('string'), tripsEntry.async('string')
     ]);
     const paymentsRows = Papa.parse(paymentsCsv, { header: true, skipEmptyLines: true }).data;
     const tripsRows     = Papa.parse(tripsCsv, { header: true, skipEmptyLines: true }).data;
 
-    setStep('Casando pagamentos com corridas...', 55);
+    setStep('Organizando corridas concluídas...', 55);
     await new Promise(r => setTimeout(r, 0));
-    const payments = uzGroupPayments(paymentsRows);
-    if (!payments.length) throw new Error('Não encontrei nenhum pagamento no CSV. Pode ser que os nomes das colunas sejam diferentes do esperado — me envia o cabeçalho do arquivo pra eu ajustar.');
-    const trips   = uzBuildTrips(tripsRows);
-    const records = uzMatch(payments, trips);
+    const trips = uzBuildTrips(tripsRows);
+    if (!trips.length) throw new Error('Não encontrei nenhuma corrida concluída no arquivo. Os nomes das colunas podem ter mudado — me envia o cabeçalho do driver_lifetime_trips-0.csv pra eu ajustar.');
+    const agg = uzAggregatePayments(paymentsRows);
 
-    setStep('Comparando com seu histórico...', 75);
+    setStep('Comparando com seu histórico...', 80);
     await new Promise(r => setTimeout(r, 0));
 
-    let added = 0, dup = 0, negAdjusted = 0, totalValue = 0, totalTip = 0, totalPromo = 0;
+    let added = 0, dup = 0, totalValue = 0;
     let minDate = null, maxDate = null;
     const toImport = [];
     const dayCache = {};
-    for (const r of records) {
-      if (r._negAdjusted) negAdjusted++;
-      if (!minDate || r.date < minDate) minDate = r.date;
-      if (!maxDate || r.date > maxDate) maxDate = r.date;
-      if (!dayCache[r.date]) dayCache[r.date] = DB.day(r.date);
-      const day = dayCache[r.date];
-      const isDup = day.trips.some(t => t.time === r.time && Math.abs((t.value || 0) - r.value) < 0.02)
-        || toImport.some(t => t.date === r.date && t.time === r.time && Math.abs(t.value - r.value) < 0.02);
+    for (const t of trips) {
+      if (!minDate || t.date < minDate) minDate = t.date;
+      if (!maxDate || t.date > maxDate) maxDate = t.date;
+      if (!dayCache[t.date]) dayCache[t.date] = DB.day(t.date);
+      const day = dayCache[t.date];
+      const isDup = day.trips.some(x => x.time === t.time && Math.abs((x.value || 0) - t.value) < 0.02)
+        || toImport.some(x => x.date === t.date && x.time === t.time && Math.abs(x.value - t.value) < 0.02);
       if (isDup) { dup++; continue; }
-      added++; totalValue += r.value; totalTip += r.tip; totalPromo += r.promo;
-      toImport.push(r);
+      added++; totalValue += t.value;
+      toImport.push(t);
     }
 
     setStep('Pronto!', 100);
-    _uzResult = { toImport, added, dup, negAdjusted, totalValue: uzRound2(totalValue),
-      totalTip: uzRound2(totalTip), totalPromo: uzRound2(totalPromo), minDate, maxDate, totalFound: records.length };
+    _uzResult = { toImport, added, dup, totalValue: uzRound2(totalValue),
+      totalTip: agg.tip, totalPromo: agg.promo, minDate, maxDate, totalFound: trips.length };
 
     setTimeout(() => uzShowResult(_uzResult), 350);
 
@@ -2944,7 +2889,7 @@ function uzFmtDate(d) {
 function uzShowResult(res) {
   document.getElementById('uz-proc').style.display = 'none';
   document.getElementById('uz-res').style.display = 'block';
-  document.getElementById('uz-res-sub').textContent = res.totalFound + ' corridas encontradas no arquivo do Uber';
+  document.getElementById('uz-res-sub').textContent = res.totalFound + ' corridas concluídas encontradas no arquivo do Uber';
   document.getElementById('uz-k-novas').textContent = res.added;
   document.getElementById('uz-k-dup').textContent = res.dup;
   document.getElementById('uz-k-valor').textContent = DB.fR(res.totalValue);
@@ -2961,9 +2906,10 @@ function uzShowResult(res) {
   }
 
   const warnEl = document.getElementById('uz-neg-warn');
-  if (res.negAdjusted > 0) {
+  if (res.totalTip > 0 || res.totalPromo > 0) {
     warnEl.style.display = 'block';
-    warnEl.textContent = res.negAdjusted + ' corrida' + (res.negAdjusted !== 1 ? 's' : '') + ' tinha' + (res.negAdjusted !== 1 ? 'm' : '') + ' ajuste/reembolso maior que o ganho — valor zerado pra não travar a importação.';
+    warnEl.style.color = '#64748B';
+    warnEl.textContent = 'No período do arquivo: ' + DB.fR(res.totalTip) + ' em gorjeta e ' + DB.fR(res.totalPromo) + ' em incentivo/promoção (informativo, já considerado no total da Uber — não é somado de novo aqui).';
   } else {
     warnEl.style.display = 'none';
   }
@@ -2977,22 +2923,21 @@ async function confirmUberZipImport() {
   const res = _uzResult;
   if (!res || !res.added) { closeMo('mo-uberzip'); return; }
   const byDate = {};
-  res.toImport.forEach(r => { (byDate[r.date] || (byDate[r.date] = [])).push(r); });
+  res.toImport.forEach(t => { (byDate[t.date] || (byDate[t.date] = [])).push(t); });
 
   const dates = Object.keys(byDate);
   for (let i = 0; i < dates.length; i++) {
     const date = dates[i];
     const day = DB.day(date);
-    byDate[date].forEach(r => {
-      const trip = { id: 'uberz_' + r.tripUuid, platform: 'uber', time: r.time,
-        duration: r.duration || 0, origin: '', dest: '', value: r.value, km: r.km || 0,
-        category: r.category || '', surge: !!r.surge, airport: !!r.airport,
-        tip: r.tip || 0, promo: r.promo || 0, source: 'import_uber_zip' };
+    byDate[date].forEach(t => {
+      const trip = { id: DB.uid(), platform: 'uber', time: t.time,
+        duration: t.duration || 0, origin: '', dest: '', value: t.value, km: t.km || 0,
+        category: t.category || '', surge: !!t.surge, airport: !!t.airport,
+        source: 'import_uber_zip' };
       day.trips.push(trip);
       SYNC.push('trips', { id: trip.id, date, platform: trip.platform, time: trip.time || null,
         duration: trip.duration, origin: trip.origin, dest: trip.dest, value: trip.value, km: trip.km,
-        category: trip.category, surge: trip.surge, airport: trip.airport, tip: trip.tip, promo: trip.promo,
-        source: trip.source });
+        category: trip.category, surge: trip.surge, airport: trip.airport, source: trip.source });
     });
     DB.saveDay(day);
     if (i % 15 === 0) await new Promise(r => setTimeout(r, 0));
