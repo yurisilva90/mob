@@ -619,7 +619,15 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
       <div class="j-km"><strong id="jc-km">0,0</strong><span>Km</span></div>
     </div>
     <div class="j-metrics">
-      <div class="j-mini"><strong id="jc-total">0h00</strong><span>Tempo total</span></div>
+      <div class="j-mini">
+        <div style="display:flex;align-items:center;justify-content:center;gap:5px">
+          <strong id="jc-total">0h00</strong>
+          <button class="km-edit-btn" onclick="openTempoAdjust()" aria-label="Editar tempo total">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+          </button>
+        </div>
+        <span>Tempo total</span>
+      </div>
       <div class="j-mini">
         <div style="display:flex;align-items:center;justify-content:center;gap:5px">
           <strong id="jc-kmtotal">0,0 km</strong>
@@ -1050,6 +1058,27 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
       </div>
     </div>
     <button class="btn-p" onclick="saveKmAdjust()">Confirmar</button>
+  </div>
+</div>
+
+<div class="mo ctr" id="mo-tempo-adjust">
+  <div class="sheet ctr">
+    <div class="sheet-head"><h2>Ajustar tempo total</h2><button class="xbtn" onclick="closeMo('mo-tempo-adjust')">&#x2715;</button></div>
+    <div style="font-size:12.5px;color:#64748B;margin-bottom:18px;line-height:1.4">Você pode ajustar o tempo total da jornada hoje sempre que precisar.</div>
+    <div style="text-align:center;font-size:28px;font-family:'DM Mono',monospace;font-weight:700;color:#0F172A;margin-bottom:14px" id="tempoadj-display">0h00m</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px">
+      <div style="display:flex;gap:6px">
+        <button class="kmadj-step" onclick="tempoAdjStep(-60)">-1h</button>
+        <button class="kmadj-step" onclick="tempoAdjStep(-10)">-10m</button>
+        <button class="kmadj-step" onclick="tempoAdjStep(-5)">-5m</button>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="kmadj-step" onclick="tempoAdjStep(5)">+5m</button>
+        <button class="kmadj-step" onclick="tempoAdjStep(10)">+10m</button>
+        <button class="kmadj-step" onclick="tempoAdjStep(60)">+1h</button>
+      </div>
+    </div>
+    <button class="btn-p" onclick="saveTempoAdjust()">Confirmar</button>
   </div>
 </div>
 
@@ -1607,7 +1636,7 @@ function renderHgGoals(dates, days, rev) {
   }, 0);
   const elapsedReal = days.reduce((s,d,i) => {
     const liveEl = (liveOn && isToday(dates[i])) ? getElapsed() : 0;
-    return s + (d.sessions||[]).reduce((a,x)=>a+(x.elapsed||0),0) + liveEl;
+    return s + (d.sessions||[]).reduce((a,x)=>a+(x.elapsed||0),0) + liveEl + (d.tempoAdjust||0);
   }, 0);
   const timeRealMin = Math.round(elapsedReal/60);
 
@@ -1890,7 +1919,7 @@ function renderJourneyCard(day, isToday) {
   const live = isToday && (g.st === 'running' || g.st === 'paused');
   const liveElapsed = live ? getElapsed() : 0;
   const liveKm = live ? g.km : 0;
-  const totalElapsed = finishedElapsed + liveElapsed;
+  const totalElapsed = Math.max(0, finishedElapsed + liveElapsed + (day.tempoAdjust || 0));
   const totalKm = finishedKm + liveKm + (day.kmAdjust || 0);
   const state = isToday ? g.st : 'idle';
 
@@ -1954,7 +1983,7 @@ function renderMetasDoDia(day) {
   const isToday = day.date === DB.today();
   const liveOn = isToday && (S.gps.st==='running'||S.gps.st==='paused');
   const totalKm = (day.sessions||[]).reduce((s,x)=>s+(x.km||0),0) + (liveOn ? S.gps.km : 0) + (day.kmAdjust || 0);
-  const totalElapsed = (day.sessions||[]).reduce((s,x)=>s+(x.elapsed||0),0) + (liveOn ? getElapsed() : 0);
+  const totalElapsed = Math.max(0, (day.sessions||[]).reduce((s,x)=>s+(x.elapsed||0),0) + (liveOn ? getElapsed() : 0) + (day.tempoAdjust || 0));
   const dow = new Date(day.date+'T12:00').getDay();
   const plan = DB.planJornada().find(p => p.days && p.days.includes(dow));
   const moneyGoal = (plan && plan.moneyGoal) ? plan.moneyGoal : (m.dailyRev || 0);
@@ -2462,6 +2491,37 @@ function saveKmAdjust() {
   closeMo('mo-km-adjust');
   renderJornada();
   showToast('Km total ajustado.');
+}
+
+// ── Ajuste de tempo total (mesma lógica do km, em minutos: -1h/-10m/-5m | +5m/+10m/+1h) ──
+let tempoAdjBaseSecs = 0, tempoAdjCurSecs = 0;
+function openTempoAdjust() {
+  const day = DB.day(S.curDate);
+  const isToday = S.curDate === DB.today();
+  const live = isToday && (S.gps.st === 'running' || S.gps.st === 'paused');
+  const liveElapsed = live ? getElapsed() : 0;
+  const finishedElapsed = (day.sessions || []).reduce((s,x)=>s+(x.elapsed||0),0);
+  tempoAdjBaseSecs = finishedElapsed + liveElapsed;
+  tempoAdjCurSecs = Math.max(0, tempoAdjBaseSecs + (day.tempoAdjust || 0));
+  updateTempoAdjDisplay();
+  openMo('mo-tempo-adjust');
+}
+function updateTempoAdjDisplay() {
+  const el = document.getElementById('tempoadj-display');
+  if (el) el.textContent = fmtDur(tempoAdjCurSecs / 60);
+}
+function tempoAdjStep(deltaMin) {
+  tempoAdjCurSecs = Math.max(0, tempoAdjCurSecs + deltaMin * 60);
+  updateTempoAdjDisplay();
+}
+function saveTempoAdjust() {
+  const day = DB.day(S.curDate);
+  day.tempoAdjust = Math.round(tempoAdjCurSecs - tempoAdjBaseSecs);
+  DB.saveDay(day);
+  SYNC.push('day_meta', { date: S.curDate, tempo_adjust_secs: day.tempoAdjust });
+  closeMo('mo-tempo-adjust');
+  renderJornada();
+  showToast('Tempo total ajustado.');
 }
 
 // ── IMPORT AI ─────────────────────────────────────────────────
@@ -4020,6 +4080,7 @@ const SYNC = {
       (dayMeta.data || []).forEach(m => {
         const day = ensure(m.date);
         day.kmAdjust = parseFloat(m.km_adjust) || 0;
+        day.tempoAdjust = parseInt(m.tempo_adjust_secs) || 0;
         if (m.km_total_legacy != null) day.kmTotal = parseFloat(m.km_total_legacy);
       });
       Object.values(byDate).forEach(day => DB.saveDay(day));
