@@ -3396,6 +3396,22 @@ function restoreGpsSession() {
   g.st = saved.st; g.start = saved.start; g.pausedMs = saved.pausedMs || 0; g.pa = saved.pa || null;
   g.km = saved.km || 0; g.pts = saved.lastPt ? [saved.lastPt] : [];
   g.baseKm = saved.baseKm || 0; g.baseElapsed = saved.baseElapsed || 0;
+  // O snapshot acima é só o último valor salvo antes do app ir pra segundo plano (o
+  // watchPosition do JS para quando o app não está em foreground). Se o app nativo
+  // tiver um GpsService rodando, ele é a fonte mais atual — corrige aqui, antes do
+  // primeiro render, pra não mostrar um km/tempo defasado por um instante na tela.
+  if (window.SmartMobiNative && typeof SmartMobiNative.isGpsRunning === 'function') {
+    try {
+      if (SmartMobiNative.isGpsRunning()) {
+        const nativeKm = SmartMobiNative.getGpsKm();
+        const nativeStart = SmartMobiNative.getGpsStartTime();
+        const nativePaused = SmartMobiNative.getGpsPausedMs();
+        if (typeof nativeKm === 'number' && nativeKm > 0) g.km = nativeKm;
+        if (nativeStart) g.start = nativeStart;
+        if (typeof nativePaused === 'number') g.pausedMs = nativePaused;
+      }
+    } catch(e) {}
+  }
   syncNavButton();
   g.ti = setInterval(gpsUpdate, 1000);
   if (navigator.geolocation) {
