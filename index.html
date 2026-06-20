@@ -4729,6 +4729,21 @@ renderLancCats();
 agCalY=new Date().getFullYear();agCalM=new Date().getMonth();agCalSelDate=DB.today();
 authInit();
 
+// ── Service worker: registra, força checagem de atualização e recarrega
+// sozinho quando uma versão nova assumir o controle. Sem isso, correções
+// ficavam "presas" numa versão antiga no celular sem nada avisar.
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(reg => {
+    reg.update();
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloaded) return;
+      reloaded = true;
+      location.reload();
+    });
+  }).catch(() => {});
+}
+
 </script>
 </body>
 </html>

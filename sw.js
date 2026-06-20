@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smartmobi-v20-final';
+const CACHE_NAME = 'smartmobi-v21-network-first';
 const ASSETS = [
   '/',
   '/index.html',
@@ -23,6 +23,24 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
+  const url = new URL(event.request.url);
+  const isAppShell = event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('/index.html');
+
+  if (isAppShell) {
+    // Network-first pro HTML: o app SEMPRE busca a versão mais nova primeiro.
+    // Só cai pro cache se estiver de verdade offline (sem internet).
+    // Isso evita o app ficar "preso" numa versão antiga mesmo depois de eu corrigir algo.
+    event.respondWith(
+      fetch(event.request).then(response => {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        return response;
+      }).catch(() => caches.match(event.request).then(cached => cached || caches.match('/index.html')))
+    );
+    return;
+  }
+
+  // Demais assets (ícones, manifest) — cache-first, ok serem mais "lentos" pra atualizar.
   event.respondWith(
     caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
       const copy = response.clone();
