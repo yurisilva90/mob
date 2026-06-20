@@ -699,7 +699,7 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
         <div class="kpi"><div class="row"><div class="ico green"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M17 7H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="kpiVal" id="fin-rec">R$ 0,00</div></div><div class="kpiLbl">Receitas</div></div>
         <div class="kpi"><div class="row"><div class="ico red"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></div><div class="kpiVal" id="fin-desp">R$ 0,00</div></div><div class="kpiLbl">Despesas</div></div>
         <div class="kpi"><div class="row"><div class="ico blue"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17 9 11l4 4 8-8"/></svg></div><div class="kpiVal" id="fin-lucro">R$ 0,00</div></div><div class="kpiLbl">Lucro</div></div>
-        <div class="kpi"><div class="row"><div class="ico orange"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg></div><div class="kpiVal" id="fin-meta">R$ 0</div></div><div class="kpiLbl" id="fin-meta-lbl">Meta</div></div>
+        <div class="kpi"><div class="row"><div class="ico orange"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg></div><div class="kpiVal" id="fin-meta">R$ 0</div></div><div class="kpiLbl" id="fin-meta-lbl">Objetivo</div></div>
       </div>
     </section>
     <section class="card cardPad" style="margin-bottom:14px">
@@ -2345,12 +2345,12 @@ function renderFin() {
   // Meta — sensível ao período, mas sempre derivada da mesma fonte (Meta mensal cadastrada)
   const today = new Date();
   const dimAtual = new Date(today.getFullYear(), today.getMonth()+1, 0).getDate();
-  const metaLabels = { today: 'Meta do dia', month: 'Meta do mês', year: 'Meta do ano' };
+  const metaLabels = { today: 'Objetivo do dia', month: 'Objetivo do mês', year: 'Objetivo do ano' };
   const metaTarget = S.finPer === 'today' ? (meta.general ? meta.general/dimAtual : 0)
     : S.finPer === 'year' ? (meta.general ? meta.general*12 : 0)
     : (meta.general || 0);
-  setText('fin-meta', metaTarget ? DB.fRI(metaTarget) : 'Não definida');
-  setText('fin-meta-lbl', metaLabels[S.finPer] || 'Meta');
+  setText('fin-meta', metaTarget ? DB.fRI(metaTarget) : 'Não definido');
+  setText('fin-meta-lbl', metaLabels[S.finPer] || 'Objetivo');
 
   // vs período anterior (mesmo recorte de dias do período atual, deslocado pra trás)
   const prevSums = sumPeriodo(getFinDaysPrev().map(d => DB.day(d)));
