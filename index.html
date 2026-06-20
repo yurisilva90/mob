@@ -187,6 +187,18 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .li-val{text-align:right;font-size:11px;color:var(--muted);font-weight:600;flex:0 0 auto}.li-val strong{display:block;color:var(--text);font-size:13.5px;font-weight:760;font-family:'Inter',system-ui,sans-serif}
 .li-extra{display:flex;gap:6px;margin-top:5px}.chip{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px;font-family:'Inter',system-ui,sans-serif;letter-spacing:-.01em}.chip svg{flex-shrink:0}.chip-d{background:#FFF7ED;color:#F59E0B}.chip-g{background:#F5F3FF;color:#7C3AED}
 .sw{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0}.sw input{opacity:0;width:0;height:0;position:absolute}.sw .trk{position:absolute;inset:0;background:#E2E8F0;border-radius:99px;transition:.2s;cursor:pointer}.sw .trk:before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}.sw input:checked + .trk{background:#22C55E}.sw input:checked + .trk:before{transform:translateX(20px)}
+.acc-card{background:#F8FAFC;border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:14px}
+.acc-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.acc-email{font-size:13.5px;font-weight:700;color:var(--text);word-break:break-all}
+.acc-plan-lbl{font-size:10.5px;color:#94A3B8;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:3px}
+.acc-badge{font-size:11px;font-weight:800;padding:5px 10px;border-radius:999px;background:#EFF6FF;color:#0EA5E9;flex-shrink:0}
+.acc-badge.pro{background:#ECFDF3;color:#16A34A}
+.acc-exp{font-size:11.5px;color:#64748B;margin-top:8px}
+.acc-upgrade{width:100%;height:44px;border:0;border-radius:14px;background:linear-gradient(135deg,#0EA5E9,#0284C7);color:#fff;font-size:13.5px;font-weight:800;cursor:pointer;margin-top:10px;touch-action:manipulation;font-family:Inter,system-ui,sans-serif}
+.veiculo-btn{width:100%;height:50px;border:1.5px solid var(--line);background:#F8FAFC;border-radius:16px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;font-size:14.5px;font-weight:700;color:var(--text);cursor:pointer;touch-action:manipulation;font-family:Inter,system-ui,sans-serif}
+.veiculo-btn svg{color:#94A3B8;flex-shrink:0}
+.sync-dot{width:10px;height:10px;border-radius:50%;background:#22C55E;flex-shrink:0}
+.sync-dot.pending{background:#F59E0B}
 .action{background:#fff;border:1px solid rgba(14,165,233,.18);box-shadow:0 3px 14px rgba(15,23,42,.06);border-radius:22px;padding:15px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;cursor:pointer;touch-action:manipulation}.action .glyph{width:42px;height:42px;border-radius:16px;background:rgba(14,165,233,.1);display:flex;align-items:center;justify-content:center;color:var(--blue)}.action h3{font-size:14px;font-weight:700}.action p{font-size:12px;color:var(--muted);margin-top:3px}.chev{margin-left:auto;color:#94A3B8;font-size:22px}
 .kmcard{background:#fff;border:1px solid var(--line);border-radius:24px;padding:16px;box-shadow:0 3px 14px rgba(15,23,42,.06)}.cardhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}.cardhead h2{font-size:15px;letter-spacing:-.02em}.linkbtn{border:0;background:rgba(14,165,233,.1);color:var(--blue);border-radius:999px;padding:7px 12px;font-size:12px;font-weight:800;cursor:pointer;touch-action:manipulation}.row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}.row span{font-size:12px;color:var(--muted);font-weight:600}.row strong{font-family:'Inter',system-ui,sans-serif;font-size:13px}.bar{height:10px;background:#E2E8F0;border-radius:999px;overflow:hidden;margin-top:12px}.fill{height:100%;background:linear-gradient(90deg,var(--green),var(--blue));border-radius:999px;transition:width .5s}.note{font-size:11px;color:var(--muted);text-align:center;margin-top:8px;font-weight:600}
 .section{display:flex;align-items:center;justify-content:space-between}.section h2{font-size:16px;font-weight:700}.add{border:0;background:rgba(14,165,233,.1);color:var(--blue);font-weight:800;border-radius:999px;padding:7px 12px;font-size:12px;cursor:pointer;touch-action:manipulation}.list{background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:0 3px 14px rgba(15,23,42,.06);overflow:hidden}.tag{width:38px;height:38px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0}
@@ -199,7 +211,7 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .cat-wrap{margin:0 -16px;padding-left:16px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}.cat-wrap::-webkit-scrollbar{display:none}.cat-rail{display:grid;grid-auto-flow:column;grid-template-rows:repeat(2,76px);grid-auto-columns:82px;gap:8px;padding-right:16px}.cat{border:1.5px solid var(--line);background:#fff;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;color:#334155;cursor:pointer;touch-action:manipulation}.cat.active{border-color:var(--blue);background:rgba(14,165,233,.08);color:var(--blue)}.cat svg{width:23px;height:23px}.cat span{font-size:10px;font-weight:900;line-height:1;text-align:center}
 .recurring{background:#fff;border:1px solid rgba(15,23,42,.07);border-radius:24px;box-shadow:0 3px 14px rgba(15,23,42,.06);overflow:hidden}.rec-row{display:flex;align-items:center;justify-content:space-between;padding:15px 16px}.rec-title{font-size:14px;font-weight:900}.rec-sub{font-size:12px;color:var(--muted);margin-top:3px}.toggle{width:50px;height:30px;border:none;border-radius:999px;background:#CBD5E1;position:relative;cursor:pointer;transition:.2s}.toggle::after{content:"";position:absolute;width:24px;height:24px;border-radius:50%;background:#fff;top:3px;left:3px;box-shadow:0 2px 6px rgba(15,23,42,.2);transition:.2s}.toggle.on{background:var(--blue)}.toggle.on::after{left:23px}.freq{display:none;gap:8px;padding:0 16px 16px}.freq.show{display:flex}.freq button{flex:1;height:40px;border-radius:14px;border:1.5px solid var(--line);background:#F8FAFC;color:var(--muted);font-size:12px;font-weight:900;cursor:pointer;touch-action:manipulation}.freq button.active{background:rgba(14,165,233,.10);border-color:var(--blue);color:var(--blue)}.save{width:100%;height:56px;border:none;border-radius:20px;color:#fff;font-size:16px;font-weight:900;box-shadow:0 12px 26px rgba(15,23,42,.12);cursor:pointer;touch-action:manipulation;font-family:Inter,system-ui,sans-serif}.save.receita{background:var(--green)}.save.despesa{background:var(--red)}
 /* ── Mais screen ── */
-.mais-item{background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 2px 10px rgba(15,23,42,.05);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;touch-action:manipulation}.mais-ico{width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}.mais-ico.blue{background:#EFF6FF;color:#0EA5E9}.mais-ico.orange{background:#FFF7ED;color:#F59E0B}.mais-ico.purple{background:#F5F3FF;color:#7C3AED}.mais-t{font-size:14px;font-weight:700}.mais-s{font-size:12px;color:var(--muted);margin-top:2px}.mais-arr{font-size:22px;color:#CBD5E1;margin-left:auto}
+.mais-item{background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 2px 10px rgba(15,23,42,.05);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;touch-action:manipulation}.mais-ico{width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}.mais-ico.blue{background:#EFF6FF;color:#0EA5E9}.mais-ico.orange{background:#FFF7ED;color:#F59E0B}.mais-ico.purple{background:#F5F3FF;color:#7C3AED}.mais-ico.green{background:#ECFDF3;color:#16A34A}.mais-t{font-size:14px;font-weight:700}.mais-s{font-size:12px;color:var(--muted);margin-top:2px}.mais-arr{font-size:22px;color:#CBD5E1;margin-left:auto}
 /* ── Financeiro specific ── */
 .wrap{padding:12px 16px}.period{display:flex;gap:4px;margin-bottom:14px}.period button{flex:1;padding:9px 6px;border-radius:16px;border:1.5px solid var(--line);background:#F8FAFC;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;touch-action:manipulation}.period button.on{background:rgba(14,165,233,.1);border-color:rgba(14,165,233,.3);color:var(--blue)}.hero{background:linear-gradient(135deg,#0F172A,var(--blue));border-radius:28px;padding:22px 20px;color:#fff;box-shadow:0 10px 28px rgba(15,23,42,.08)}.heroTop .label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;opacity:.75;font-weight:700;margin-bottom:6px}.heroTop .amount{font-size:42px;font-weight:900;letter-spacing:-.06em;line-height:1}.heroTop .sub{font-size:12px;opacity:.75;margin-top:4px}.heroGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:16px;background:rgba(255,255,255,.1);border-radius:16px;overflow:hidden}.heroCell{padding:12px;text-align:center;border-right:1px solid rgba(255,255,255,.12)}.heroCell:last-child{border-right:none}.heroCell strong{font-size:18px;font-weight:800;display:block;margin-bottom:3px}.heroCell span{font-size:11px;opacity:.75}
 .card{background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:0 2px 10px rgba(15,23,42,.05)}.cardPad{padding:16px}.cardHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.cardHead h2{font-size:16px;font-weight:700;letter-spacing:-.03em}.cardHead a,.cardHead button{font-size:12px;color:var(--blue);font-weight:700;background:none;border:none;cursor:pointer}
@@ -997,6 +1009,7 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
   <div style="padding:20px 16px 8px"><div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Configurações</div></div>
   <div style="padding:0 16px;display:flex;flex-direction:column;gap:8px">
     <div class="mais-item" onclick="openPerfil()"><div class="mais-ico blue"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg></div><div><div class="mais-t">Perfil</div><div class="mais-s" id="mais-perfil-sub">Configure nome, placa e veículo</div></div><div class="mais-arr">›</div></div>
+    <div class="mais-item" onclick="openConfig()"><div class="mais-ico green"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg></div><div><div class="mais-t">Configurações</div><div class="mais-s">Ícone flutuante, modo escuro e mais</div></div><div class="mais-arr">›</div></div>
     <div class="mais-item" onclick="openMo('mo-cats');renderCatsModal()"><div class="mais-ico orange"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h8"/></svg></div><div><div class="mais-t">Categorias</div><div class="mais-s">Gerencie categorias de despesa</div></div><div class="mais-arr">›</div></div>
     <div class="mais-item" onclick="openSuporte()"><div class="mais-ico purple"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg></div><div><div class="mais-t">Suporte</div><div class="mais-s">Ajuda e feedback</div></div><div class="mais-arr">›</div></div>
   </div>
@@ -1302,20 +1315,72 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
   <div class="sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-head"><h2>Perfil</h2><button class="xbtn" onclick="closeMo('mo-perfil')">&#x2715;</button></div>
+
+    <div class="acc-card" id="acc-card">
+      <div class="acc-row">
+        <div><div class="acc-email" id="acc-email">—</div><div class="acc-plan-lbl">Tipo de conta</div></div>
+        <div class="acc-badge" id="acc-badge">Free</div>
+      </div>
+      <div class="acc-exp" id="acc-exp" style="display:none"></div>
+      <button class="acc-upgrade" id="acc-upgrade-btn" onclick="openUpgrade()" style="display:none">Assinar SmartMobi Pro</button>
+    </div>
+
     <div class="field"><label class="lbl">Nome</label><input class="inp" type="text" id="p-nome" placeholder="Seu nome"></div>
     <div class="field"><label class="lbl">Placa</label><input class="inp" type="text" id="p-placa" placeholder="ABC1D23"></div>
-    <div class="field"><label class="lbl">Veículo</label><input class="inp" type="text" id="p-veiculo" placeholder="BYD Dolphin Mini 2024"></div>
-    <div class="field"><label class="lbl">Meta mensal (R$)</label><input class="inp" type="number" id="p-meta" placeholder="9000" inputmode="decimal" style="font-family:'Inter',system-ui,sans-serif;font-weight:700"></div>
-    <div class="field" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-      <div style="flex:1"><label class="lbl" style="margin-bottom:2px;display:block">Bolinha flutuante</label><div style="font-size:11px;color:#94A3B8;line-height:1.4">Mostra o cronômetro e km sobre outros apps durante a jornada</div></div>
-      <label class="sw"><input type="checkbox" id="p-overlay" onchange="toggleOverlayPref(this)"><span class="trk"></span></label>
-    </div>
-    <div class="field" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-      <div style="flex:1"><label class="lbl" style="margin-bottom:2px;display:block">Modo escuro</label><div style="font-size:11px;color:#94A3B8;line-height:1.4">Tema escuro em todo o app (beta — alguns elementos ainda podem não se ajustar)</div></div>
-      <label class="sw"><input type="checkbox" id="p-dark" onchange="toggleDarkMode(this)"><span class="trk"></span></label>
+    <div class="field">
+      <label class="lbl">Veículo</label>
+      <button class="veiculo-btn" id="p-veiculo-btn" onclick="openVeiculoPicker()">
+        <span id="p-veiculo-txt">Selecionar veículo</span>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
     </div>
     <button class="btn-p" onclick="savePerfil()">Salvar</button>
     <button onclick="authSignOutBtn()" style="width:100%;height:48px;background:transparent;border:1.5px solid #EF4444;border-radius:18px;color:#EF4444;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;margin-top:10px">Sair da conta</button>
+  </div>
+</div>
+
+<!-- Configurações do app (separado do Perfil — preferências, não dados pessoais) -->
+<div class="mo" id="mo-config">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head"><h2>Configurações</h2><button class="xbtn" onclick="closeMo('mo-config')">&#x2715;</button></div>
+    <div class="field" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div style="flex:1"><label class="lbl" style="margin-bottom:2px;display:block">Ícone flutuante</label><div style="font-size:11px;color:#94A3B8;line-height:1.4">Mostra o cronômetro e km sobre outros apps durante a jornada</div></div>
+      <label class="sw"><input type="checkbox" id="cfg-overlay" onchange="toggleOverlayPref(this)"><span class="trk"></span></label>
+    </div>
+    <div class="field" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div style="flex:1"><label class="lbl" style="margin-bottom:2px;display:block">Modo escuro</label><div style="font-size:11px;color:#94A3B8;line-height:1.4">Tema escuro em todo o app (beta — alguns elementos ainda podem não se ajustar)</div></div>
+      <label class="sw"><input type="checkbox" id="cfg-dark" onchange="toggleDarkMode(this)"><span class="trk"></span></label>
+    </div>
+    <div class="field" style="display:flex;align-items:center;justify-content:space-between;gap:12px" onclick="openMo('mo-notif')" id="cfg-notif-row">
+      <div style="flex:1"><label class="lbl" style="margin-bottom:2px;display:block">Notificações</label><div style="font-size:11px;color:#94A3B8;line-height:1.4">Avisos de meta, jornada e sincronização</div></div>
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+    </div>
+    <div class="field" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div style="flex:1"><label class="lbl" style="margin-bottom:2px;display:block">Sincronização</label><div style="font-size:11px;color:#94A3B8;line-height:1.4" id="cfg-sync-sub">Tudo sincronizado</div></div>
+      <div class="sync-dot" id="cfg-sync-dot"></div>
+    </div>
+    <div style="font-size:11px;color:#94A3B8;text-align:center;margin-top:14px" id="cfg-version"></div>
+  </div>
+</div>
+
+<!-- Seletor de veículo: marca, modelo e ano -->
+<div class="mo" id="mo-veiculo">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head"><h2>Veículo</h2><button class="xbtn" onclick="closeMo('mo-veiculo')">&#x2715;</button></div>
+    <div class="field"><label class="lbl">Marca</label>
+      <select class="inp" id="vp-marca" onchange="vpOnMarcaChange()"></select>
+    </div>
+    <div class="field" id="vp-marca-outra-wrap" style="display:none"><label class="lbl">Qual marca?</label><input class="inp" type="text" id="vp-marca-outra" placeholder="Digite a marca"></div>
+    <div class="field"><label class="lbl">Modelo</label>
+      <select class="inp" id="vp-modelo" onchange="vpOnModeloChange()"></select>
+    </div>
+    <div class="field" id="vp-modelo-outro-wrap" style="display:none"><label class="lbl">Qual modelo?</label><input class="inp" type="text" id="vp-modelo-outro" placeholder="Digite o modelo"></div>
+    <div class="field"><label class="lbl">Ano</label>
+      <select class="inp" id="vp-ano"></select>
+    </div>
+    <button class="btn-p" onclick="saveVeiculoPicker()">Confirmar</button>
   </div>
 </div>
 
@@ -3762,15 +3827,46 @@ function openPerfil() {
   const cfg = DB.cfg();
   if (cfg.name) {const el=document.getElementById('p-nome');if(el)el.value=cfg.name;}
   if (cfg.plate) {const el=document.getElementById('p-placa');if(el)el.value=cfg.plate;}
-  if (cfg.vehicle) {const el=document.getElementById('p-veiculo');if(el)el.value=cfg.vehicle;}
-  const meta = DB.meta();
-  if (meta.general) {const el=document.getElementById('p-meta');if(el)el.value=meta.general;}
-  const ovEl = document.getElementById('p-overlay');
-  if (ovEl) ovEl.checked = cfg.overlayEnabled !== false;
-  const darkEl = document.getElementById('p-dark');
-  if (darkEl) darkEl.checked = !!cfg.darkMode;
+  const vTxt = document.getElementById('p-veiculo-txt');
+  if (vTxt) vTxt.textContent = cfg.vehicle || 'Selecionar veículo';
+
+  const emailEl = document.getElementById('acc-email');
+  if (emailEl) emailEl.textContent = (_supaUser && _supaUser.email) || '—';
+  // Plano: ainda nao ha integracao de pagamento real, todo mundo aparece como Free por enquanto.
+  const plan = cfg.plan || 'free';
+  const badgeEl = document.getElementById('acc-badge');
+  const upgradeBtn = document.getElementById('acc-upgrade-btn');
+  const expEl = document.getElementById('acc-exp');
+  if (badgeEl) { badgeEl.textContent = plan === 'pro' ? 'Pro' : 'Free'; badgeEl.classList.toggle('pro', plan === 'pro'); }
+  if (upgradeBtn) upgradeBtn.style.display = plan === 'pro' ? 'none' : 'block';
+  if (expEl) {
+    if (plan === 'pro' && cfg.planExpiresAt) { expEl.style.display='block'; expEl.textContent = 'Renova em ' + new Date(cfg.planExpiresAt).toLocaleDateString('pt-BR'); }
+    else expEl.style.display = 'none';
+  }
 
   openMo('mo-perfil');
+}
+function openUpgrade() {
+  // Placeholder — ainda sem fluxo de pagamento real, so o botao por enquanto.
+  showToast('Em breve você poderá assinar o SmartMobi Pro por aqui.', 'info');
+}
+function openConfig() {
+  const cfg = DB.cfg();
+  const ovEl = document.getElementById('cfg-overlay');
+  if (ovEl) ovEl.checked = cfg.overlayEnabled !== false;
+  const darkEl = document.getElementById('cfg-dark');
+  if (darkEl) darkEl.checked = !!cfg.darkMode;
+
+  const pending = DB.syncQueue().length;
+  const dot = document.getElementById('cfg-sync-dot');
+  const sub = document.getElementById('cfg-sync-sub');
+  if (dot) dot.classList.toggle('pending', pending > 0);
+  if (sub) sub.textContent = pending > 0 ? (pending+' lançamento'+(pending!==1?'s':'')+' aguardando conexão') : 'Tudo sincronizado';
+
+  const verEl = document.getElementById('cfg-version');
+  if (verEl) verEl.textContent = 'SmartMobi · v' + (window.SmartMobiNative?.getVersion?.() || '—');
+
+  openMo('mo-config');
 }
 function toggleDarkMode(el) {
   const cfg = DB.cfg();
@@ -3788,7 +3884,7 @@ function toggleOverlayPref(el) {
   if (!window.SmartMobiNative) return;
   try {
     if (el.checked) {
-      // Se a jornada já estiver rolando, mostra a bolinha na hora, sem esperar o próximo sync.
+      // Se a jornada já estiver rolando, mostra o ícone na hora, sem esperar o próximo sync.
       if (S.gps.st === 'running' || S.gps.st === 'paused') {
         SmartMobiNative.startFloating?.(S.gps.start, S.gps.km || 0);
         SmartMobiNative.updateFloatingStatus?.(S.gps.st);
@@ -3802,14 +3898,91 @@ async function savePerfil() {
   const cfg = DB.cfg();
   cfg.name    = document.getElementById('p-nome')?.value || '';
   cfg.plate   = document.getElementById('p-placa')?.value || '';
-  cfg.vehicle = document.getElementById('p-veiculo')?.value || '';
-  const meta = DB.meta(); meta.general = parseFloat(document.getElementById('p-meta')?.value) || 0;
 
-  DB.saveCfg(cfg); DB.saveMeta(meta);
+  DB.saveCfg(cfg);
   closeMo('mo-perfil');
   renderMais();
   if (S.sec==='home') renderHome();
   showToast('Perfil salvo!', 'success');
+}
+
+// ── SELETOR DE VEÍCULO (marca → modelo → ano) ────────────────────
+const VEHICLE_BRANDS = {
+  'Chevrolet': ['Onix','Onix Plus','Prisma','Spin','Tracker','Joy','Cobalt'],
+  'Fiat': ['Mobi','Argo','Cronos','Pulse','Strada','Uno','Siena'],
+  'Volkswagen': ['Gol','Voyage','Polo','Virtus','T-Cross','Nivus','Saveiro','Up!'],
+  'Hyundai': ['HB20','HB20S','Creta','Tucson','i30'],
+  'Toyota': ['Etios','Yaris','Corolla','Corolla Cross','SW4'],
+  'Honda': ['Fit','City','HR-V','Civic','WR-V'],
+  'Renault': ['Kwid','Sandero','Logan','Duster','Stepway'],
+  'Nissan': ['March','Versa','Kicks','Sentra'],
+  'Ford': ['Ka','Ka Sedan','EcoSport','Fiesta'],
+  'Jeep': ['Renegade','Compass'],
+  'Citroën': ['C3','C4 Cactus'],
+  'Peugeot': ['208','2008'],
+  'Mitsubishi': ['Space Star','ASX'],
+  'Kia': ['Picanto','Soul','Sportage'],
+  'BYD': ['Dolphin Mini','Dolphin','Yuan Plus','Song Plus','Seal'],
+  'GWM': ['Haval H6'],
+  'Caoa Chery': ['Tiggo 2','Tiggo 3X','Tiggo 5X'],
+  'Outra marca': []
+};
+function vpPopulateMarcas() {
+  const sel = document.getElementById('vp-marca');
+  if (!sel) return;
+  sel.innerHTML = Object.keys(VEHICLE_BRANDS).map(b => `<option value="${b}">${b}</option>`).join('');
+}
+function vpPopulateAnos() {
+  const sel = document.getElementById('vp-ano');
+  if (!sel) return;
+  const max = new Date().getFullYear() + 1;
+  let opts = '';
+  for (let y = max; y >= 1995; y--) opts += `<option value="${y}">${y}</option>`;
+  sel.innerHTML = opts;
+}
+function vpOnMarcaChange() {
+  const marca = document.getElementById('vp-marca')?.value;
+  const outraWrap = document.getElementById('vp-marca-outra-wrap');
+  if (outraWrap) outraWrap.style.display = marca === 'Outra marca' ? 'block' : 'none';
+  const modelos = VEHICLE_BRANDS[marca] || [];
+  const modSel = document.getElementById('vp-modelo');
+  if (modSel) modSel.innerHTML = modelos.map(m => `<option value="${m}">${m}</option>`).join('') + '<option value="Outro modelo">Outro modelo</option>';
+  vpOnModeloChange();
+}
+function vpOnModeloChange() {
+  const modelo = document.getElementById('vp-modelo')?.value;
+  const outroWrap = document.getElementById('vp-modelo-outro-wrap');
+  if (outroWrap) outroWrap.style.display = modelo === 'Outro modelo' ? 'block' : 'none';
+}
+function openVeiculoPicker() {
+  vpPopulateMarcas();
+  vpPopulateAnos();
+  const cfg = DB.cfg();
+  const marcaSel = document.getElementById('vp-marca');
+  if (marcaSel && cfg.vehicleBrand && VEHICLE_BRANDS[cfg.vehicleBrand] !== undefined) marcaSel.value = cfg.vehicleBrand;
+  vpOnMarcaChange();
+  const modSel = document.getElementById('vp-modelo');
+  if (modSel && cfg.vehicleModel) modSel.value = cfg.vehicleModel;
+  vpOnModeloChange();
+  const anoSel = document.getElementById('vp-ano');
+  if (anoSel && cfg.vehicleYear) anoSel.value = cfg.vehicleYear;
+  if (cfg.vehicleBrand === 'Outra marca') { const el=document.getElementById('vp-marca-outra'); if (el) el.value = cfg.vehicleBrandCustom || ''; }
+  if (cfg.vehicleModel === 'Outro modelo') { const el=document.getElementById('vp-modelo-outro'); if (el) el.value = cfg.vehicleModelCustom || ''; }
+  openMo('mo-veiculo');
+}
+function saveVeiculoPicker() {
+  const cfg = DB.cfg();
+  let marca = document.getElementById('vp-marca')?.value || '';
+  let modelo = document.getElementById('vp-modelo')?.value || '';
+  const ano = document.getElementById('vp-ano')?.value || '';
+  cfg.vehicleBrand = marca; cfg.vehicleModel = modelo; cfg.vehicleYear = ano;
+  if (marca === 'Outra marca') { marca = document.getElementById('vp-marca-outra')?.value || 'Outra'; cfg.vehicleBrandCustom = marca; }
+  if (modelo === 'Outro modelo') { modelo = document.getElementById('vp-modelo-outro')?.value || ''; cfg.vehicleModelCustom = modelo; }
+  cfg.vehicle = [marca, modelo, ano].filter(Boolean).join(' ');
+  DB.saveCfg(cfg);
+  const vTxt = document.getElementById('p-veiculo-txt');
+  if (vTxt) vTxt.textContent = cfg.vehicle || 'Selecionar veículo';
+  closeMo('mo-veiculo');
 }
 
 // ── UTILS ─────────────────────────────────────────────────────
@@ -4886,9 +5059,6 @@ function togglePass(inputId, btn) {
 const initCfg = DB.cfg();
 if (initCfg.name) { const el=document.getElementById('p-nome'); if(el) el.value=initCfg.name; }
 if (initCfg.plate) { const el=document.getElementById('p-placa'); if(el) el.value=initCfg.plate; }
-if (initCfg.vehicle) { const el=document.getElementById('p-veiculo'); if(el) el.value=initCfg.vehicle; }
-const initMeta = DB.meta();
-if (initMeta.general) { const el=document.getElementById('p-meta'); if(el) el.value=initMeta.general; }
 const now0 = new Date();
 const dateInputs = ['l-data'];
 dateInputs.forEach(id => { const el=document.getElementById(id); if(el) el.value=DB.today(); });
