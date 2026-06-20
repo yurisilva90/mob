@@ -690,7 +690,7 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
       <div class="heroGrid">
         <div class="heroCell"><strong id="fin-pct-lucro">0%</strong><span>% lucro</span></div>
         <div class="heroCell"><strong id="fin-media">R$ 0</strong><span>média dia</span></div>
-        <div class="heroCell"><strong id="fin-vs-ant">—</strong><span>vs mês ant.</span></div>
+        <div class="heroCell"><strong id="fin-vs-ant">—</strong><span id="fin-vs-ant-lbl">vs mês ant.</span></div>
       </div>
     </section>
     <section class="card cardPad" style="margin-bottom:14px">
@@ -699,7 +699,7 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
         <div class="kpi"><div class="row"><div class="ico green"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M17 7H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="kpiVal" id="fin-rec">R$ 0,00</div></div><div class="kpiLbl">Receitas</div></div>
         <div class="kpi"><div class="row"><div class="ico red"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></div><div class="kpiVal" id="fin-desp">R$ 0,00</div></div><div class="kpiLbl">Despesas</div></div>
         <div class="kpi"><div class="row"><div class="ico blue"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17 9 11l4 4 8-8"/></svg></div><div class="kpiVal" id="fin-lucro">R$ 0,00</div></div><div class="kpiLbl">Lucro</div></div>
-        <div class="kpi"><div class="row"><div class="ico orange"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg></div><div class="kpiVal" id="fin-meta">R$ 0</div></div><div class="kpiLbl">Meta</div></div>
+        <div class="kpi"><div class="row"><div class="ico orange"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg></div><div class="kpiVal" id="fin-meta">R$ 0</div></div><div class="kpiLbl" id="fin-meta-lbl">Meta</div></div>
       </div>
     </section>
     <section class="card cardPad" style="margin-bottom:14px">
@@ -2118,7 +2118,6 @@ function agMinutesBetween(start, end) {
 function renderMetasDoDia(day) {
   const stack = document.getElementById('metas-dia-stack');
   if (!stack) return;
-  const m = DB.get('sm_metas') || {};
   const rev = day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0);
   const isToday = day.date === DB.today();
   const liveOn = isToday && (S.gps.st==='running'||S.gps.st==='paused');
@@ -2126,7 +2125,9 @@ function renderMetasDoDia(day) {
   const totalElapsed = Math.max(0, (day.sessions||[]).reduce((s,x)=>s+(x.elapsed||0),0) + (liveOn ? getElapsed() : 0) + (day.tempoAdjust || 0));
   const dow = new Date(day.date+'T12:00').getDay();
   const plan = DB.planJornada().find(p => p.days && p.days.includes(dow));
-  const moneyGoal = (plan && plan.moneyGoal) ? plan.moneyGoal : (m.dailyRev || 0);
+  const meta = DB.meta();
+  const dimMes = new Date(new Date(day.date+'T12:00').getFullYear(), new Date(day.date+'T12:00').getMonth()+1, 0).getDate();
+  const moneyGoal = (plan && plan.moneyGoal) ? plan.moneyGoal : (meta.general ? meta.general/dimMes : 0);
 
   let html = '';
   if (moneyGoal) {
@@ -2299,13 +2300,35 @@ function getFinDays() {
   for (let d = new Date(start); d <= today; d.setDate(d.getDate()+1)) days.push(fmt(new Date(d)));
   return days;
 }
+// Mesmo recorte de dias do período atual, deslocado pra trás — usado na comparação "vs período anterior"
+function getFinDaysPrev() {
+  const today = new Date(), p = S.finPer, fmt = d => d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+  if (p === 'today') {
+    const y = new Date(today); y.setDate(y.getDate()-1);
+    return [fmt(y)];
+  }
+  if (p === 'month') {
+    const prevMonth = new Date(today.getFullYear(), today.getMonth()-1, 1);
+    const dim = new Date(prevMonth.getFullYear(), prevMonth.getMonth()+1, 0).getDate();
+    const n = Math.min(today.getDate(), dim);
+    return Array.from({length:n}, (_,i)=> prevMonth.getFullYear()+'-'+p2(prevMonth.getMonth()+1)+'-'+p2(i+1));
+  }
+  const start = new Date(today.getFullYear()-1, 0, 1);
+  const end = new Date(today.getFullYear()-1, today.getMonth(), today.getDate());
+  const days = [];
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) days.push(fmt(new Date(d)));
+  return days;
+}
 function renderFin() {
   const allDays = getFinDays().map(d => DB.day(d));
   const sc = S.finScope;
   const filterExp = e => sc === 'all' || (sc === 'prof' && e.scope !== 'pessoal') || (sc === 'pes' && e.scope === 'pessoal');
   const filterRev = r => sc === 'all' || (sc === 'prof' && r.scope !== 'pessoal') || (sc === 'pes' && r.scope === 'pessoal');
-  const rev  = allDays.reduce((s,d) => s + d.trips.filter(filterRev).reduce((a,t)=>a+(t.value||0),0) + d.revenues.filter(filterRev).reduce((a,r)=>a+(r.amount||0),0), 0);
-  const exp  = allDays.reduce((s,d) => s + d.expenses.filter(filterExp).reduce((a,e)=>a+(e.amount||0),0), 0);
+  const sumPeriodo = ds => ({
+    rev: ds.reduce((s,d) => s + d.trips.filter(filterRev).reduce((a,t)=>a+(t.value||0),0) + d.revenues.filter(filterRev).reduce((a,r)=>a+(r.amount||0),0), 0),
+    exp: ds.reduce((s,d) => s + d.expenses.filter(filterExp).reduce((a,e)=>a+(e.amount||0),0), 0)
+  });
+  const { rev, exp } = sumPeriodo(allDays);
   const profit = rev - exp;
   const meta = DB.meta();
   const days  = getFinDays().length;
@@ -2318,11 +2341,34 @@ function renderFin() {
   setText('fin-lucro', DB.fR(profit));
   setText('fin-pct-lucro', pctL+'%');
   setText('fin-media',     DB.fRI(media));
-  setText('fin-meta',      meta.general ? DB.fRI(meta.general) : 'Não definida');
-  setText('fin-vs-ant', '—');
-  // Weekly bars
+
+  // Meta — sensível ao período, mas sempre derivada da mesma fonte (Meta mensal cadastrada)
+  const today = new Date();
+  const dimAtual = new Date(today.getFullYear(), today.getMonth()+1, 0).getDate();
+  const metaLabels = { today: 'Meta do dia', month: 'Meta do mês', year: 'Meta do ano' };
+  const metaTarget = S.finPer === 'today' ? (meta.general ? meta.general/dimAtual : 0)
+    : S.finPer === 'year' ? (meta.general ? meta.general*12 : 0)
+    : (meta.general || 0);
+  setText('fin-meta', metaTarget ? DB.fRI(metaTarget) : 'Não definida');
+  setText('fin-meta-lbl', metaLabels[S.finPer] || 'Meta');
+
+  // vs período anterior (mesmo recorte de dias do período atual, deslocado pra trás)
+  const prevSums = sumPeriodo(getFinDaysPrev().map(d => DB.day(d)));
+  const prevProfit = prevSums.rev - prevSums.exp;
+  const vsLabels = { today: 'vs ontem', month: 'vs mês ant.', year: 'vs ano ant.' };
+  setText('fin-vs-ant-lbl', vsLabels[S.finPer] || 'vs ant.');
+  if (prevProfit !== 0) {
+    const delta = Math.round((profit - prevProfit) / Math.abs(prevProfit) * 100);
+    setText('fin-vs-ant', (delta >= 0 ? '+' : '') + delta + '%');
+  } else {
+    setText('fin-vs-ant', '—');
+  }
+
+  // Fluxo do mês — sempre o mês atual de verdade, não muda com o seletor Hoje/Mês/Ano
+  const mesAtualDays = Array.from({length: dimAtual}, (_,i) => DB.day(today.getFullYear()+'-'+p2(today.getMonth()+1)+'-'+p2(i+1)));
+  const bucketSize = Math.ceil(dimAtual/4);
   const weeks = [0,1,2,3].map(w => {
-    const wDays = allDays.slice(w*7, (w+1)*7);
+    const wDays = mesAtualDays.slice(w*bucketSize, (w+1)*bucketSize);
     return wDays.reduce((s,d)=>s+d.trips.reduce((a,t)=>a+(t.value||0),0)+d.revenues.reduce((a,r)=>a+(r.amount||0),0),0);
   });
   const maxW = Math.max(...weeks, 1);
