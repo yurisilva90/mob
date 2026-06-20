@@ -176,6 +176,16 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .card{background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:0 2px 10px rgba(15,23,42,.05)}.cardPad{padding:16px}.cardHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.cardHead h2{font-size:16px;font-weight:700;letter-spacing:-.03em}.cardHead a,.cardHead button{font-size:12px;color:var(--blue);font-weight:700;background:none;border:none;cursor:pointer}
 .seg{display:flex;gap:4px}.seg button{padding:7px 12px;border-radius:12px;border:none;background:#F1F5F9;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation}.seg button.on{background:rgba(14,165,233,.1);color:var(--blue)}
 .kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}.kpi{background:#F8FAFC;border-radius:16px;padding:14px}.kpi .row{display:flex;align-items:center;gap:8px;margin-bottom:6px}.ico{width:34px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}.ico.green{background:#ECFDF3;color:#16A34A}.ico.red{background:#FEF2F2;color:#EF4444}.ico.blue{background:#EFF6FF;color:#0EA5E9}.ico.orange{background:#FFF7ED;color:#F59E0B}.ico.purple{background:#F5F3FF;color:#7C3AED}.kpiVal{font-family:'DM Mono',monospace;font-size:20px;font-weight:700;line-height:1}.kpiLbl{font-size:11px;color:var(--muted);font-weight:600;margin-top:2px}
+.fin-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.fin-metric{background:#F8FAFC;border:1px solid var(--line);border-radius:18px;padding:10px 7px;text-align:center}.fin-metric strong{display:block;font-size:15px;font-weight:760;font-family:'DM Mono',monospace}.fin-metric span{display:block;font-size:9.5px;font-weight:720;text-transform:uppercase;letter-spacing:.055em;color:var(--muted);margin-top:4px}
+.obj-switch,.type-switch2{display:flex;background:#EAF0F6;border:1px solid rgba(15,23,42,.06);padding:4px;border-radius:18px;margin-bottom:16px}
+.obj-btn,.type-btn2{flex:1;border:none;background:transparent;color:var(--muted);padding:10px 8px;border-radius:14px;font-size:13.5px;font-weight:900;cursor:pointer;font-family:Inter,system-ui,sans-serif}
+.obj-btn.active,.type-btn2.active{background:#fff;color:var(--text);box-shadow:0 4px 12px rgba(15,23,42,.08)}
+.gbar.rec i{background:linear-gradient(90deg,#8b5cf6,#0ea5e9)}.gbar.exp i{background:linear-gradient(90deg,#F59E0B,#F59E0B)}.gbar.exp.over i,.gbar.rec.over i{background:linear-gradient(90deg,#EF4444,#EF4444)}
+.goal-locked{display:flex;align-items:center;justify-content:space-between;background:#F8FAFC;border:1px dashed #D8E0EA;border-radius:14px;padding:10px 12px;cursor:pointer}.goal-locked span{font-size:12px;color:var(--muted);font-weight:600}.goal-locked b{font-size:12px;color:var(--blue);font-weight:800}
+.cfg-link{display:block;text-align:center;font-size:12.5px;font-weight:700;color:var(--blue);background:#F8FAFC;border:1px solid var(--line);border-radius:14px;padding:11px;margin-top:4px;cursor:pointer;font-family:Inter,system-ui,sans-serif}
+.cat-row2{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #edf1f6}.cat-row2:last-child{border-bottom:0}.cat-lbl2{flex:1;font-size:14px;font-weight:650}
+.cat-inp-wrap2{position:relative;width:118px}.cat-inp-wrap2 span{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--muted);font-weight:700}
+.cat-inp2{width:100%;height:42px;border:1.5px solid var(--line);background:#F8FAFC;border-radius:13px;padding:0 12px 0 32px;font-size:14px;font-weight:700;color:var(--text);outline:none;font-family:'DM Mono',monospace;text-align:right}.cat-inp2:focus{border-color:var(--blue);background:#fff}
 .chart{padding:4px 0}.barCol{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}.barCol i{width:100%;background:linear-gradient(180deg,var(--blue),var(--blue2));border-radius:6px 6px 0 0;min-height:8px}.barCol small{font-size:10px;color:var(--muted);font-weight:700}
 .actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.action{border:1px solid var(--line);border-radius:16px;background:#F8FAFC;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:8px;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation;color:var(--text)}.action .ico{background:transparent}.action:active{background:var(--line)}
 .list{padding:0 0 2px}.item{display:flex;align-items:center;gap:12px;padding:12px 0}.itemBody{flex:1;min-width:0}
@@ -695,12 +705,21 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
     </section>
     <section class="card cardPad" style="margin-bottom:14px">
       <div class="cardHead"><h2>Resumo</h2><div class="seg"><button class="on" id="fs-all" onclick="setFinScope('all')">Tudo</button><button id="fs-prof" onclick="setFinScope('prof')">Prof.</button><button id="fs-pes" onclick="setFinScope('pes')">Pessoal</button></div></div>
-      <div class="kpis">
-        <div class="kpi"><div class="row"><div class="ico green"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M17 7H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="kpiVal" id="fin-rec">R$ 0,00</div></div><div class="kpiLbl">Receitas</div></div>
-        <div class="kpi"><div class="row"><div class="ico red"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg></div><div class="kpiVal" id="fin-desp">R$ 0,00</div></div><div class="kpiLbl">Despesas</div></div>
-        <div class="kpi"><div class="row"><div class="ico blue"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17 9 11l4 4 8-8"/></svg></div><div class="kpiVal" id="fin-lucro">R$ 0,00</div></div><div class="kpiLbl">Lucro</div></div>
-        <div class="kpi"><div class="row"><div class="ico orange"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg></div><div class="kpiVal" id="fin-meta">R$ 0</div></div><div class="kpiLbl" id="fin-meta-lbl">Objetivo</div></div>
+      <div class="fin-metrics">
+        <div class="fin-metric"><strong id="fin-rec">R$ 0,00</strong><span>Receitas</span></div>
+        <div class="fin-metric"><strong id="fin-desp">R$ 0,00</strong><span>Despesas</span></div>
+        <div class="fin-metric"><strong id="fin-lucro">R$ 0,00</strong><span>Lucro</span></div>
       </div>
+    </section>
+    <section class="card cardPad" style="margin-bottom:14px">
+      <div class="cardHead"><h2>Objetivos</h2></div>
+      <div class="obj-switch">
+        <button class="obj-btn active" id="ob-rec" onclick="setObjTab('rec')">Receitas</button>
+        <button class="obj-btn" id="ob-desp" onclick="setObjTab('desp')">Despesas</button>
+      </div>
+      <div id="obj-rec-list"></div>
+      <div id="obj-desp-list" style="display:none"></div>
+      <div class="cfg-link" onclick="openObjConfig()">Configurar objetivos</div>
     </section>
     <section class="card cardPad" style="margin-bottom:14px">
       <div class="cardHead"><h2>Fluxo do mês</h2></div>
@@ -1321,6 +1340,32 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
   </div>
 </div>
 
+<div class="mo" id="mo-obj-config">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head" style="padding:0 0 12px"><h2>Configurar objetivos</h2><button class="xbtn" onclick="closeMo('mo-obj-config')">&#x2715;</button></div>
+    <div class="obj-switch">
+      <button class="obj-btn active" id="ocfg-rec" onclick="setObjCfgTab('rec')">Receitas</button>
+      <button class="obj-btn" id="ocfg-desp" onclick="setObjCfgTab('desp')">Despesas</button>
+    </div>
+    <div id="objcfg-rec">
+      <div class="type-switch2">
+        <button class="type-btn2 active" id="ocfg-rec-operacional" onclick="setObjCfgGroup('rec','operacional')">Operacional</button>
+        <button class="type-btn2" id="ocfg-rec-pessoal" onclick="setObjCfgGroup('rec','pessoal')">Pessoal</button>
+      </div>
+      <div id="objcfg-rec-rows"></div>
+    </div>
+    <div id="objcfg-desp" style="display:none">
+      <div class="type-switch2">
+        <button class="type-btn2 active" id="ocfg-desp-operacional" onclick="setObjCfgGroup('desp','operacional')">Operacional</button>
+        <button class="type-btn2" id="ocfg-desp-pessoal" onclick="setObjCfgGroup('desp','pessoal')">Pessoal</button>
+      </div>
+      <div id="objcfg-desp-rows"></div>
+    </div>
+    <button class="btn-p" onclick="saveObjCfg()">Salvar objetivos</button>
+  </div>
+</div>
+
 
 </div>
 <script>
@@ -1345,6 +1390,8 @@ const DB = {
   saveCfg: c => DB.set('sm_cfg', c),
   cats: t => DB.get('sm_cats_'+t) || DEFAULT_CATS[t],
   saveCats: (t,c) => DB.set('sm_cats_'+t, c),
+  objGoals: t => DB.get('sm_obj_'+t) || {},
+  saveObjGoals: (t,g) => DB.set('sm_obj_'+t, g),
   meta: () => DB.get('sm_meta') || {type:'monthly', general:9000, varyByDay:false, days:{}},
   saveMeta: m => DB.set('sm_meta', m),
   uid: () => Date.now().toString(36) + Math.random().toString(36).slice(2,5),
@@ -2330,7 +2377,6 @@ function renderFin() {
   });
   const { rev, exp } = sumPeriodo(allDays);
   const profit = rev - exp;
-  const meta = DB.meta();
   const days  = getFinDays().length;
   const pctL  = rev > 0 ? Math.round(profit/rev*100) : 0;
   const media = days > 0 ? rev/days : 0;
@@ -2342,15 +2388,8 @@ function renderFin() {
   setText('fin-pct-lucro', pctL+'%');
   setText('fin-media',     DB.fRI(media));
 
-  // Meta — sensível ao período, mas sempre derivada da mesma fonte (Meta mensal cadastrada)
   const today = new Date();
   const dimAtual = new Date(today.getFullYear(), today.getMonth()+1, 0).getDate();
-  const metaLabels = { today: 'Objetivo do dia', month: 'Objetivo do mês', year: 'Objetivo do ano' };
-  const metaTarget = S.finPer === 'today' ? (meta.general ? meta.general/dimAtual : 0)
-    : S.finPer === 'year' ? (meta.general ? meta.general*12 : 0)
-    : (meta.general || 0);
-  setText('fin-meta', metaTarget ? DB.fRI(metaTarget) : 'Não definido');
-  setText('fin-meta-lbl', metaLabels[S.finPer] || 'Objetivo');
 
   // vs período anterior (mesmo recorte de dias do período atual, deslocado pra trás)
   const prevSums = sumPeriodo(getFinDaysPrev().map(d => DB.day(d)));
@@ -2377,6 +2416,7 @@ function renderFin() {
     if (el) { const bar = el.querySelector('i'); if (bar) bar.style.height = Math.max(8,Math.round(v/maxW*90))+'%'; }
   });
   // Recent moves
+  renderObjetivos();
   const movEl = document.getElementById('fin-mov');
   if (movEl) {
     const all = allDays.flatMap(d => [
@@ -2398,7 +2438,103 @@ function renderFin() {
   }
 }
 
-// ── LANÇAMENTOS ───────────────────────────────────────────────
+// ── OBJETIVOS por categoria (Receitas/Despesas, sempre o mês atual real) ──
+function renderObjetivos() {
+  const today = new Date();
+  const dimAtual = new Date(today.getFullYear(), today.getMonth()+1, 0).getDate();
+  const mesAtualDays = Array.from({length: dimAtual}, (_,i) => DB.day(today.getFullYear()+'-'+p2(today.getMonth()+1)+'-'+p2(i+1)));
+
+  function build(kind) {
+    const listKey = kind === 'receita' ? 'revenues' : 'expenses';
+    const rows = [], locked = [];
+    [kind+'_operacional', kind+'_pessoal'].forEach(key => {
+      const scope = key.endsWith('pessoal') ? 'pessoal' : 'operacional';
+      const cats  = DB.cats(key) || [];
+      const goals = DB.objGoals(key) || {};
+      cats.forEach(c => {
+        const goal = parseFloat(goals[c.id]) || 0;
+        if (!goal) { locked.push(c.l); return; }
+        const spent = mesAtualDays.reduce((s,d) => s + d[listKey].filter(x => x.category === c.id && x.scope === scope).reduce((a,x)=>a+(x.amount||0),0), 0);
+        const pct = goal ? Math.round(spent/goal*100) : 0;
+        rows.push({ label: c.l, spent, goal, pct, over: pct > 100 });
+      });
+    });
+    return { rows, locked };
+  }
+
+  [['rec','receita'], ['desp','despesa']].forEach(([tab, kind]) => {
+    const { rows, locked } = build(kind);
+    const barClass = tab === 'rec' ? 'rec' : 'exp';
+    let html = rows.map(r => `<div class="goal-item"><div class="goal-top"><strong>${r.label}</strong><span${r.over?' style="color:#EF4444"':''}>${DB.fRI(r.spent)} de ${DB.fRI(r.goal)} · ${r.pct}%</span></div><div class="gbar ${barClass}${r.over?' over':''}"><i style="width:${Math.min(100,r.pct)}%"></i></div></div>`).join('');
+    html += locked.map(l => `<div class="goal-locked" onclick="openObjConfig()"><span>${l} — objetivo não definido</span><b>Configurar</b></div>`).join('');
+    if (!rows.length && !locked.length) html = '<div class="empty">Nenhuma categoria cadastrada</div>';
+    const listEl = document.getElementById('obj-'+tab+'-list');
+    if (listEl) listEl.innerHTML = html;
+  });
+}
+function setObjTab(t) {
+  const recList = document.getElementById('obj-rec-list'), despList = document.getElementById('obj-desp-list');
+  if (recList) recList.style.display = t==='rec' ? '' : 'none';
+  if (despList) despList.style.display = t==='desp' ? '' : 'none';
+  const obRec = document.getElementById('ob-rec'), obDesp = document.getElementById('ob-desp');
+  if (obRec) obRec.classList.toggle('active', t==='rec');
+  if (obDesp) obDesp.classList.toggle('active', t==='desp');
+}
+
+// ── Modal "Configurar objetivos" — rascunho em memória pra não perder valor ao trocar de aba/grupo ──
+let objCfgDraft = {}, objCfgState = { rec: 'operacional', desp: 'operacional' };
+function openObjConfig() {
+  objCfgDraft = {
+    receita_operacional: Object.assign({}, DB.objGoals('receita_operacional')),
+    receita_pessoal:     Object.assign({}, DB.objGoals('receita_pessoal')),
+    despesa_operacional: Object.assign({}, DB.objGoals('despesa_operacional')),
+    despesa_pessoal:     Object.assign({}, DB.objGoals('despesa_pessoal'))
+  };
+  objCfgState = { rec: 'operacional', desp: 'operacional' };
+  setObjCfgTab('rec');
+  setObjCfgGroup('rec', 'operacional');
+  setObjCfgGroup('desp', 'operacional');
+  openMo('mo-obj-config');
+}
+function setObjCfgTab(t) {
+  const recEl = document.getElementById('objcfg-rec'), despEl = document.getElementById('objcfg-desp');
+  if (recEl) recEl.style.display = t==='rec' ? '' : 'none';
+  if (despEl) despEl.style.display = t==='desp' ? '' : 'none';
+  const ocfgRec = document.getElementById('ocfg-rec'), ocfgDesp = document.getElementById('ocfg-desp');
+  if (ocfgRec) ocfgRec.classList.toggle('active', t==='rec');
+  if (ocfgDesp) ocfgDesp.classList.toggle('active', t==='desp');
+}
+function setObjCfgGroup(tab, group) {
+  objCfgState[tab] = group;
+  const opBtn = document.getElementById('ocfg-'+tab+'-operacional'), pesBtn = document.getElementById('ocfg-'+tab+'-pessoal');
+  if (opBtn) opBtn.classList.toggle('active', group==='operacional');
+  if (pesBtn) pesBtn.classList.toggle('active', group==='pessoal');
+  renderObjCfgRows(tab);
+}
+function objCfgInput(input) {
+  const key = input.dataset.key, cat = input.dataset.cat;
+  const val = parseFloat(input.value) || 0;
+  if (val) objCfgDraft[key][cat] = val; else delete objCfgDraft[key][cat];
+}
+function renderObjCfgRows(tab) {
+  const kind = tab === 'rec' ? 'receita' : 'despesa';
+  const group = objCfgState[tab];
+  const key = kind + '_' + group;
+  const cats = DB.cats(key) || [];
+  const draft = objCfgDraft[key] || {};
+  const el = document.getElementById('objcfg-'+tab+'-rows');
+  if (!el) return;
+  el.innerHTML = cats.map(c => `<div class="cat-row2"><span class="cat-lbl2">${c.l}</span><div class="cat-inp-wrap2"><span>R$</span><input class="cat-inp2" type="number" inputmode="decimal" data-key="${key}" data-cat="${c.id}" value="${draft[c.id]||''}" placeholder="0" oninput="objCfgInput(this)"></div></div>`).join('') || '<div class="empty">Nenhuma categoria cadastrada</div>';
+}
+function saveObjCfg() {
+  Object.keys(objCfgDraft).forEach(key => {
+    DB.saveObjGoals(key, objCfgDraft[key]);
+    SYNC.pushCats(key);
+  });
+  closeMo('mo-obj-config');
+  renderObjetivos();
+  showToast('Objetivos salvos.');
+}
 function setLancFilter(f) {
   S.lancFilter = f;
   ['all','rec','dep'].forEach(x => {
@@ -4280,6 +4416,7 @@ const SYNC = {
     try {
       await _SUPA.from('categories').upsert({
         user_id: _supaUser.id, cat_key: key, items: DB.cats(key) || DEFAULT_CATS[key] || [],
+        goals: DB.objGoals(key) || {},
         synced_at: new Date().toISOString()
       });
     } catch (e) { console.error('SYNC.pushCats', e); }
@@ -4356,6 +4493,7 @@ const SYNC = {
       }
       (cats.data || []).forEach(c => {
         if (!DB.get('sm_cats_' + c.cat_key)) DB.saveCats(c.cat_key, c.items || []);
+        if (!DB.get('sm_obj_' + c.cat_key) && c.goals) DB.saveObjGoals(c.cat_key, c.goals);
       });
     } catch (e) { console.error('SYNC.pullAll', e); }
   }
