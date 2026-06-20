@@ -3363,7 +3363,8 @@ function getElapsed() {
 function gpsUpdate() {
   const el = getElapsed(), h=Math.floor(el/3600), m=Math.floor(el%3600/60), s=el%60;
   setText('jc-timer', p2(h)+':'+p2(m)+':'+p2(s));
-  const total = (S.gps.baseElapsed||0) + el;
+  const day = DB.day(S.curDate);
+  const total = Math.max(0, (S.gps.baseElapsed||0) + el + (day.tempoAdjust || 0));
   const th=Math.floor(total/3600), tm=Math.floor(total%3600/60);
   setText('jc-total', th+'h'+p2(tm));
 }
