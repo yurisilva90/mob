@@ -3711,12 +3711,20 @@ function restoreGpsSession() {
   if (window.SmartMobiNative && typeof SmartMobiNative.isGpsRunning === 'function') {
     try {
       if (SmartMobiNative.isGpsRunning()) {
-        const nativeKm = SmartMobiNative.getGpsKm();
-        const nativeStart = SmartMobiNative.getGpsStartTime();
-        const nativePaused = SmartMobiNative.getGpsPausedMs();
-        if (typeof nativeKm === 'number' && nativeKm > 0) g.km = nativeKm;
-        if (nativeStart) g.start = nativeStart;
-        if (typeof nativePaused === 'number') g.pausedMs = nativePaused;
+        // So confia no km nativo se a sessao ja estiver rodando ha mais de alguns
+        // segundos. Logo apos um gpsStart(), o sinal de reset enviado pro servico
+        // nativo pode ainda nao ter sido processado — ler o km nesse instante corre
+        // o risco de pegar um valor antigo (de antes do reset), fazendo o numero
+        // "pular" pra um valor maior por um instante ate se corrigir sozinho.
+        const sessionAgeMs = Date.now() - (g.start || 0);
+        if (sessionAgeMs > 8000) {
+          const nativeKm = SmartMobiNative.getGpsKm();
+          const nativeStart = SmartMobiNative.getGpsStartTime();
+          const nativePaused = SmartMobiNative.getGpsPausedMs();
+          if (typeof nativeKm === 'number' && nativeKm > 0) g.km = nativeKm;
+          if (nativeStart) g.start = nativeStart;
+          if (typeof nativePaused === 'number') g.pausedMs = nativePaused;
+        }
       }
     } catch(e) {}
   }
