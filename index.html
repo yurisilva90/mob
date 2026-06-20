@@ -607,7 +607,6 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
       <button class="arrow" onclick="chgDay(-1)">&#8249;</button>
       <div class="datebox">
         <h1 id="dn-date">Hoje</h1>
-        <p id="dn-dow">carregando...</p>
       </div>
       <button class="arrow" onclick="chgDay(1)">&#8250;</button>
     </div>
@@ -1099,19 +1098,22 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
   <div class="sheet ctr">
     <div class="sheet-head"><h2>Ajustar tempo total</h2><button class="xbtn" onclick="closeMo('mo-tempo-adjust')">&#x2715;</button></div>
     <div style="font-size:12.5px;color:#64748B;margin-bottom:18px;line-height:1.4">Você pode ajustar o tempo total da jornada hoje sempre que precisar.</div>
-    <div style="text-align:center;font-size:28px;font-family:'DM Mono',monospace;font-weight:700;color:#0F172A;margin-bottom:14px" id="tempoadj-display">0h00m</div>
-    <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px">
-      <div style="display:flex;gap:6px">
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px">
+      <div style="display:flex;flex-direction:column;gap:6px">
         <button class="kmadj-step" onclick="tempoAdjStep(-60)">-1h</button>
         <button class="kmadj-step" onclick="tempoAdjStep(-10)">-10m</button>
         <button class="kmadj-step" onclick="tempoAdjStep(-5)">-5m</button>
       </div>
-      <div style="display:flex;gap:6px">
+      <input id="tempoadj-val" type="text" inputmode="text" autocomplete="off"
+        onblur="tempoAdjInputCommit()" onfocus="this.select()"
+        style="width:118px;height:114px;text-align:center;font-size:25px;font-family:'DM Mono',monospace;font-weight:700;border:1.5px solid #E2E8F0;border-radius:18px;background:#F8FAFC;color:#0F172A;outline:none;box-sizing:border-box;flex-shrink:0">
+      <div style="display:flex;flex-direction:column;gap:6px">
         <button class="kmadj-step" onclick="tempoAdjStep(5)">+5m</button>
         <button class="kmadj-step" onclick="tempoAdjStep(10)">+10m</button>
         <button class="kmadj-step" onclick="tempoAdjStep(60)">+1h</button>
       </div>
     </div>
+    <div style="text-align:center;font-size:11px;color:#94A3B8;margin-bottom:14px">Toque pra digitar. Ex.: 2h30m ou 45m</div>
     <button class="btn-p" onclick="saveTempoAdjust()">Confirmar</button>
   </div>
 </div>
@@ -1990,8 +1992,7 @@ function renderJornada() {
   const dows  = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   const ms    = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
   const dateEl = document.getElementById('dn-date');
-  if (dateEl) dateEl.innerHTML = p2(dt.getDate())+' '+ms[dt.getMonth()]+' '+dt.getFullYear()+(isToday?'<span class="today">HOJE</span>':'');
-  const dowEl = document.getElementById('dn-dow'); if (dowEl) dowEl.textContent = dows[dt.getDay()]+', '+p2(dt.getDate())+' de '+ms[dt.getMonth()];
+  if (dateEl) dateEl.innerHTML = dows[dt.getDay()]+', '+p2(dt.getDate())+' '+ms[dt.getMonth()]+' '+dt.getFullYear()+(isToday?'<span class="today">HOJE</span>':'');
   const day = DB.day(d);
   const rev = day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0);
   const exp = day.expenses.reduce((s,e)=>s+(e.amount||0),0);
@@ -2632,7 +2633,7 @@ function saveKmAdjust() {
   showToast('Km total ajustado.');
 }
 
-// ── Ajuste de tempo total (mesma lógica do km, em minutos: -1h/-10m/-5m | +5m/+10m/+1h) ──
+// ── Ajuste de tempo total (mesma lógica do km: botões nas laterais + campo editável por texto) ──
 let tempoAdjBaseSecs = 0, tempoAdjCurSecs = 0;
 function openTempoAdjust() {
   const day = DB.day(S.curDate);
@@ -2645,15 +2646,40 @@ function openTempoAdjust() {
   updateTempoAdjDisplay();
   openMo('mo-tempo-adjust');
 }
+// Aceita "2h30m", "2h 30m", "2h", "45m" ou número puro (minutos)
+function parseTempoAdjInput(text) {
+  text = (text || '').trim().toLowerCase().replace(/\s+/g, '');
+  if (!text) return null;
+  let h = 0, m = 0;
+  const full = text.match(/^(\d+)h(\d+)?m?$/);
+  const justH = text.match(/^(\d+)h$/);
+  const justM = text.match(/^(\d+)m$/);
+  const justNum = text.match(/^(\d+)$/);
+  if (full) { h = parseInt(full[1]); m = parseInt(full[2] || 0); }
+  else if (justH) { h = parseInt(justH[1]); }
+  else if (justM) { m = parseInt(justM[1]); }
+  else if (justNum) { m = parseInt(justNum[1]); }
+  else return null;
+  return Math.max(0, h*3600 + m*60);
+}
 function updateTempoAdjDisplay() {
-  const el = document.getElementById('tempoadj-display');
-  if (el) el.textContent = fmtDur(tempoAdjCurSecs / 60);
+  const inp = document.getElementById('tempoadj-val');
+  if (inp) inp.value = fmtDur(tempoAdjCurSecs / 60);
 }
 function tempoAdjStep(deltaMin) {
   tempoAdjCurSecs = Math.max(0, tempoAdjCurSecs + deltaMin * 60);
   updateTempoAdjDisplay();
 }
+function tempoAdjInputCommit() {
+  const inp = document.getElementById('tempoadj-val');
+  if (!inp) return;
+  const parsed = parseTempoAdjInput(inp.value);
+  if (parsed === null) { updateTempoAdjDisplay(); return; }
+  tempoAdjCurSecs = parsed;
+  updateTempoAdjDisplay();
+}
 function saveTempoAdjust() {
+  tempoAdjInputCommit();
   const day = DB.day(S.curDate);
   day.tempoAdjust = Math.round(tempoAdjCurSecs - tempoAdjBaseSecs);
   DB.saveDay(day);
