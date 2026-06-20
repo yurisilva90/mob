@@ -1,10 +1,12 @@
-const CACHE_NAME = 'smartmobi-v21-network-first';
+const CACHE_NAME = 'smartmobi-v22-icon-mark';
 const ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
+  '/icon-mark-192.png',
+  '/icon-mark-512.png',
   '/apple-touch-icon.png',
   '/screenshot-home.png',
   '/screenshot-wide.png'
