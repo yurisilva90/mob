@@ -1393,6 +1393,8 @@ const DB = {
   saveCats: (t,c) => DB.set('sm_cats_'+t, c),
   objGoals: t => DB.get('sm_obj_'+t) || {},
   saveObjGoals: (t,g) => DB.set('sm_obj_'+t, g),
+  syncQueue: () => DB.get('sm_sync_queue') || [],
+  saveSyncQueue: q => DB.set('sm_sync_queue', q),
   meta: () => DB.get('sm_meta') || {type:'monthly', general:9000, varyByDay:false, days:{}},
   saveMeta: m => DB.set('sm_meta', m),
   uid: () => Date.now().toString(36) + Math.random().toString(36).slice(2,5),
@@ -4398,13 +4400,29 @@ let _supaUser = null;
 // Pull: no primeiro boot logado, busca tudo da nuvem e mescla no localStorage,
 // pra dados sobreviverem a troca de aparelho ou reinstalação.
 const SYNC = {
+  // Enfileira uma operacao que falhou pra tentar de novo depois (ex: sem internet
+  // no meio de uma corrida). Fica salva no localStorage, sobrevive a fechar o app.
+  enqueue(op) {
+    const q = DB.syncQueue();
+    q.push(Object.assign({ id: Date.now()+'_'+Math.random().toString(36).slice(2), ts: Date.now() }, op));
+    DB.saveSyncQueue(q);
+    this._updateBadge();
+  },
+  _updateBadge() {
+    const n = DB.syncQueue().length;
+    const el = document.getElementById('sync-pending-badge');
+    if (el) el.style.display = n > 0 ? 'flex' : 'none';
+  },
   async push(table, row) {
     if (!_supaUser) return;
     try {
       await _SUPA.from(table).upsert(Object.assign({}, row, {
         user_id: _supaUser.id, synced_at: new Date().toISOString()
       }));
-    } catch (e) { console.error('SYNC.push', table, e); }
+    } catch (e) {
+      console.error('SYNC.push', table, e);
+      this.enqueue({ type: 'push', table, row });
+    }
   },
   async del(table, match) {
     if (!_supaUser) return;
@@ -4412,7 +4430,10 @@ const SYNC = {
       let q = _SUPA.from(table).delete();
       Object.entries(match).forEach(([k, v]) => { q = q.eq(k, v); });
       await q;
-    } catch (e) { console.error('SYNC.del', table, e); }
+    } catch (e) {
+      console.error('SYNC.del', table, e);
+      this.enqueue({ type: 'del', table, match });
+    }
   },
   async pushCats(key) {
     if (!_supaUser) return;
@@ -4422,7 +4443,42 @@ const SYNC = {
         goals: DB.objGoals(key) || {},
         synced_at: new Date().toISOString()
       });
-    } catch (e) { console.error('SYNC.pushCats', e); }
+    } catch (e) {
+      console.error('SYNC.pushCats', e);
+      this.enqueue({ type: 'pushCats', key });
+    }
+  },
+  // Tenta reenviar tudo que ficou pendente, na ordem em que foi criado. O que
+  // funcionar sai da fila; o que falhar de novo fica pra proxima tentativa.
+  async flushQueue() {
+    if (!_supaUser || !navigator.onLine) return;
+    const q = DB.syncQueue();
+    if (!q.length) return;
+    const remaining = [];
+    for (const op of q) {
+      try {
+        if (op.type === 'push') {
+          await _SUPA.from(op.table).upsert(Object.assign({}, op.row, {
+            user_id: _supaUser.id, synced_at: new Date().toISOString()
+          }));
+        } else if (op.type === 'del') {
+          let dq = _SUPA.from(op.table).delete();
+          Object.entries(op.match).forEach(([k, v]) => { dq = dq.eq(k, v); });
+          await dq;
+        } else if (op.type === 'pushCats') {
+          await _SUPA.from('categories').upsert({
+            user_id: _supaUser.id, cat_key: op.key, items: DB.cats(op.key) || DEFAULT_CATS[op.key] || [],
+            goals: DB.objGoals(op.key) || {},
+            synced_at: new Date().toISOString()
+          });
+        }
+      } catch (e) {
+        console.error('SYNC.flushQueue retry falhou', op, e);
+        remaining.push(op);
+      }
+    }
+    DB.saveSyncQueue(remaining);
+    this._updateBadge();
   },
   async pullAll() {
     if (!_supaUser) return;
@@ -4547,6 +4603,7 @@ async function showApp() {
   }
   if (!_appBooted) {
     try { await SYNC.pullAll(); } catch(e) { console.error('pullAll boot:', e); }
+    try { await SYNC.flushQueue(); } catch(e) { console.error('flushQueue boot:', e); }
   }
   try{renderHome();}    catch(e){console.error('renderHome:',e);}
   try{restoreGpsSession();} catch(e){console.error('restoreGpsSession:',e);}
@@ -4731,6 +4788,12 @@ renderLancCats();
 // Render all screens
 agCalY=new Date().getFullYear();agCalM=new Date().getMonth();agCalSelDate=DB.today();
 authInit();
+
+// ── Fila de sincronizacao: tenta reenviar o que ficou pendente quando a
+// conexao voltar, e periodicamente como rede de seguranca (sinal fraco pode
+// nao disparar o evento 'online' de forma confiavel).
+window.addEventListener('online', () => { SYNC.flushQueue().catch(()=>{}); });
+setInterval(() => { SYNC.flushQueue().catch(()=>{}); }, 30000);
 
 // ── Service worker: registra, força checagem de atualização e recarrega
 // sozinho quando uma versão nova assumir o controle. Sem isso, correções
