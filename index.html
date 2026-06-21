@@ -3786,7 +3786,13 @@ function restoreGpsSession() {
           const nativeKm = SmartMobiNative.getGpsKm();
           const nativeStart = SmartMobiNative.getGpsStartTime();
           const nativePaused = SmartMobiNative.getGpsPausedMs();
-          if (typeof nativeKm === 'number' && nativeKm > 0) g.km = nativeKm;
+          // So adota o km nativo se ele for MAIOR que o que a sessao web ja tem.
+          // Nunca deixa essa reconciliacao DIMINUIR o km exibido — isso e o que
+          // causava o "pulo pra baixo" quando havia uma correcao manual (kmAdjust)
+          // aplicada: o servico nativo nao sabe nada sobre essa correcao, entao
+          // confiar nele sem essa guarda jogava o numero de volta pro valor cru,
+          // descartando a edicao do usuario.
+          if (typeof nativeKm === 'number' && nativeKm > g.km) g.km = nativeKm;
           if (nativeStart) g.start = nativeStart;
           if (typeof nativePaused === 'number') g.pausedMs = nativePaused;
         }
