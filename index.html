@@ -418,6 +418,7 @@ html.dark .hg-chart-card{box-shadow:0 12px 28px rgba(0,0,0,.35)}
 .hg-mini-tabs button.active,.hg-category-tabs button.active{background:var(--card);color:var(--text);box-shadow:0 6px 14px rgba(15,23,42,.06)}
 html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{box-shadow:none;border:1px solid var(--line)}
 .hg-category-tabs{margin:2px 0 15px}.hg-category-tabs button{flex:1}
+.hg-chart-highlight{font-size:11.5px;font-weight:700;color:var(--blue);margin:-4px 0 10px;min-height:14px}
 .hg-bar-chart{height:154px;position:relative;margin-top:6px}
 .hg-grid-line{position:absolute;left:0;right:0;border-top:1px dashed var(--line)}
 .hg-grid-line span{position:absolute;left:0;top:-7px;font-size:9px;color:var(--muted2);font-weight:700;background:var(--card);padding-right:4px}
@@ -433,6 +434,8 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .hg-bar-bubble.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .hg-bar-bubble:after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#0F172A}
 .hg-bar-bubble .hg-bb-l{font-size:10px;color:#94A3B8;font-weight:600;margin-top:1px}
+.hg-bar-bubble{text-align:center;white-space:normal;max-width:none}
+.hg-bar-bubble .hg-bb-row{font-size:10px;color:#CBD5E1;font-weight:600;margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,.15);white-space:nowrap}
 .hg-bar-col span{font-size:10px;color:#667085;font-weight:650;white-space:nowrap}
 .hg-bar-chart.hour .hg-bar{max-width:10px;background:#22c55e}
 .hg-bar-chart.month .hg-bar{max-width:16px;background:#8b5cf6}
@@ -625,21 +628,23 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
   </section>
 
   <section class="hg-chart-card" style="margin:14px 16px 0">
-    <div class="hg-chart-head"><div><h2>Resultado por Dia</h2><p>Alterna entre dias da semana e semanas do mês.</p></div>
+    <div class="hg-chart-head"><div><h2>Dia/Semana</h2><p>Soma por dia da semana, dentro do período selecionado acima.</p></div>
       <div class="hg-mini-tabs"><button class="active" id="hg-dia-d" onclick="setHgDiaMode('d')">Dia</button><button id="hg-dia-w" onclick="setHgDiaMode('w')">Semana</button></div>
     </div>
+    <p class="hg-chart-highlight" id="hg-dia-insight"></p>
     <div class="hg-bar-chart" id="hg-chart-dia"></div>
   </section>
 
   <section class="hg-chart-card" style="margin:14px 16px 0">
-    <div class="hg-chart-head"><div><h2>Resultado por Hora</h2><p>Horários zerados ficam ocultos.</p></div>
+    <div class="hg-chart-head"><div><h2>Hora/Turno</h2><p>Soma por horário, dentro do período selecionado acima.</p></div>
       <div class="hg-mini-tabs"><button class="active" id="hg-hora-h" onclick="setHgHoraMode('h')">Hora</button><button id="hg-hora-t" onclick="setHgHoraMode('t')">Turno</button></div>
     </div>
+    <p class="hg-chart-highlight" id="hg-hora-insight"></p>
     <div class="hg-bar-chart hour" id="hg-chart-hora"></div>
   </section>
 
   <section class="hg-chart-card" style="margin:14px 16px 0">
-    <div class="hg-chart-head"><div><h2>Resultado por Mês</h2><p>Evolução mensal ou anual.</p></div>
+    <div class="hg-chart-head"><div><h2>Mês/Ano</h2><p>Soma por mês/ano, dentro do período selecionado acima — com Semana ou Mês escolhido aqui em cima, vira 1 barra só.</p></div>
       <div class="hg-mini-tabs"><button class="active" id="hg-mes-m" onclick="setHgMesMode('m')">Mês</button><button id="hg-mes-y" onclick="setHgMesMode('y')">Ano</button></div>
     </div>
     <div class="hg-bar-chart month" id="hg-chart-mes"></div>
@@ -1845,8 +1850,18 @@ function hgBarsHtml(data, chartId) {
   }
   const barsHtml = items.map((d,i) => {
     const h = Math.max(3, Math.round(d.value/top*H));
+    const prev = i > 0 ? items[i-1] : null;
+    let extraRows = '';
+    if (d.qtd > 1) {
+      extraRows += `<div class="hg-bb-row">Média ${DB.fR(d.avg)} · Maior ${DB.fR(d.max)} · Menor ${DB.fR(d.min)}</div><div class="hg-bb-row">${d.qtd} dias com dado</div>`;
+    }
+    if (prev && prev.value > 0.001) {
+      const pct = Math.round((d.value - prev.value) / prev.value * 100);
+      const arrow = pct > 0 ? '▲' : (pct < 0 ? '▼' : '–');
+      extraRows += `<div class="hg-bb-row">${arrow} ${Math.abs(pct)}% vs ${prev.label}</div>`;
+    }
     return `<div class="hg-bar-col">
-      <div class="hg-bar-bubble" id="hgbub-${chartId}-${i}"><div>${DB.fR(d.value)}</div><div class="hg-bb-l">${d.label}</div></div>
+      <div class="hg-bar-bubble" id="hgbub-${chartId}-${i}"><div>${DB.fR(d.value)}</div><div class="hg-bb-l">${d.label}</div>${extraRows}</div>
       <div class="hg-bar" id="hgbar-${chartId}-${i}" style="height:${h}px" onclick="hgToggleBar('${chartId}',${i})"></div>
       <span class="hg-bar-lbl" id="hglbl-${chartId}-${i}">${d.label}</span>
     </div>`;
@@ -1974,7 +1989,40 @@ function renderHgGoals(dates, days, rev) {
   el.innerHTML = html;
 }
 
-// ── Resultado por Dia (Dia: semana atual · Semana: últimas 8 semanas do mês) ──
+// ── Motor genérico de "balde" — usado pelos 3 gráficos de barra da Home.
+// Pega as datas do período selecionado (getHomeDays), agrupa cada dia num balde
+// (dia da semana / semana / hora / turno / mês / ano, depende do gráfico+modo) e
+// guarda os valores individuais de cada dia que caiu naquele balde — não só a soma.
+// Quando um balde tem mais de 1 dia (ex: todas as sextas do mês), o toque mostra
+// média/maior/menor/qtd de dias em vez de só o total, sem poluir a barra.
+function hgBucketStats(dates, keyFn, valueFn, order) {
+  const buckets = {};
+  dates.forEach(date => {
+    const ks = keyFn(date); // pode retornar 1 chave ou um array de {key,value} (caso da Hora)
+    if (ks == null) return;
+    const list = Array.isArray(ks) ? ks : [{key: ks, value: valueFn ? valueFn(date) : null}];
+    list.forEach(({key, value}) => {
+      if (value == null || value <= 0.001) return;
+      (buckets[key] = buckets[key] || []).push(value);
+    });
+  });
+  const keys = order ? order.filter(k => buckets[k]) : Object.keys(buckets).sort();
+  return keys.map(k => {
+    const arr = buckets[k];
+    const sum = arr.reduce((a,b)=>a+b, 0);
+    return { label: k, value: sum, max: Math.max(...arr), min: Math.min(...arr), avg: sum/arr.length, qtd: arr.length };
+  });
+}
+function hgDayTotal(date) {
+  const day = DB.day(date);
+  return day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0);
+}
+function hgWeekStart(date) {
+  const d = new Date(date+'T00:00:00'); const dow = (d.getDay()+6)%7; d.setDate(d.getDate()-dow);
+  return p2(d.getDate())+'/'+p2(d.getMonth()+1);
+}
+
+// ── Por Dia/Semana ──
 function setHgDiaMode(m) {
   S.hgDiaMode = m;
   ['d','w'].forEach(x => { const e=document.getElementById('hg-dia-'+x); if(e) e.classList.toggle('active', x===m); });
@@ -1983,35 +2031,22 @@ function setHgDiaMode(m) {
 function renderHgChartDia() {
   const el = document.getElementById('hg-chart-dia');
   if (!el) return;
-  const today = new Date();
+  const dates = getHomeDays();
+  let data;
   if (S.hgDiaMode === 'd') {
     const lbls = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
-    const dow = (today.getDay()+6)%7;
-    const data = lbls.map((l,i) => {
-      const d = new Date(today); d.setDate(today.getDate()-dow+i);
-      const day = DB.day(d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate()));
-      const v = day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0);
-      return {label:l, value:v};
-    });
-    el.innerHTML = hgBarsHtml(data, 'dia');
+    const keyFn = date => lbls[(new Date(date+'T00:00:00').getDay()+6)%7];
+    data = hgBucketStats(dates, keyFn, hgDayTotal, lbls);
   } else {
-    const data = [];
-    for (let w = 7; w >= 0; w--) {
-      const end = new Date(today); end.setDate(today.getDate() - w*7);
-      const dow = (end.getDay()+6)%7;
-      const start = new Date(end); start.setDate(end.getDate()-dow);
-      let v = 0;
-      for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
-        const day = DB.day(d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate()));
-        v += day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0);
-      }
-      data.push({label: p2(start.getDate())+'/'+p2(start.getMonth()+1), value: v});
-    }
-    el.innerHTML = hgBarsHtml(data, 'dia');
+    const keyFn = hgWeekStart;
+    const order = [...new Set(dates.map(keyFn))];
+    data = hgBucketStats(dates, keyFn, hgDayTotal, order);
   }
+  el.innerHTML = hgBarsHtml(data, 'dia');
+  renderHgHighlight('hg-dia-insight', data, 'fraco', d => 'Dia mais fraco: '+d.label+' (média '+DB.fR(d.avg)+')');
 }
 
-// ── Resultado por Hora (Hora: por hora do dia · Turno: 4 turnos) — dados do mês atual ──
+// ── Por Hora/Turno ──
 function setHgHoraMode(m) {
   S.hgHoraMode = m;
   ['h','t'].forEach(x => { const e=document.getElementById('hg-hora-'+x); if(e) e.classList.toggle('active', x===m); });
@@ -2020,29 +2055,31 @@ function setHgHoraMode(m) {
 function renderHgChartHora() {
   const el = document.getElementById('hg-chart-hora');
   if (!el) return;
-  const today = new Date();
-  const monthDays = Array.from({length: today.getDate()}, (_,i) => DB.day(today.getFullYear()+'-'+p2(today.getMonth()+1)+'-'+p2(i+1)));
-  const allTrips = monthDays.flatMap(d => d.trips).filter(t => t.time);
-  if (S.hgHoraMode === 'h') {
-    const byHour = hgGroupBy(allTrips, t => parseInt(t.time.split(':')[0]), t => t.value||0);
-    const data = Object.keys(byHour).sort((a,b)=>a-b).map(h => ({label: h+'h', value: byHour[h]}));
-    el.innerHTML = hgBarsHtml(data, 'hora');
-  } else {
-    const turnos = [
-      {label:'Madrugada', test:h=>h>=0&&h<6},
-      {label:'Manhã',     test:h=>h>=6&&h<12},
-      {label:'Tarde',     test:h=>h>=12&&h<18},
-      {label:'Noite',     test:h=>h>=18&&h<24}
-    ];
-    const data = turnos.map(t => ({
-      label: t.label,
-      value: allTrips.filter(tr => t.test(parseInt(tr.time.split(':')[0]))).reduce((s,tr)=>s+(tr.value||0),0)
-    }));
-    el.innerHTML = hgBarsHtml(data, 'hora');
-  }
+  const dates = getHomeDays();
+  const turnos = [
+    {label:'Madrugada', test:h=>h>=0&&h<6}, {label:'Manhã', test:h=>h>=6&&h<12},
+    {label:'Tarde', test:h=>h>=12&&h<18}, {label:'Noite', test:h=>h>=18&&h<24}
+  ];
+  // pra cada dia, quebra os valores por hora (ou turno) ANTES de agregar entre dias —
+  // assim um dia com 2 corridas na mesma hora conta certo, e dias diferentes na mesma
+  // hora ficam no mesmo balde.
+  const keyFn = date => {
+    const trips = DB.day(date).trips.filter(t => t.time);
+    const perKey = {};
+    trips.forEach(t => {
+      const hr = parseInt(t.time.split(':')[0]);
+      const k = S.hgHoraMode === 'h' ? (hr+'h') : turnos.find(tu=>tu.test(hr)).label;
+      perKey[k] = (perKey[k]||0) + (t.value||0);
+    });
+    return Object.keys(perKey).map(k => ({key:k, value:perKey[k]}));
+  };
+  const order = S.hgHoraMode === 'h' ? Array.from({length:24},(_,h)=>h+'h') : turnos.map(t=>t.label);
+  const data = hgBucketStats(dates, keyFn, null, order);
+  el.innerHTML = hgBarsHtml(data, 'hora');
+  renderHgHighlight('hg-hora-insight', data, 'forte', d => 'Melhor horário: '+d.label+' (média '+DB.fR(d.avg)+')');
 }
 
-// ── Resultado por Mês (Mês: últimos 6 meses · Ano: últimos 5 anos) ──
+// ── Por Mês/Ano ──
 function setHgMesMode(m) {
   S.hgMesMode = m;
   ['m','y'].forEach(x => { const e=document.getElementById('hg-mes-'+x); if(e) e.classList.toggle('active', x===m); });
@@ -2051,36 +2088,31 @@ function setHgMesMode(m) {
 function renderHgChartMes() {
   const el = document.getElementById('hg-chart-mes');
   if (!el) return;
-  const today = new Date();
+  const dates = getHomeDays();
   const mesesLbl = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  let data;
   if (S.hgMesMode === 'm') {
-    const data = [];
-    for (let m = 5; m >= 0; m--) {
-      const ref = new Date(today.getFullYear(), today.getMonth()-m, 1);
-      const daysInMonth = (ref.getMonth()===today.getMonth() && ref.getFullYear()===today.getFullYear()) ? today.getDate() : new Date(ref.getFullYear(), ref.getMonth()+1, 0).getDate();
-      let v = 0;
-      for (let i = 1; i <= daysInMonth; i++) {
-        const day = DB.day(ref.getFullYear()+'-'+p2(ref.getMonth()+1)+'-'+p2(i));
-        v += day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0);
-      }
-      data.push({label: mesesLbl[ref.getMonth()], value: v});
-    }
-    el.innerHTML = hgBarsHtml(data, 'mes');
+    const keyFn = date => mesesLbl[parseInt(date.split('-')[1],10)-1];
+    const order = [...new Set(dates.map(keyFn))];
+    data = hgBucketStats(dates, keyFn, hgDayTotal, order);
   } else {
-    const data = [];
-    for (let y = 4; y >= 0; y--) {
-      const year = today.getFullYear() - y;
-      const isCurrent = year === today.getFullYear();
-      const end = isCurrent ? today : new Date(year, 11, 31);
-      let v = 0;
-      for (let d = new Date(year,0,1); d <= end; d.setDate(d.getDate()+1)) {
-        const day = DB.day(d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate()));
-        v += day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0);
-      }
-      data.push({label: String(year), value: v});
-    }
-    el.innerHTML = hgBarsHtml(data, 'mes');
+    const keyFn = date => date.split('-')[0];
+    const order = [...new Set(dates.map(keyFn))];
+    data = hgBucketStats(dates, keyFn, hgDayTotal, order);
   }
+  // Com período Semana/Mês selecionado em cima, isso aqui naturalmente vira 1 barra só
+  // (só existe 1 mês/ano dentro do recorte) — é o esperado, segue a mesma regra dos outros.
+  el.innerHTML = hgBarsHtml(data, 'mes');
+}
+
+// Destaque automático (sem precisar tocar) — pega o balde de maior/menor média.
+// tipo 'forte' pega o maior, 'fraco' pega o menor (entre os que têm dado).
+function renderHgHighlight(elId, data, tipo, fmt) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (!data.length) { el.textContent = ''; return; }
+  const best = data.reduce((a,b) => (tipo==='forte' ? (b.avg>a.avg?b:a) : (b.avg<a.avg?b:a)));
+  el.textContent = fmt(best);
 }
 
 // ── Plataformas (fixo, sem tabs) ──
