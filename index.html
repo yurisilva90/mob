@@ -185,7 +185,7 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .li-info{flex:1;min-width:0}.li-info h3{font-size:13.5px;font-weight:760}.li-info p{font-size:11.5px;color:var(--muted);margin-top:2px}
 .trip-title{font-size:12.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .li-val{text-align:right;font-size:11px;color:var(--muted);font-weight:600;flex:0 0 auto}.li-val strong{display:block;color:var(--text);font-size:13.5px;font-weight:760;font-family:'Inter',system-ui,sans-serif}
-.li-extra{display:flex;gap:6px;margin-top:5px}.chip{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px;font-family:'Inter',system-ui,sans-serif;letter-spacing:-.01em}.chip svg{flex-shrink:0}.chip-d{background:#FFF7ED;color:#F59E0B}.chip-g{background:#F5F3FF;color:#7C3AED}.chip-p{background:#ECFDF3;color:#16A34A}
+.li-extra{display:flex;gap:6px;margin-top:5px}.chip{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px;font-family:'Inter',system-ui,sans-serif;letter-spacing:-.01em}.chip svg{flex-shrink:0}.chip-d{background:#FFF7ED;color:#F59E0B}.chip-g{background:#F5F3FF;color:#7C3AED}
 .sw{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0}.sw input{opacity:0;width:0;height:0;position:absolute}.sw .trk{position:absolute;inset:0;background:#E2E8F0;border-radius:99px;transition:.2s;cursor:pointer}.sw .trk:before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}.sw input:checked + .trk{background:#22C55E}.sw input:checked + .trk:before{transform:translateX(20px)}
 .acc-card{background:#F8FAFC;border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:14px}
 .acc-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -2166,7 +2166,6 @@ function renderCorridas() {
       const extras = [];
       if (t.dinamico > 0) extras.push(`<span class="chip chip-d"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg> ${DB.fR(t.dinamico)}</span>`);
       if (t.tip > 0) extras.push(`<span class="chip chip-g"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.5 4.05 3 5.5l7 7Z"/></svg> ${DB.fR(t.tip)}</span>`);
-      if (t.promo) extras.push(`<span class="chip chip-p"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M20.59 13.41 13.42 20.6a2 2 0 0 1-2.83 0L2.5 12.5V2.5h10l8.09 8.08a2 2 0 0 1 0 2.83Z"/><circle cx="6.5" cy="6.5" r="1.5" fill="#fff"/></svg> ${DB.fR(t.promo)}</span>`);
       const extraRow = extras.length ? `<div class="li-extra">${extras.join('')}</div>` : '';
       return `<div class="li-row">
         <div class="li-info"><h3 class="trip-title">${t.origin||'—'}${dest}</h3><p>${plat} · ${(t.km||0).toFixed(1)} km${dur}</p>${extraRow}</div>
@@ -2464,7 +2463,6 @@ function tripItem(t) {
   const extras = [];
   if (t.dinamico > 0) extras.push(`<span class="chip chip-d"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg> ${DB.fR(t.dinamico)}</span>`);
   if (t.tip > 0) extras.push(`<span class="chip chip-g"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.5 4.05 3 5.5l7 7Z"/></svg> ${DB.fR(t.tip)}</span>`);
-  if (t.promo) extras.push(`<span class="chip chip-p"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M20.59 13.41 13.42 20.6a2 2 0 0 1-2.83 0L2.5 12.5V2.5h10l8.09 8.08a2 2 0 0 1 0 2.83Z"/><circle cx="6.5" cy="6.5" r="1.5" fill="#fff"/></svg> ${DB.fR(t.promo)}</span>`);
   const extraRow = extras.length ? `<div class="li-extra">${extras.join('')}</div>` : '';
   return `<div class="li-row">
     <div class="li-info"><h3 class="trip-title">${t.origin||'—'}${dest}</h3><p>${plat} · ${(t.km||0).toFixed(1)} km${dur}</p>${extraRow}</div>
@@ -3279,7 +3277,6 @@ function showImportConfirm() {
     const ex = [];
     if (t.dinamico > 0) ex.push(`<span class="chip chip-d"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg> ${DB.fR(t.dinamico)}</span>`);
     if (t.tip > 0) ex.push(`<span class="chip chip-g"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.5 4.05 3 5.5l7 7Z"/></svg> ${DB.fR(t.tip)}</span>`);
-    if (t.promo) ex.push(`<span class="chip chip-p"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M20.59 13.41 13.42 20.6a2 2 0 0 1-2.83 0L2.5 12.5V2.5h10l8.09 8.08a2 2 0 0 1 0 2.83Z"/><circle cx="6.5" cy="6.5" r="1.5" fill="#fff"/></svg> ${DB.fR(t.promo)}</span>`);
     const exRow = ex.length ? `<div class="li-extra" style="margin-top:4px">${ex.join('')}</div>` : '';
     return `<div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid #E2E8F0;cursor:pointer" onclick="toggleImportTrip(${i})">
       <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${t._sel?'#22C55E':'#E2E8F0'};background:${t._sel?'#22C55E':'transparent'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0" id="ict-${i}">${t._sel?'✓':''}</div>
@@ -3412,12 +3409,10 @@ function uzBuildTrips(rows) {
       category: r['global_product_name'] || '',
       surge: r['is_surged'] === 'true',
       airport: r['is_airport_trip'] === 'true',
-      // valor da tarifa dinâmica, já incluso no "value" — mostrado separado só pra detalhar a corrida.
-      dinamico: r['surge_fare_local'] ? uzRound2(Math.max(0, uzNum(r['surge_fare_local']))) : 0,
-      // promoção/desconto aplicado na corrida — vem direto do csv de corridas, por
-      // corrida mesmo (sem precisar casar com o arquivo de pagamentos). Pode ser
-      // negativo (desconto que reduziu o valor) ou positivo; já incluso no "value".
-      promo: r['promotion_local'] ? uzRound2(uzNum(r['promotion_local'])) : 0,
+      // dinamico junta tarifa dinamica (surge) + promocao/desconto da corrida num
+      // valor só — já incluso no "value", mostrado separado só pra detalhar a corrida.
+      // Pode ficar negativo se o desconto for maior que o surge.
+      dinamico: uzRound2(Math.max(0, uzNum(r['surge_fare_local'])) + uzNum(r['promotion_local'])),
     });
   }
   return trips;
@@ -3546,12 +3541,12 @@ async function confirmUberZipImport() {
       const trip = { id: DB.uid(), platform: 'uber', time: t.time,
         duration: t.duration || 0, origin: 'Importação Uber', dest: '', value: t.value, km: t.km || 0,
         category: t.category || '', surge: !!t.surge, airport: !!t.airport,
-        dinamico: t.dinamico || 0, promo: t.promo || 0, source: 'import_uber_zip' };
+        dinamico: t.dinamico || 0, source: 'import_uber_zip' };
       day.trips.push(trip);
       SYNC.push('trips', { id: trip.id, date, platform: trip.platform, time: trip.time || null,
         duration: trip.duration, origin: trip.origin, dest: trip.dest, value: trip.value, km: trip.km,
         category: trip.category, surge: trip.surge, airport: trip.airport, dinamico: trip.dinamico,
-        promo: trip.promo, source: trip.source });
+        source: trip.source });
     });
     DB.saveDay(day);
     if (i % 15 === 0) await new Promise(r => setTimeout(r, 0));
