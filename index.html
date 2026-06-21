@@ -3055,6 +3055,13 @@ function showSpinner(msg) {
     '<div style="margin-top:12px;font-size:13px;color:#64748B;font-weight:500">' + msg + '</div></div>';
 }
 
+// Normaliza "7:42" e "07:42" pro mesmo formato — a IA não le a hora de forma
+// 100% consistente entre frames/prints (zero à esquerda variando), e sem isso
+// a mesma corrida real passava pelo dedup do import como se fossem duas.
+function normTime(t) {
+  const m = String(t||'').match(/(\d{1,2}):(\d{2})/);
+  return m ? m[1].padStart(2,'0')+':'+m[2] : String(t||'');
+}
 async function processMultipleImports(files, plat) {
   const total = files.length;
   document.getElementById('ic-title').textContent = 'Analisando ' + total + ' print' + (total > 1 ? 's' : '') + '...';
@@ -3072,6 +3079,7 @@ async function processMultipleImports(files, plat) {
   const day = DB.day(S.curDate);
   const seen = new Set();
   const unique = allTrips.filter(t => {
+    t.time = normTime(t.time);
     const key = t.time+'_'+(t.value||0).toFixed(2);
     if (seen.has(key)) return false;
     seen.add(key); return true;
@@ -3101,6 +3109,7 @@ async function processVideoImport(file, plat) {
     const dayV = DB.day(S.curDate);
     const seenV = new Set();
     const unique = allTrips.filter(t => {
+      t.time = normTime(t.time);
       const key = t.time+'_'+(t.value||0).toFixed(2);
       if (seenV.has(key)) return false;
       seenV.add(key); return true;
@@ -3212,7 +3221,7 @@ async function extractTripsFromBase64(b64, mt, plat) {
   const isUber = plat.toLowerCase() === 'uber';
   const prompt = isUber
     ? 'Esta imagem mostra o "Histórico de ganhos" do Uber motorista, com uma linha divisória entre cada corrida (mesmo no modo escuro). Extraia CADA corrida, mas SÓ quando ela aparecer COMPLETA na imagem (com a linha divisória acima e abaixo) — se uma corrida estiver cortada no topo ou na base da imagem (incompleta), IGNORE essa corrida, não tente adivinhar ou completar com dados de outra. Ignore Missão (R$ 0,00). Abaixo do valor principal de cada corrida pode aparecer "Valor extra" (ícone de mão/coração — é a gorjeta do passageiro) e/ou "Preço dinâmico" (ícone de raio) — extraia os dois valores quando existirem, cada um com seu próprio R$. IGNORE completamente a linha "Dinheiro recebido" (ícone de câmera/foto) — ela não soma nada no resultado, só indica que a corrida foi paga em dinheiro. Retorne SOMENTE JSON array: [{"time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"Black","origin":"bairro","dest":"bairro","dinamico":0.00,"gorjeta":0.00}]. duration=minutos inteiros. dinamico e gorjeta ficam 0.00 quando não aparecerem na corrida. Se vazio retorne [].'
-    : 'Histórico do 99, com uma linha divisória entre cada corrida (mesmo no modo escuro). Extraia CADA corrida, mas SÓ quando ela aparecer COMPLETA na imagem (linha divisória acima e abaixo) — se estiver cortada no topo ou na base, IGNORE essa corrida. Se aparecerem valores de tarifa dinâmica ou gorjeta separados do valor principal, extraia os dois. Retorne SOMENTE JSON array: [{"time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"99Pop","origin":"bairro","dest":"bairro","dinamico":0.00,"gorjeta":0.00}]. dinamico e gorjeta ficam 0.00 quando não aparecerem. Se vazio retorne [].';
+    : 'Histórico do 99, com uma linha divisória entre cada corrida (mesmo no modo escuro). Extraia CADA corrida, mas SÓ quando ela aparecer COMPLETA na imagem (linha divisória acima e abaixo) — se estiver cortada no topo ou na base, IGNORE essa corrida. Se aparecerem valores de tarifa dinâmica ou gorjeta separados do valor principal, extraia os dois. IGNORE completamente qualquer linha "Dinheiro recebido" — ela não soma nada no resultado, só indica que a corrida foi paga em dinheiro (forma de pagamento, não valor extra), e NUNCA deve ser extraída como gorjeta nem como dinâmico. Retorne SOMENTE JSON array: [{"time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"99Pop","origin":"bairro","dest":"bairro","dinamico":0.00,"gorjeta":0.00}]. dinamico e gorjeta ficam 0.00 quando não aparecerem. Se vazio retorne [].';
   const resp = await fetch('https://smartmobi-proxy.yurisilva1990.workers.dev', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({model:'claude-haiku-4-5-20251001', max_tokens:1500,
