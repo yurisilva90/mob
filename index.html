@@ -419,26 +419,24 @@ html.dark .hg-chart-card{box-shadow:0 12px 28px rgba(0,0,0,.35)}
 html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{box-shadow:none;border:1px solid var(--line)}
 .hg-category-tabs{margin:2px 0 15px}.hg-category-tabs button{flex:1}
 .hg-chart-highlight{font-size:11.5px;font-weight:700;color:var(--blue);margin:-4px 0 10px;min-height:14px}
-.hg-bar-chart{height:154px;position:relative;margin-top:6px}
+.hg-bar-chart{height:154px;position:relative;margin-top:6px;z-index:1}
 .hg-grid-line{position:absolute;left:0;right:0;border-top:1px dashed var(--line)}
 .hg-grid-line span{position:absolute;left:0;top:-7px;font-size:9px;color:var(--muted2);font-weight:700;background:var(--card);padding-right:4px}
 .hg-bars-row{position:absolute;left:30px;right:0;bottom:0;top:0;display:flex;align-items:flex-end;gap:6px;overflow-x:auto;overflow-y:visible}
-.hg-bar-col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:7px;height:100%;justify-content:flex-end;position:relative}
-.hg-bar{width:100%;max-width:18px;border-radius:5px 5px 0 0;background:var(--blue);min-height:2px;cursor:pointer;transition:opacity .15s,transform .1s;touch-action:manipulation}
+.hg-bar-col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:7px;height:100%;justify-content:flex-end}
+.hg-bar{width:100%;border-radius:5px 5px 0 0;background:var(--blue);min-height:2px;cursor:pointer;transition:opacity .15s,transform .1s;touch-action:manipulation;position:relative}
 .hg-bar:active{transform:scaleY(.98)}
 .hg-bar.dim{opacity:.35}
 .hg-bar.sel{background:var(--blue2)}
 .hg-bar-col span.hg-bar-lbl{font-size:10px;color:var(--muted);font-weight:650;white-space:nowrap}
 .hg-bar-col span.hg-bar-lbl.sel{color:var(--blue);font-weight:800}
-.hg-bar-bubble{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(4px);background:#0F172A;color:#fff;padding:7px 11px;border-radius:11px;font-size:12px;font-weight:700;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s;z-index:5}
+.hg-bar-bubble{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(4px);background:#0F172A;color:#fff;padding:7px 11px;border-radius:11px;font-size:12px;font-weight:700;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s;z-index:20;text-align:center;max-width:none}
 .hg-bar-bubble.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .hg-bar-bubble:after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#0F172A}
 .hg-bar-bubble .hg-bb-l{font-size:10px;color:#94A3B8;font-weight:600;margin-top:1px}
-.hg-bar-bubble{text-align:center;white-space:normal;max-width:none}
 .hg-bar-bubble .hg-bb-row{font-size:10px;color:#CBD5E1;font-weight:600;margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,.15);white-space:nowrap}
-.hg-bar-col span{font-size:10px;color:#667085;font-weight:650;white-space:nowrap}
-.hg-bar-chart.hour .hg-bar{max-width:10px;background:#22c55e}
-.hg-bar-chart.month .hg-bar{max-width:16px;background:#8b5cf6}
+.hg-bar-chart.hour .hg-bar{background:#22c55e}
+.hg-bar-chart.month .hg-bar{background:#8b5cf6}
 .hg-bar-empty{width:100%;text-align:center;font-size:12px;color:#94A3B8;padding:50px 0}
 .hg-pie-wrap{display:grid;grid-template-columns:118px 1fr;gap:16px;align-items:center;padding-top:4px}
 .hg-pie{width:118px;height:118px;border-radius:50%;position:relative;box-shadow:inset 0 0 0 1px rgba(15,23,42,.05);flex-shrink:0}
@@ -1836,7 +1834,8 @@ function hgFmtAxis(v) {
   if (v >= 1000) return (v/1000).toFixed(v % 1000 === 0 ? 0 : 1) + 'k';
   return Math.round(v).toString();
 }
-function hgBarsHtml(data, chartId) {
+function hgBarsHtml(data, chartId, rich) {
+  if (rich == null) rich = true;
   const items = data.filter(d => d.value > 0.001);
   if (!items.length) return '<div class="hg-bar-empty">Sem dados nesse período</div>';
   const rawMax = Math.max(...items.map(d=>d.value), 1);
@@ -1852,21 +1851,37 @@ function hgBarsHtml(data, chartId) {
     const h = Math.max(3, Math.round(d.value/top*H));
     const prev = i > 0 ? items[i-1] : null;
     let extraRows = '';
-    if (d.qtd > 1) {
+    if (rich && d.qtd > 1) {
       extraRows += `<div class="hg-bb-row">Média ${DB.fR(d.avg)} · Maior ${DB.fR(d.max)} · Menor ${DB.fR(d.min)}</div><div class="hg-bb-row">${d.qtd} dias com dado</div>`;
     }
-    if (prev && prev.value > 0.001) {
+    if (rich && prev && prev.value > 0.001) {
       const pct = Math.round((d.value - prev.value) / prev.value * 100);
       const arrow = pct > 0 ? '▲' : (pct < 0 ? '▼' : '–');
       extraRows += `<div class="hg-bb-row">${arrow} ${Math.abs(pct)}% vs ${prev.label}</div>`;
     }
     return `<div class="hg-bar-col">
-      <div class="hg-bar-bubble" id="hgbub-${chartId}-${i}"><div>${DB.fR(d.value)}</div><div class="hg-bb-l">${d.label}</div>${extraRows}</div>
-      <div class="hg-bar" id="hgbar-${chartId}-${i}" style="height:${h}px" onclick="hgToggleBar('${chartId}',${i})"></div>
+      <div class="hg-bar" id="hgbar-${chartId}-${i}" style="height:${h}px" onclick="hgToggleBar('${chartId}',${i})">
+        <div class="hg-bar-bubble" id="hgbub-${chartId}-${i}"><div>${DB.fR(d.value)}</div><div class="hg-bb-l">${d.label}</div>${extraRows}</div>
+      </div>
       <span class="hg-bar-lbl" id="hglbl-${chartId}-${i}">${d.label}</span>
     </div>`;
   }).join('');
   return gridHtml + `<div class="hg-bars-row">${barsHtml}</div>`;
+}
+function hgFitColWidths(containerId) {
+  const row = document.querySelector('#'+containerId+' .hg-bars-row');
+  if (!row) return;
+  const cols = row.querySelectorAll('.hg-bar-col');
+  const n = cols.length;
+  if (!n) return;
+  const visibleN = Math.min(n, 12);
+  const w = Math.max(24, row.clientWidth / visibleN);
+  const barW = Math.min(64, Math.round(w * 0.62));
+  cols.forEach(c => {
+    c.style.flex = '0 0 '+w+'px';
+    const bar = c.querySelector('.hg-bar');
+    if (bar) bar.style.maxWidth = barW+'px';
+  });
 }
 const S_hgActiveBar = {};
 function hgToggleBar(chartId, i) {
@@ -2043,6 +2058,7 @@ function renderHgChartDia() {
     data = hgBucketStats(dates, keyFn, hgDayTotal, order);
   }
   el.innerHTML = hgBarsHtml(data, 'dia');
+  hgFitColWidths('hg-chart-dia');
   renderHgHighlight('hg-dia-insight', data, 'fraco', d => 'Dia mais fraco: '+d.label+' (média '+DB.fR(d.avg)+')');
 }
 
@@ -2075,7 +2091,8 @@ function renderHgChartHora() {
   };
   const order = S.hgHoraMode === 'h' ? Array.from({length:24},(_,h)=>h+'h') : turnos.map(t=>t.label);
   const data = hgBucketStats(dates, keyFn, null, order);
-  el.innerHTML = hgBarsHtml(data, 'hora');
+  el.innerHTML = hgBarsHtml(data, 'hora', false);
+  hgFitColWidths('hg-chart-hora');
   renderHgHighlight('hg-hora-insight', data, 'forte', d => 'Melhor horário: '+d.label+' (média '+DB.fR(d.avg)+')');
 }
 
@@ -2103,6 +2120,7 @@ function renderHgChartMes() {
   // Com período Semana/Mês selecionado em cima, isso aqui naturalmente vira 1 barra só
   // (só existe 1 mês/ano dentro do recorte) — é o esperado, segue a mesma regra dos outros.
   el.innerHTML = hgBarsHtml(data, 'mes');
+  hgFitColWidths('hg-chart-mes');
 }
 
 // Destaque automático (sem precisar tocar) — pega o balde de maior/menor média.
