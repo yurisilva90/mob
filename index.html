@@ -412,6 +412,7 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
 html.dark .hg-chart-card{box-shadow:0 12px 28px rgba(0,0,0,.35)}
 .hg-chart-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
 .hg-chart-head h2{font-size:16.5px;font-weight:760;letter-spacing:-.025em;color:var(--text)}
+.hg-info-btn{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--muted2);background:transparent;color:var(--muted2);font-size:11px;font-weight:800;line-height:1;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;margin-left:2px;padding:0;touch-action:manipulation;font-family:Inter,system-ui,sans-serif}
 .hg-chart-head p{font-size:12px;color:var(--muted);font-weight:500;margin-top:3px;line-height:1.35}
 .hg-mini-tabs,.hg-category-tabs{height:34px;background:var(--soft-line);border:1px solid var(--line);border-radius:999px;padding:3px;display:flex;gap:3px;flex:0 0 auto}
 .hg-mini-tabs button,.hg-category-tabs button{min-width:48px;border:0;background:transparent;color:var(--muted);font-size:11px;font-weight:720;border-radius:999px;padding:0 10px;cursor:pointer;font-family:Inter,system-ui,sans-serif}
@@ -423,18 +424,19 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .hg-grid-line{position:absolute;left:0;right:0;border-top:1px dashed var(--line)}
 .hg-grid-line span{position:absolute;left:0;top:-7px;font-size:9px;color:var(--muted2);font-weight:700;background:var(--card);padding-right:4px}
 .hg-bars-row{position:absolute;left:30px;right:0;bottom:0;top:0;display:flex;align-items:flex-end;gap:6px;overflow-x:auto;overflow-y:visible}
-.hg-bar-col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:7px;height:100%;justify-content:flex-end}
-.hg-bar{width:100%;border-radius:5px 5px 0 0;background:var(--blue);min-height:2px;cursor:pointer;transition:opacity .15s,transform .1s;touch-action:manipulation;position:relative}
+.hg-bar-col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:7px;height:100%;justify-content:flex-end;position:relative}
+.hg-bar{width:100%;border-radius:5px 5px 0 0;background:var(--blue);min-height:2px;cursor:pointer;transition:opacity .15s,transform .1s;touch-action:manipulation}
 .hg-bar:active{transform:scaleY(.98)}
 .hg-bar.dim{opacity:.35}
 .hg-bar.sel{background:var(--blue2)}
 .hg-bar-col span.hg-bar-lbl{font-size:10px;color:var(--muted);font-weight:650;white-space:nowrap}
 .hg-bar-col span.hg-bar-lbl.sel{color:var(--blue);font-weight:800}
-.hg-bar-bubble{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(4px);background:#0F172A;color:#fff;padding:7px 11px;border-radius:11px;font-size:12px;font-weight:700;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s;z-index:20;text-align:center;max-width:none}
+.hg-bar-bubble{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(4px);background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px 12px;border-radius:13px;font-size:12px;font-weight:700;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s,left .15s;z-index:20;text-align:center;max-width:none;box-shadow:0 8px 20px rgba(15,23,42,.16)}
 .hg-bar-bubble.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.hg-bar-bubble:after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#0F172A}
-.hg-bar-bubble .hg-bb-l{font-size:10px;color:#94A3B8;font-weight:600;margin-top:1px}
-.hg-bar-bubble .hg-bb-row{font-size:10px;color:#CBD5E1;font-weight:600;margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,.15);white-space:nowrap}
+.hg-bar-bubble:after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--card)}
+.hg-bar-bubble .hg-bb-val{font-size:13.5px;font-weight:800}
+.hg-bar-bubble .hg-bb-qtd{font-size:10.5px;color:var(--muted);font-weight:700}
+.hg-bar-bubble .hg-bb-row{font-size:10.5px;color:var(--muted);font-weight:650;margin-top:3px;white-space:nowrap}
 .hg-bar-chart.hour .hg-bar{background:#22c55e}
 .hg-bar-chart.month .hg-bar{background:#8b5cf6}
 .hg-bar-empty{width:100%;text-align:center;font-size:12px;color:#94A3B8;padding:50px 0}
@@ -626,7 +628,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
   </section>
 
   <section class="hg-chart-card" style="margin:14px 16px 0">
-    <div class="hg-chart-head"><div><h2>Dia/Semana</h2><p>Soma por dia da semana, dentro do período selecionado acima.</p></div>
+    <div class="hg-chart-head"><div><h2>Dia/Semana <button class="hg-info-btn" onclick="showToast('Soma por dia da semana, dentro do período selecionado acima.')">?</button></h2></div>
       <div class="hg-mini-tabs"><button class="active" id="hg-dia-d" onclick="setHgDiaMode('d')">Dia</button><button id="hg-dia-w" onclick="setHgDiaMode('w')">Semana</button></div>
     </div>
     <p class="hg-chart-highlight" id="hg-dia-insight"></p>
@@ -634,7 +636,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
   </section>
 
   <section class="hg-chart-card" style="margin:14px 16px 0">
-    <div class="hg-chart-head"><div><h2>Hora/Turno</h2><p>Soma por horário, dentro do período selecionado acima.</p></div>
+    <div class="hg-chart-head"><div><h2>Hora/Turno <button class="hg-info-btn" onclick="showToast('Soma por horário, dentro do período selecionado acima.')">?</button></h2></div>
       <div class="hg-mini-tabs"><button class="active" id="hg-hora-h" onclick="setHgHoraMode('h')">Hora</button><button id="hg-hora-t" onclick="setHgHoraMode('t')">Turno</button></div>
     </div>
     <p class="hg-chart-highlight" id="hg-hora-insight"></p>
@@ -642,14 +644,14 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
   </section>
 
   <section class="hg-chart-card" style="margin:14px 16px 0">
-    <div class="hg-chart-head"><div><h2>Mês/Ano</h2><p>Soma por mês/ano, dentro do período selecionado acima — com Semana ou Mês escolhido aqui em cima, vira 1 barra só.</p></div>
+    <div class="hg-chart-head"><div><h2>Mês/Ano <button class="hg-info-btn" onclick="showToast('Soma por mês/ano, dentro do período selecionado acima — com Semana ou Mês escolhido aqui em cima, vira 1 barra só.')">?</button></h2></div>
       <div class="hg-mini-tabs"><button class="active" id="hg-mes-m" onclick="setHgMesMode('m')">Mês</button><button id="hg-mes-y" onclick="setHgMesMode('y')">Ano</button></div>
     </div>
     <div class="hg-bar-chart month" id="hg-chart-mes"></div>
   </section>
 
   <section class="hg-chart-card" style="margin:14px 16px 0">
-    <div class="hg-chart-head"><div><h2>Plataformas</h2><p>Distribuição por app ou origem.</p></div></div>
+    <div class="hg-chart-head"><div><h2>Plataformas <button class="hg-info-btn" onclick="showToast('Distribuição por app ou origem.')">?</button></h2></div></div>
     <div class="hg-pie-wrap">
       <div class="hg-pie" id="hg-pie-plat"></div>
       <div class="hg-pie-list" id="hg-pie-plat-list"></div>
@@ -657,7 +659,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
   </section>
 
   <section class="hg-chart-card" style="margin:14px 16px 0">
-    <div class="hg-chart-head"><div><h2>Receitas x Despesas</h2><p>Distribuição por categoria conforme o tipo selecionado.</p></div></div>
+    <div class="hg-chart-head"><div><h2>Receitas x Despesas <button class="hg-info-btn" onclick="showToast('Distribuição por categoria conforme o tipo selecionado.')">?</button></h2></div></div>
     <div class="hg-category-tabs"><button class="active" id="hg-rd-receita" onclick="setHgRevDesp('receita')">Receitas</button><button id="hg-rd-despesa" onclick="setHgRevDesp('despesa')">Despesas</button></div>
     <div class="hg-pie-wrap">
       <div class="hg-pie" id="hg-pie-cat"></div>
@@ -1852,17 +1854,17 @@ function hgBarsHtml(data, chartId, rich) {
     const prev = i > 0 ? items[i-1] : null;
     let extraRows = '';
     if (rich && d.qtd > 1) {
-      extraRows += `<div class="hg-bb-row">Média ${DB.fR(d.avg)} · Maior ${DB.fR(d.max)} · Menor ${DB.fR(d.min)}</div><div class="hg-bb-row">${d.qtd} dias com dado</div>`;
+      extraRows += `<div class="hg-bb-row">Média ${DB.fR(d.avg)} · ▲${DB.fR(d.max)} · ▼${DB.fR(d.min)}</div>`;
     }
     if (rich && prev && prev.value > 0.001) {
       const pct = Math.round((d.value - prev.value) / prev.value * 100);
       const arrow = pct > 0 ? '▲' : (pct < 0 ? '▼' : '–');
       extraRows += `<div class="hg-bb-row">${arrow} ${Math.abs(pct)}% vs ${prev.label}</div>`;
     }
+    const qtdTxt = (rich && d.qtd > 1) ? ' <span class="hg-bb-qtd">('+d.qtd+')</span>' : '';
     return `<div class="hg-bar-col">
-      <div class="hg-bar" id="hgbar-${chartId}-${i}" style="height:${h}px" onclick="hgToggleBar('${chartId}',${i})">
-        <div class="hg-bar-bubble" id="hgbub-${chartId}-${i}"><div>${DB.fR(d.value)}</div><div class="hg-bb-l">${d.label}</div>${extraRows}</div>
-      </div>
+      <div class="hg-bar-bubble" id="hgbub-${chartId}-${i}"><div class="hg-bb-val">${DB.fR(d.value)}${qtdTxt}</div>${extraRows}</div>
+      <div class="hg-bar" id="hgbar-${chartId}-${i}" style="height:${h}px" onclick="hgToggleBar('${chartId}',${i})"></div>
       <span class="hg-bar-lbl" id="hglbl-${chartId}-${i}">${d.label}</span>
     </div>`;
   }).join('');
@@ -1897,7 +1899,18 @@ function hgToggleBar(chartId, i) {
   const bub = document.getElementById('hgbub-'+chartId+'-'+i);
   const bar = document.getElementById('hgbar-'+chartId+'-'+i);
   const lbl = document.getElementById('hglbl-'+chartId+'-'+i);
-  if (bub) bub.classList.add('show');
+  if (bub) {
+    bub.style.marginLeft = '0px';
+    bub.classList.add('show');
+    requestAnimationFrame(() => {
+      const rect = bub.getBoundingClientRect();
+      const margin = 10;
+      let shift = 0;
+      if (rect.left < margin) shift = margin - rect.left;
+      else if (rect.right > window.innerWidth - margin) shift = (window.innerWidth - margin) - rect.right;
+      if (shift !== 0) bub.style.marginLeft = shift + 'px';
+    });
+  }
   if (bar) bar.classList.add('sel');
   if (lbl) lbl.classList.add('sel');
   if (root) root.querySelectorAll('.hg-bar').forEach(b => { if (b !== bar) b.classList.add('dim'); });
