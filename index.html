@@ -434,8 +434,8 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .hg-bar.sel{background:var(--blue2)}
 .hg-bar-col span.hg-bar-lbl{font-size:10px;color:var(--muted);font-weight:650;white-space:nowrap}
 .hg-bar-col span.hg-bar-lbl.sel{color:var(--blue);font-weight:800}
-.hg-bar-bubble{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(4px);background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px 12px;border-radius:13px;font-size:12px;font-weight:700;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s,left .15s;z-index:20;text-align:center;max-width:none;box-shadow:0 8px 20px rgba(15,23,42,.16)}
-.hg-bar-bubble.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.hg-bar-bubble{position:absolute;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px 12px;border-radius:13px;font-size:12px;font-weight:700;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s;z-index:20;text-align:center;box-shadow:0 8px 20px rgba(15,23,42,.16);transform:translateY(4px)}
+.hg-bar-bubble.show{opacity:1;transform:translateY(0)}
 .hg-bar-bubble:after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--card)}
 .hg-bar-bubble .hg-bb-val{font-size:13.5px;font-weight:800}
 .hg-bar-bubble .hg-bb-qtd{font-size:10.5px;color:var(--muted);font-weight:700}
@@ -1848,31 +1848,29 @@ function hgBarsHtml(data, chartId, rich) {
   const top = hgNiceMax(rawMax * 1.08);
   const H = 124;
 
+  // tooltip único por chart, fora do container de rolagem — evita o clip do overflow-x:auto
+  // que ignorava overflow-y:visible por especificação do CSS
+  const bubHtml = `<div class="hg-bar-bubble" id="hgbub-${chartId}"></div>`;
+
   let gridHtml = '';
   for (let i = 0; i <= 3; i++) {
     const frac = i/3, val = top*(1-frac);
     gridHtml += `<div class="hg-grid-line" style="top:${Math.round(frac*H)}px"><span>${hgFmtAxis(val)}</span></div>`;
   }
+  // armazena os dados de cada barra em data-* pra hgToggleBar poder acessar sem recomputar
   const barsHtml = items.map((d,i) => {
     const h = Math.max(3, Math.round(d.value/top*H));
-    const prev = i > 0 ? items[i-1] : null;
-    let extraRows = '';
-    if (rich && d.qtd > 1) {
-      extraRows += `<div class="hg-bb-row">– ${DB.fR(d.avg)} · ▲${DB.fR(d.max)} · ▼${DB.fR(d.min)}</div>`;
-    }
-    if (rich && prev && prev.value > 0.001) {
-      const pct = Math.round((d.value - prev.value) / prev.value * 100);
-      const arrow = pct > 0 ? '▲' : (pct < 0 ? '▼' : '–');
-      extraRows += `<div class="hg-bb-row">${arrow} ${Math.abs(pct)}% vs ${prev.label}</div>`;
-    }
-    const qtdTxt = (rich && d.qtd > 1) ? ' <span class="hg-bb-qtd">('+d.qtd+')</span>' : '';
     return `<div class="hg-bar-col">
-      <div class="hg-bar-bubble" id="hgbub-${chartId}-${i}"><div class="hg-bb-val">${DB.fR(d.value)}${qtdTxt}</div>${extraRows}</div>
-      <div class="hg-bar" id="hgbar-${chartId}-${i}" style="height:${h}px" onclick="hgToggleBar('${chartId}',${i})"></div>
+      <div class="hg-bar" id="hgbar-${chartId}-${i}" style="height:${h}px"
+        data-val="${d.value}" data-avg="${d.avg||d.value}" data-max="${d.max||d.value}"
+        data-min="${d.min||d.value}" data-qtd="${d.qtd||1}" data-lbl="${d.label}"
+        data-prev="${i>0?items[i-1].value:''}" data-prevlbl="${i>0?items[i-1].label:''}"
+        data-rich="${rich?1:0}"
+        onclick="hgToggleBar('${chartId}',${i})"></div>
       <span class="hg-bar-lbl" id="hglbl-${chartId}-${i}">${d.label}</span>
     </div>`;
   }).join('');
-  return gridHtml + `<div class="hg-bars-row">${barsHtml}</div>`;
+  return bubHtml + gridHtml + `<div class="hg-bars-row">${barsHtml}</div>`;
 }
 function hgFitColWidths(containerId) {
   const row = document.querySelector('#'+containerId+' .hg-bars-row');
@@ -1916,30 +1914,55 @@ function hgToggleBar(chartId, i) {
   const wasActive = S_hgActiveBar[chartId] === i;
   const root = document.getElementById('hg-chart-'+chartId);
   if (root) {
-    root.querySelectorAll('.hg-bar-bubble.show').forEach(b=>b.classList.remove('show'));
     root.querySelectorAll('.hg-bar.dim,.hg-bar.sel').forEach(b=>b.classList.remove('dim','sel'));
     root.querySelectorAll('.hg-bar-lbl.sel').forEach(s=>s.classList.remove('sel'));
   }
+  const bub = root ? root.querySelector('.hg-bar-bubble') : null;
+  if (bub) bub.classList.remove('show');
   if (wasActive) { delete S_hgActiveBar[chartId]; return; }
   S_hgActiveBar[chartId] = i;
-  const bub = document.getElementById('hgbub-'+chartId+'-'+i);
   const bar = document.getElementById('hgbar-'+chartId+'-'+i);
   const lbl = document.getElementById('hglbl-'+chartId+'-'+i);
-  if (bub) {
-    bub.style.marginLeft = '0px';
-    bub.classList.add('show');
-    requestAnimationFrame(() => {
-      const rect = bub.getBoundingClientRect();
-      const margin = 10;
-      let shift = 0;
-      if (rect.left < margin) shift = margin - rect.left;
-      else if (rect.right > window.innerWidth - margin) shift = (window.innerWidth - margin) - rect.right;
-      if (shift !== 0) bub.style.marginLeft = shift + 'px';
-    });
-  }
   if (bar) bar.classList.add('sel');
   if (lbl) lbl.classList.add('sel');
   if (root) root.querySelectorAll('.hg-bar').forEach(b => { if (b !== bar) b.classList.add('dim'); });
+  if (bub && bar) {
+    // monta o conteúdo do tooltip com os dados em data-*
+    const val  = parseFloat(bar.dataset.val);
+    const avg  = parseFloat(bar.dataset.avg);
+    const max  = parseFloat(bar.dataset.max);
+    const min  = parseFloat(bar.dataset.min);
+    const qtd  = parseInt(bar.dataset.qtd);
+    const lbl_ = bar.dataset.lbl;
+    const prev = bar.dataset.prev ? parseFloat(bar.dataset.prev) : null;
+    const prevLbl = bar.dataset.prevlbl || '';
+    const rich = bar.dataset.rich === '1';
+    const qtdTxt = (rich && qtd > 1) ? ` <span class="hg-bb-qtd">(${qtd})</span>` : '';
+    let html = `<div class="hg-bb-val">${DB.fR(val)}${qtdTxt}</div>`;
+    if (rich && qtd > 1) {
+      html += `<div class="hg-bb-row">– ${DB.fR(avg)} · ▲${DB.fR(max)} · ▼${DB.fR(min)}</div>`;
+    }
+    if (rich && prev != null && prev > 0.001) {
+      const pct = Math.round((val - prev) / prev * 100);
+      const arrow = pct > 0 ? '▲' : (pct < 0 ? '▼' : '–');
+      html += `<div class="hg-bb-row">${arrow} ${Math.abs(pct)}% vs ${prevLbl}</div>`;
+    }
+    bub.innerHTML = html;
+    // posiciona o tooltip acima da barra, alinhado ao centro dela,
+    // mas clamped pra não sair do chart nem da tela
+    bub.classList.add('show');
+    requestAnimationFrame(() => {
+      const barRect = bar.getBoundingClientRect();
+      const rootRect = root.getBoundingClientRect();
+      const bw = bub.offsetWidth;
+      const margin = 10;
+      let left = barRect.left - rootRect.left + barRect.width/2 - bw/2;
+      if (left < margin) left = margin;
+      if (left + bw > rootRect.width - margin) left = rootRect.width - margin - bw;
+      bub.style.left = left + 'px';
+      bub.style.bottom = (rootRect.bottom - barRect.top + 8) + 'px';
+    });
+  }
 }
 function hgGroupBy(items, keyFn, valFn) {
   const m = {};
