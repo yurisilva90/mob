@@ -1026,10 +1026,25 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 </div>
 
 <!-- ══ TELA MAIS ══════════════════════════════════════════════════════════ -->
+<div class="screen" id="sc-informes">
+  <div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:14px;padding:32px;text-align:center">
+    <div style="width:64px;height:64px;border-radius:20px;background:rgba(14,165,233,.12);display:flex;align-items:center;justify-content:center">
+      <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#0EA5E9" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.56 2 2 0 0 1 3.6 1.37h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16.92z"/></svg>
+    </div>
+    <div style="font-size:20px;font-weight:800;letter-spacing:-.02em">Informes</div>
+    <div style="font-size:14px;color:var(--muted);line-height:1.5;max-width:260px">Reportes em tempo real da comunidade de motoristas — em breve disponível.</div>
+    <div style="font-size:12px;color:var(--muted2);margin-top:4px">Aeroportos · Bairros · Eventos · Bares · Hotéis</div>
+  </div>
+</div>
+
 <div class="screen" id="sc-mais">
   <div style="padding:16px 16px 8px"><div style="font-size:22px;font-weight:800;letter-spacing:-.04em">Mais</div></div>
   <div id="mais-modules" style="padding:0 16px;display:flex;flex-direction:column;gap:10px"></div>
-  <div style="padding:20px 16px 8px"><div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Configurações</div></div>
+  <div style="padding:16px 16px 8px"><div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Ferramentas</div></div>
+  <div style="padding:0 16px;display:flex;flex-direction:column;gap:8px">
+    <div class="mais-item" onclick="navTo('agenda')"><div class="mais-ico blue"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><div><div class="mais-t">Agenda</div><div class="mais-s">Planejamento e horários de trabalho</div></div><div class="mais-arr">›</div></div>
+  </div>
+  <div style="padding:16px 16px 8px"><div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Configurações</div></div>
   <div style="padding:0 16px;display:flex;flex-direction:column;gap:8px">
     <div class="mais-item" onclick="openPerfil()"><div class="mais-ico blue"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg></div><div><div class="mais-t">Perfil</div><div class="mais-s" id="mais-perfil-sub">Configure nome, placa e veículo</div></div><div class="mais-arr">›</div></div>
     <div class="mais-item" onclick="openConfig()"><div class="mais-ico green"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg></div><div><div class="mais-t">Configurações</div><div class="mais-s">Ícone flutuante, modo escuro e mais</div></div><div class="mais-arr">›</div></div>
@@ -1046,8 +1061,8 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
   <div class="nav active" id="bn-home" onclick="navTo('home')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Início</span>
   </div>
-  <div class="nav" id="bn-agenda" onclick="navTo('agenda')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span>Agenda</span>
+  <div class="nav" id="bn-agenda" onclick="navTo('informes')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.56 2 2 0 0 1 3.6 1.37h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16.92z"/></svg><span>Informes</span>
   </div>
   <div class="center" id="bn-jornada">
     <div class="start" id="gps-btn" onclick="navTo('jornada')">
@@ -1624,7 +1639,7 @@ function navTo(sec) {
   const sc = document.getElementById('sc-'+sec);
   if (sc) { sc.classList.add('on'); sc.style.display = 'block'; }
   // Map sub-screens to their nav parent
-  const navMap = {financeiro:'fav', lancamentos:'fav', 'planejar-jornada':'mais', corridas:'jornada'};
+  const navMap = {financeiro:'fav', lancamentos:'fav', 'planejar-jornada':'mais', corridas:'jornada', agenda:'mais', informes:'agenda'};
   const navId = navMap[sec] || sec;
   const bn = document.getElementById('bn-'+navId);
   if (bn) bn.classList.add('active');
@@ -1637,6 +1652,7 @@ function navTo(sec) {
   if (sec === 'lancamentos') renderLancamentos();
   if (sec === 'corridas')   renderCorridas();
   if (sec === 'mais')       renderMais();
+  if (sec === 'agenda')     { try { renderAgenda(); } catch(e) {} }
 }
 function openSuporte() {
   const el = document.getElementById('suporte-version');
