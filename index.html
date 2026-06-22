@@ -388,7 +388,7 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
 .hg-period-top{display:flex;align-items:center;margin-bottom:20px}
 .hg-period-tabs{height:40px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:4px;display:flex;gap:4px;flex:1;margin-right:10px}
 .hg-period-tabs button{flex:1;border:0;background:transparent;color:rgba(255,255,255,.76);font-size:12px;font-weight:720;border-radius:999px;cursor:pointer;font-family:Inter,system-ui,sans-serif}
-.hg-period-tabs button.active{background:#fff;color:#101828;box-shadow:0 8px 18px rgba(15,23,42,.08)}.hg-insight{display:flex;align-items:flex-start;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.16);border-radius:16px;padding:10px 12px;margin-top:14px}.hg-insight svg{flex-shrink:0;margin-top:1px;opacity:.85}.hg-insight p{font-size:12.5px;font-weight:620;line-height:1.4;opacity:.92}
+.hg-period-tabs button.active{background:#fff;color:#101828;box-shadow:0 8px 18px rgba(15,23,42,.08)}.hg-insight{font-size:12.5px;font-weight:500;line-height:1.45;opacity:.75;margin-top:10px;padding:0 2px}
 .hg-filter-btn{width:40px;height:40px;border:1px solid rgba(255,255,255,.2);border-radius:15px;background:rgba(255,255,255,.12);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
 .hg-filter-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
 .hg-main-value{text-align:center;margin-bottom:18px}
@@ -616,10 +616,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
       <h1 id="hg-amount">R$ 0</h1>
       <p id="hg-sub">0 corridas · 0,0 km</p>
     </div>
-    <div class="hg-insight" id="hg-insight" style="display:none">
-      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/><circle cx="12" cy="12" r="4"/></svg>
-      <p id="hg-insight-txt"></p>
-    </div>
+    <p class="hg-insight" id="hg-insight" style="display:none"></p>
     <div class="hg-metrics">
       <div class="hg-metric"><strong id="hg-rpkm">—</strong><span>R$/Km</span></div>
       <div class="hg-metric"><strong id="hg-rphr">—</strong><span>R$/Hora</span></div>
@@ -1764,8 +1761,7 @@ function getHomeDaysPrev() {
 // Algumas variacoes de frase por situacao, pra nao ficar robotico sempre igual.
 function renderHgInsight(rev, tc, km) {
   const el = document.getElementById('hg-insight');
-  const txtEl = document.getElementById('hg-insight-txt');
-  if (!el || !txtEl) return;
+  if (!el) return;
   const prevDates = getHomeDaysPrev();
   if (!prevDates || tc === 0) { el.style.display = 'none'; return; }
 
@@ -1790,8 +1786,8 @@ function renderHgInsight(rev, tc, km) {
       linha2 = `Ritmo parecido com ${refLbl} até aqui.`;
     }
   }
-  txtEl.textContent = linha1 + ' ' + linha2;
-  el.style.display = 'flex';
+  el.textContent = linha1 + ' ' + linha2;
+  el.style.display = 'block';
 }
 const HG_PALETTE = ['#0ea5e9','#22c55e','#8b5cf6','#f59e0b','#ef4444','#14b8a6','#64748b'];
 function hgBuildPie(items, pieElId, listElId, valueFmt) {
@@ -1940,7 +1936,7 @@ function hgToggleBar(chartId, i) {
     const qtdTxt = (rich && qtd > 1) ? ` <span class="hg-bb-qtd">(${qtd})</span>` : '';
     let html = `<div class="hg-bb-val">${DB.fR(val)}${qtdTxt}</div>`;
     if (rich && qtd > 1) {
-      html += `<div class="hg-bb-row">– ${DB.fR(avg)} · ▲${DB.fR(max)} · ▼${DB.fR(min)}</div>`;
+      html += `<div class="hg-bb-row">≈ ${DB.fR(avg)} · ▲${DB.fR(max)} · ▼${DB.fR(min)}</div>`;
     }
     if (rich && prev != null && prev > 0.001) {
       const pct = Math.round((val - prev) / prev * 100);
