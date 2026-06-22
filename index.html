@@ -5136,6 +5136,20 @@ async function showApp() {
   if(_supaUser && !DB.cfg().name && _supaUser.email){
     const cfg=DB.cfg(); cfg.name=_supaUser.email.split('@')[0]; DB.saveCfg(cfg);
   }
+  // Limpeza única: remove corridas source='import_uber_zip' do localStorage
+  // antes de reimportar com os fixes de UTC e promocao fundida no dinamico.
+  // Roda só uma vez (flag sm_zip_wipe_v1). Não afeta uber_import nem import_ai.
+  if (!localStorage.getItem('sm_zip_wipe_v1')) {
+    let removidas = 0;
+    DB.allDates().forEach(d => {
+      const day = DB.day(d);
+      const antes = (day.trips||[]).length;
+      day.trips = (day.trips||[]).filter(t => t.source !== 'import_uber_zip');
+      if (day.trips.length !== antes) { removidas += antes - day.trips.length; DB.saveDay(day); }
+    });
+    localStorage.setItem('sm_zip_wipe_v1', '1');
+    if (removidas > 0) console.log('[boot] zip wipe: removidas', removidas, 'corridas do localStorage');
+  }
   if (!_appBooted) {
     try { await SYNC.pullAll(); } catch(e) { console.error('pullAll boot:', e); }
     try { await SYNC.flushQueue(); } catch(e) { console.error('flushQueue boot:', e); }
