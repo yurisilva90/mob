@@ -1813,9 +1813,13 @@ async function renderHgInsight(rev, tc, km, exp, hrs, pctL) {
     if (plan && plan.moneyGoal > 0) metaPct = Math.round(rev / plan.moneyGoal * 100);
   } catch(e) {}
 
-  const nDays = dates.length || 1;
+  const diasTrabalhados = dates.filter(d => DB.day(d).trips.length > 0).length || 1;
+  const nDays = diasTrabalhados; // ritmo por dia TRABALHADO, não por dia do período
   const rpkm  = km > 0 ? rev/km : 0;
   const rphr  = hrs > 0 ? rev/hrs : 0;
+
+  // confiabilidade dos dados de hora — só conta corridas que vieram com hora registrada
+  const corridasComHora = dates.reduce((s,d) => s + DB.day(d).trips.filter(t => t.time && t.time.trim()).length, 0);
 
   try {
     const { data:{ session } } = await _SUPA.auth.getSession();
@@ -1828,7 +1832,8 @@ async function renderHgInsight(rev, tc, km, exp, hrs, pctL) {
           rpkm, rphr, lucro_pct: pctL, despesas: exp,
           faturamento_prev: revPrev, corridas_prev: tcPrev,
           melhor_dia: melhorDia, pior_dia: piorDia, melhor_hora: melhorHora,
-          ritmo_dia: rev/nDays, meta_pct: metaPct }) });
+          corridas_com_hora: corridasComHora,
+          ritmo_dia: rev/nDays, dias_trabalhados: nDays, meta_pct: metaPct }) });
     if (!resp.ok) throw new Error('api '+resp.status);
     const json = await resp.json();
     const insight = json.insight || '';
