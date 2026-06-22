@@ -1762,47 +1762,85 @@ function getHomeDaysPrev() {
 }
 // Resumo por regras (sem IA) do periodo atual vs o mesmo recorte do periodo anterior.
 // Algumas variacoes de frase por situacao, pra nao ficar robotico sempre igual.
-function renderHgInsight(rev, tc, km) {
+async function renderHgInsight(rev, tc, km, exp, hrs, pctL) {
   const el  = document.getElementById('hg-insight');
   const txt = document.getElementById('hg-insight-txt');
   if (!el || !txt) return;
   if (tc === 0) { el.style.display = 'none'; return; }
 
-  const prevDates = getHomeDaysPrev();
-  const refLbl = { w:'semana passada', m:'mês passado', y:'ano passado' }[S.homePeriod] || 'período anterior';
-  const nDays  = getHomeDays().length || 1;
-  const ritmo  = DB.fR(rev / nDays);
+  // cache por período + dia — máx 3 chamadas/dia (uma por filtro)
+  const hoje = new Date().toISOString().slice(0, 10);
+  const cacheKey = 'sm_insight_' + (S.homePeriod||'w') + '_' + hoje;
+  const cached = localStorage.getItem(cacheKey);
+  if (cached) { txt.textContent = cached; el.style.display = 'flex'; return; }
 
-  let msg;
-  if (!prevDates) {
-    // sem período anterior — foca no ritmo diário como única info nova
-    msg = `Ritmo de ${ritmo}/dia no período.`;
-  } else {
-    const prevDays = prevDates.map(d => DB.day(d));
-    const revPrev  = prevDays.reduce((s,d) => s + d.trips.reduce((a,t)=>a+(t.value||0),0) + d.revenues.reduce((a,r)=>a+(r.amount||0),0), 0);
-    const tcPrev   = prevDays.reduce((s,d) => s + d.trips.length, 0);
+  txt.textContent = 'Analisando…';
+  el.style.display = 'flex';
 
-    if (revPrev <= 0) {
-      msg = `Sem dados da ${refLbl} pra comparar. Ritmo de ${ritmo}/dia.`;
-    } else {
-      const pct    = Math.round(((rev - revPrev) / revPrev) * 100);
-      const pctTc  = tcPrev > 0 ? Math.round(((tc - tcPrev) / tcPrev) * 100) : null;
-      const sinal  = pct > 0 ? '+' : '';
-
-      if (pct > 10) {
-        msg = `${sinal}${pct}% vs ${refLbl}${pctTc != null ? ` · ${pctTc > 0 ? '+' : ''}${pctTc}% em corridas` : ''}.`;
-      } else if (pct < -10) {
-        msg = `${pct}% vs ${refLbl}${pctTc != null ? ` · ${pctTc > 0 ? '+' : ''}${pctTc}% em corridas` : ''}. Ritmo de ${ritmo}/dia.`;
-      } else if (Math.abs(pct) <= 4) {
-        msg = `Ritmo parecido com a ${refLbl} (${sinal}${pct}%).`;
-      } else {
-        msg = `${sinal}${pct}% vs ${refLbl}. Ritmo de ${ritmo}/dia.`;
-      }
-    }
+  // período anterior
+  const prevDates = getHomeDaysPrev ? getHomeDaysPrev() : null;
+  let revPrev = null, tcPrev = null;
+  if (prevDates && prevDates.length) {
+    const pd = prevDates.map(d => DB.day(d));
+    revPrev = pd.reduce((s,d) => s + d.trips.reduce((a,t)=>a+(t.value||0),0) + d.revenues.reduce((a,r)=>a+(r.amount||0),0), 0);
+    tcPrev  = pd.reduce((s,d) => s + d.trips.length, 0);
   }
 
-  txt.textContent = msg;
-  el.style.display = 'flex';
+  // melhor/pior dia da semana
+  const lblsDia = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+  const dates = getHomeDays();
+  const diaData = hgBucketStats(dates,
+    date => lblsDia[(new Date(date+'T00:00:00').getDay()+6)%7],
+    hgDayTotal, lblsDia).filter(d => d.value > 0);
+  const melhorDia = diaData.length ? diaData.reduce((a,b)=>b.avg>a.avg?b:a).label : null;
+  const piorDia   = diaData.length > 1 ? diaData.reduce((a,b)=>b.avg<a.avg?b:a).label : null;
+
+  // melhor hora
+  const horaOrder = Array.from({length:24},(_,h)=>h+'h');
+  const horaKeyFn = date => {
+    const trips = DB.day(date).trips.filter(t => t.time);
+    const pk = {};
+    trips.forEach(t => { const h = parseInt(t.time.split(':')[0])+'h'; pk[h]=(pk[h]||0)+(t.value||0); });
+    return Object.keys(pk).map(k=>({key:k,value:pk[k]}));
+  };
+  const horaData = hgBucketStats(dates, horaKeyFn, null, horaOrder).filter(d=>d.value>0);
+  const melhorHora = horaData.length ? horaData.reduce((a,b)=>b.avg>a.avg?b:a).label : null;
+
+  // % meta
+  let metaPct = null;
+  try {
+    const plan = DB.get ? DB.get('sm_plan_jornada') : null;
+    if (plan && plan.moneyGoal > 0) metaPct = Math.round(rev / plan.moneyGoal * 100);
+  } catch(e) {}
+
+  const nDays = dates.length || 1;
+  const rpkm  = km > 0 ? rev/km : 0;
+  const rphr  = hrs > 0 ? rev/hrs : 0;
+
+  try {
+    const { data:{ session } } = await _SUPA.auth.getSession();
+    if (!session) throw new Error('no session');
+    const resp = await fetch(
+      'https://jlsrpptslwfhmkvelaro.supabase.co/functions/v1/gerar-insight',
+      { method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+        body: JSON.stringify({ periodo: S.homePeriod||'w', faturamento: rev, corridas: tc, km,
+          rpkm, rphr, lucro_pct: pctL, despesas: exp,
+          faturamento_prev: revPrev, corridas_prev: tcPrev,
+          melhor_dia: melhorDia, pior_dia: piorDia, melhor_hora: melhorHora,
+          ritmo_dia: rev/nDays, meta_pct: metaPct }) });
+    if (!resp.ok) throw new Error('api '+resp.status);
+    const json = await resp.json();
+    const insight = json.insight || '';
+    if (insight) { localStorage.setItem(cacheKey, insight); txt.textContent = insight; }
+    else { el.style.display = 'none'; }
+  } catch(e) {
+    const refLbl = {w:'semana passada',m:'mês passado',y:'ano passado'}[S.homePeriod]||'período anterior';
+    const ritmo = DB.fR(rev/nDays);
+    txt.textContent = revPrev > 0
+      ? `${rev>revPrev?'+':''}${Math.round((rev-revPrev)/revPrev*100)}% vs ${refLbl}. Ritmo de ${ritmo}/dia.`
+      : `Ritmo de ${ritmo}/dia no período.`;
+  }
 }
 const HG_PALETTE = ['#0ea5e9','#22c55e','#8b5cf6','#f59e0b','#ef4444','#14b8a6','#64748b'];
 function hgBuildPie(items, pieElId, listElId, valueFmt) {
@@ -2001,7 +2039,7 @@ function renderHomeGraphs() {
   setText('hg-exp', DB.fRI(exp));
   setText('hg-profit', DB.fRI(profit));
   setText('hg-pct', pctL+'%');
-  renderHgInsight(rev, tc, km);
+  renderHgInsight(rev, tc, km, exp, hrs, pctL);
 
   renderHgGoals(dates, days, rev);
   renderHgChartDia();
