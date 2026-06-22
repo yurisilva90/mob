@@ -388,7 +388,7 @@ textarea.ag-input{height:80px;padding-top:13px;resize:none}
 .hg-period-top{display:flex;align-items:center;margin-bottom:20px}
 .hg-period-tabs{height:40px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:4px;display:flex;gap:4px;flex:1;margin-right:10px}
 .hg-period-tabs button{flex:1;border:0;background:transparent;color:rgba(255,255,255,.76);font-size:12px;font-weight:720;border-radius:999px;cursor:pointer;font-family:Inter,system-ui,sans-serif}
-.hg-period-tabs button.active{background:#fff;color:#101828;box-shadow:0 8px 18px rgba(15,23,42,.08)}.hg-insight{font-size:12.5px;font-weight:500;line-height:1.45;opacity:.75;margin-top:10px;padding:0 2px}
+.hg-period-tabs button.active{background:#fff;color:#101828;box-shadow:0 8px 18px rgba(15,23,42,.08)}.hg-insight{display:none;align-items:flex-start;gap:9px;margin-top:14px;padding-top:13px;border-top:1px solid rgba(255,255,255,.13)}.hg-insight p{font-size:12.5px;font-style:italic;font-weight:500;opacity:.72;line-height:1.5;color:inherit}
 .hg-filter-btn{width:40px;height:40px;border:1px solid rgba(255,255,255,.2);border-radius:15px;background:rgba(255,255,255,.12);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
 .hg-filter-btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
 .hg-main-value{text-align:center;margin-bottom:18px}
@@ -616,7 +616,10 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
       <h1 id="hg-amount">R$ 0</h1>
       <p id="hg-sub">0 corridas · 0,0 km</p>
     </div>
-    <p class="hg-insight" id="hg-insight" style="display:none"></p>
+    <div class="hg-insight" id="hg-insight" style="display:none">
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:.5;margin-top:2px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <p id="hg-insight-txt"></p>
+    </div>
     <div class="hg-metrics">
       <div class="hg-metric"><strong id="hg-rpkm">—</strong><span>R$/Km</span></div>
       <div class="hg-metric"><strong id="hg-rphr">—</strong><span>R$/Hora</span></div>
@@ -1760,34 +1763,46 @@ function getHomeDaysPrev() {
 // Resumo por regras (sem IA) do periodo atual vs o mesmo recorte do periodo anterior.
 // Algumas variacoes de frase por situacao, pra nao ficar robotico sempre igual.
 function renderHgInsight(rev, tc, km) {
-  const el = document.getElementById('hg-insight');
-  if (!el) return;
+  const el  = document.getElementById('hg-insight');
+  const txt = document.getElementById('hg-insight-txt');
+  if (!el || !txt) return;
+  if (tc === 0) { el.style.display = 'none'; return; }
+
   const prevDates = getHomeDaysPrev();
-  if (!prevDates || tc === 0) { el.style.display = 'none'; return; }
+  const refLbl = { w:'semana passada', m:'mês passado', y:'ano passado' }[S.homePeriod] || 'período anterior';
+  const nDays  = getHomeDays().length || 1;
+  const ritmo  = DB.fR(rev / nDays);
 
-  const prevDays = prevDates.map(d => DB.day(d));
-  const revPrev = prevDays.reduce((s,d) => s + d.trips.reduce((a,t)=>a+(t.value||0),0) + d.revenues.reduce((a,r)=>a+(r.amount||0),0), 0);
-  const tcPrev  = prevDays.reduce((s,d) => s + d.trips.length, 0);
-
-  const periodoLbl = { w:'esta semana', m:'este mês', y:'este ano' }[S.homePeriod] || 'no período';
-  const refLbl = { w:'a semana passada', m:'o mês passado', y:'o ano passado' }[S.homePeriod] || 'o período anterior';
-
-  let linha1 = `Você já fez ${tc} corrida${tc!==1?'s':''} e faturou ${DB.fR(rev)} ${periodoLbl}.`;
-  let linha2;
-  if (revPrev <= 0) {
-    linha2 = `Ainda não há dados de ${refLbl} pra comparar.`;
+  let msg;
+  if (!prevDates) {
+    // sem período anterior — foca no ritmo diário como única info nova
+    msg = `Ritmo de ${ritmo}/dia no período.`;
   } else {
-    const pct = Math.round(((rev - revPrev) / revPrev) * 100);
-    if (pct > 4) {
-      linha2 = [`Isso é ${pct}% acima de ${refLbl} no mesmo recorte.`, `${pct}% melhor que ${refLbl} até aqui — seguindo bem.`][rev % 2];
-    } else if (pct < -4) {
-      linha2 = [`${Math.abs(pct)}% abaixo de ${refLbl} no mesmo recorte.`, `Um pouco mais devagar que ${refLbl} (${pct}%) até aqui.`][rev % 2];
+    const prevDays = prevDates.map(d => DB.day(d));
+    const revPrev  = prevDays.reduce((s,d) => s + d.trips.reduce((a,t)=>a+(t.value||0),0) + d.revenues.reduce((a,r)=>a+(r.amount||0),0), 0);
+    const tcPrev   = prevDays.reduce((s,d) => s + d.trips.length, 0);
+
+    if (revPrev <= 0) {
+      msg = `Sem dados da ${refLbl} pra comparar. Ritmo de ${ritmo}/dia.`;
     } else {
-      linha2 = `Ritmo parecido com ${refLbl} até aqui.`;
+      const pct    = Math.round(((rev - revPrev) / revPrev) * 100);
+      const pctTc  = tcPrev > 0 ? Math.round(((tc - tcPrev) / tcPrev) * 100) : null;
+      const sinal  = pct > 0 ? '+' : '';
+
+      if (pct > 10) {
+        msg = `${sinal}${pct}% vs ${refLbl}${pctTc != null ? ` · ${pctTc > 0 ? '+' : ''}${pctTc}% em corridas` : ''}.`;
+      } else if (pct < -10) {
+        msg = `${pct}% vs ${refLbl}${pctTc != null ? ` · ${pctTc > 0 ? '+' : ''}${pctTc}% em corridas` : ''}. Ritmo de ${ritmo}/dia.`;
+      } else if (Math.abs(pct) <= 4) {
+        msg = `Ritmo parecido com a ${refLbl} (${sinal}${pct}%).`;
+      } else {
+        msg = `${sinal}${pct}% vs ${refLbl}. Ritmo de ${ritmo}/dia.`;
+      }
     }
   }
-  el.textContent = linha1 + ' ' + linha2;
-  el.style.display = 'block';
+
+  txt.textContent = msg;
+  el.style.display = 'flex';
 }
 const HG_PALETTE = ['#0ea5e9','#22c55e','#8b5cf6','#f59e0b','#ef4444','#14b8a6','#64748b'];
 function hgBuildPie(items, pieElId, listElId, valueFmt) {
