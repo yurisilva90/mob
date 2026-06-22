@@ -1854,7 +1854,7 @@ function hgBarsHtml(data, chartId, rich) {
     const prev = i > 0 ? items[i-1] : null;
     let extraRows = '';
     if (rich && d.qtd > 1) {
-      extraRows += `<div class="hg-bb-row">Média ${DB.fR(d.avg)} · ▲${DB.fR(d.max)} · ▼${DB.fR(d.min)}</div>`;
+      extraRows += `<div class="hg-bb-row">– ${DB.fR(d.avg)} · ▲${DB.fR(d.max)} · ▼${DB.fR(d.min)}</div>`;
     }
     if (rich && prev && prev.value > 0.001) {
       const pct = Math.round((d.value - prev.value) / prev.value * 100);
