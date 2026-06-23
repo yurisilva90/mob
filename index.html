@@ -523,7 +523,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .inf-bchip-ct{font-size:8.5px;font-weight:800;background:var(--red);color:#fff;border-radius:99px;padding:1px 5px;align-self:flex-start}
 .inf-bchip-ct.z{background:var(--line);color:var(--muted)}
 /* 4 categorias fixas no fundo */
-.inf-cat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:9px 14px 11px;position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--bg);border-top:1px solid var(--line);z-index:25}
+.inf-cat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:9px 14px 11px;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--bg);border-top:1px solid var(--line);z-index:25}
 .inf-ccard{background:var(--card);border:2px solid var(--line);border-radius:13px;padding:9px 4px 8px;cursor:pointer;transition:border-color .15s,transform .1s;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
 .inf-ccard:active{transform:scale(.96)}
 .inf-ccard-ic{width:27px;height:27px;border-radius:8px;display:flex;align-items:center;justify-content:center}
@@ -531,7 +531,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .inf-ccard-ct{position:absolute;top:5px;right:5px;font-size:8px;font-weight:800;background:var(--red);color:#fff;border-radius:99px;padding:1px 4px}
 /* painel de informes full-screen */
 .inf-panel{position:fixed;left:0;right:0;top:100%;bottom:0;background:var(--card);z-index:30;transition:top .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}
-.inf-panel.open{top:52px}
+.inf-panel.open{top:52px;bottom:120px}
 .inf-panel-head{padding:10px 14px 10px;border-bottom:1px solid var(--line);flex-shrink:0;display:flex;align-items:center;gap:9px}
 .inf-panel-hic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .inf-panel-hbody{flex:1;min-width:0}
@@ -1282,7 +1282,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
     </div>
   </div>
 
-  <div style="height:80px"></div>
+  <div style="height:140px"></div>
 
   <!-- 4 categorias fixas -->
   <div class="inf-cat-row">
@@ -1398,7 +1398,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Início</span>
   </div>
   <div class="nav" id="bn-agenda" onclick="navTo('informes')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.56 2 2 0 0 1 3.6 1.37h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16.92z"/></svg><span>Informes</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 11 18-5v12L3 13"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg><span>Informes</span>
   </div>
   <div class="center" id="bn-jornada">
     <div class="start" id="gps-btn" onclick="navTo('jornada')">
