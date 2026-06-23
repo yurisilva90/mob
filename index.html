@@ -531,8 +531,10 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .inf-ccard-ct{position:absolute;top:5px;right:5px;font-size:8px;font-weight:800;background:var(--red);color:#fff;border-radius:99px;padding:1px 4px}
 /* painel de informes full-screen */
 .inf-panel{position:fixed;left:0;right:0;top:100%;bottom:0;background:var(--card);z-index:30;transition:top .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}
-.inf-panel.open{top:52px;bottom:120px}
-.inf-panel-head{padding:10px 14px 10px;border-bottom:1px solid var(--line);flex-shrink:0;display:flex;align-items:center;gap:9px}
+.inf-panel.open{top:0;bottom:0}
+.inf-panel-drag{flex-shrink:0;padding:10px 0 6px;display:flex;align-items:center;justify-content:center;cursor:grab;touch-action:none}
+.inf-panel-drag-bar{width:40px;height:4px;border-radius:2px;background:var(--line)}
+.inf-panel-head{padding:6px 14px 10px;border-bottom:1px solid var(--line);flex-shrink:0;display:flex;align-items:center;gap:9px}
 .inf-panel-hic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .inf-panel-hbody{flex:1;min-width:0}
 .inf-panel-tipo{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.07em}
@@ -1310,7 +1312,11 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 
   <!-- painel de informes full-screen -->
   <div class="inf-panel" id="inf-panel">
+    <div class="inf-panel-drag" id="inf-panel-drag"><div class="inf-panel-drag-bar"></div></div>
     <div class="inf-panel-head">
+      <button onclick="infFecharPainel()" style="width:32px;height:32px;border-radius:9px;border:1.5px solid var(--line);background:var(--soft);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
       <div class="inf-panel-hic" id="inf-panel-hic"></div>
       <div class="inf-panel-hbody">
         <div class="inf-panel-tipo" id="inf-panel-tipo"></div>
@@ -6102,6 +6108,38 @@ function infIconSvg(tipo,cor,sz){
   const m={aero:`<svg ${a}><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>`,term:`<svg ${a}><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,bairro:`<svg ${a}><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.333-8 14-8 14S4 15.333 4 10a8 8 0 0 1 8-8z"/></svg>`,rua:`<svg ${a}><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>`,ev:`<svg ${a}><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>`,tur:`<svg ${a}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`,bar:`<svg ${a}><path d="M17 11H3v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1z"/><path d="M3 11v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>`,hotel:`<svg ${a}><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M2 12h20"/><path d="M8 7V5a4 4 0 0 1 8 0v2"/></svg>`};
   return m[tipo]||m.bairro;
 }
+// Gesto swipe down para fechar o painel
+(function() {
+  const panel = document.getElementById('inf-panel');
+  const drag  = document.getElementById('inf-panel-drag');
+  if (!panel || !drag) return;
+  let startY = 0, isDragging = false;
+  function onStart(e) {
+    startY = (e.touches ? e.touches[0].clientY : e.clientY);
+    isDragging = true;
+    panel.style.transition = 'none';
+  }
+  function onMove(e) {
+    if (!isDragging) return;
+    const dy = (e.touches ? e.touches[0].clientY : e.clientY) - startY;
+    if (dy > 0) panel.style.transform = 'translateY(' + dy + 'px)';
+  }
+  function onEnd(e) {
+    if (!isDragging) return;
+    isDragging = false;
+    panel.style.transition = '';
+    const dy = (e.changedTouches ? e.changedTouches[0].clientY : e.clientY) - startY;
+    if (dy > 100) { panel.style.transform = ''; infFecharPainel(); }
+    else panel.style.transform = '';
+  }
+  drag.addEventListener('touchstart', onStart, {passive:true});
+  drag.addEventListener('touchmove',  onMove,  {passive:true});
+  drag.addEventListener('touchend',   onEnd);
+  drag.addEventListener('mousedown',  onStart);
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup',   onEnd);
+})();
+
 ['inf-ov-gps','inf-ov-venue','inf-ov-rep'].forEach(id=>{
   const el=document.getElementById(id);if(el)el.addEventListener('click',function(e){if(e.target===this)infFecharOv(id);});
 });
