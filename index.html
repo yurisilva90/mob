@@ -459,6 +459,174 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .hg-cat-track i{display:block;height:100%;border-radius:999px}
 .hg-filter-row{display:flex;gap:8px}
 .hg-filter-row input{flex:1;height:44px;border:1.5px solid #E2E8F0;border-radius:12px;padding:0 12px;font-size:13px;font-family:Inter,system-ui,sans-serif}
+/* ── INFORMES ── */
+#sc-informes{padding:0;background:var(--bg);overflow-y:auto}
+.inf-topbar{display:flex;align-items:center;gap:7px;padding:10px 14px 8px;background:var(--bg);position:sticky;top:0;z-index:10}
+.inf-tb-btn{width:34px;height:34px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.inf-search-input{flex:1;height:36px;border-radius:11px;border:1.5px solid var(--blue);background:var(--card);font-family:Inter,system-ui,sans-serif;font-size:13.5px;font-weight:600;color:var(--text);padding:0 12px;outline:none;display:none}
+.inf-search-input.show{display:block}
+.inf-topbar-right{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.inf-city{display:flex;align-items:center;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:5px 10px;font-size:11px;font-weight:700;white-space:nowrap}
+.inf-city-dot{width:6px;height:6px;border-radius:50%;background:#22C55E}
+.inf-time-pill{display:flex;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:2px;gap:1px}
+.inf-tp{border:0;background:transparent;color:var(--muted);font-size:10px;font-weight:700;font-family:inherit;padding:3px 7px;border-radius:99px;cursor:pointer}
+.inf-tp.active{background:var(--blue);color:#fff}
+/* dropdown busca */
+.inf-search-dd{position:fixed;left:14px;right:14px;top:56px;background:var(--card);border:1.5px solid var(--line);border-radius:16px;box-shadow:0 8px 28px rgba(15,23,42,.13);z-index:35;overflow:hidden;display:none;max-height:55vh;overflow-y:auto}
+.inf-search-dd.show{display:block}
+.inf-sd-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line);cursor:pointer}
+.inf-sd-item:last-child{border-bottom:0}
+.inf-sd-item:active{background:var(--soft)}
+.inf-sd-ic{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-sd-name{font-size:13px;font-weight:700}
+.inf-sd-sub{font-size:10px;color:var(--muted);margin-top:1px}
+.inf-sd-dist{margin-left:auto;font-size:10px;font-weight:700;color:var(--muted2);flex-shrink:0}
+.inf-sd-empty{padding:16px;text-align:center;color:var(--muted);font-size:13px;font-weight:600}
+/* destaques 2x2 */
+.inf-sec-lbl{font-size:10px;font-weight:800;color:var(--muted2);text-transform:uppercase;letter-spacing:.07em;padding:8px 14px 5px}
+.inf-feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 14px}
+.inf-feat{background:var(--card);border:2px solid var(--line);border-radius:17px;padding:12px 12px 10px;cursor:pointer;transition:border-color .15s,transform .1s;position:relative;min-height:82px}
+.inf-feat:active{transform:scale(.97)}
+.inf-feat.active{border-color:var(--blue)}
+.inf-feat.inf-gps{background:linear-gradient(135deg,#0EA5E9,#0284C7);border-color:transparent}
+.inf-feat-ic{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:6px}
+.inf-feat.inf-gps .inf-feat-ic{background:rgba(255,255,255,.2)}
+.inf-feat-ct{position:absolute;top:9px;right:9px;font-size:9px;font-weight:800;background:var(--red);color:#fff;border-radius:99px;padding:2px 6px}
+.inf-feat.inf-gps .inf-feat-ct{background:rgba(255,255,255,.25);color:#fff}
+.inf-feat-name{font-size:12.5px;font-weight:800;line-height:1.15}
+.inf-feat.inf-gps .inf-feat-name{color:#fff}
+.inf-feat-bar{position:absolute;bottom:0;left:11px;right:11px;height:2.5px;background:var(--blue);border-radius:1.5px;opacity:0}
+.inf-feat.active .inf-feat-bar{opacity:1}
+/* zonas 2x2 */
+.inf-zona-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 14px}
+.inf-zcard{background:var(--card);border:2px solid var(--line);border-radius:17px;padding:13px 12px 11px;cursor:pointer;transition:border-color .15s,transform .1s;position:relative;min-height:106px;display:flex;flex-direction:column;justify-content:space-between}
+.inf-zcard:active{transform:scale(.97)}
+.inf-zcard-top{display:flex;justify-content:space-between;align-items:flex-start}
+.inf-zcard-ic{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-zcard-ct{font-size:9px;font-weight:800;background:var(--red);color:#fff;border-radius:99px;padding:2px 6px}
+.inf-zcard-ct.z{background:var(--line);color:var(--muted)}
+.inf-zcard-name{font-size:13.5px;font-weight:800;margin-top:7px}
+.inf-zcard-sub{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.3}
+/* bairros inline */
+.inf-bairros-inline{display:none;padding:0 14px}
+.inf-bairros-back{display:flex;align-items:center;gap:7px;margin-bottom:9px}
+.inf-bairros-back-btn{display:flex;align-items:center;gap:4px;border:1.5px solid var(--line);border-radius:99px;background:var(--card);padding:5px 11px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit}
+.inf-bairros-zona-nome{font-size:13.5px;font-weight:800}
+.inf-bairros-scroll-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.inf-bairros-scroll-wrap::-webkit-scrollbar{display:none}
+.inf-bchip-grid{display:grid;grid-template-rows:repeat(3,auto);grid-auto-flow:column;grid-auto-columns:calc((100vw - 56px)/3);gap:7px;min-width:max-content}
+.inf-bchip{background:var(--card);border:2px solid var(--line);border-radius:13px;padding:10px 8px 9px;cursor:pointer;transition:border-color .15s,transform .1s;display:flex;flex-direction:column;gap:4px}
+.inf-bchip:active{transform:scale(.96)}
+.inf-bchip.active{border-color:#475569}
+.inf-bchip-ic{width:23px;height:23px;border-radius:7px;display:flex;align-items:center;justify-content:center}
+.inf-bchip-name{font-size:11px;font-weight:700;line-height:1.2}
+.inf-bchip-ct{font-size:8.5px;font-weight:800;background:var(--red);color:#fff;border-radius:99px;padding:1px 5px;align-self:flex-start}
+.inf-bchip-ct.z{background:var(--line);color:var(--muted)}
+/* 4 categorias fixas no fundo */
+.inf-cat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:9px 14px 11px;position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--bg);border-top:1px solid var(--line);z-index:25}
+.inf-ccard{background:var(--card);border:2px solid var(--line);border-radius:13px;padding:9px 4px 8px;cursor:pointer;transition:border-color .15s,transform .1s;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
+.inf-ccard:active{transform:scale(.96)}
+.inf-ccard-ic{width:27px;height:27px;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.inf-ccard-name{font-size:9.5px;font-weight:800;text-align:center;line-height:1.2}
+.inf-ccard-ct{position:absolute;top:5px;right:5px;font-size:8px;font-weight:800;background:var(--red);color:#fff;border-radius:99px;padding:1px 4px}
+/* painel de informes full-screen */
+.inf-panel{position:fixed;left:0;right:0;top:100%;bottom:0;background:var(--card);z-index:30;transition:top .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}
+.inf-panel.open{top:52px}
+.inf-panel-head{padding:10px 14px 10px;border-bottom:1px solid var(--line);flex-shrink:0;display:flex;align-items:center;gap:9px}
+.inf-panel-hic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-panel-hbody{flex:1;min-width:0}
+.inf-panel-tipo{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.07em}
+.inf-panel-loc{font-size:15px;font-weight:800;margin-top:1px}
+.inf-panel-meta{font-size:10.5px;color:var(--muted);margin-top:1px}
+.inf-panel-fav{width:34px;height:34px;border-radius:9px;border:1.5px solid var(--line);background:var(--soft);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .15s}
+.inf-panel-fav.on{border-color:#F59E0B;background:rgba(245,158,11,.1)}
+/* status 2+3 */
+.inf-status{padding:9px 14px 4px;flex-shrink:0}
+.inf-st-r1{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:7px}
+.inf-st-r2{display:grid;gap:7px}
+.inf-chip{border-radius:13px;padding:0;text-align:left;border:1px solid transparent}
+.inf-chip.big{padding:11px 12px}
+.inf-chip.sm{padding:8px 10px}
+.inf-chip.ok{background:#DCFCE7;border-color:#BBF7D0}
+.inf-chip.warn{background:#FEF3C7;border-color:#FDE68A}
+.inf-chip.bad{background:#FEE2E2;border-color:#FECACA}
+.inf-chip.neu{background:var(--soft);border-color:var(--line)}
+.inf-chip-lbl{font-size:8.5px;font-weight:800;opacity:.65;display:block;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.inf-chip.big .inf-chip-lbl{font-size:9px;margin-bottom:4px}
+.inf-chip-val{font-weight:800;line-height:1.1;display:block}
+.inf-chip.big .inf-chip-val{font-size:17px}
+.inf-chip.sm .inf-chip-val{font-size:12.5px}
+.inf-chip.ok .inf-chip-lbl,.inf-chip.ok .inf-chip-val{color:#15803D}
+.inf-chip.warn .inf-chip-lbl,.inf-chip.warn .inf-chip-val{color:#92400E}
+.inf-chip.bad .inf-chip-lbl,.inf-chip.bad .inf-chip-val{color:#991B1B}
+.inf-chip.neu .inf-chip-lbl,.inf-chip.neu .inf-chip-val{color:var(--muted)}
+/* lista de informes */
+.inf-sep{height:1px;background:var(--line);margin:4px 14px 0;flex-shrink:0}
+.inf-list-wrap{flex:1;overflow-y:auto;padding:0 14px}
+.inf-item{display:flex;align-items:flex-start;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}
+.inf-item:last-child{border-bottom:0}
+.inf-ibadge{border-radius:7px;padding:3px 7px;font-size:9.5px;font-weight:800;flex-shrink:0;margin-top:1px;white-space:nowrap}
+.infbd{background:#EDE9FE;color:#5B21B6}.infbt{background:#FEF3C7;color:#92400E}
+.infbf{background:#FEE2E2;color:#991B1B}.infbfi{background:#DBEAFE;color:#1E40AF}
+.infbde{background:#DCFCE7;color:#15803D}.infblo{background:#F0FDF4;color:#166534}
+.infbac{background:#FFF7ED;color:#92400E}
+.inf-ibody{flex:1;min-width:0}
+.inf-idesc{font-size:12.5px;font-weight:600;line-height:1.3}
+.inf-iage{font-size:10px;color:var(--muted);margin-top:2px}
+.inf-iage .iago{color:#22C55E;font-weight:700}
+.inf-conf1{color:var(--muted2)}.inf-conf2{color:#F59E0B}.inf-conf3{color:#22C55E}
+.inf-votes{display:flex;gap:6px;margin-top:5px}
+.inf-vbtn{display:flex;align-items:center;gap:3px;border:1.5px solid var(--line);border-radius:99px;padding:3px 9px;background:var(--soft);cursor:pointer;font-size:10.5px;font-weight:700;color:var(--muted);font-family:inherit;transition:all .15s}
+.inf-vbtn.up.on{border-color:#22C55E;color:#22C55E;background:rgba(34,197,94,.07)}
+.inf-vbtn.dn.on{border-color:var(--red);color:var(--red);background:rgba(239,68,68,.07)}
+/* avatares sobrepostos */
+.inf-avs{display:flex;align-items:center;flex-shrink:0;flex-direction:row-reverse}
+.inf-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:800;color:#fff;border:2.5px solid var(--card);box-shadow:0 1px 3px rgba(15,23,42,.16);margin-left:-9px}
+.inf-avs .inf-av:last-child{margin-left:0}
+/* reportar botão */
+.inf-rep-wrap{padding:9px 14px 14px;flex-shrink:0}
+.inf-rep-btn{width:100%;height:48px;border-radius:14px;border:0;background:#F59E0B;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px}
+/* Overlay sheets */
+.inf-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:40;opacity:0;pointer-events:none;transition:opacity .2s;display:flex;align-items:flex-end;justify-content:center}
+.inf-ov.open{opacity:1;pointer-events:all}
+.inf-sheet{background:var(--card);border-radius:24px 24px 0 0;padding:14px 16px 38px;width:100%;max-width:430px;transform:translateY(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);max-height:88vh;overflow-y:auto}
+.inf-ov.open .inf-sheet{transform:translateY(0)}
+.inf-sh-handle{width:34px;height:3px;border-radius:2px;background:var(--line);margin:0 auto 13px}
+.inf-sh-head{display:flex;align-items:center;gap:9px;margin-bottom:3px}
+.inf-sh-ic{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-sh-title{font-size:16px;font-weight:800}
+.inf-sh-sub{font-size:11.5px;color:var(--muted);margin-bottom:11px}
+.inf-sh-search{position:relative;margin-bottom:11px}
+.inf-sh-search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);opacity:.4;pointer-events:none}
+.inf-sh-sinput{width:100%;height:42px;border-radius:12px;border:1.5px solid var(--line);background:var(--soft);font-family:inherit;font-size:13px;font-weight:600;color:var(--text);padding:0 12px 0 36px;outline:none}
+.inf-loc-item{display:flex;align-items:center;gap:9px;padding:11px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.inf-loc-item:last-child{border-bottom:0}
+.inf-loc-item:active{opacity:.6}
+.inf-loc-ic{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-loc-body{flex:1;min-width:0}
+.inf-loc-name{font-size:13.5px;font-weight:700}
+.inf-loc-sub{font-size:10px;color:var(--muted);margin-top:1px}
+.inf-loc-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0}
+.inf-loc-dist{font-size:10px;font-weight:700;color:var(--muted2)}
+.inf-loc-ct{font-size:9px;font-weight:800;background:var(--red);color:#fff;border-radius:99px;padding:2px 6px}
+.inf-loc-ct.z{background:var(--line);color:var(--muted)}
+/* Modal reportar */
+.inf-rep-tipo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:13px}
+.inf-rtipo{background:var(--soft);border:2px solid var(--line);border-radius:12px;padding:10px 5px 9px;cursor:pointer;text-align:center;transition:border-color .15s}
+.inf-rtipo.sel{border-color:var(--blue)}
+.inf-rtipo-ic{display:flex;justify-content:center;margin-bottom:5px}
+.inf-rtipo-lbl{font-size:10.5px;font-weight:700}
+.inf-ropts{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:13px;display:none}
+.inf-ropts.show{display:flex}
+.inf-ropt-lbl{font-size:10px;font-weight:800;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px;width:100%}
+.inf-ropt{height:36px;padding:0 13px;border-radius:99px;border:1.5px solid var(--line);background:var(--soft);font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+.inf-ropt.sel{border-color:var(--blue);color:var(--blue);background:rgba(14,165,233,.08)}
+.inf-ropt.sel.r{border-color:var(--red);color:var(--red);background:rgba(239,68,68,.08)}
+.inf-ropt.sel.g{border-color:#22C55E;color:#22C55E;background:rgba(34,197,94,.08)}
+.inf-ropt.sel.a{border-color:#F59E0B;color:#F59E0B;background:rgba(245,158,11,.08)}
+.inf-send-btn{width:100%;height:46px;border-radius:13px;border:0;background:var(--blue);color:#fff;font-size:13.5px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px}
+.inf-send-btn:disabled{opacity:.35}
+.inf-empty{padding:28px 0;text-align:center;color:var(--muted);font-size:13px;font-weight:600}
 
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1027,13 +1195,181 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 
 <!-- ══ TELA MAIS ══════════════════════════════════════════════════════════ -->
 <div class="screen" id="sc-informes">
-  <div style="display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:14px;padding:32px;text-align:center">
-    <div style="width:64px;height:64px;border-radius:20px;background:rgba(14,165,233,.12);display:flex;align-items:center;justify-content:center">
-      <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#0EA5E9" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.56 2 2 0 0 1 3.6 1.37h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16.92z"/></svg>
+  <!-- topbar -->
+  <div class="inf-topbar" id="inf-topbar">
+    <div id="inf-tb-default" style="display:flex;align-items:center;gap:6px">
+      <button class="inf-tb-btn" onclick="navTo('home')">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+      </button>
+      <button class="inf-tb-btn" id="inf-search-btn" onclick="infToggleSearch()">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+      <button class="inf-tb-btn" id="inf-back-btn" onclick="infFecharPainel()" style="display:none;background:#0EA5E9;border-color:#0EA5E9">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
     </div>
-    <div style="font-size:20px;font-weight:800;letter-spacing:-.02em">Informes</div>
-    <div style="font-size:14px;color:var(--muted);line-height:1.5;max-width:260px">Reportes em tempo real da comunidade de motoristas — em breve disponível.</div>
-    <div style="font-size:12px;color:var(--muted2);margin-top:4px">Aeroportos · Bairros · Eventos · Bares · Hotéis</div>
+    <input class="inf-search-input" id="inf-search-bar" type="text" placeholder="Buscar bairro, local, evento…" oninput="infBuscarGlobal(this.value)">
+    <div class="inf-topbar-right">
+      <div class="inf-city"><div class="inf-city-dot"></div><span>Rio de Janeiro</span></div>
+      <div class="inf-time-pill">
+        <button class="inf-tp" onclick="infSetTime(this,'5')">5m</button>
+        <button class="inf-tp active" id="inf-tp-active" onclick="infSetTime(this,'15')">15m</button>
+        <button class="inf-tp" onclick="infSetTime(this,'60')">1h</button>
+      </div>
+    </div>
+  </div>
+  <div class="inf-search-dd" id="inf-search-dd"></div>
+
+  <!-- 4 destaques 2x2 -->
+  <div class="inf-sec-lbl">Destaques</div>
+  <div class="inf-feat-grid">
+    <div class="inf-feat" id="inf-fl-gig" onclick="infAbrirLocal(this,'Galeão (GIG)','aero')">
+      <div class="inf-feat-bar"></div>
+      <div class="inf-feat-ct" id="inf-ct-gig">–</div>
+      <div class="inf-feat-ic" style="background:#EFF6FF"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#0EA5E9" stroke-width="2"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></div>
+      <div class="inf-feat-name">Galeão</div>
+    </div>
+    <div class="inf-feat" id="inf-fl-sdu" onclick="infAbrirLocal(this,'Santos Dumont (SDU)','aero')">
+      <div class="inf-feat-bar"></div>
+      <div class="inf-feat-ct" id="inf-ct-sdu">–</div>
+      <div class="inf-feat-ic" style="background:#EFF6FF"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#0EA5E9" stroke-width="2"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></div>
+      <div class="inf-feat-name">Santos Dumont</div>
+    </div>
+    <div class="inf-feat" id="inf-fl-rod" onclick="infAbrirLocal(this,'Rodoviária Novo Rio','term')">
+      <div class="inf-feat-bar"></div>
+      <div class="inf-feat-ct" id="inf-ct-rod">–</div>
+      <div class="inf-feat-ic" style="background:#EEF2FF"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#6366F1" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+      <div class="inf-feat-name">Rodoviária</div>
+    </div>
+    <div class="inf-feat inf-gps" onclick="infAbrirGps()">
+      <div class="inf-feat-ct">GPS</div>
+      <div class="inf-feat-ic"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div>
+      <div class="inf-feat-name">Minha área</div>
+    </div>
+  </div>
+
+  <!-- zonas + bairros inline -->
+  <div class="inf-sec-lbl">Bairros por zona</div>
+  <div id="inf-zona-section">
+    <div class="inf-zona-grid" id="inf-zona-grid">
+      <div class="inf-zcard" onclick="infAbrirZona('sul')">
+        <div class="inf-zcard-top"><div class="inf-zcard-ic" style="background:#F1F5F9"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#475569" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.333-8 14-8 14S4 15.333 4 10a8 8 0 0 1 8-8z"/></svg></div><div class="inf-zcard-ct" id="inf-zct-sul">–</div></div>
+        <div class="inf-zcard-name">Zona Sul</div><div class="inf-zcard-sub">Copa · Ipanema · Leblon +5</div>
+      </div>
+      <div class="inf-zcard" onclick="infAbrirZona('norte')">
+        <div class="inf-zcard-top"><div class="inf-zcard-ic" style="background:#F1F5F9"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#475569" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.333-8 14-8 14S4 15.333 4 10a8 8 0 0 1 8-8z"/></svg></div><div class="inf-zcard-ct" id="inf-zct-norte">–</div></div>
+        <div class="inf-zcard-name">Zona Norte</div><div class="inf-zcard-sub">Tijuca · Maracanã · Méier +4</div>
+      </div>
+      <div class="inf-zcard" onclick="infAbrirZona('oeste')">
+        <div class="inf-zcard-top"><div class="inf-zcard-ic" style="background:#F1F5F9"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#475569" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.333-8 14-8 14S4 15.333 4 10a8 8 0 0 1 8-8z"/></svg></div><div class="inf-zcard-ct" id="inf-zct-oeste">–</div></div>
+        <div class="inf-zcard-name">Zona Oeste</div><div class="inf-zcard-sub">Barra · Recreio · Jacarepaguá +2</div>
+      </div>
+      <div class="inf-zcard" onclick="infAbrirZona('centro')">
+        <div class="inf-zcard-top"><div class="inf-zcard-ic" style="background:#F1F5F9"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#475569" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.333-8 14-8 14S4 15.333 4 10a8 8 0 0 1 8-8z"/></svg></div><div class="inf-zcard-ct" id="inf-zct-centro">–</div></div>
+        <div class="inf-zcard-name">Centro</div><div class="inf-zcard-sub">Lapa · Santa Teresa · Glória +3</div>
+      </div>
+    </div>
+    <div class="inf-bairros-inline" id="inf-bairros-inline">
+      <div class="inf-bairros-back">
+        <button class="inf-bairros-back-btn" onclick="infVoltarZonas()">
+          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>Zonas
+        </button>
+        <span class="inf-bairros-zona-nome" id="inf-bairros-zona-nome"></span>
+      </div>
+      <div class="inf-bairros-scroll-wrap">
+        <div class="inf-bchip-grid" id="inf-bchip-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="height:80px"></div>
+
+  <!-- 4 categorias fixas -->
+  <div class="inf-cat-row">
+    <div class="inf-ccard" onclick="infAbrirVenue('bares')">
+      <div class="inf-ccard-ct" id="inf-cct-bares">–</div>
+      <div class="inf-ccard-ic" style="background:#EDE9FE"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#8B5CF6" stroke-width="2"><path d="M17 11H3v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1z"/><path d="M3 11v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg></div>
+      <div class="inf-ccard-name">Bares e Rest.</div>
+    </div>
+    <div class="inf-ccard" onclick="infAbrirVenue('hoteis')">
+      <div class="inf-ccard-ct" id="inf-cct-hoteis">–</div>
+      <div class="inf-ccard-ic" style="background:#FDF2F8"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#EC4899" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M2 12h20"/><path d="M8 7V5a4 4 0 0 1 8 0v2"/></svg></div>
+      <div class="inf-ccard-name">Hotéis</div>
+    </div>
+    <div class="inf-ccard" onclick="infAbrirVenue('eventos')">
+      <div class="inf-ccard-ct" id="inf-cct-eventos">–</div>
+      <div class="inf-ccard-ic" style="background:#FFF7ED"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#F59E0B" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div>
+      <div class="inf-ccard-name">Eventos</div>
+    </div>
+    <div class="inf-ccard" onclick="infAbrirVenue('turistico')">
+      <div class="inf-ccard-ct" id="inf-cct-turistico">–</div>
+      <div class="inf-ccard-ic" style="background:#F0FDF4"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#22C55E" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+      <div class="inf-ccard-name">Turístico</div>
+    </div>
+  </div>
+
+  <!-- painel de informes full-screen -->
+  <div class="inf-panel" id="inf-panel">
+    <div class="inf-panel-head">
+      <div class="inf-panel-hic" id="inf-panel-hic"></div>
+      <div class="inf-panel-hbody">
+        <div class="inf-panel-tipo" id="inf-panel-tipo"></div>
+        <div class="inf-panel-loc" id="inf-panel-loc">—</div>
+        <div class="inf-panel-meta" id="inf-panel-meta"></div>
+      </div>
+      <button class="inf-panel-fav" id="inf-panel-fav" onclick="infToggleFav()">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#F59E0B" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </button>
+    </div>
+    <div class="inf-status" id="inf-status"></div>
+    <div class="inf-sep"></div>
+    <div class="inf-list-wrap" id="inf-list-wrap"><div class="inf-empty">Carregando informes…</div></div>
+    <div class="inf-rep-wrap">
+      <button class="inf-rep-btn" onclick="infAbrirReportar()">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Reportar agora
+      </button>
+    </div>
+  </div>
+
+  <!-- Sheet: GPS ruas -->
+  <div class="inf-ov" id="inf-ov-gps">
+    <div class="inf-sheet">
+      <div class="inf-sh-handle"></div>
+      <div class="inf-sh-head"><div class="inf-sh-ic" style="background:#CCFBF1"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#14B8A6" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div><div class="inf-sh-title">Minha rua</div></div>
+      <div class="inf-sh-sub">Raio de 300m · mais próxima primeiro</div>
+      <div class="inf-sh-search"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="inf-sh-sinput" type="text" placeholder="Buscar rua…" oninput="infFiltrarSheet(this,'inf-gps-list')"></div>
+      <div id="inf-gps-list"><div class="inf-empty">Aguardando GPS…</div></div>
+    </div>
+  </div>
+
+  <!-- Sheet: venue list -->
+  <div class="inf-ov" id="inf-ov-venue">
+    <div class="inf-sheet">
+      <div class="inf-sh-handle"></div>
+      <div class="inf-sh-head"><div class="inf-sh-ic" id="inf-venue-ic"></div><div class="inf-sh-title" id="inf-venue-title"></div></div>
+      <div class="inf-sh-sub" id="inf-venue-sub"></div>
+      <div class="inf-sh-search"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="inf-sh-sinput" type="text" placeholder="Buscar…" oninput="infFiltrarSheet(this,'inf-venue-list')"></div>
+      <div id="inf-venue-list"></div>
+    </div>
+  </div>
+
+  <!-- Sheet: reportar -->
+  <div class="inf-ov" id="inf-ov-rep">
+    <div class="inf-sheet">
+      <div class="inf-sh-handle"></div>
+      <div class="inf-sh-head"><div class="inf-sh-ic" id="inf-rep-ic"></div><div><div class="inf-sh-title">O que está acontecendo?</div><div style="font-size:11px;color:var(--muted);margin-top:2px" id="inf-rep-sub"></div></div></div>
+      <div style="margin:10px 0 0">
+        <div class="inf-rep-tipo-grid" id="inf-rep-tipos"></div>
+        <div id="inf-rep-opcoes-wrap">
+          <!-- opções dinâmicas conforme tipo selecionado -->
+        </div>
+        <button class="inf-send-btn" id="inf-send-btn" disabled onclick="infEnviarReporte()">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Enviar informe
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -5371,6 +5707,365 @@ if ('serviceWorker' in navigator) {
     });
   }).catch(() => {});
 }
+
+// ══════════════════════════════════════════════
+// INFORMES
+// ══════════════════════════════════════════════
+const INF_TIPOS = {
+  aero:  {cor:'#0EA5E9',bg:'#EFF6FF',label:'Aeroporto',
+    r1:['fila','lotacao'], r2:['transito','fiscalizacao','dinamico','demanda'],
+    modal:['lotacao','fila','dinamico','demanda','fiscalizacao','transito']},
+  term:  {cor:'#6366F1',bg:'#EEF2FF',label:'Terminal',
+    r1:['fila','lotacao'], r2:['transito','fiscalizacao','dinamico','demanda'],
+    modal:['lotacao','fila','demanda','dinamico','fiscalizacao','transito']},
+  bairro:{cor:'#475569',bg:'#F1F5F9',label:'Bairro',
+    r1:['dinamico','demanda'], r2:[],
+    modal:['dinamico','demanda']},
+  rua:   {cor:'#14B8A6',bg:'#CCFBF1',label:'Rua',
+    r1:['transito','acidente'], r2:['fiscalizacao','dinamico','demanda'],
+    modal:['transito','fiscalizacao','acidente','dinamico']},
+  ev:    {cor:'#F59E0B',bg:'#FFF7ED',label:'Evento',
+    r1:['dinamico','demanda'], r2:['transito','fiscalizacao','fila','lotacao'],
+    modal:['fila','lotacao','demanda','dinamico','fiscalizacao']},
+  tur:   {cor:'#22C55E',bg:'#F0FDF4',label:'Turístico',
+    r1:['dinamico','demanda'], r2:['transito','fiscalizacao','fila','lotacao'],
+    modal:['fila','lotacao','demanda','fiscalizacao']},
+  bar:   {cor:'#8B5CF6',bg:'#EDE9FE',label:'Bar / Restaurante',
+    r1:['demanda','lotacao'], r2:['fiscalizacao','dinamico','fila'],
+    modal:['fila','lotacao','demanda','fiscalizacao']},
+  hotel: {cor:'#EC4899',bg:'#FDF2F8',label:'Hotel',
+    r1:['demanda','lotacao'], r2:['dinamico'],
+    modal:['lotacao','fila','demanda','fiscalizacao']},
+};
+const INF_PARAMS = {
+  transito:    {label:'Trânsito',     expMin:30, opts:[{v:'Fluindo',c:'g'},{v:'Leve',c:''},{v:'Lento',c:'a'},{v:'Parado',c:'r'}]},
+  fiscalizacao:{label:'Fiscalização', expMin:60, sub:[{v:'PM',c:'r'},{v:'GM',c:'r'},{v:'Lei Seca',c:'r'},{v:'Detro',c:'a'}], subacao:[{v:'Multando',c:'r'},{v:'Abordando',c:'a'},{v:'Posicionado',c:''}]},
+  dinamico:    {label:'Dinâmico',     expMin:15, opts:[{v:'R$ 0',c:''},{v:'+R$2,50',c:'g'},{v:'+R$5',c:'g'},{v:'+R$8',c:'g'},{v:'+R$10',c:'g'},{v:'+R$15',c:'g'},{v:'+R$20',c:'g'},{v:'+R$25',c:'g'}]},
+  demanda:     {label:'Demanda',      expMin:30, opts:[{v:'Tocando bem',c:'g'},{v:'Esporádico',c:'a'},{v:'Não toca nada',c:'r'}]},
+  fila:        {label:'Fila',         expMin:20, opts:[{v:'Vazia',c:'g'},{v:'Pequena',c:''},{v:'Média',c:'a'},{v:'Grande',c:'r'}]},
+  lotacao:     {label:'Lotação',      expMin:60, opts:[{v:'Vazio',c:'g'},{v:'Pouco movimentado',c:'g'},{v:'Movimentado',c:'a'},{v:'Muito movimentado',c:'r'},{v:'Cheio',c:'r'}]},
+  acidente:    {label:'Acidente',     expMin:30, opts:[{v:'Na via · ativo',c:'r'},{v:'Acostamento',c:'a'},{v:'Resolvido',c:'g'}]},
+};
+const INF_PLBL = {transito:'Trânsito',fiscalizacao:'Fiscalização',dinamico:'Dinâmico',demanda:'Demanda',fila:'Fila',lotacao:'Lotação',acidente:'Acidente'};
+const INF_BAIRROS = {
+  sul:   ['Copacabana','Ipanema','Leblon','Botafogo','Flamengo','Leme','Gávea','Laranjeiras','Urca'],
+  norte: ['Tijuca','Maracanã','Vila Isabel','Méier','Penha','Niterói','Ilha do Gov.','Ramos','Engenho'],
+  oeste: ['Barra da Tijuca','Recreio','Jacarepaguá','Campo Grande','Bangu','Santa Cruz'],
+  centro:['Lapa','Cinelândia','Glória','Santa Teresa','Catete','Cosme Velho','Gamboa'],
+};
+const INF_ZNOMES = {sul:'Zona Sul',norte:'Zona Norte',oeste:'Zona Oeste',centro:'Centro'};
+const INF_VENUES = {
+  bares:{titulo:'Bares e Restaurantes',tipo:'bar',itens:[{n:'Bar do Mineiro',sub:'Santa Teresa'},{n:'Casa da Cachaça',sub:'Lapa'},{n:'Academia da Cachaça',sub:'Leblon'},{n:'Bar Urca',sub:'Urca'},{n:'Devassa',sub:'Vários'},{n:'Confeitaria Colombo',sub:'Centro'}]},
+  hoteis:{titulo:'Hotéis',tipo:'hotel',itens:[{n:'Copacabana Palace',sub:'Copacabana'},{n:'Fairmont Rio',sub:'Copacabana'},{n:'Intercontinental',sub:'São Conrado'},{n:'Windsor Barra',sub:'Barra'},{n:'Sheraton Grand',sub:'Leblon'},{n:'Ibis Copacabana',sub:'Copacabana'},{n:'Arena Hotel',sub:'Barra'}]},
+  eventos:{titulo:'Eventos e Shows',tipo:'ev',itens:[{n:'Vivo Rio',sub:'Glória'},{n:'Fundição Progresso',sub:'Lapa'},{n:'Circo Voador',sub:'Lapa'},{n:'Teatro Municipal',sub:'Centro'},{n:'MAM',sub:'Flamengo'},{n:'Maracanã',sub:'Zona Norte'},{n:'Arena Jeunesse',sub:'Barra'}]},
+  turistico:{titulo:'Pontos Turísticos',tipo:'tur',itens:[{n:'Museu do Amanhã',sub:'Porto Maravilha'},{n:'Pão de Açúcar',sub:'Urca'},{n:'Arcos da Lapa',sub:'Lapa'},{n:'Cristo Redentor',sub:'Corcovado'},{n:'Jardim Botânico',sub:'Lagoa'},{n:'MAM',sub:'Flamengo'},{n:'Quinta da Boa Vista',sub:'São Cristóvão'}]},
+};
+const INF_SDBDB = [
+  {n:'Galeão (GIG)',t:'aero'},{n:'Santos Dumont (SDU)',t:'aero'},{n:'Rodoviária Novo Rio',t:'term'},
+  {n:'Copacabana',t:'bairro'},{n:'Ipanema',t:'bairro'},{n:'Leblon',t:'bairro'},{n:'Lapa',t:'bairro'},
+  {n:'Botafogo',t:'bairro'},{n:'Barra da Tijuca',t:'bairro'},{n:'Tijuca',t:'bairro'},{n:'Maracanã',t:'bairro'},
+  {n:'Vivo Rio',t:'ev'},{n:'Maracanã',t:'ev'},{n:'Cristo Redentor',t:'tur'},{n:'Pão de Açúcar',t:'tur'},
+  {n:'Bar do Mineiro',t:'bar'},{n:'Casa da Cachaça',t:'bar'},{n:'Copacabana Palace',t:'hotel'},{n:'Fairmont Rio',t:'hotel'},
+];
+let _infLoc=null,_infTipoKey=null,_infMinutos=15,_infRepTipo=null,_infRepValor=null,_infRepDetalhe=null;
+let _infFavs=JSON.parse(localStorage.getItem('sm_inf_favs')||'[]');
+const INF_AVC=['#6D28D9','#0369A1','#B45309','#0F766E','#15803D','#BE123C','#7C3AED','#0284C7'];
+const INF_BADGE={dinamico:'infbd',transito:'infbt',fiscalizacao:'infbf',fila:'infbfi',demanda:'infbde',lotacao:'infblo',acidente:'infbac'};
+
+function renderInformes(){ infCarregarContagens(); }
+
+async function infCarregarContagens(){
+  if(!_SUPA)return;
+  try{
+    const{data}=await _SUPA.from('informes').select('location_name').eq('is_active',true).gt('expires_at',new Date().toISOString());
+    if(!data)return;
+    const cnt={};data.forEach(r=>{cnt[r.location_name]=(cnt[r.location_name]||0)+1;});
+    [['gig','Galeão (GIG)'],['sdu','Santos Dumont (SDU)'],['rod','Rodoviária Novo Rio']].forEach(([id,n])=>{
+      const el=document.getElementById('inf-ct-'+id);if(el)el.textContent=cnt[n]||0;
+    });
+    Object.entries({sul:INF_BAIRROS.sul,norte:INF_BAIRROS.norte,oeste:INF_BAIRROS.oeste,centro:INF_BAIRROS.centro}).forEach(([z,bs])=>{
+      const total=bs.reduce((s,b)=>s+(cnt[b]||0),0);
+      const el=document.getElementById('inf-zct-'+z);
+      if(el){el.textContent=total;el.className='inf-zcard-ct'+(total===0?' z':'');}
+    });
+    Object.entries({bares:INF_VENUES.bares.itens,hoteis:INF_VENUES.hoteis.itens,eventos:INF_VENUES.eventos.itens,turistico:INF_VENUES.turistico.itens}).forEach(([cat,itens])=>{
+      const total=itens.reduce((s,i)=>s+(cnt[i.n]||0),0);
+      const el=document.getElementById('inf-cct-'+cat);if(el)el.textContent=total||'–';
+    });
+  }catch(e){console.warn('inf cnt',e);}
+}
+
+function infAbrirLocal(el,nome,tipoKey){
+  document.querySelectorAll('.inf-feat,.inf-bchip,.inf-zcard').forEach(b=>b.classList.remove('active'));
+  if(el)el.classList.add('active');
+  _infLoc=nome;_infTipoKey=tipoKey;
+  const t=INF_TIPOS[tipoKey]||INF_TIPOS.bairro;
+  const hic=document.getElementById('inf-panel-hic');
+  hic.style.background=t.bg;hic.innerHTML=infIconSvg(tipoKey,t.cor,17);
+  document.getElementById('inf-panel-tipo').textContent=t.label;
+  document.getElementById('inf-panel-tipo').style.color=t.cor;
+  document.getElementById('inf-panel-loc').textContent=nome;
+  document.getElementById('inf-panel-meta').textContent='Carregando…';
+  document.getElementById('inf-panel-fav').classList.toggle('on',_infFavs.some(f=>f.n===nome));
+  document.getElementById('inf-panel').classList.add('open');
+  document.getElementById('inf-back-btn').style.display='flex';
+  infCarregarInformes(nome,tipoKey);
+}
+
+async function infCarregarInformes(nome,tipoKey){
+  const t=INF_TIPOS[tipoKey]||INF_TIPOS.bairro;
+  let informes=[];
+  try{
+    if(_SUPA){
+      const{data}=await _SUPA.from('informes').select('*').eq('location_name',nome).eq('is_active',true).gt('expires_at',new Date().toISOString()).order('votes_up',{ascending:false}).limit(30);
+      informes=data||[];
+    }
+  }catch(e){console.warn('inf load',e);}
+  document.getElementById('inf-panel-meta').textContent=informes.length+' informe'+(informes.length!==1?'s':'')+' · últimos '+_infMinutos+'min';
+  // status
+  const pp={};informes.forEach(r=>{if(!pp[r.param_type])pp[r.param_type]=r;});
+  const chipH=(pid,big)=>{
+    const lbl=INF_PLBL[pid]||pid;const inf=pp[pid];
+    const val=inf?(inf.param_value+(inf.param_detail?' · '+inf.param_detail:'')):'–';
+    const cls=inf?infChipClass(pid,val):'neu';
+    return`<div class="inf-chip ${big?'big':'sm'} ${cls}"><span class="inf-chip-lbl">${lbl}</span><span class="inf-chip-val">${val}</span></div>`;
+  };
+  const cols2=t.r2.length>=4?4:t.r2.length>=3?3:t.r2.length||1;
+  document.getElementById('inf-status').innerHTML=
+    `<div class="inf-st-r1">${t.r1.map(p=>chipH(p,true)).join('')}</div>`+
+    (t.r2.length?`<div class="inf-st-r2" style="grid-template-columns:repeat(${cols2},1fr)">${t.r2.map(p=>chipH(p,false)).join('')}</div>`:'');
+  // lista
+  if(!informes.length){document.getElementById('inf-list-wrap').innerHTML='<div class="inf-empty">Nenhum informe recente · seja o primeiro a reportar!</div>';return;}
+  document.getElementById('inf-list-wrap').innerHTML=informes.map((inf,i)=>{
+    const badge=INF_BADGE[inf.param_type]||'infbt';
+    const lbl=INF_PLBL[inf.param_type]||inf.param_type;
+    const desc=inf.param_value+(inf.param_detail?' · '+inf.param_detail:'');
+    const ageMin=Math.max(0,Math.round((Date.now()-new Date(inf.created_at))/60000));
+    const ageStr=ageMin<1?'agora':ageMin+'min';
+    const conf=inf.votes_up>=10?3:inf.votes_up>=5?2:1;
+    const confLbl=['','fraco','confiável','confirmado'][conf];
+    const confCls=['','inf-conf1','inf-conf2','inf-conf3'][conf];
+    const avN=Math.min(3,1+Math.floor(inf.votes_up/3));
+    const avs=Array.from({length:avN},(_,ai)=>{
+      const c=INF_AVC[(i+ai)%INF_AVC.length];
+      const ltr=(inf.user_id||'MO').slice(ai*2,ai*2+2).toUpperCase();
+      return`<div class="inf-av" style="background:${c};z-index:${avN-ai}">${ltr||'MO'}</div>`;
+    }).join('');
+    return`<div class="inf-item">
+      <div class="inf-ibadge ${badge}">${lbl}</div>
+      <div class="inf-ibody">
+        <div class="inf-idesc">${desc}</div>
+        <div class="inf-iage"><span class="iago">${ageStr}</span> · <span class="${confCls}">${confLbl}</span></div>
+        <div class="inf-votes">
+          <button class="inf-vbtn up" onclick="infVotar('${inf.id}','up',this)"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>${inf.votes_up}</button>
+          <button class="inf-vbtn dn" onclick="infVotar('${inf.id}','dn',this)"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>${inf.votes_dn}</button>
+        </div>
+      </div>
+      <div class="inf-avs">${avs}</div>
+    </div>`;
+  }).join('');
+}
+
+function infChipClass(pid,val){
+  if(!val||val==='–')return'neu';
+  const bad={transito:['Parado','Lento'],fiscalizacao:['PM','GM','Lei Seca','Detro','Multando'],demanda:['Não toca','Esporádico'],fila:['Grande','Média'],lotacao:['Cheio','Muito movimentado','Movimentado'],acidente:['Na via']};
+  const good={transito:['Fluindo','Leve'],demanda:['Tocando bem'],fila:['Vazia'],lotacao:['Vazio','Pouco movimentado'],acidente:['Resolvido']};
+  if(bad[pid]?.some(v=>val.includes(v)))return'bad';
+  if(good[pid]?.some(v=>val.includes(v)))return'ok';
+  if(pid==='dinamico'){const n=parseFloat(val.replace(/[^0-9.]/g,'')||0);return n>0?'ok':'neu';}
+  return'warn';
+}
+
+async function infVotar(infId,vote,btn){
+  if(!_SUPA)return;
+  btn.closest('.inf-votes').querySelectorAll('.inf-vbtn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  try{
+    const sess=await _SUPA.auth.getSession();const uid=sess?.data?.session?.user?.id;if(!uid)return;
+    await _SUPA.from('informe_votes').upsert({informe_id:infId,user_id:uid,vote},{onConflict:'informe_id,user_id'});
+  }catch(e){console.warn('voto',e);}
+}
+
+function infFecharPainel(){
+  document.getElementById('inf-panel').classList.remove('open');
+  document.getElementById('inf-back-btn').style.display='none';
+  document.querySelectorAll('.inf-feat,.inf-bchip,.inf-zcard').forEach(b=>b.classList.remove('active'));
+}
+
+function infToggleFav(){
+  if(!_infLoc)return;
+  const btn=document.getElementById('inf-panel-fav');
+  const idx=_infFavs.findIndex(f=>f.n===_infLoc);
+  if(idx>=0){_infFavs.splice(idx,1);btn.classList.remove('on');showToast('Removido dos favoritos');}
+  else if(_infFavs.length<4){_infFavs.push({n:_infLoc,t:_infTipoKey});btn.classList.add('on');showToast('Adicionado aos favoritos!');}
+  else{showToast('Máximo de 4 favoritos');return;}
+  localStorage.setItem('sm_inf_favs',JSON.stringify(_infFavs));
+}
+
+function infAbrirZona(zona){
+  document.getElementById('inf-zona-grid').style.display='none';
+  document.getElementById('inf-bairros-inline').style.display='block';
+  document.getElementById('inf-bairros-zona-nome').textContent=INF_ZNOMES[zona];
+  document.getElementById('inf-bchip-grid').innerHTML=(INF_BAIRROS[zona]||[]).map(b=>
+    `<div class="inf-bchip" onclick="infAbrirLocal(this,'${b}','bairro')">
+      <div class="inf-bchip-ic" style="background:#F1F5F9"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#475569" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.333-8 14-8 14S4 15.333 4 10a8 8 0 0 1 8-8z"/></svg></div>
+      <div class="inf-bchip-name">${b}</div>
+      <div class="inf-bchip-ct z">–</div>
+    </div>`
+  ).join('');
+}
+function infVoltarZonas(){
+  document.getElementById('inf-zona-grid').style.display='grid';
+  document.getElementById('inf-bairros-inline').style.display='none';
+}
+
+function infAbrirGps(){
+  document.getElementById('inf-gps-list').innerHTML='<div class="inf-empty">Obtendo localização…</div>';
+  document.getElementById('inf-ov-gps').classList.add('open');
+  if(!navigator.geolocation){document.getElementById('inf-gps-list').innerHTML='<div class="inf-empty">GPS não disponível</div>';return;}
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const{latitude:lat,longitude:lon}=pos.coords;
+    document.getElementById('inf-gps-list').innerHTML='<div class="inf-empty">Buscando ruas…</div>';
+    try{
+      const revR=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&zoom=17&format=json&accept-language=pt`,{headers:{'User-Agent':'SmartMobi/1.0'}});
+      const rev=await revR.json();
+      const ruaAtual=rev.address?.road||rev.address?.pedestrian||rev.address?.suburb||'Rua atual';
+      const bairro=rev.address?.suburb||rev.address?.neighbourhood||'';
+      const oQ=`[out:json];way(around:300,${lat},${lon})[highway][name];out tags;`;
+      const oR=await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(oQ)}`);
+      const oD=await oR.json();
+      const priority=['primary','secondary','tertiary','residential'];
+      const ruas=[];const seen=new Set([ruaAtual]);
+      [...oD.elements].sort((a,b)=>{const pa=priority.indexOf(a.tags.highway);const pb=priority.indexOf(b.tags.highway);return(pa<0?99:pa)-(pb<0?99:pb);}).forEach(el=>{const n=el.tags.name;if(n&&!seen.has(n)){seen.add(n);ruas.push(n);}});
+      let html=`<div class="inf-loc-item" onclick="infFecharOv('inf-ov-gps');infAbrirLocal(null,'${ruaAtual.replace(/'/g,"\\'")}','rua')"><div class="inf-loc-ic" style="background:#CCFBF1"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#14B8A6" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg></div><div class="inf-loc-body"><div class="inf-loc-name" style="color:#14B8A6">${ruaAtual}</div><div class="inf-loc-sub">Você está aqui · ${bairro}</div></div></div>`;
+      ruas.slice(0,10).forEach(r=>{html+=`<div class="inf-loc-item" onclick="infFecharOv('inf-ov-gps');infAbrirLocal(null,'${r.replace(/'/g,"\\'")}','rua')"><div class="inf-loc-ic" style="background:#CCFBF1"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#14B8A6" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/></svg></div><div class="inf-loc-body"><div class="inf-loc-name">${r}</div><div class="inf-loc-sub">Próxima · ≈300m</div></div></div>`;});
+      document.getElementById('inf-gps-list').innerHTML=html;
+    }catch(e){document.getElementById('inf-gps-list').innerHTML='<div class="inf-empty">Erro ao buscar. Tente novamente.</div>';}
+  },()=>{document.getElementById('inf-gps-list').innerHTML='<div class="inf-empty">Permissão negada</div>';},{timeout:10000,enableHighAccuracy:true});
+}
+
+function infAbrirVenue(cat){
+  const v=INF_VENUES[cat];const t=INF_TIPOS[v.tipo];
+  const ic=document.getElementById('inf-venue-ic');ic.style.background=t.bg;ic.innerHTML=infIconSvg(v.tipo,t.cor,17);
+  document.getElementById('inf-venue-title').textContent=v.titulo;
+  document.getElementById('inf-venue-sub').textContent='Ordenado pela sua localização';
+  document.getElementById('inf-venue-list').innerHTML=v.itens.map(item=>
+    `<div class="inf-loc-item" onclick="infFecharOv('inf-ov-venue');infAbrirLocal(null,'${item.n}','${v.tipo}')">
+      <div class="inf-loc-ic" style="background:${t.bg}">${infIconSvg(v.tipo,t.cor,15)}</div>
+      <div class="inf-loc-body"><div class="inf-loc-name">${item.n}</div><div class="inf-loc-sub">${item.sub}</div></div>
+    </div>`
+  ).join('');
+  document.getElementById('inf-ov-venue').classList.add('open');
+}
+
+const INF_PICONS={
+  transito:`<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
+  fiscalizacao:`<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+  dinamico:`<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+  demanda:`<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.56 2 2 0 0 1 3.6 1.37h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16.92z"/></svg>`,
+  fila:`<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`,
+  lotacao:`<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  acidente:`<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+};
+
+function infAbrirReportar(){
+  const t=INF_TIPOS[_infTipoKey]||INF_TIPOS.bairro;
+  const ic=document.getElementById('inf-rep-ic');ic.style.background=t.bg;ic.innerHTML=infIconSvg(_infTipoKey,t.cor,16);
+  document.getElementById('inf-rep-sub').textContent=_infLoc;
+  _infRepTipo=null;_infRepValor=null;_infRepDetalhe=null;
+  document.getElementById('inf-send-btn').disabled=true;
+  document.getElementById('inf-rep-tipos').innerHTML=t.modal.map(pid=>
+    `<div class="inf-rtipo" data-pid="${pid}" onclick="infSelTipo('${pid}')">
+      <div class="inf-rtipo-ic">${INF_PICONS[pid]||''}</div>
+      <div class="inf-rtipo-lbl">${INF_PLBL[pid]||pid}</div>
+    </div>`
+  ).join('');
+  document.getElementById('inf-rep-opcoes-wrap').innerHTML='';
+  document.getElementById('inf-ov-rep').classList.add('open');
+}
+
+function infSelTipo(pid){
+  _infRepTipo=pid;_infRepValor=null;_infRepDetalhe=null;
+  document.querySelectorAll('.inf-rtipo').forEach(b=>b.classList.remove('sel'));
+  const sel=document.querySelector(`.inf-rtipo[data-pid="${pid}"]`);if(sel)sel.classList.add('sel');
+  document.getElementById('inf-send-btn').disabled=true;
+  const p=INF_PARAMS[pid];if(!p)return;
+  let html=`<div class="inf-ropts show" id="inf-ropts-main"><div class="inf-ropt-lbl">${INF_PLBL[pid]}</div>`;
+  if(p.opts){html+=p.opts.map(o=>`<button class="inf-ropt" onclick="infSelOpt(this,'${o.v}','${o.c||''}')">${o.v}</button>`).join('');}
+  else if(p.sub){html+=p.sub.map(o=>`<button class="inf-ropt" onclick="infSelFisc(this,'${o.v}')">${o.v}</button>`).join('');}
+  html+='</div>';
+  if(pid==='fiscalizacao')html+=`<div class="inf-ropts" id="inf-ropts-fisc-acao"><div class="inf-ropt-lbl">O que estão fazendo?</div>${p.subacao.map(o=>`<button class="inf-ropt" onclick="infSelOpt(this,'${o.v}','${o.c||''}')">${o.v}</button>`).join('')}</div>`;
+  document.getElementById('inf-rep-opcoes-wrap').innerHTML=html;
+}
+
+function infSelOpt(btn,val,cor){
+  const parent=btn.closest('.inf-ropts');
+  parent.querySelectorAll('.inf-ropt').forEach(b=>b.className='inf-ropt');
+  btn.className=`inf-ropt sel${cor?' '+cor:''}`;
+  _infRepValor=val;document.getElementById('inf-send-btn').disabled=false;
+}
+function infSelFisc(btn,val){
+  const parent=btn.closest('.inf-ropts');
+  parent.querySelectorAll('.inf-ropt').forEach(b=>b.className='inf-ropt');
+  btn.className='inf-ropt sel r';
+  _infRepDetalhe=val;
+  const acao=document.getElementById('inf-ropts-fisc-acao');if(acao)acao.classList.add('show');
+  document.getElementById('inf-send-btn').disabled=true;
+}
+
+async function infEnviarReporte(){
+  if(!_infRepTipo||!_infRepValor)return;
+  const btn=document.getElementById('inf-send-btn');btn.disabled=true;btn.textContent='Enviando…';
+  const expMin=INF_PARAMS[_infRepTipo]?.expMin||30;
+  const expiresAt=new Date(Date.now()+expMin*60000).toISOString();
+  try{
+    if(_SUPA){
+      const sess=await _SUPA.auth.getSession();const uid=sess?.data?.session?.user?.id;
+      if(uid)await _SUPA.from('informes').insert({user_id:uid,location_name:_infLoc,location_type:_infTipoKey,city:'rio',param_type:_infRepTipo,param_value:_infRepValor,param_detail:_infRepDetalhe||null,expires_at:expiresAt,votes_up:1,votes_dn:0,is_active:true});
+    }
+    infFecharOv('inf-ov-rep');showToast('Informe enviado — obrigado!');
+    infCarregarInformes(_infLoc,_infTipoKey);
+  }catch(e){console.error('inf send',e);showToast('Erro ao enviar. Tente novamente.');}
+  btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Enviar informe';
+}
+
+let _infSrchOpen=false;
+function infToggleSearch(){
+  _infSrchOpen=!_infSrchOpen;
+  document.getElementById('inf-tb-default').style.display=_infSrchOpen?'none':'flex';
+  const sb=document.getElementById('inf-search-bar');sb.style.display=_infSrchOpen?'block':'none';
+  if(_infSrchOpen)sb.focus();else{sb.value='';document.getElementById('inf-search-dd').classList.remove('show');}
+}
+function infBuscarGlobal(q){
+  const dd=document.getElementById('inf-search-dd');
+  if(!q.trim()){dd.classList.remove('show');return;}
+  const res=INF_SDBDB.filter(x=>x.n.toLowerCase().includes(q.toLowerCase())).slice(0,7);
+  dd.innerHTML=res.length?res.map(x=>{const t=INF_TIPOS[x.t]||INF_TIPOS.bairro;return`<div class="inf-sd-item" onclick="infToggleSearch();infAbrirLocal(null,'${x.n}','${x.t}')"><div class="inf-sd-ic" style="background:${t.bg}">${infIconSvg(x.t,t.cor,14)}</div><div><div class="inf-sd-name">${x.n}</div><div class="inf-sd-sub">${t.label}</div></div></div>`;}).join(''):'<div class="inf-sd-empty">Nenhum resultado</div>';
+  dd.classList.add('show');
+}
+function infSetTime(btn,min){
+  document.querySelectorAll('.inf-tp').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  _infMinutos=parseInt(min);infCarregarContagens();
+  if(_infLoc)infCarregarInformes(_infLoc,_infTipoKey);
+}
+function infFecharOv(id){document.getElementById(id).classList.remove('open');}
+function infFiltrarSheet(inp,listId){
+  const v=inp.value.toLowerCase();
+  document.querySelectorAll('#'+listId+' .inf-loc-item').forEach(el=>{const t=el.querySelector('.inf-loc-name')?.textContent.toLowerCase()||'';el.style.display=(!v||t.includes(v))?'':'none';});
+}
+function infIconSvg(tipo,cor,sz){
+  const a=`viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="none" stroke="${cor}" stroke-width="2"`;
+  const m={aero:`<svg ${a}><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>`,term:`<svg ${a}><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,bairro:`<svg ${a}><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.333-8 14-8 14S4 15.333 4 10a8 8 0 0 1 8-8z"/></svg>`,rua:`<svg ${a}><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>`,ev:`<svg ${a}><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>`,tur:`<svg ${a}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`,bar:`<svg ${a}><path d="M17 11H3v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1z"/><path d="M3 11v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>`,hotel:`<svg ${a}><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M2 12h20"/><path d="M8 7V5a4 4 0 0 1 8 0v2"/></svg>`};
+  return m[tipo]||m.bairro;
+}
+['inf-ov-gps','inf-ov-venue','inf-ov-rep'].forEach(id=>{
+  const el=document.getElementById(id);if(el)el.addEventListener('click',function(e){if(e.target===this)infFecharOv(id);});
+});
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#inf-search-bar')&&!e.target.closest('#inf-search-btn')&&!e.target.closest('#inf-search-dd')){
+    const dd=document.getElementById('inf-search-dd');if(dd)dd.classList.remove('show');
+  }
+});
 
 </script>
 </body>
