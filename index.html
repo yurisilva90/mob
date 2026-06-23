@@ -461,15 +461,23 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .hg-filter-row input{flex:1;height:44px;border:1.5px solid #E2E8F0;border-radius:12px;padding:0 12px;font-size:13px;font-family:Inter,system-ui,sans-serif}
 /* ── INFORMES ── */
 #sc-informes{padding:0;background:var(--bg);overflow-y:auto}
-.inf-topbar{display:flex;align-items:center;gap:7px;padding:10px 14px 8px;background:var(--bg);position:sticky;top:0;z-index:10}
-.inf-tb-btn{width:34px;height:34px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
-.inf-search-input{flex:1;height:36px;border-radius:11px;border:1.5px solid var(--blue);background:var(--card);font-family:Inter,system-ui,sans-serif;font-size:13.5px;font-weight:600;color:var(--text);padding:0 12px;outline:none;display:none}
-.inf-search-input.show{display:block}
+.inf-topbar{display:flex;align-items:center;gap:6px;padding:9px 14px 7px;background:var(--bg);position:sticky;top:0;z-index:10}
+.inf-tb-btn{width:32px;height:32px;border-radius:9px;border:1.5px solid var(--line);background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+/* caixa de busca com lupa integrada */
+.inf-search-wrap{display:none;flex:1;align-items:center;height:34px;border-radius:10px;
+  border:1.5px solid var(--blue);background:var(--card);overflow:hidden}
+.inf-search-wrap.show{display:flex}
+.inf-search-lupa-btn{width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;border:0;background:transparent;color:var(--blue)}
+.inf-search-input{flex:1;height:34px;border:0;background:transparent;
+  font-family:Inter,system-ui,sans-serif;font-size:13px;font-weight:600;color:var(--text);
+  padding:0 10px 0 0;outline:none}
 .inf-topbar-right{display:flex;align-items:center;gap:5px;flex-shrink:0}
-.inf-city{display:flex;align-items:center;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:5px 10px;font-size:11px;font-weight:700;white-space:nowrap}
+.inf-city{display:flex;align-items:center;gap:4px;background:var(--card);border:1px solid var(--line);
+  border-radius:99px;padding:4px 9px;font-size:10.5px;font-weight:700;white-space:nowrap}
 .inf-city-dot{width:6px;height:6px;border-radius:50%;background:#22C55E}
 .inf-time-pill{display:flex;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:2px;gap:1px}
-.inf-tp{border:0;background:transparent;color:var(--muted);font-size:10px;font-weight:700;font-family:inherit;padding:3px 7px;border-radius:99px;cursor:pointer}
+.inf-tp{border:0;background:transparent;color:var(--muted);font-size:10px;font-weight:700;font-family:inherit;padding:3px 6px;border-radius:99px;cursor:pointer}
 .inf-tp.active{background:var(--blue);color:#fff}
 /* dropdown busca */
 .inf-search-dd{position:fixed;left:14px;right:14px;top:56px;background:var(--card);border:1.5px solid var(--line);border-radius:16px;box-shadow:0 8px 28px rgba(15,23,42,.13);z-index:35;overflow:hidden;display:none;max-height:55vh;overflow-y:auto}
@@ -483,30 +491,30 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .inf-sd-dist{margin-left:auto;font-size:10px;font-weight:700;color:var(--muted2);flex-shrink:0}
 .inf-sd-empty{padding:16px;text-align:center;color:var(--muted);font-size:13px;font-weight:600}
 /* destaques 2x2 */
-.inf-sec-lbl{font-size:10px;font-weight:800;color:var(--muted2);text-transform:uppercase;letter-spacing:.07em;padding:8px 14px 5px}
-.inf-feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 14px}
-.inf-feat{background:var(--card);border:2px solid var(--line);border-radius:17px;padding:12px 12px 10px;cursor:pointer;transition:border-color .15s,transform .1s;position:relative;min-height:82px}
+.inf-sec-lbl{font-size:10px;font-weight:800;color:var(--muted2);text-transform:uppercase;letter-spacing:.07em;padding:7px 14px 4px}
+.inf-feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:0 14px}
+.inf-feat{background:var(--card);border:2px solid var(--line);border-radius:17px;padding:10px 10px 8px;cursor:pointer;transition:border-color .15s,transform .1s;position:relative;min-height:70px}
 .inf-feat:active{transform:scale(.97)}
 .inf-feat.active{border-color:var(--blue)}
 .inf-feat.inf-gps{background:linear-gradient(135deg,#0EA5E9,#0284C7);border-color:transparent}
-.inf-feat-ic{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:6px}
+.inf-feat-ic{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;margin-bottom:5px}
 .inf-feat.inf-gps .inf-feat-ic{background:rgba(255,255,255,.2)}
 .inf-feat-ct{position:absolute;top:9px;right:9px;font-size:9px;font-weight:800;background:var(--red);color:#fff;border-radius:99px;padding:2px 6px}
 .inf-feat.inf-gps .inf-feat-ct{background:rgba(255,255,255,.25);color:#fff}
-.inf-feat-name{font-size:12.5px;font-weight:800;line-height:1.15}
+.inf-feat-name{font-size:12px;font-weight:800;line-height:1.15}
 .inf-feat.inf-gps .inf-feat-name{color:#fff}
 .inf-feat-bar{position:absolute;bottom:0;left:11px;right:11px;height:2.5px;background:var(--blue);border-radius:1.5px;opacity:0}
 .inf-feat.active .inf-feat-bar{opacity:1}
 /* zonas 2x2 */
-.inf-zona-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 14px}
-.inf-zcard{background:var(--card);border:2px solid var(--line);border-radius:17px;padding:13px 12px 11px;cursor:pointer;transition:border-color .15s,transform .1s;position:relative;min-height:106px;display:flex;flex-direction:column;justify-content:space-between}
+.inf-zona-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:0 14px}
+.inf-zcard{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:10px 11px 9px;cursor:pointer;transition:border-color .15s,transform .1s;position:relative;min-height:88px;display:flex;flex-direction:column;justify-content:space-between}
 .inf-zcard:active{transform:scale(.97)}
 .inf-zcard-top{display:flex;justify-content:space-between;align-items:flex-start}
 .inf-zcard-ic{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .inf-zcard-ct{font-size:9px;font-weight:800;background:var(--red);color:#fff;border-radius:99px;padding:2px 6px}
 .inf-zcard-ct.z{background:var(--line);color:var(--muted)}
-.inf-zcard-name{font-size:13.5px;font-weight:800;margin-top:7px}
-.inf-zcard-sub{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.3}
+.inf-zcard-name{font-size:13px;font-weight:800;margin-top:5px}
+.inf-zcard-sub{font-size:9.5px;color:var(--muted);margin-top:1px;line-height:1.3}
 /* bairros inline */
 .inf-bairros-inline{display:none;padding:0 14px}
 .inf-bairros-back{display:flex;align-items:center;gap:7px;margin-bottom:9px}
@@ -1199,18 +1207,26 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 <div class="screen" id="sc-informes">
   <!-- topbar -->
   <div class="inf-topbar" id="inf-topbar">
-    <div id="inf-tb-default" style="display:flex;align-items:center;gap:6px">
-      <button class="inf-tb-btn" onclick="navTo('home')">
-        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
-      </button>
-      <button class="inf-tb-btn" id="inf-search-btn" onclick="infToggleSearch()">
+    <!-- Home sempre visível -->
+    <button class="inf-tb-btn" onclick="navTo('home')" id="inf-home-btn">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+    </button>
+    <!-- Lupa isolada (estado padrão) -->
+    <button class="inf-tb-btn" id="inf-search-btn" onclick="infToggleSearch()" style="flex-shrink:0">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+    <!-- Caixa de busca com lupa integrada (aparece sobre a lupa) -->
+    <div class="inf-search-wrap" id="inf-search-wrap">
+      <button class="inf-search-lupa-btn" onclick="infToggleSearch()" title="Fechar busca">
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       </button>
-      <button class="inf-tb-btn" id="inf-back-btn" onclick="infFecharPainel()" style="display:none;background:#0EA5E9;border-color:#0EA5E9">
-        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-      </button>
+      <input class="inf-search-input" id="inf-search-bar" type="text" placeholder="Buscar bairro, local, evento…" oninput="infBuscarGlobal(this.value)">
     </div>
-    <input class="inf-search-input" id="inf-search-bar" type="text" placeholder="Buscar bairro, local, evento…" oninput="infBuscarGlobal(this.value)">
+    <!-- Botão voltar painel -->
+    <button class="inf-tb-btn" id="inf-back-btn" onclick="infFecharPainel()" style="display:none;background:#0EA5E9;border-color:#0EA5E9;flex-shrink:0">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <!-- Direita: sempre visível -->
     <div class="inf-topbar-right">
       <div class="inf-city"><div class="inf-city-dot"></div><span>Rio de Janeiro</span></div>
       <div class="inf-time-pill">
@@ -5811,11 +5827,27 @@ const INF_VENUES = {
   turistico:{titulo:'Pontos Turísticos',tipo:'tur',itens:[{n:'Museu do Amanhã',sub:'Porto Maravilha'},{n:'Pão de Açúcar',sub:'Urca'},{n:'Arcos da Lapa',sub:'Lapa'},{n:'Cristo Redentor',sub:'Corcovado'},{n:'Jardim Botânico',sub:'Lagoa'},{n:'MAM',sub:'Flamengo'},{n:'Quinta da Boa Vista',sub:'São Cristóvão'}]},
 };
 const INF_SDBDB = [
+  // Aeroportos e terminais
   {n:'Galeão (GIG)',t:'aero'},{n:'Santos Dumont (SDU)',t:'aero'},{n:'Rodoviária Novo Rio',t:'term'},
-  {n:'Copacabana',t:'bairro'},{n:'Ipanema',t:'bairro'},{n:'Leblon',t:'bairro'},{n:'Lapa',t:'bairro'},
-  {n:'Botafogo',t:'bairro'},{n:'Barra da Tijuca',t:'bairro'},{n:'Tijuca',t:'bairro'},{n:'Maracanã',t:'bairro'},
-  {n:'Vivo Rio',t:'ev'},{n:'Maracanã',t:'ev'},{n:'Cristo Redentor',t:'tur'},{n:'Pão de Açúcar',t:'tur'},
-  {n:'Bar do Mineiro',t:'bar'},{n:'Casa da Cachaça',t:'bar'},{n:'Copacabana Palace',t:'hotel'},{n:'Fairmont Rio',t:'hotel'},
+  // Bairros
+  {n:'Copacabana',t:'bairro'},{n:'Ipanema',t:'bairro'},{n:'Leblon',t:'bairro'},
+  {n:'Lapa',t:'bairro'},{n:'Botafogo',t:'bairro'},{n:'Barra da Tijuca',t:'bairro'},
+  {n:'Tijuca',t:'bairro'},{n:'Maracanã',t:'bairro'},{n:'Niterói',t:'bairro'},
+  {n:'Flamengo',t:'bairro'},{n:'Glória',t:'bairro'},{n:'Recreio',t:'bairro'},
+  {n:'Vila Isabel',t:'bairro'},{n:'Méier',t:'bairro'},{n:'Penha',t:'bairro'},
+  // Eventos
+  {n:'Vivo Rio',t:'ev'},{n:'Maracanã',t:'ev'},{n:'Fundição Progresso',t:'ev'},
+  {n:'Circo Voador',t:'ev'},{n:'Teatro Municipal',t:'ev'},{n:'MAM',t:'ev'},
+  {n:'Arena Jeunesse',t:'ev'},
+  // Turístico
+  {n:'Cristo Redentor',t:'tur'},{n:'Pão de Açúcar',t:'tur'},{n:'Arcos da Lapa',t:'tur'},
+  {n:'Museu do Amanhã',t:'tur'},{n:'Jardim Botânico',t:'tur'},{n:'Quinta da Boa Vista',t:'tur'},
+  // Bares e Restaurantes
+  {n:'Bar do Mineiro',t:'bar'},{n:'Casa da Cachaça',t:'bar'},{n:'Academia da Cachaça',t:'bar'},
+  {n:'Bar Urca',t:'bar'},{n:'Devassa',t:'bar'},{n:'Confeitaria Colombo',t:'bar'},
+  // Hotéis
+  {n:'Copacabana Palace',t:'hotel'},{n:'Fairmont Rio',t:'hotel'},{n:'Intercontinental',t:'hotel'},
+  {n:'Windsor Barra',t:'hotel'},{n:'Sheraton Grand',t:'hotel'},{n:'Ibis Copacabana',t:'hotel'},
 ];
 let _infLoc=null,_infTipoKey=null,_infMinutos=15,_infRepTipo=null,_infRepValor=null,_infRepDetalhe=null;
 let _infFavs=JSON.parse(localStorage.getItem('sm_inf_favs')||'[]');
@@ -6117,9 +6149,14 @@ async function infEnviarReporte(){
 let _infSrchOpen=false;
 function infToggleSearch(){
   _infSrchOpen=!_infSrchOpen;
-  document.getElementById('inf-tb-default').style.display=_infSrchOpen?'none':'flex';
-  const sb=document.getElementById('inf-search-bar');sb.style.display=_infSrchOpen?'block':'none';
-  if(_infSrchOpen)sb.focus();else{sb.value='';document.getElementById('inf-search-dd').classList.remove('show');}
+  // Lupa isolada ↔ caixa de busca com lupa integrada
+  const btn=document.getElementById('inf-search-btn');
+  const wrap=document.getElementById('inf-search-wrap');
+  btn.style.display=_infSrchOpen?'none':'flex';
+  wrap.classList.toggle('show',_infSrchOpen);
+  const sb=document.getElementById('inf-search-bar');
+  if(_infSrchOpen){sb.value='';sb.focus();}
+  else{sb.value='';document.getElementById('inf-search-dd').classList.remove('show');}
 }
 function infBuscarGlobal(q){
   const dd=document.getElementById('inf-search-dd');
