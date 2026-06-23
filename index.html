@@ -4451,7 +4451,10 @@ function restoreGpsSession() {
             g.lastFixTime = null;
           }
           if (nativeStart) g.start = nativeStart;
-          if (typeof nativePaused === 'number') g.pausedMs = nativePaused;
+          // Guard: não diminui pausedMs com valor menor do nativo
+          if (typeof nativePaused === 'number' && nativePaused >= (g.pausedMs || 0)) {
+            g.pausedMs = nativePaused;
+          }
         }
       }
     } catch(e) {}
@@ -5717,7 +5720,10 @@ function nativeSyncGps(km, startMs, pausedMs) {
     S.gps.km = kmNat;
   }
   if (startMs && !S.gps.start) S.gps.start = startMs;
-  if (typeof pausedMs === 'number') S.gps.pausedMs = pausedMs;
+  // GUARD: nunca deixa o sync nativo DIMINUIR o pausedMs acumulado.
+  // Se o GpsService reiniciou com pausedMs=0, mantemos o valor JS que é maior.
+  const pauseNat = (typeof pausedMs === 'number' && isFinite(pausedMs)) ? pausedMs : 0;
+  if (pauseNat >= (S.gps.pausedMs || 0)) { S.gps.pausedMs = pauseNat; }
 
   // LIMPA pontos de referencia JS para evitar dupla contagem.
   // Quando o app volta ao foreground, restoreSession recarrega o ultimo ponto
