@@ -480,6 +480,27 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .inf-tp{border:0;background:transparent;color:var(--muted);font-size:10px;font-weight:700;font-family:inherit;padding:3px 6px;border-radius:99px;cursor:pointer}
 .inf-tp.active{background:var(--blue);color:#fff}
 /* dropdown busca */
+
+/* ── Favoritos ── */
+.inf-favs{padding:7px 14px 0}
+.inf-favs-lbl{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.inf-favs-lbl span{font-size:10px;font-weight:800;color:var(--muted2);text-transform:uppercase;letter-spacing:.07em}
+.inf-favs-lbl a{font-size:11px;font-weight:700;color:var(--blue);cursor:pointer;text-decoration:none}
+.inf-favs-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.inf-fav-chip{background:var(--card);border:2px solid var(--line);border-radius:13px;
+  padding:9px 5px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;
+  gap:4px;position:relative;transition:border-color .15s,transform .1s;min-height:60px}
+.inf-fav-chip:active{transform:scale(.96)}
+.inf-fav-chip.active{border-color:var(--blue)}
+.inf-fav-chip.empty{border-style:dashed;background:transparent}
+.inf-fav-ic{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center}
+.inf-fav-name{font-size:9.5px;font-weight:700;text-align:center;line-height:1.2;
+  overflow:hidden;white-space:nowrap;width:100%;text-overflow:ellipsis;padding:0 2px}
+.inf-fav-ct{position:absolute;top:4px;right:4px;font-size:7.5px;font-weight:800;
+  background:var(--red);color:#fff;border-radius:99px;padding:1px 4px}
+.inf-fav-empty-ic{opacity:.3}
+.inf-fav-empty-lbl{font-size:9px;color:var(--muted2);font-weight:600}
+
 .inf-search-dd{position:fixed;left:14px;right:14px;top:56px;background:var(--card);border:1.5px solid var(--line);border-radius:16px;box-shadow:0 8px 28px rgba(15,23,42,.13);z-index:35;overflow:hidden;display:none;max-height:55vh;overflow-y:auto}
 .inf-search-dd.show{display:block}
 .inf-sd-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line);cursor:pointer}
@@ -1263,6 +1284,17 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
       <div class="inf-feat-ct">GPS</div>
       <div class="inf-feat-ic"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div>
       <div class="inf-feat-name">Minha área</div>
+    </div>
+  </div>
+
+  <!-- FAVORITOS -->
+  <div class="inf-favs" id="inf-favs-section">
+    <div class="inf-favs-lbl">
+      <span>Favoritos</span>
+      <a onclick="infEditarFavs()">Editar</a>
+    </div>
+    <div class="inf-favs-row" id="inf-favs-row">
+      <!-- renderizado pelo JS via infRenderFavs() -->
     </div>
   </div>
 
@@ -5734,6 +5766,41 @@ renderLancCats();
 agCalY=new Date().getFullYear();agCalM=new Date().getMonth();agCalSelDate=DB.today();
 authInit();
 
+
+// ── Favoritos (Item 7) ───────────────────────────────────────────────────
+function infRenderFavs(){
+  const row=document.getElementById('inf-favs-row');if(!row)return;
+  // 4 slots: 3 favoritados + 1 vazio, ou menos se tiver menos
+  const slots=[];
+  for(let i=0;i<4;i++){
+    if(_infFavs[i]) slots.push(_infFavs[i]);
+    else slots.push(null);
+  }
+  const t_fn=k=>INF_TIPOS[k]||INF_TIPOS.bairro;
+  row.innerHTML=slots.map((f,i)=>{
+    if(!f) return`<div class="inf-fav-chip empty" onclick="showToast('Toque na ★ dentro de qualquer local')">
+      <div class="inf-fav-empty-ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+      <div class="inf-fav-empty-lbl">Adicionar</div>
+    </div>`;
+    const t=t_fn(f.t);
+    return`<div class="inf-fav-chip" onclick="infAbrirLocal(this,'${f.n}','${f.t}')">
+      <div class="inf-fav-ic" style="background:${t.bg}">${infIconSvg(f.t,t.cor,12)}</div>
+      <div class="inf-fav-name">${f.n}</div>
+    </div>`;
+  }).join('');
+  // Ocultar seção se não tiver nenhum favorito
+  const sec=document.getElementById('inf-favs-section');
+  if(sec) sec.style.display=_infFavs.length===0?'none':'block';
+}
+
+function infEditarFavs(){
+  if(!_infFavs.length){showToast('Nenhum favorito ainda. Toque na ★ em qualquer local.');return;}
+  const nomes=_infFavs.map(f=>f.n).join(', ');
+  showConfirm(`Favoritos: ${nomes}\n\nDeseja limpar todos os favoritos?`,
+    ()=>{_infFavs=[];localStorage.setItem('sm_inf_favs','[]');infRenderFavs();showToast('Favoritos limpos.');},
+    {confirmLabel:'Limpar todos'});
+}
+
 // Monitor periodico da bolinha flutuante — reconstroi se o Android tiver matado
 // o overlay enquanto a jornada estava ativa (ocorre mesmo com cabo conectado
 // em alguns dispositivos com gestao de bateria agressiva).
@@ -5854,7 +5921,7 @@ let _infFavs=JSON.parse(localStorage.getItem('sm_inf_favs')||'[]');
 const INF_AVC=['#6D28D9','#0369A1','#B45309','#0F766E','#15803D','#BE123C','#7C3AED','#0284C7'];
 const INF_BADGE={dinamico:'infbd',transito:'infbt',fiscalizacao:'infbf',fila:'infbfi',demanda:'infbde',lotacao:'infblo',acidente:'infbac'};
 
-function renderInformes(){ infCarregarContagens(); }
+function renderInformes(){ infCarregarContagens(); infRenderFavs(); }
 
 async function infCarregarContagens(){
   if(!_SUPA)return;
@@ -5901,6 +5968,8 @@ function infAbrirLocal(el,nome,tipoKey){
   document.getElementById('inf-panel').classList.add('open');
   document.getElementById('inf-back-btn').style.display='flex';
   infCarregarInformes(nome,tipoKey);
+  // Realtime: assina novos informes para esse local
+  infSubscribeRealtime(nome,tipoKey);
 }
 
 async function infCarregarInformes(nome,tipoKey){
@@ -5997,6 +6066,27 @@ function infFecharPainel(){
   document.getElementById('inf-panel').classList.remove('open');
   document.getElementById('inf-back-btn').style.display='none';
   document.querySelectorAll('.inf-feat,.inf-bchip,.inf-zcard').forEach(b=>b.classList.remove('active'));
+  infUnsubscribeRealtime();
+}
+let _infChannel=null;
+function infSubscribeRealtime(nome,tipoKey){
+  infUnsubscribeRealtime();
+  if(!_SUPA)return;
+  try{
+    _infChannel=_SUPA.channel('inf-'+nome.replace(/[^a-z0-9]/gi,'-'))
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'informes',
+        filter:`location_name=eq.${nome}`},
+        payload=>{
+          // Novo informe chegou em tempo real — recarrega o painel
+          console.log('[RT] novo informe',payload.new?.param_type);
+          infCarregarInformes(_infLoc,_infTipoKey);
+          showToast('Novo informe chegou!','info');
+        })
+      .subscribe();
+  }catch(e){console.warn('realtime sub',e);}
+}
+function infUnsubscribeRealtime(){
+  if(_infChannel){try{_SUPA?.removeChannel(_infChannel);}catch(e){}}_infChannel=null;
 }
 
 function infToggleFav(){
@@ -6007,6 +6097,7 @@ function infToggleFav(){
   else if(_infFavs.length<4){_infFavs.push({n:_infLoc,t:_infTipoKey});btn.classList.add('on');showToast('Adicionado aos favoritos!');}
   else{showToast('Máximo de 4 favoritos');return;}
   localStorage.setItem('sm_inf_favs',JSON.stringify(_infFavs));
+  infRenderFavs();
 }
 
 function infAbrirZona(zona){
@@ -6053,6 +6144,39 @@ function infAbrirGps(){
 
 function infAbrirVenue(cat){
   const v=INF_VENUES[cat];const t=INF_TIPOS[v.tipo];
+  // Tenta carregar via GPS primeiro; fallback para lista fixa
+  infAbrirVenueSheet(cat, v.itens);
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(pos=>{
+      infCarregarVenuesGPS(cat, pos.coords.latitude, pos.coords.longitude);
+    }, null, {timeout:5000, maximumAge:30000});
+  }
+}
+async function infCarregarVenuesGPS(cat, lat, lon){
+  const queries = {
+    bares: `node(around:800,${lat},${lon})[amenity~"^(bar|pub|restaurant|cafe|nightclub)$"][name];`,
+    hoteis:`node(around:2000,${lat},${lon})[tourism~"^(hotel|hostel|motel|guest_house)$"][name];`,
+    eventos:`(node(around:5000,${lat},${lon})[amenity~"^(theatre|cinema|arts_centre)$"][name];node(around:5000,${lat},${lon})[leisure="stadium"][name];);`,
+    turistico:`node(around:3000,${lat},${lon})[tourism~"^(museum|attraction|viewpoint|gallery)$"][name];`,
+  };
+  const oq = queries[cat]; if(!oq) return;
+  try{
+    const r=await fetch(`https://overpass-api.de/api/interpreter?data=[out:json];${encodeURIComponent(oq)}out 20;`);
+    const d=await r.json();
+    if(!d.elements||!d.elements.length) return;
+    // Calcula distância e ordena
+    const R=6371;
+    const dist=(a,b,c,dd)=>R*2*Math.asin(Math.sqrt(Math.sin(((c-a)*Math.PI/180)/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(((dd-b)*Math.PI/180)/2)**2));
+    const itens=d.elements
+      .filter(e=>e.tags&&e.tags.name)
+      .map(e=>({n:e.tags.name, sub:e.tags['addr:suburb']||e.tags['addr:city']||'Via GPS', km:dist(lat,lon,e.lat||lat,e.lon||lon)}))
+      .sort((a,b)=>a.km-b.km)
+      .slice(0,12)
+      .map(e=>({...e,distStr:(e.km<1?Math.round(e.km*1000)+'m':e.km.toFixed(1)+'km')}));
+    if(itens.length) infAbrirVenueSheet(cat, itens, true);
+  }catch(e){console.warn('overpass venues',e);}
+}
+function infAbrirVenueSheet(cat, itens, viaGPS){
   const ic=document.getElementById('inf-venue-ic');ic.style.background=t.bg;ic.innerHTML=infIconSvg(v.tipo,t.cor,17);
   document.getElementById('inf-venue-title').textContent=v.titulo;
   document.getElementById('inf-venue-sub').textContent='Ordenado pela sua localização';
