@@ -4387,7 +4387,12 @@ function restoreGpsSession() {
           // aplicada: o servico nativo nao sabe nada sobre essa correcao, entao
           // confiar nele sem essa guarda jogava o numero de volta pro valor cru,
           // descartando a edicao do usuario.
-          if (typeof nativeKm === 'number' && nativeKm > g.km) g.km = nativeKm;
+          if (typeof nativeKm === 'number' && nativeKm > g.km) {
+            g.km = nativeKm;
+            // Limpa referencia JS para evitar dupla contagem no primeiro fix
+            g.pts = [];
+            g.lastFixTime = null;
+          }
           if (nativeStart) g.start = nativeStart;
           if (typeof nativePaused === 'number') g.pausedMs = nativePaused;
         }
@@ -5641,17 +5646,37 @@ async function loginForgot() {
 // Chamada pelo nativo ao voltar ao foreground — sincroniza GPS
 function nativeSyncGps(km, startMs, pausedMs) {
   if (!S || !S.gps || S.gps.st === 'idle') return;
-  S.gps.km = km;
-  S.gps.start = startMs || S.gps.start;
-  S.gps.pausedMs = pausedMs || 0;
-  setText('jc-km', km.toFixed(1));
-  setText('jc-kmtotal', ((S.gps.baseKm||0)+km).toFixed(1)+' km');
-  // Garante que a bolinha flutuante volte a aparecer se o Android tiver fechado o app
-  // e perdido o overlay enquanto a jornada continuava ativa em segundo plano.
-  // startFloating já é seguro de chamar de novo: se a bolinha já existe, só atualiza o km.
+
+  // GUARD: nunca deixa o sync nativo DIMINUIR o km acumulado.
+  // Se o GpsService foi morto e reiniciado pelo Android, ele pode chamar
+  // nativeSyncGps com km < do que ja temos em memoria. Nesse caso mantemos
+  // o valor maior (o que estava em S.gps.km ou no nativo, o que for maior).
+  const kmNat = (typeof km === 'number' && isFinite(km)) ? km : S.gps.km;
+  if (kmNat > (S.gps.km || 0)) {
+    S.gps.km = kmNat;
+  }
+  if (startMs && !S.gps.start) S.gps.start = startMs;
+  if (typeof pausedMs === 'number') S.gps.pausedMs = pausedMs;
+
+  // LIMPA pontos de referencia JS para evitar dupla contagem.
+  // Quando o app volta ao foreground, restoreSession recarrega o ultimo ponto
+  // GPS salvo (g.pts = [lastPt]). Se o carro se deslocou no background, o
+  // proximo disparo do watchPosition calcularia essa distancia E SOMARIA em
+  // cima do km ja atualizado pelo nativo -> inflaria o total momentaneamente.
+  // Zerando g.pts e lastFixTime, o proximo fix apenas registra a posicao atual
+  // como nova referencia sem contar nenhuma distancia extra.
+  S.gps.pts = [];
+  S.gps.lastFixTime = null;
+
+  const kmFinal = S.gps.km;
+  setText('jc-km', kmFinal.toFixed(1));
+  setText('jc-kmtotal', ((S.gps.baseKm||0)+kmFinal).toFixed(1)+' km');
+
+  // Recria a bolinha flutuante se o Android tiver matado o overlay.
+  // startFloating e seguro de chamar de novo: se ja existe, so atualiza o km.
   if (window.SmartMobiNative && DB.cfg().overlayEnabled !== false) {
     try {
-      if (typeof SmartMobiNative.startFloating === 'function') SmartMobiNative.startFloating(S.gps.start, km);
+      if (typeof SmartMobiNative.startFloating === 'function') SmartMobiNative.startFloating(S.gps.start, kmFinal);
       if (typeof SmartMobiNative.updateFloatingStatus === 'function') SmartMobiNative.updateFloatingStatus(S.gps.st === 'paused' ? 'paused' : 'running');
     } catch(e) {}
   }
@@ -5686,6 +5711,25 @@ renderLancCats();
 // Render all screens
 agCalY=new Date().getFullYear();agCalM=new Date().getMonth();agCalSelDate=DB.today();
 authInit();
+
+// Monitor periodico da bolinha flutuante — reconstroi se o Android tiver matado
+// o overlay enquanto a jornada estava ativa (ocorre mesmo com cabo conectado
+// em alguns dispositivos com gestao de bateria agressiva).
+setInterval(function() {
+  if (!window.SmartMobiNative) return;
+  if (!S || !S.gps || S.gps.st === 'idle') return;
+  if (DB.cfg().overlayEnabled === false) return;
+  try {
+    const overlayAlive = (typeof SmartMobiNative.hasOverlay === 'function') ? SmartMobiNative.hasOverlay() : true;
+    if (!overlayAlive) {
+      console.log('[SmartMobi] Overlay sumiu — recriando bolinha');
+      if (typeof SmartMobiNative.startFloating === 'function')
+        SmartMobiNative.startFloating(S.gps.start, S.gps.km || 0);
+      if (typeof SmartMobiNative.updateFloatingStatus === 'function')
+        SmartMobiNative.updateFloatingStatus(S.gps.st === 'paused' ? 'paused' : 'running');
+    }
+  } catch(e) {}
+}, 20000); // verifica a cada 20 segundos
 
 // ── Fila de sincronizacao: tenta reenviar o que ficou pendente quando a
 // conexao voltar, e periodicamente como rede de seguranca (sinal fraco pode
