@@ -5521,6 +5521,10 @@ async function authInit() {
           refresh_token: session.refresh_token
         })); } catch(e) {}
       }
+      // Salva credenciais para o GpsService usar nas notificações de reporte rápido
+      if (window.SmartMobiNative?.saveUserToken) {
+        try { SmartMobiNative.saveUserToken(session.user.id, session.access_token); } catch(e) {}
+      }
       await loadProfile(); showApp();
     } else if (ev==='SIGNED_OUT') {
       _supaUser = null;
