@@ -5827,9 +5827,18 @@ function renderInformes(){ infCarregarContagens(); }
 async function infCarregarContagens(){
   if(!_SUPA)return;
   try{
-    const{data}=await _SUPA.from('informes').select('location_name').eq('is_active',true).gt('expires_at',new Date().toISOString());
+    const{data}=await _SUPA.from('informes')
+      .select('location_name')
+      .eq('is_active',true)
+      .gt('expires_at',new Date().toISOString());
     if(!data)return;
     const cnt={};data.forEach(r=>{cnt[r.location_name]=(cnt[r.location_name]||0)+1;});
+    // Atualiza contagem individual dos bairros quando inline
+    document.querySelectorAll('.inf-bchip-ct').forEach(el=>{
+      const nome=el.closest('.inf-bchip')?.querySelector('.inf-bchip-name')?.textContent||'';
+      const n=cnt[nome]||0;
+      el.textContent=n;el.className='inf-bchip-ct'+(n===0?' z':'');
+    });
     [['gig','Galeão (GIG)'],['sdu','Santos Dumont (SDU)'],['rod','Rodoviária Novo Rio']].forEach(([id,n])=>{
       const el=document.getElementById('inf-ct-'+id);if(el)el.textContent=cnt[n]||0;
     });
@@ -5867,8 +5876,24 @@ async function infCarregarInformes(nome,tipoKey){
   let informes=[];
   try{
     if(_SUPA){
-      const{data}=await _SUPA.from('informes').select('*').eq('location_name',nome).eq('is_active',true).gt('expires_at',new Date().toISOString()).order('votes_up',{ascending:false}).limit(30);
-      informes=data||[];
+      // Busca lista de informes (para exibir na lista com avatares)
+      const{data:lista}=await _SUPA.from('informes')
+        .select('*').eq('location_name',nome).eq('is_active',true)
+        .gt('expires_at',new Date().toISOString())
+        .order('votes_up',{ascending:false}).limit(30);
+      informes=lista||[];
+      // Busca status consolidado (moda por param_type) para os chips
+      const{data:status}=await _SUPA.from('informes_status')
+        .select('*').eq('location_name',nome).limit(20);
+      if(status&&status.length){
+        // Sobrescreve pp (por param) com o valor mais votado de cada tipo
+        status.forEach(r=>{
+          if(!pp[r.param_type]||r.total_up>=(pp[r.param_type]?.votes_up||0)){
+            pp[r.param_type]={param_value:r.param_value,param_detail:r.param_detail,
+              votes_up:r.total_up,confianca:r.confianca};
+          }
+        });
+      }
     }
   }catch(e){console.warn('inf load',e);}
   document.getElementById('inf-panel-meta').textContent=informes.length+' informe'+(informes.length!==1?'s':'')+' · últimos '+_infMinutos+'min';
@@ -6071,7 +6096,17 @@ async function infEnviarReporte(){
   try{
     if(_SUPA){
       const sess=await _SUPA.auth.getSession();const uid=sess?.data?.session?.user?.id;
-      if(uid)await _SUPA.from('informes').insert({user_id:uid,location_name:_infLoc,location_type:_infTipoKey,city:'rio',param_type:_infRepTipo,param_value:_infRepValor,param_detail:_infRepDetalhe||null,expires_at:expiresAt,votes_up:1,votes_dn:0,is_active:true});
+      if(uid){
+        const{error}=await _SUPA.from('informes').insert({user_id:uid,location_name:_infLoc,location_type:_infTipoKey,city:'rio',param_type:_infRepTipo,param_value:_infRepValor,param_detail:_infRepDetalhe||null,expires_at:expiresAt,votes_up:1,votes_dn:0,is_active:true});
+        if(error){
+          // Trigger de spam ativo — informa o usuário sem travar o app
+          if(error.message?.includes('duplicate_report')||error.code==='P0001'){
+            btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Enviar informe';
+            showToast('Você já reportou isso recentemente. Aguarde um pouco.');return;
+          }
+          throw error;
+        }
+      }
     }
     infFecharOv('inf-ov-rep');showToast('Informe enviado — obrigado!');
     infCarregarInformes(_infLoc,_infTipoKey);
