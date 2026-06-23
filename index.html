@@ -552,14 +552,14 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .inf-bchip-ct{font-size:8.5px;font-weight:800;background:var(--red);color:#fff;border-radius:99px;padding:1px 5px;align-self:flex-start}
 .inf-bchip-ct.z{background:var(--line);color:var(--muted)}
 /* 4 categorias fixas no fundo */
-.inf-cat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:9px 14px 11px;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--bg);border-top:1px solid var(--line);z-index:25}
+.inf-cat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:9px 14px 11px;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--bg);border-top:1px solid var(--line);z-index:105}
 .inf-ccard{background:var(--card);border:2px solid var(--line);border-radius:13px;padding:9px 4px 8px;cursor:pointer;transition:border-color .15s,transform .1s;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative}
 .inf-ccard:active{transform:scale(.96)}
 .inf-ccard-ic{width:27px;height:27px;border-radius:8px;display:flex;align-items:center;justify-content:center}
 .inf-ccard-name{font-size:9.5px;font-weight:800;text-align:center;line-height:1.2}
 .inf-ccard-ct{position:absolute;top:5px;right:5px;font-size:8px;font-weight:800;background:var(--red);color:#fff;border-radius:99px;padding:1px 4px}
 /* painel de informes full-screen */
-.inf-panel{position:fixed;left:0;right:0;top:100%;bottom:0;background:var(--card);z-index:30;transition:top .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}
+.inf-panel{position:fixed;left:0;right:0;top:100%;bottom:0;background:var(--card);z-index:110;transition:top .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}
 .inf-panel.open{top:0;bottom:0}
 .inf-panel-drag{flex-shrink:0;padding:10px 0 6px;display:flex;align-items:center;justify-content:center;cursor:grab;touch-action:none}
 .inf-panel-drag-bar{width:40px;height:4px;border-radius:2px;background:var(--line)}
@@ -2021,6 +2021,9 @@ const MODULE_ICONS_COLOR = {blue:'#0EA5E9', purple:'#7C3AED', green:'#22C55E', o
 
 // ── NAVIGATION ────────────────────────────────────────────────
 function navTo(sec) {
+  // Ocultar/mostrar nav na tela de Informes (o painel usa z-index alto mas o cat-row precisa da nav escondida)
+  const bottomNav = document.querySelector('.bottom');
+  if (bottomNav) bottomNav.style.display = sec === 'informes' ? 'none' : 'flex';
   document.querySelectorAll('.screen').forEach(s => {
     s.classList.remove('on');
     s.style.display = '';  // limpa inline style para CSS funcionar
@@ -6068,6 +6071,7 @@ async function infVotar(infId,vote,btn){
 
 function infFecharPainel(){
   document.getElementById('inf-panel').classList.remove('open');
+  const bn=document.querySelector('.bottom');if(bn)bn.style.display='none'; // informes mantém nav escondido, navTo restaura ao sair
   document.getElementById('inf-back-btn').style.display='none';
   document.querySelectorAll('.inf-feat,.inf-bchip,.inf-zcard').forEach(b=>b.classList.remove('active'));
   infUnsubscribeRealtime();
