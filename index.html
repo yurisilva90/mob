@@ -233,7 +233,7 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .budgetRow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}.budgetRow:last-child{border-bottom:none}.budgetTrack{height:6px;background:#E2E8F0;border-radius:3px;overflow:hidden;margin-top:6px}.budgetTrack i{display:block;height:100%;border-radius:3px;background:var(--blue);transition:width .4s}
 .split{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}.donut{width:80px;height:80px;border-radius:50%;background:conic-gradient(var(--blue) 0 57%,var(--green) 57% 86%,var(--orange) 86% 97%,var(--red) 97% 100%);flex-shrink:0}.catRow{display:flex;align-items:center;gap:8px;margin-bottom:8px}.dot{width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0}
 /* ── Home screen extras ── */
-.ad{background:#fff;border:1px solid var(--line);border-radius:18px;padding:10px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 10px rgba(15,23,42,.05)}.adtag{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);background:#F1F5F9;padding:3px 8px;border-radius:6px;flex-shrink:0}.adtext{flex:1;font-size:12px;color:var(--muted)}.adbtn{font-size:11px;font-weight:800;color:var(--blue);padding:5px 10px;background:rgba(14,165,233,.1);border-radius:10px;cursor:pointer;flex-shrink:0}
+.ad{background:#fff;border:1px solid var(--line);border-radius:18px;padding:10px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 10px rgba(15,23,42,.05);cursor:pointer;transition:opacity .15s}.ad:active{opacity:.85}.adtag{font-size:8.5px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);background:#F1F5F9;padding:3px 7px;border-radius:6px;flex-shrink:0}.ad-logo{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:9px;font-weight:900;color:#fff;line-height:1.1;text-align:center}.adtext{flex:1;font-size:11.5px;color:var(--text);font-weight:600;line-height:1.35}.adtext strong{font-size:12px;font-weight:800;display:block;color:var(--text)}.adbtn{font-size:11px;font-weight:800;padding:6px 12px;border-radius:10px;cursor:pointer;flex-shrink:0;white-space:nowrap;border:0}
 .entries{background:#fff;border:1px solid var(--line);border-radius:24px;padding:16px;box-shadow:0 2px 10px rgba(15,23,42,.05)}.eheader{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.eheader h3{font-size:15px;font-weight:700}.eheader button{font-size:12px;font-weight:700;color:var(--blue);background:none;border:none;cursor:pointer;touch-action:manipulation}
 .partner{background:linear-gradient(135deg,#0F172A,#1E293B);border-radius:22px;padding:16px;color:#fff;box-shadow:0 10px 28px rgba(15,23,42,.08)}.eyebrow{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;opacity:.6;margin-bottom:4px}.pt{font-size:16px;font-weight:800;letter-spacing:-.03em}.ps{font-size:12px;opacity:.65;margin-top:4px}
 .pie-wrap{display:flex;align-items:center;gap:14px;padding:8px 0}.pie{width:72px;height:72px;border-radius:50%;background:conic-gradient(var(--blue) 0 61%,var(--green) 61% 89%,var(--orange) 89% 100%);flex-shrink:0}.pie-wrap .list{background:none;border:none;box-shadow:none;padding:0;flex:1}.li{display:flex;align-items:center;justify-content:space-between;font-size:12px;padding:3px 0}.li span{color:var(--muted);font-weight:600}.li b{font-family:'Inter',system-ui,sans-serif;font-weight:700}.legend{display:flex;gap:12px;margin-top:8px}.leg{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);font-weight:600}.dot{width:7px;height:7px;border-radius:50%;background:var(--blue);flex-shrink:0}.dot.g{background:var(--green)}.dot.o{background:var(--orange)}
@@ -831,7 +831,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 <!-- ══ TELA HOME ══════════════════════════════════════════════════════════ -->
 <div class="screen on" id="sc-home">
   <div style="padding:0 16px">
-    <div class="ad"><div class="adtag">PUBLI</div><div class="adtext" id="ad-text">Seguro para motoristas · Porto Seguro</div><div class="adbtn">Ver</div></div>
+    <div class="ad" id="ad-top" onclick="adClick(0)"><div class="adtag">PUBLI</div><div class="ad-logo" id="ad-logo-0"></div><div class="adtext" id="ad-text-0"></div><div class="adbtn" id="ad-btn-0">Ver</div></div>
   </div>
   <div class="hg-info-tip" id="hg-info-tip"></div>
   <section class="hg-period-card" style="margin:12px 16px 0">
@@ -878,6 +878,8 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
     <p class="hg-chart-highlight" id="hg-hora-insight"></p>
     <div class="hg-bar-chart hour" id="hg-chart-hora"></div>
   </section>
+
+  <div class="ad" id="ad-mid" onclick="adClick(1)" style="margin:14px 16px 0"><div class="adtag">PUBLI</div><div class="ad-logo" id="ad-logo-1"></div><div class="adtext" id="ad-text-1"></div><div class="adbtn" id="ad-btn-1">Ver</div></div>
 
   <section class="hg-chart-card" style="margin:14px 16px 0">
     <div class="hg-chart-head"><div><h2>Mês/Ano <button class="hg-info-btn" onclick="showChartInfo(this,'Soma por mês/ano, dentro do período selecionado acima — com Semana ou Mês escolhido aqui em cima, vira 1 barra só.')">?</button></h2></div>
@@ -5916,7 +5918,87 @@ setScope('operacional');
 renderLancCats();
 // Render all screens
 agCalY=new Date().getFullYear();agCalM=new Date().getMonth();agCalSelDate=DB.today();
+
+// ── Parceiros PUBLI ──────────────────────────────────────────────────────────
+const ADS = [
+  {
+    logo: 'IP', logoBg: 'linear-gradient(135deg,#FFD100,#FF8C00)',
+    title: 'Ganhe KM de Vantagens', sub: 'Abastece em postos Ipiranga',
+    btnTxt: 'Ver postos', btnBg: '#FF8C00', btnColor: '#fff',
+    url: 'https://www.kmdevantagens.com.br'
+  },
+  {
+    logo: 'PS', logoBg: 'linear-gradient(135deg,#003087,#0369A1)',
+    title: 'Seguro por km rodado', sub: 'Exclusivo para motoristas de app · Porto Seguro',
+    btnTxt: 'Cotar grátis', btnBg: '#0369A1', btnColor: '#fff',
+    url: 'https://www.portoseguro.com.br'
+  },
+  {
+    logo: 'SA', logoBg: 'linear-gradient(135deg,#EC0000,#C80000)',
+    title: 'Crédito para autônomos', sub: 'Financiamento sem comprovante fixo · Santander',
+    btnTxt: 'Simular', btnBg: '#EC0000', btnColor: '#fff',
+    url: 'https://www.santander.com.br'
+  },
+  {
+    logo: 'TIM', logoBg: 'linear-gradient(135deg,#00A651,#007A3D)',
+    title: '150GB para trabalhar', sub: 'Plano exclusivo para motoristas · TIM Black',
+    btnTxt: 'Assinar', btnBg: '#00A651', btnColor: '#fff',
+    url: 'https://www.tim.com.br'
+  },
+  {
+    logo: 'AZ', logoBg: 'linear-gradient(135deg,#E11D48,#9F1239)',
+    title: '10% off em peças e acessórios', sub: 'Só para motoristas de app · AutoZone',
+    btnTxt: 'Cupom', btnBg: '#E11D48', btnColor: '#fff',
+    url: 'https://www.autozone.com.br'
+  },
+  {
+    logo: 'ITA', logoBg: 'linear-gradient(135deg,#F37021,#E05A00)',
+    title: 'Conta PJ sem mensalidade', sub: 'Para autônomos e MEI · Itaú',
+    btnTxt: 'Abrir conta', btnBg: '#F37021', btnColor: '#fff',
+    url: 'https://www.itau.com.br'
+  },
+];
+
+let _adTopIdx = 0;
+let _adMidIdx = 1; // começa no segundo parceiro
+
+function renderAd(slotIdx, adIdx) {
+  const ad = ADS[adIdx % ADS.length];
+  const logoEl  = document.getElementById('ad-logo-' + slotIdx);
+  const textEl  = document.getElementById('ad-text-' + slotIdx);
+  const btnEl   = document.getElementById('ad-btn-'  + slotIdx);
+  if (!logoEl || !textEl || !btnEl) return;
+  logoEl.style.background = ad.logoBg;
+  logoEl.textContent = ad.logo;
+  textEl.innerHTML = '<strong>' + ad.title + '</strong>' + ad.sub;
+  btnEl.textContent = ad.btnTxt;
+  btnEl.style.background = ad.btnBg;
+  btnEl.style.color = ad.btnColor;
+}
+
+function adClick(slotIdx) {
+  const adIdx = slotIdx === 0 ? _adTopIdx : _adMidIdx;
+  const ad = ADS[adIdx % ADS.length];
+  if (ad.url) window.open(ad.url, '_blank');
+}
+
+function initAds() {
+  // Escolhe parceiro aleatório para cada slot
+  _adTopIdx = Math.floor(Math.random() * ADS.length);
+  _adMidIdx = (_adTopIdx + 1 + Math.floor(Math.random() * (ADS.length - 1))) % ADS.length;
+  renderAd(0, _adTopIdx);
+  renderAd(1, _adMidIdx);
+  // Rotaciona a cada 5 minutos
+  setInterval(() => {
+    _adTopIdx = (_adTopIdx + 1) % ADS.length;
+    _adMidIdx = (_adMidIdx + 1) % ADS.length;
+    renderAd(0, _adTopIdx);
+    renderAd(1, _adMidIdx);
+  }, 5 * 60 * 1000);
+}
+
 authInit();
+initAds();
 
 
 // ── Favoritos (Item 7) ───────────────────────────────────────────────────
