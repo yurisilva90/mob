@@ -233,8 +233,8 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .budgetRow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}.budgetRow:last-child{border-bottom:none}.budgetTrack{height:6px;background:#E2E8F0;border-radius:3px;overflow:hidden;margin-top:6px}.budgetTrack i{display:block;height:100%;border-radius:3px;background:var(--blue);transition:width .4s}
 .split{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}.donut{width:80px;height:80px;border-radius:50%;background:conic-gradient(var(--blue) 0 57%,var(--green) 57% 86%,var(--orange) 86% 97%,var(--red) 97% 100%);flex-shrink:0}.catRow{display:flex;align-items:center;gap:8px;margin-bottom:8px}.dot{width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0}
 /* ── Home screen extras ── */
-.ad-carousel{margin:14px 16px 0;border-radius:18px;overflow:hidden;position:relative;touch-action:pan-y;cursor:pointer;height:90px}
-.ad-carousel img{width:100%;height:90px;object-fit:cover;object-position:center;display:block;transition:transform .4s ease;pointer-events:none}
+.ad-carousel{margin:14px 16px 0;border-radius:18px;overflow:hidden;position:relative;touch-action:pan-y;cursor:pointer;height:130px}
+.ad-carousel img{width:100%;height:130px;object-fit:cover;object-position:center;display:block;transition:transform .4s ease;pointer-events:none}
 .ad-carousel .adtag{position:absolute;top:8px;left:10px;font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:#64748B;background:rgba(255,255,255,0.92);padding:3px 7px;border-radius:6px;z-index:2;backdrop-filter:blur(4px)}
 .entries{background:#fff;border:1px solid var(--line);border-radius:24px;padding:16px;box-shadow:0 2px 10px rgba(15,23,42,.05)}.eheader{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.eheader h3{font-size:15px;font-weight:700}.eheader button{font-size:12px;font-weight:700;color:var(--blue);background:none;border:none;cursor:pointer;touch-action:manipulation}
 .partner{background:linear-gradient(135deg,#0F172A,#1E293B);border-radius:22px;padding:16px;color:#fff;box-shadow:0 10px 28px rgba(15,23,42,.08)}.eyebrow{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;opacity:.6;margin-bottom:4px}.pt{font-size:16px;font-weight:800;letter-spacing:-.03em}.ps{font-size:12px;opacity:.65;margin-top:4px}
@@ -833,7 +833,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 <!-- ══ TELA HOME ══════════════════════════════════════════════════════════ -->
 <div class="screen on" id="sc-home">
   <div style="padding:0 16px">
-    <div class="ad-carousel" id="ad-carousel-0"><div class="adtag">PUBLI</div></div>
+    <div class="ad-carousel" id="ad-carousel-0"></div>
   </div>
   <div class="hg-info-tip" id="hg-info-tip"></div>
   <section class="hg-period-card" style="margin:12px 16px 0">
@@ -881,7 +881,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
     <div class="hg-bar-chart hour" id="hg-chart-hora"></div>
   </section>
 
-  <div class="ad-carousel" id="ad-carousel-1"><div class="adtag">PUBLI</div></div>
+  <div class="ad-carousel" id="ad-carousel-1"></div>
 
   <section class="hg-chart-card" style="margin:14px 16px 0">
     <div class="hg-chart-head"><div><h2>Mês/Ano <button class="hg-info-btn" onclick="showChartInfo(this,'Soma por mês/ano, dentro do período selecionado acima — com Semana ou Mês escolhido aqui em cima, vira 1 barra só.')">?</button></h2></div>
@@ -5987,15 +5987,11 @@ function renderAdSlot(slotIdx) {
   const img = document.createElement('img');
   img.src = ad.img;
   img.alt = 'Publicidade';
-  img.style.cssText = 'width:100%;height:90px;object-fit:cover;display:block;border-radius:18px';
+  img.style.cssText = 'width:100%;height:130px;object-fit:cover;display:block;border-radius:18px';
   // Animação de slide
   img.style.transform = 'translateX(0)';
   el.innerHTML = '';
-  const tag = document.createElement('div');
-  tag.className = 'adtag';
-  tag.textContent = 'PUBLI';
   el.appendChild(img);
-  el.appendChild(tag);
 }
 
 function swipeAd(slotIdx, dir) {
