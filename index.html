@@ -2892,11 +2892,14 @@ function renderJornada() {
   const today = DB.today(), d = S.curDate, isToday = d === today;
   const dt    = new Date(d+'T12:00');
   const dows  = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
-  const ms    = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  const ms    = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const msLong= ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
   const dateEl = document.getElementById('dn-date');
-  if (dateEl) dateEl.innerHTML = dt.getDate()+' de '+ms[dt.getMonth()]+' de '+dt.getFullYear()+(isToday?'<span class="today">HOJE</span>':'');
+  // Formato compacto: "23 jun 2026" — cabe em 1 linha
+  if (dateEl) dateEl.textContent = dt.getDate()+' de '+msLong[dt.getMonth()]+' de '+dt.getFullYear();
   const dowEl = document.getElementById('dn-dow');
-  if (dowEl) dowEl.textContent = dows[dt.getDay()];
+  // Dia da semana + badge "Hoje" na mesma linha
+  if (dowEl) dowEl.innerHTML = dows[dt.getDay()] + (isToday ? ' <span class="dn-hoje">Hoje</span>' : '');
   const day = DB.day(d);
   const rev = day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0);
   const exp = day.expenses.reduce((s,e)=>s+(e.amount||0),0);
