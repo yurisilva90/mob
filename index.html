@@ -659,6 +659,39 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .inf-send-btn:disabled{opacity:.35}
 .inf-empty{padding:28px 0;text-align:center;color:var(--muted);font-size:13px;font-weight:600}
 
+/* ── Sessão card expansível ── */
+.jss-card{background:var(--card);border:1px solid var(--line);border-radius:18px;margin-bottom:9px;overflow:hidden}
+.jss-row{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer}
+.jss-info{flex:1;min-width:0}
+.jss-top{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+.jss-name{font-size:14px;font-weight:800}
+.jss-badge{font-size:9px;font-weight:800;padding:2px 8px;border-radius:99px}
+.jss-badge.live{background:#DCFCE7;color:#15803D}
+.jss-badge.pau{background:#F1F5F9;color:#475569}
+.jss-badge.end{background:#EFF6FF;color:#0369A1}
+.jss-sub{font-size:11.5px;color:var(--muted);font-weight:600}
+.jss-chev{flex-shrink:0;color:var(--muted2);transition:transform .22s;display:flex;align-items:center}
+.jss-card.open .jss-chev{transform:rotate(180deg)}
+.jss-kpi-row{display:none;align-items:center;padding:0 14px 11px;gap:0}
+.jss-card.open .jss-kpi-row{display:flex}
+.jss-kpi{flex:1;text-align:center}
+.jss-kpi .jv{font-size:14px;font-weight:800;letter-spacing:-.03em;display:block}
+.jss-kpi .jv.g{color:var(--green)}
+.jss-kpi .jl{font-size:8px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em;margin-top:1px;display:block}
+.jss-acts{display:flex;gap:1px;flex-shrink:0;margin-left:4px}
+.jss-act{border:0;background:transparent;cursor:pointer;color:var(--muted2);padding:5px;display:flex;align-items:center;border-radius:7px;touch-action:manipulation}
+/* ── Lançamentos — tabs pago / a pagar ── */
+.lanc-tabs{display:flex;background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:3px;gap:3px;margin-bottom:12px}
+.lanc-tab{flex:1;height:34px;border-radius:11px;border:0;background:transparent;font-family:inherit;font-size:11.5px;font-weight:800;color:var(--muted);cursor:pointer;transition:.15s}
+.lanc-tab.on{background:var(--card);color:var(--text);box-shadow:0 2px 8px rgba(15,23,42,.08)}
+.lanc-status-badge{font-size:9px;font-weight:800;padding:2px 7px;border-radius:99px;display:inline-block;margin-top:3px}
+.lsb-pago{background:#DCFCE7;color:#15803D}
+.lsb-apagar{background:#FEF3C7;color:#92400E}
+.lsb-vencido{background:#FEE2E2;color:#991B1B}
+.lanc-act-btn{border:0;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9px;flex-shrink:0;transition:.12s}
+.lanc-act-btn.confirmar{background:#DCFCE7;color:#15803D}
+.lanc-act-btn.cancelar{background:#FEE2E2;color:#991B1B}
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -948,7 +981,13 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
   <div class="section" style="padding:16px 16px 8px"><h2>Corridas</h2><button class="add" onclick="navTo('corridas')" id="trips-toggle">Ver todas &#8250;</button></div>
   <div style="padding:0 16px"><div id="trips-list"><div class="empty">Nenhuma corrida registrada</div></div></div>
 
-  <div class="section" style="padding:16px 16px 8px"><h2>Lançamentos</h2><div style="display:flex;gap:8px;align-items:center"><button class="add" onclick="toggleLancView()" id="lanc-toggle" style="display:none">Ver todas &#8250;</button><button class="add" onclick="openLanc('receita')">+ Adicionar</button></div></div>
+  <div class="section" style="padding:16px 16px 4px"><h2>Lançamentos</h2><div style="display:flex;gap:8px;align-items:center"><button class="add" onclick="toggleLancView()" id="lanc-toggle" style="display:none">Ver todas &#8250;</button><button class="add" onclick="openLanc('receita')">+ Adicionar</button></div></div>
+  <div style="padding:4px 16px 0">
+    <div class="lanc-tabs">
+      <button class="lanc-tab on" id="lt-apagar" onclick="setLancTab('a_pagar')">A pagar / Vencido</button>
+      <button class="lanc-tab" id="lt-pago" onclick="setLancTab('pago')">Pagos</button>
+    </div>
+  </div>
   <div style="padding:0 16px"><div id="jorn-lanc-list"><div class="empty">Nenhum lançamento registrado</div></div></div>
   <div style="height:8px"></div>
 </div>
@@ -1473,6 +1512,22 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 <!-- ════ MODAIS ════ -->
 
 <!-- Lançamento (Receita / Despesa) -->
+
+<!-- Modal editar sessão -->
+<div class="mo" id="mo-jss-edit">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head"><h2>Editar sessão</h2><button class="xbtn" onclick="closeMo('mo-jss-edit')">&#x2715;</button></div>
+    <input type="hidden" id="jss-edit-date"><input type="hidden" id="jss-edit-idx">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div class="field" style="margin-bottom:0"><label class="lbl">Km ativo</label><input class="inp" type="number" id="jss-edit-km" step="0.1" style="height:48px"></div>
+      <div class="field" style="margin-bottom:0"><label class="lbl">Km deslocamento</label><input class="inp" type="number" id="jss-edit-desloc" step="0.1" style="height:48px"></div>
+    </div>
+    <div class="field"><label class="lbl">Tempo ativo (HH:MM)</label><input class="inp" type="text" id="jss-edit-tempo" placeholder="03:17" style="height:48px"></div>
+    <button class="save receita" onclick="saveJss()">Salvar alterações</button>
+  </div>
+</div>
+
 <div class="mo" id="mo-lancamento">
   <div class="sheet">
     <div class="sheet-handle"></div>
@@ -1492,10 +1547,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
       <label class="lbl">Categoria</label>
       <div class="cat-wrap"><div class="cat-rail" id="l-cat-rail"></div></div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-      <div class="field" style="margin-bottom:0"><label class="lbl">Data</label><input class="inp" type="date" id="l-data" style="height:48px"></div>
-      <div class="field" style="margin-bottom:0"><label class="lbl">Hora</label><input class="inp" type="time" id="l-hora" style="height:48px"></div>
-    </div>
+    <div class="field"><label class="lbl">Data</label><input class="inp" type="date" id="l-data" style="height:48px;width:100%"></div>
     <div class="field"><label class="lbl">Descrição opcional</label><input class="inp" type="text" id="l-desc" placeholder="Ex.: abastecimento Shell, bônus Uber"></div>
     <div class="recurring">
       <div class="rec-row">
@@ -1506,6 +1558,13 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
         <button onclick="setFreq(this)" class="active">Semanal</button>
         <button onclick="setFreq(this)">Quinzenal</button>
         <button onclick="setFreq(this)">Mensal</button>
+      </div>
+    </div>
+    <div class="field" id="l-status-wrap" style="margin-bottom:12px">
+      <label class="lbl">Status</label>
+      <div class="lanc-tabs" style="margin-bottom:0">
+        <button class="lanc-tab on" id="l-st-pago" onclick="setLancStatus('pago')">✓ Pago / Recebido</button>
+        <button class="lanc-tab" id="l-st-apagar" onclick="setLancStatus('a_pagar')">◷ A pagar</button>
       </div>
     </div>
     <button class="save receita" id="l-save" onclick="saveLanc()" style="margin-top:14px">Salvar receita</button>
@@ -2855,9 +2914,9 @@ function renderJornada() {
   if (sessEl) {
     const total = (day.sessions||[]).length;
     const finishedAll = (day.sessions||[]).slice().reverse()
-      .map((s,i)=>sessionItem('Sessão '+(total-i), s.start, s.end, s.km, s.elapsed, false));
+      .map((s,ri)=>sessionItem('Sessão '+(total-ri), s, total-1-ri, S.curDate, day, false));
     const finishedShown = S.sessionsExpanded ? finishedAll : finishedAll.slice(0,3);
-    const liveRow = (isToday && (S.gps.st==='running'||S.gps.st==='paused')) ? [sessionItem('Sessão atual', S.gps.start, null, S.gps.km, getElapsed(), true)] : [];
+    const liveRow = (isToday && (S.gps.st==='running'||S.gps.st==='paused')) ? [sessionItem('Sessão atual', {start:S.gps.start,end:null,km:S.gps.km,elapsed:getElapsed()}, -1, S.curDate, day, true)] : [];
     const rows = [...liveRow, ...finishedShown];
     sessEl.innerHTML = rows.length ? rows.join('') : '<div class="empty">Nenhuma sessão registrada</div>';
   }
@@ -2881,12 +2940,20 @@ function renderJornada() {
   const lEl = document.getElementById('jorn-lanc-list');
   const lancToggleBtn = document.getElementById('lanc-toggle');
   if (lEl) {
-    const items = [
+    const today = DB.today();
+    const allItems = [
       ...day.revenues.map(r=>Object.assign({},r,{_type:'receita'})),
       ...day.expenses.map(e=>Object.assign({},e,{_type:'despesa'}))
     ];
+    const tabFilter = _lancTabSel || 'a_pagar';
+    const items = allItems.filter(it => {
+      const st = it.status || 'pago';
+      const venc = st==='a_pagar' && it.date && it.date < today;
+      if(tabFilter==='a_pagar') return st==='a_pagar' || venc;
+      return st==='pago';
+    });
     const show = S.lancExpanded ? items : items.slice(0,5);
-    lEl.innerHTML = show.length ? show.map(it => lancItem(it)).join('') : '<div class="empty">Nenhum lançamento registrado</div>';
+    lEl.innerHTML = show.length ? show.map(it => lancItem(it, true)).join('') : '<div class="empty">Nenhum lançamento registrado</div>';
     if (lancToggleBtn) {
       lancToggleBtn.style.display = items.length > 5 ? '' : 'none';
       lancToggleBtn.innerHTML = S.lancExpanded ? 'Ver menos' : 'Ver todas &#8250;';
@@ -3080,16 +3147,46 @@ function renderPjList() {
   }).join('');
 }
 
-function sessionItem(label, startMs, endMs, km, elapsedSecs, live) {
+function sessionItem(label, sess, origIdx, dateStr, day, live) {
+  const startMs = sess.start || 0, endMs = sess.end || 0;
+  const km = sess.km || 0, elapsedSecs = sess.elapsed || 0;
   const dur = fmtDur((elapsedSecs||0)/60);
-  const range = fmtHM(startMs) + ' → ' + (endMs ? fmtHM(endMs) : (live ? 'Agora' : '—'));
-  const status = live ? (S.gps.st==='paused' ? 'Pausada' : 'Online') : 'Finalizada';
-  return `<div class="li-row">
-    <div class="li-ico green"><svg viewBox="0 0 24 24"><path d="M5 13l1.4-4.2A3 3 0 0 1 9.2 7h5.6a3 3 0 0 1 2.8 1.8L19 13"/><path d="M4 13h16v5H4z"/><circle cx="7.5" cy="18" r="1.2" fill="currentColor"/><circle cx="16.5" cy="18" r="1.2" fill="currentColor"/></svg></div>
-    <div class="li-info"><h3>${label}</h3><p>${range} · ${status}</p></div>
-    <div class="li-val"><strong>${dur}</strong>${(km||0).toFixed(1)} km</div>
+  const range = fmtHM(startMs) + '–' + (endMs ? fmtHM(endMs) : (live ? 'Agora' : '—'));
+  const status = live ? (S.gps.st==='paused' ? 'Pausada' : 'Online') : 'Encerrada';
+  const badgeCls = live ? (S.gps.st==='paused' ? 'pau' : 'live') : 'end';
+  const cardId = 'jss-' + dateStr + '-' + origIdx;
+
+  // Corridas e ganhos desta sessão (por horário)
+  const trips = (day?.trips||[]).filter(t => {
+    const ts = t.ts || 0;
+    if (!ts) return false;
+    return ts >= startMs && (endMs ? ts <= endMs : true);
+  });
+  const corridas = trips.length;
+  const ganhos = trips.reduce((s,t)=>s+(t.value||0),0);
+  const kmDesloc = (sess.kmDesloc || km);
+
+  const editBtn = !live ? `<button class="jss-act" onclick="event.stopPropagation();editJss('${dateStr}',${origIdx})" title="Editar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="jss-act del" onclick="event.stopPropagation();deleteJss('${dateStr}',${origIdx})" title="Excluir"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>` : '';
+
+  return `<div class="jss-card" id="${cardId}">
+    <div class="jss-row" onclick="toggleJss('${cardId}')">
+      <div class="jss-info">
+        <div class="jss-top"><span class="jss-name">${label}</span><span class="jss-badge ${badgeCls}">${status}</span></div>
+        <div class="jss-sub">${range} · ${dur}</div>
+      </div>
+      <div class="jss-chev"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg></div>
+    </div>
+    <div class="jss-kpi-row">
+      <div class="jss-kpi"><span class="jv">${km.toFixed(1)}</span><span class="jl">Km ativo</span></div>
+      <div class="jss-kpi"><span class="jv">${kmDesloc.toFixed(1)}</span><span class="jl">Desloc.</span></div>
+      <div class="jss-kpi"><span class="jv">${corridas}</span><span class="jl">Corridas</span></div>
+      <div class="jss-kpi"><span class="jv g">${DB.fR(ganhos)}</span><span class="jl">Ganhos</span></div>
+      <div class="jss-acts">${editBtn}</div>
+    </div>
   </div>`;
 }
+function toggleJss(id){const el=document.getElementById(id);if(el)el.classList.toggle('open');}
 function tripItem(t) {
   const plat = {uber:'Uber','99':'99',particular:'Particular'}[t.platform||'uber'] || 'Uber';
   const dest = t.dest ? ' → '+t.dest : '';
@@ -3103,7 +3200,7 @@ function tripItem(t) {
     <div class="li-val"><strong>${DB.fR(t.value)}</strong></div>
   </div>`;
 }
-function lancItem(it) {
+function lancItem(it, showActBtn) {
   const isRec = it._type === 'receita';
   const catKey = (it._type || 'despesa') + '_' + (it.scope || 'operacional');
   const cats = DB.cats(catKey) || DEFAULT_CATS[catKey] || [];
@@ -3112,10 +3209,23 @@ function lancItem(it) {
   const title = it.desc || it.categoryLabel || it.category || (isRec ? 'Receita extra' : 'Despesa');
   const sub = (it.scope==='pessoal'?'Pessoal':'Operacional') + (it.date?' · '+it.date:'');
   const val = isRec ? DB.fR(it.amount) : '-'+DB.fR(it.amount);
-  return `<div class="li-row">
+  // Status: checar vencimento
+  const status = it.status || 'pago';
+  const today = DB.today();
+  const vencido = status==='a_pagar' && it.date && it.date < today;
+  const statusFinal = vencido ? 'vencido' : status;
+  const badgeCls = statusFinal==='pago'?'lsb-pago':statusFinal==='vencido'?'lsb-vencido':'lsb-apagar';
+  const badgeTxt = statusFinal==='pago'?(isRec?'Recebido':'Pago'):statusFinal==='vencido'?'Vencido':'A pagar';
+  const actionBtn = showActBtn ? `<button class="lanc-act-btn ${statusFinal==='pago'?'cancelar':'confirmar'}" onclick="event.stopPropagation();toggleLancStatus('${it.id}','${it.date||DB.today()}')" title="${statusFinal==='pago'?'Desfazer':'Marcar como pago'}">
+    ${statusFinal==='pago'
+      ? '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+      : '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'}
+  </button>` : '';
+  return `<div class="li-row" style="${vencido?'border:1px solid #FECACA;border-radius:14px;padding:10px;margin-bottom:2px':''}">
     <div class="li-ico ${isRec?'green':'red'}">${icoSvg}</div>
-    <div class="li-info"><h3>${title}</h3><p>${sub}</p></div>
-    <div class="li-val"><strong>${val}</strong>${isRec?'Entrada':'Saída'}</div>
+    <div class="li-info"><h3>${title}</h3><p>${sub}</p><span class="lanc-status-badge ${badgeCls}">${badgeTxt}</span></div>
+    <div class="li-val"><strong>${val}</strong></div>
+    ${actionBtn}
   </div>`;
 }
 
@@ -3420,6 +3530,22 @@ const CAT_GROUP_LABELS = {
   receita_operacional:  'Receita Operacional',
   receita_pessoal:      'Receita Pessoal'
 };
+
+// Ícones SVG para modal de nova categoria (sem emoji)
+const CAT_SVG_ICONS = [
+  {k:'car',   svg:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>'},
+  {k:'fuel',  svg:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 22V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/><path d="M15 9h2a2 2 0 0 1 2 2v3a1 1 0 0 0 1 1 1 1 0 0 0 1-1V9l-3-3"/><line x1="3" y1="22" x2="17" y2="22"/><rect x="5" y="9" width="8" height="5" rx="1"/></svg>'},
+  {k:'wrench',svg:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/></svg>'},
+  {k:'shield',svg:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'},
+  {k:'doc',   svg:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>'},
+  {k:'card',  svg:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>'},
+  {k:'dollar',svg:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>'},
+  {k:'phone', svg:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>'},
+  {k:'home',  svg:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'},
+  {k:'park',  svg:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M16 7V5a2 2 0 0 0-4 0v2"/><path d="M12 7v10"/><path d="M12 12h3a2 2 0 0 0 0-4h-3"/></svg>'},
+  {k:'health',svg:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>'},
+  {k:'other', svg:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'},
+];
 let catAddState = { key: null, icon: 'plus' };
 
 function renderCatsModal() {
@@ -3444,10 +3570,10 @@ function catGroupHtml(key) {
       <input id="cat-new-name" type="text" placeholder="Nome da categoria"
         style="width:100%;height:42px;border:1px solid #E2E8F0;border-radius:10px;padding:0 12px;font-size:14px;margin-bottom:10px;box-sizing:border-box;outline:none">
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94A3B8;margin-bottom:8px">Escolha um ícone</div>
-      <div id="cat-icon-picker" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
-        ${Object.keys(CAT_ICONS).map(ic => `
-          <button onclick="catPickIcon('${ic}')" data-ic="${ic}"
-            style="width:38px;height:38px;border-radius:10px;border:1.5px solid ${catAddState.icon===ic?'#22C55E':'#E2E8F0'};background:${catAddState.icon===ic?'#F0FDF4':'#fff'};color:${catAddState.icon===ic?'#16A34A':'#64748B'};display:flex;align-items:center;justify-content:center;cursor:pointer">${CAT_ICONS[ic]}</button>
+      <div id="cat-icon-picker" style="display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-bottom:12px">
+        ${CAT_SVG_ICONS.map(ic => `
+          <button onclick="catPickIcon('${ic.k}')" data-ic="${ic.k}"
+            style="width:44px;height:44px;border-radius:11px;border:1.5px solid ${catAddState.icon===ic.k?'#22C55E':'#E2E8F0'};background:${catAddState.icon===ic.k?'#F0FDF4':'#F8FAFC'};color:${catAddState.icon===ic.k?'#16A34A':'#64748B'};display:flex;align-items:center;justify-content:center;cursor:pointer">${ic.svg.replace('stroke="currentColor"','stroke="currentColor"')}</button>
         `).join('')}
       </div>
       <div style="display:flex;gap:8px">
@@ -3468,7 +3594,16 @@ function catGroupHtml(key) {
 
 function catStartAdd(key) { catAddState = { key, icon: 'plus' }; renderCatsModal(); }
 function catCancelAdd()   { catAddState = { key: null, icon: 'plus' }; renderCatsModal(); }
-function catPickIcon(ic)  { catAddState.icon = ic; renderCatsModal(); }
+function catPickIcon(ic) {
+  catAddState.icon = ic;
+  // Atualiza visual dos botões sem re-renderizar (preserva o texto digitado)
+  document.querySelectorAll('#cat-icon-picker button').forEach(btn => {
+    const isOn = btn.dataset.ic === ic;
+    btn.style.borderColor    = isOn ? '#22C55E' : '#E2E8F0';
+    btn.style.background     = isOn ? '#F0FDF4' : '#fff';
+    btn.style.color          = isOn ? '#16A34A' : '#64748B';
+  });
+}
 
 function catConfirmAdd(key) {
   const input = document.getElementById('cat-new-name');
@@ -3524,7 +3659,8 @@ function saveLanc() {
     id: DB.uid(), category: cat?.id || '', categoryLabel: cat?.l || '',
     desc: document.getElementById('l-desc')?.value || '',
     amount: val, date, scope: S.lancScope,
-    recorrente: lancRecOn, freq: lancFreqSel
+    recorrente: lancRecOn, freq: lancFreqSel,
+    status: _lancStatusSel || (S.lancType==='receita'?'pago':'a_pagar')
   };
   if (S.lancType === 'receita') day.revenues.push(entry);
   else day.expenses.push(entry);
