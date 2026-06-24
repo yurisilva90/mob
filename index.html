@@ -713,7 +713,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
     );
   </script>
 </head>
-<body>
+<body style="background:#0F172A">
 <div class="app">
 <!-- ════ TOPBAR (fixed, shared) ════ -->
 <!-- ════ SCROLL WRAPPER ════ -->
@@ -4385,6 +4385,7 @@ function gpsOnPosition(pos) {
 }
 function gpsStart() {
   const g = S.gps; g.st='running'; g.start=Date.now(); g.km=0; g.pts=[]; g.pausedMs=0; g.pa=null;
+  g.sessionId = DB.uid(); // ID único desta sessão, usado para upsert no cloud
   const day0 = DB.day(DB.today());
   g.baseKm = (day0.sessions||[]).reduce((s,x)=>s+(x.km||0),0);
   g.baseElapsed = (day0.sessions||[]).reduce((s,x)=>s+(x.elapsed||0),0);
@@ -4512,8 +4513,19 @@ function gpsStop() {
   day.session = { km: totalKm, elapsed: totalElapsed }; // compat com Agenda
   if (!day.kmTotal && totalKm > 0.1) day.kmTotal = parseFloat(totalKm.toFixed(1));
   DB.saveDay(day);
-  SYNC.push('sessions', { id: sess.id, date: DB.today(), start_ms: sess.start, end_ms: sess.end,
-    km: sess.km, elapsed_secs: sess.elapsed });
+  // Usa o sessionId que veio do gpsStart (garante upsert correto no cloud)
+  const cloudId = S.gps.sessionId || sess.id;
+  _SUPA.from('sessions').upsert({
+    id: cloudId, user_id: _supaUser?.id, date: DB.today(),
+    start_ms: sess.start, end_ms: sess.end,
+    km: parseFloat((sess.km||0).toFixed(3)),
+    elapsed_secs: sess.elapsed,
+    paused_ms: 0, is_paused: false
+  }, { onConflict: 'id' }).catch(()=>
+    SYNC.push('sessions', { id: cloudId, date: DB.today(), start_ms: sess.start, end_ms: sess.end,
+      km: sess.km, elapsed_secs: sess.elapsed })
+  );
+  S.gps.sessionId = null;
   syncNavButton();
   DB.del('sm_gps_session');
   const km = g.km;
@@ -4527,7 +4539,10 @@ function getElapsed() {
   const p = g.pausedMs + (g.pa ? Date.now()-g.pa : 0);
   return Math.floor((Date.now()-g.start-p)/1000);
 }
+let _gpsCloudTick = 0;
 function gpsUpdate() {
+  _gpsCloudTick++;
+  if (_gpsCloudTick % 300 === 0) _persistGpsCloud().catch(()=>{}); // a cada 5 min
   const el = getElapsed(), h=Math.floor(el/3600), m=Math.floor(el%3600/60), s=el%60;
   setText('jc-timer', p2(h)+':'+p2(m)+':'+p2(s));
   const day = DB.day(S.curDate);
@@ -4543,8 +4558,29 @@ function persistGps() {
   const lastPt = g.pts && g.pts.length ? g.pts[g.pts.length-1] : null;
   DB.set('sm_gps_session', {
     st: g.st, start: g.start, pausedMs: g.pausedMs, pa: g.pa,
-    km: g.km, lastPt, baseKm: g.baseKm, baseElapsed: g.baseElapsed
+    km: g.km, lastPt, baseKm: g.baseKm, baseElapsed: g.baseElapsed,
+    sessionId: g.sessionId
   });
+  // Checkpoint no Supabase (não bloqueia)
+  _persistGpsCloud().catch(()=>{});
+}
+
+async function _persistGpsCloud() {
+  if (!_supaUser || !S.gps.start || S.gps.st === 'idle') return;
+  const g = S.gps;
+  if (!g.sessionId) g.sessionId = DB.uid();
+  await _SUPA.from('sessions').upsert({
+    id:         g.sessionId,
+    user_id:    _supaUser.id,
+    date:       DB.today(),
+    start_ms:   g.start,
+    end_ms:     null,
+    km:         parseFloat((g.km||0).toFixed(3)),
+    elapsed_secs: getElapsed(),
+    paused_ms:  g.pausedMs || 0,
+    is_paused:  g.st === 'paused',
+    km_desloc:  null
+  }, { onConflict: 'id' });
 }
 function restoreGpsSession() {
   const g = S.gps;
@@ -4564,6 +4600,7 @@ function restoreGpsSession() {
   g.st = saved.st; g.start = saved.start; g.pausedMs = saved.pausedMs || 0; g.pa = saved.pa || null;
   g.km = saved.km || 0; g.pts = saved.lastPt ? [saved.lastPt] : [];
   g.baseKm = saved.baseKm || 0; g.baseElapsed = saved.baseElapsed || 0;
+  g.sessionId = saved.sessionId || null; // restaura ID para continuar o upsert correto
   // O snapshot acima é só o último valor salvo antes do app ir pra segundo plano (o
   // watchPosition do JS para quando o app não está em foreground). Se o app nativo
   // tiver um GpsService rodando, ele é a fonte mais atual — corrige aqui, antes do
@@ -5625,6 +5662,27 @@ const SYNC = {
           km: parseFloat(s.km) || 0, elapsed: s.elapsed_secs || 0
         });
       });
+      // Restaurar sessão ativa do cloud caso o app foi reinstalado
+      if (S.gps.st === 'idle' && !DB.get('sm_gps_session')) {
+        const hoje = DB.today();
+        const ativa = (sessions.data||[]).find(s => !s.end_ms && s.date === hoje);
+        if (ativa) {
+          const ageMs = Date.now() - Number(ativa.start_ms);
+          if (ageMs < 16*3600*1000) { // sessão de menos de 16h
+            // Grava no localStorage para restoreGpsSession() retomar
+            DB.set('sm_gps_session', {
+              st: ativa.is_paused ? 'paused' : 'running',
+              start:     Number(ativa.start_ms),
+              pausedMs:  Number(ativa.paused_ms || 0),
+              pa:        ativa.is_paused ? Date.now() : null,
+              km:        parseFloat(ativa.km) || 0,
+              baseKm:    0, baseElapsed: 0, lastPt: null,
+              sessionId: ativa.id
+            });
+            console.log('[SmartMobi] Sessão ativa restaurada do Supabase:', ativa.id);
+          }
+        }
+      }
       (dayMeta.data || []).forEach(m => {
         const day = ensure(m.date);
         day.kmAdjust = parseFloat(m.km_adjust) || 0;
