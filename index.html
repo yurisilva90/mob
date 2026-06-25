@@ -3154,6 +3154,88 @@ function sessionItem(label, sess, origIdx, dateStr, day, live) {
     </div>
   </div>`;
 }
+// ── Editar sessão ─────────────────────────────────────────────────────────
+function editJss(dateStr, idx) {
+  const day = DB.day(dateStr);
+  const sess = (day.sessions || [])[idx];
+  if (!sess) return;
+
+  document.getElementById('jss-edit-date').value = dateStr;
+  document.getElementById('jss-edit-idx').value  = idx;
+
+  // Preencher campos com valores atuais
+  document.getElementById('jss-edit-km').value    = (sess.km || 0).toFixed(1);
+  document.getElementById('jss-edit-desloc').value = (sess.kmDesloc || 0).toFixed(1);
+
+  // Converter elapsed (segundos) para HH:MM
+  const secs = sess.elapsed || 0;
+  const hh = String(Math.floor(secs / 3600)).padStart(2,'0');
+  const mm = String(Math.floor((secs % 3600) / 60)).padStart(2,'0');
+  document.getElementById('jss-edit-tempo').value = hh + ':' + mm;
+
+  openMo('mo-jss-edit');
+}
+
+function saveJss() {
+  const dateStr = document.getElementById('jss-edit-date').value;
+  const idx     = parseInt(document.getElementById('jss-edit-idx').value);
+  const km      = parseFloat(document.getElementById('jss-edit-km').value) || 0;
+  const desloc  = parseFloat(document.getElementById('jss-edit-desloc').value) || 0;
+  const tempoStr= document.getElementById('jss-edit-tempo').value.trim();
+
+  // Converter HH:MM para segundos
+  const parts = tempoStr.split(':');
+  const elapsed = parts.length === 2
+    ? (parseInt(parts[0]) || 0) * 3600 + (parseInt(parts[1]) || 0) * 60
+    : 0;
+
+  const day = DB.day(dateStr);
+  if (!day.sessions || !day.sessions[idx]) { closeMo('mo-jss-edit'); return; }
+
+  day.sessions[idx].km       = km;
+  day.sessions[idx].kmDesloc = desloc;
+  day.sessions[idx].elapsed  = elapsed;
+  DB.saveDay(day);
+
+  // Sincronizar com Supabase
+  const sess = day.sessions[idx];
+  if (_supaUser && sess.id) {
+    _SUPA.from('sessions').update({
+      km: parseFloat(km.toFixed(3)),
+      elapsed_secs: elapsed,
+      km_desloc: parseFloat(desloc.toFixed(3))
+    }).eq('id', sess.id).then(() => {}).catch(() => {});
+  }
+
+  closeMo('mo-jss-edit');
+  renderJornada();
+  if (S.sec === 'home') renderHome();
+  showToast('Sessão atualizada');
+}
+
+function deleteJss(dateStr, idx) {
+  showConfirm('Excluir esta sessão?', () => {
+    const day = DB.day(dateStr);
+    if (!day.sessions || !day.sessions[idx]) return;
+
+    const sess = day.sessions[idx];
+    day.sessions.splice(idx, 1);
+    DB.saveDay(day);
+
+    // Remover do Supabase
+    if (_supaUser && sess.id) {
+      _SUPA.from('sessions').update({ end_ms: -1 })
+        .eq('id', sess.id)
+        .then(() => {}).catch(() => {});
+    }
+
+    renderJornada();
+    if (S.sec === 'home') renderHome();
+    showToast('Sessão excluída');
+  }, { confirmLabel: 'Excluir', danger: true, cancelLabel: 'Cancelar' });
+}
+
+
 function toggleJss(id){const el=document.getElementById(id);if(el)el.classList.toggle('open');}
 function tripItem(t) {
   const plat = {uber:'Uber','99':'99',particular:'Particular'}[t.platform||'uber'] || 'Uber';
