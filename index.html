@@ -3572,7 +3572,9 @@ function saveLanc() {
   SYNC.push(S.lancType === 'receita' ? 'revenues' : 'expenses', {
     id: entry.id, date: entry.date, category: entry.category, category_label: entry.categoryLabel,
     amount: entry.amount, description: entry.desc, scope: entry.scope,
-    recorrente: entry.recorrente, freq: entry.freq
+    recorrente: entry.recorrente, freq: entry.freq,
+    status: entry.status || (S.lancType==='receita'?'pago':'a_pagar'),
+    due_date: entry.date || null
   });
   closeMo('mo-lancamento');
   document.getElementById('l-valor').value = '';
@@ -5509,18 +5511,41 @@ const SYNC = {
     DB.saveSyncQueue(remaining);
     this._updateBadge();
   },
+  async pushFavs() {
+    if (!_supaUser) return;
+    try {
+      await _SUPA.from('user_favorites').upsert({
+        user_id: _supaUser.id,
+        items: JSON.parse(localStorage.getItem('sm_inf_favs') || '[]'),
+        synced_at: new Date().toISOString()
+      }, { onConflict: 'user_id' });
+    } catch(e) { console.error('SYNC.pushFavs', e); }
+  },
+  async pushSettings() {
+    if (!_supaUser) return;
+    try {
+      await _SUPA.from('user_settings').upsert({
+        user_id: _supaUser.id,
+        data: DB.cfg() || {},
+        synced_at: new Date().toISOString()
+      }, { onConflict: 'user_id' });
+    } catch(e) { console.error('SYNC.pushSettings', e); }
+  },
   async pullAll() {
     if (!_supaUser) return;
     const uid = _supaUser.id;
     try {
-      const [trips, expenses, revenues, sessions, planJ, cats, dayMeta] = await Promise.all([
+      const [trips, expenses, revenues, sessions, planJ, cats, dayMeta, eventsRes, settingsRes, favsRes] = await Promise.all([
         _SUPA.from('trips').select('*').eq('user_id', uid),
         _SUPA.from('expenses').select('*').eq('user_id', uid),
         _SUPA.from('revenues').select('*').eq('user_id', uid),
         _SUPA.from('sessions').select('*').eq('user_id', uid),
         _SUPA.from('plan_jornada').select('*').eq('user_id', uid),
         _SUPA.from('categories').select('*').eq('user_id', uid),
-        _SUPA.from('day_meta').select('*').eq('user_id', uid)
+        _SUPA.from('day_meta').select('*').eq('user_id', uid),
+        _SUPA.from('events').select('*').eq('user_id', uid),
+        _SUPA.from('user_settings').select('*').eq('user_id', uid),
+        _SUPA.from('user_favorites').select('*').eq('user_id', uid)
       ]);
       const byDate = {};
       const ensure = d => byDate[d] || (byDate[d] = DB.day(d));
@@ -5540,7 +5565,8 @@ const SYNC = {
         if (!day.expenses.find(x => x.id === e.id)) day.expenses.push({
           id: e.id, category: e.category || '', categoryLabel: e.category_label || '',
           desc: e.description || '', amount: parseFloat(e.amount) || 0, date: e.date,
-          scope: e.scope || 'operacional', recorrente: e.recorrente || false, freq: e.freq || null
+          scope: e.scope || 'operacional', recorrente: e.recorrente || false, freq: e.freq || null,
+          status: e.status || 'a_pagar', dueDate: e.due_date || e.date
         });
       });
       (revenues.data || []).forEach(r => {
@@ -5548,7 +5574,8 @@ const SYNC = {
         if (!day.revenues.find(x => x.id === r.id)) day.revenues.push({
           id: r.id, category: r.category || '', categoryLabel: r.category_label || '',
           desc: r.description || '', amount: parseFloat(r.amount) || 0, date: r.date,
-          scope: r.scope || 'operacional', recorrente: r.recorrente || false, freq: r.freq || null
+          scope: r.scope || 'operacional', recorrente: r.recorrente || false, freq: r.freq || null,
+          status: r.status || 'pago', dueDate: r.due_date || r.date
         });
       });
       (sessions.data || []).forEach(s => {
@@ -5588,6 +5615,44 @@ const SYNC = {
       });
       Object.values(byDate).forEach(day => DB.saveDay(day));
 
+      // ── Events ─────────────────────────────────────────────────────────
+      if (eventsRes.data && eventsRes.data.length) {
+        const localEvs = JSON.parse(localStorage.getItem('sm_events') || '[]');
+        let changed = false;
+        eventsRes.data.forEach(ev => {
+          if (!localEvs.find(x => x.id === ev.id)) {
+            localEvs.push({ id: ev.id, title: ev.title, date: ev.date,
+              timeStart: ev.time_start, timeEnd: ev.time_end,
+              type: ev.type || 'operacional', color: ev.color || '#22C55E',
+              notes: ev.notes || '', paid: ev.paid || false });
+            changed = true;
+          }
+        });
+        if (changed) localStorage.setItem('sm_events', JSON.stringify(localEvs));
+      }
+
+      // ── Settings ───────────────────────────────────────────────────────
+      if (settingsRes.data && settingsRes.data.length && settingsRes.data[0].data) {
+        const cloudCfg = settingsRes.data[0].data;
+        const localCfg = DB.cfg() || {};
+        // Só sobrescreve se tiver dados reais no cloud e local estiver vazio/default
+        if (cloudCfg && Object.keys(cloudCfg).length > 0 && (!localCfg.name || localCfg.name === '')) {
+          DB.saveCfg(Object.assign({}, localCfg, cloudCfg));
+        }
+      }
+
+      // ── Favoritos ──────────────────────────────────────────────────────
+      if (favsRes.data && favsRes.data.length) {
+        const cloudFavs = favsRes.data[0].items || [];
+        const localFavs = JSON.parse(localStorage.getItem('sm_inf_favs') || '[]');
+        // Cloud tem prioridade se local estiver vazio
+        if (cloudFavs.length > 0 && localFavs.length === 0) {
+          localStorage.setItem('sm_inf_favs', JSON.stringify(cloudFavs));
+          _infFavs = cloudFavs;
+          infRenderFavs && infRenderFavs();
+        }
+      }
+
       if (planJ.data && planJ.data.length) {
         const local = DB.planJornada();
         planJ.data.forEach(p => {
@@ -5607,6 +5672,75 @@ const SYNC = {
     } catch (e) { console.error('SYNC.pullAll', e); }
   }
 };
+
+// ── Migração local → Supabase (roda 1x após atualização) ──────────────────
+async function migrateLocalToCloud() {
+  if (!_supaUser) return;
+  if (localStorage.getItem('sm_cloud_migration_v2')) return; // já feito
+
+  console.log('[MōB] Iniciando migração local → Supabase...');
+  let pushed = 0;
+
+  // 1. Todos os dados de dias: trips, expenses, revenues
+  for (const [key, raw] of Object.entries(localStorage)) {
+    if (!key.startsWith('sm_day_')) continue;
+    const date = key.replace('sm_day_', '');
+    try {
+      const day = JSON.parse(raw);
+      for (const t of day.trips || []) {
+        await SYNC.push('trips', { id: t.id, date, platform: t.platform||'uber',
+          time: t.time||null, duration: t.duration||0, origin: t.origin||'',
+          dest: t.dest||'', value: t.value||0, km: t.km||0,
+          source: t.source||'manual', surge: t.surge||false, airport: t.airport||false,
+          dinamico: t.dinamico||0, tip: t.tip||0 });
+        pushed++;
+      }
+      for (const e of day.expenses || []) {
+        await SYNC.push('expenses', { id: e.id, date: e.date||date,
+          category: e.category||'', category_label: e.categoryLabel||'',
+          description: e.desc||'', amount: e.amount||0, scope: e.scope||'operacional',
+          recorrente: e.recorrente||false, freq: e.freq||null,
+          status: e.status||'a_pagar', due_date: e.date||date });
+        pushed++;
+      }
+      for (const r of day.revenues || []) {
+        await SYNC.push('revenues', { id: r.id, date: r.date||date,
+          category: r.category||'', category_label: r.categoryLabel||'',
+          description: r.desc||'', amount: r.amount||0, scope: r.scope||'operacional',
+          recorrente: r.recorrente||false, freq: r.freq||null,
+          status: r.status||'pago', due_date: r.date||date });
+        pushed++;
+      }
+    } catch(e) { console.warn('[MōB] migração dia', date, e); }
+  }
+
+  // 2. Favoritos
+  await SYNC.pushFavs(); pushed++;
+
+  // 3. Configurações
+  await SYNC.pushSettings(); pushed++;
+
+  // 4. Categorias
+  try {
+    for (const key2 of Object.keys(localStorage)) {
+      if (key2.startsWith('sm_cats_')) await SYNC.pushCats(key2.replace('sm_cats_',''));
+    }
+  } catch(e) {}
+
+  // 5. Eventos
+  const localEvs = JSON.parse(localStorage.getItem('sm_events')||'[]');
+  for (const ev of localEvs) {
+    await SYNC.push('events', { id: ev.id, title: ev.title, date: ev.date,
+      time_start: ev.timeStart||null, time_end: ev.timeEnd||null,
+      type: ev.type||'operacional', color: ev.color||'#22C55E',
+      notes: ev.notes||'', paid: ev.paid||false });
+    pushed++;
+  }
+
+  localStorage.setItem('sm_cloud_migration_v2', '1');
+  console.log('[MōB] Migração concluída —', pushed, 'registros enviados ao Supabase');
+  showToast('Dados sincronizados com a nuvem ✓');
+}
 
 async function authInit() {
   ['app-nav','app-header'].forEach(id => { const el=document.getElementById(id);if(el)el.style.display='none'; });
@@ -5655,6 +5789,8 @@ async function showApp() {
   if(_supaUser && !DB.cfg().name && _supaUser.email){
     const cfg=DB.cfg(); cfg.name=_supaUser.email.split('@')[0]; DB.saveCfg(cfg);
   }
+  // Migração única de dados locais para o Supabase
+  setTimeout(() => migrateLocalToCloud().catch(()=>{}), 3000);
   // Limpeza única: remove corridas source='import_uber_zip' do localStorage
   // antes de reimportar com os fixes de UTC e promocao fundida no dinamico.
   // Roda só uma vez (flag sm_zip_wipe_v1). Não afeta uber_import nem import_ai.
@@ -6304,6 +6440,7 @@ function infToggleFav(){
   else if(_infFavs.length<4){_infFavs.push({n:_infLoc,t:_infTipoKey});btn.classList.add('on');showToast('Adicionado aos favoritos!');}
   else{showToast('Máximo de 4 favoritos');return;}
   localStorage.setItem('sm_inf_favs',JSON.stringify(_infFavs));
+  SYNC.pushFavs();
   infRenderFavs();
 }
 
