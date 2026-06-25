@@ -4160,6 +4160,115 @@ function isTripDuplicate(newT, existing) {
     return false;
   });
 }
+
+// ── Reconciliação de sessões × corridas ───────────────────────────────────
+// Regra híbrida: < 15 min → agrupa na sessão + ajusta horários
+//                >= 15 min → cria nova sessão
+function reconcileSessionsForDay(dateStr, dryRun = false) {
+  const THRESHOLD = 15 * 60 * 1000; // 15 minutos em ms
+  const day = DB.day(dateStr);
+  
+  const trips = (day.trips || [])
+    .map(t => {
+      let ts = t.ts || 0;
+      if (!ts && t.time) ts = new Date(dateStr + 'T' + t.time + ':00').getTime();
+      return { ...t, _ts: ts };
+    })
+    .filter(t => t._ts > 0)
+    .sort((a, b) => a._ts - b._ts);
+  
+  if (!trips.length) return { grouped: 0, created: 0, expanded: 0, sessions: day.sessions || [] };
+  
+  // Cópia profunda das sessões para não mutar durante dry run
+  const sessions = JSON.parse(JSON.stringify(day.sessions || []));
+  let grouped = 0, created = 0, expanded = 0;
+  
+  for (const trip of trips) {
+    const ts  = trip._ts;
+    const dur = (trip.duration || 15) * 60 * 1000;
+    const end = ts + dur;
+    
+    // Já está dentro de uma sessão existente?
+    const inside = sessions.find(s =>
+      s.start && ts >= (s.start - 1000) && (!s.end || ts <= (s.end + 1000))
+    );
+    if (inside) continue;
+    
+    // Sessão mais próxima (distância ao início ou fim)
+    let best = null, bestDist = Infinity;
+    for (const s of sessions) {
+      if (!s.start) continue;
+      const d = Math.min(
+        Math.abs(ts - s.start),
+        s.end ? Math.abs(ts - s.end) : Math.abs(ts - s.start),
+        s.end ? Math.abs(end - s.end) : Infinity
+      );
+      if (d < bestDist) { bestDist = d; best = s; }
+    }
+    
+    if (best && bestDist < THRESHOLD) {
+      // Agrupar + expandir horários da sessão
+      if (ts < best.start) { best.start = ts; expanded++; }
+      if (!best.end || end > best.end) { best.end = end; expanded++; }
+      grouped++;
+    } else {
+      // Criar nova sessão para cobrir esta corrida
+      sessions.push({
+        id: DB.uid(),
+        start: ts,
+        end:   end,
+        km:    parseFloat((trip.km || 0).toFixed(3)),
+        elapsed: Math.round((trip.duration || 15) * 60)
+      });
+      sessions.sort((a, b) => (a.start || 0) - (b.start || 0));
+      created++;
+    }
+  }
+  
+  if (!dryRun) {
+    day.sessions = sessions;
+    DB.saveDay(day);
+    // Sincronizar novas/atualizadas sessões com Supabase
+    if (_supaUser) {
+      sessions.forEach(s => {
+        _SUPA.from('sessions').upsert({
+          id: s.id, user_id: _supaUser.id, date: dateStr,
+          start_ms: s.start, end_ms: s.end,
+          km: s.km || 0, elapsed_secs: s.elapsed || 0,
+          paused_ms: 0, is_paused: false
+        }, { onConflict: 'id' }).catch(() => {});
+      });
+    }
+  }
+  
+  return { grouped, created, expanded, sessions };
+}
+
+// Rodar reconciliação em todos os dias com corridas (migração única)
+async function reconcileAllExistingDays() {
+  if (localStorage.getItem('sm_session_reconcile_v1')) return;
+  
+  const dates = DB.allDates();
+  let totalGrouped = 0, totalCreated = 0;
+  
+  for (const dateStr of dates) {
+    const day = DB.day(dateStr);
+    if (!(day.trips || []).length) continue;
+    const r = reconcileSessionsForDay(dateStr);
+    totalGrouped += r.grouped;
+    totalCreated += r.created;
+  }
+  
+  localStorage.setItem('sm_session_reconcile_v1', '1');
+  if (totalCreated > 0 || totalGrouped > 0) {
+    showToast(
+      `${totalCreated} sessão(ões) criada(s) e ${totalGrouped} corrida(s) agrupada(s) automaticamente.`,
+      'info', 5000
+    );
+    if (S.sec === 'jornada') renderJornada();
+  }
+}
+
 function confirmImport() {
   const selected = (window._pendingTrips||[]).filter(t=>t._sel);
   if (!selected.length) { closeMo('mo-import-confirm'); return; }
@@ -4186,12 +4295,37 @@ function confirmImport() {
     time: trip.time || null, duration: trip.duration, origin: trip.origin, dest: trip.dest,
     value: trip.value, km: trip.km, category: trip.category, surge: trip.surge, airport: trip.airport,
     dinamico: trip.dinamico, tip: trip.tip, source: 'import_ai' }));
-  if (S.sec==='jornada') renderJornada();
-  if (S.sec==='home') renderHome();
-  const msg = skipped>0
+
+  // Reconciliação de sessões — dry run para saber o que vai acontecer
+  const recon = reconcileSessionsForDay(S.curDate, true);
+  const hasChanges = recon.grouped > 0 || recon.created > 0;
+
+  const baseMsg = skipped > 0
     ? `${added} corrida${added!==1?'s':''} importada${added!==1?'s':''}. ${skipped} ignorada${skipped!==1?'s':''} (já existente${skipped!==1?'s':''}).`
     : `${added} corrida${added!==1?'s':''} importada${added!==1?'s':''}!`;
-  showToast(msg, skipped > 0 ? 'info' : 'success');
+
+  if (hasChanges) {
+    const reconMsg = [
+      recon.grouped > 0 ? `${recon.grouped} agrupada${recon.grouped!==1?'s':''} em sessão existente` : '',
+      recon.created > 0 ? `${recon.created} sessão${recon.created!==1?'es':''} nova${recon.created!==1?'s':''} criada${recon.created!==1?'s':''}` : ''
+    ].filter(Boolean).join(' e ');
+
+    showConfirm(
+      baseMsg + `\n\nAlgumas corridas ficaram fora de sessões GPS: ${reconMsg}. Confirmar ajuste automático?`,
+      () => {
+        reconcileSessionsForDay(S.curDate); // aplica de verdade
+        if (S.sec==='jornada') renderJornada();
+        if (S.sec==='home') renderHome();
+        showToast('Sessões ajustadas!', 'success');
+      },
+      { confirmLabel: 'Confirmar', cancelLabel: 'Manter como está',
+        onCancel: () => { if (S.sec==='jornada') renderJornada(); if (S.sec==='home') renderHome(); } }
+    );
+  } else {
+    if (S.sec==='jornada') renderJornada();
+    if (S.sec==='home') renderHome();
+    showToast(baseMsg, skipped > 0 ? 'info' : 'success');
+  }
 }
 
 // ══════════════════════════════════════════════
@@ -5961,6 +6095,7 @@ async function showApp() {
   }
   // Migração única de dados locais para o Supabase
   setTimeout(() => migrateLocalToCloud().catch(()=>{}), 3000);
+  setTimeout(() => reconcileAllExistingDays().catch(()=>{}), 5000);
   // Limpeza única: remove corridas source='import_uber_zip' do localStorage
   // antes de reimportar com os fixes de UTC e promocao fundida no dinamico.
   // Roda só uma vez (flag sm_zip_wipe_v1). Não afeta uber_import nem import_ai.
