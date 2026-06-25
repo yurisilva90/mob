@@ -82,7 +82,7 @@ html,body{height:100%;background:var(--bg);font-family:Inter,system-ui,-apple-sy
 .start.running{background:#22C55E;box-shadow:0 14px 32px rgba(34,197,94,.38)}
 .start.paused{background:#9CA3AF;box-shadow:0 14px 32px rgba(156,163,175,.38)}
 .start.ended{background:#0A2F6B;box-shadow:0 14px 32px rgba(10,47,107,.38)}
-.start svg{width:28px;height:28px;flex-shrink:0}
+.start svg{width:24px;height:30px;flex-shrink:0}
 /* Modal */
 .mo{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:flex-end;z-index:200;backdrop-filter:blur(4px)}
 .mo.on{display:flex}.mo.ctr{align-items:center;justify-content:center;padding:16px}
@@ -737,14 +737,14 @@ h1.hd-title{font-family:var(--font-brand)!important}
         <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:Inter,sans-serif">Email</label>
         <input id="l-email" type="email" inputmode="email" placeholder="seuemail@gmail.com"
           style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:16px;padding:0 16px;font-size:15px;color:#0F172A;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
-          onfocus="this.style.borderColor='#0C44BA'" onblur="this.style.borderColor='#E2E8F0'">
+          onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'">
       </div>
       <div style="margin-bottom:6px">
         <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:Inter,sans-serif">Senha</label>
         <div style="position:relative">
           <input id="l-pass" type="password" placeholder="Sua senha"
             style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:16px;padding:0 48px 0 16px;font-size:15px;color:#0F172A;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
-            onfocus="this.style.borderColor='#0C44BA'" onblur="this.style.borderColor='#E2E8F0'"
+            onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'"
             onkeydown="if(event.key==='Enter')loginEnter()">
           <button type="button" onclick="togglePass('l-pass',this)"
             style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;color:#64748B;display:flex;align-items:center;padding:4px">
@@ -759,7 +759,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
         </button>
       </div>
       <button onclick="loginEnter()" id="l-btn-enter"
-        style="width:100%;height:54px;background:#0C44BA;border:0;border-radius:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Inter,sans-serif;box-shadow:0 14px 32px rgba(12,68,186,.28);margin-bottom:16px">
+        style="width:100%;height:54px;background:#0A2F6B;border:0;border-radius:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Inter,sans-serif;box-shadow:0 14px 32px rgba(12,68,186,.28);margin-bottom:16px">
         Entrar
       </button>
       <div id="l-err" style="color:#EF4444;font-size:13px;text-align:center;margin-bottom:12px;display:none;font-family:Inter,sans-serif"></div>
@@ -779,26 +779,26 @@ h1.hd-title{font-family:var(--font-brand)!important}
         <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:Inter,sans-serif">Nome completo</label>
         <input id="r-name" type="text" placeholder="Seu nome"
           style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:16px;padding:0 16px;font-size:15px;color:#0F172A;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
-          onfocus="this.style.borderColor='#0C44BA'" onblur="this.style.borderColor='#E2E8F0'">
+          onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'">
       </div>
       <div style="margin-bottom:12px">
         <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:Inter,sans-serif">Email</label>
         <input id="r-email" type="email" inputmode="email" placeholder="seuemail@gmail.com"
           style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:16px;padding:0 16px;font-size:15px;color:#0F172A;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
-          onfocus="this.style.borderColor='#0C44BA'" onblur="this.style.borderColor='#E2E8F0'">
+          onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'">
       </div>
       <div style="margin-bottom:12px">
         <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:Inter,sans-serif">Celular (WhatsApp)</label>
         <input id="r-phone" type="tel" inputmode="tel" placeholder="(21) 99999-9999"
           style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:16px;padding:0 16px;font-size:15px;color:#0F172A;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
-          onfocus="this.style.borderColor='#0C44BA'" onblur="this.style.borderColor='#E2E8F0'">
+          onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'">
       </div>
       <div style="margin-bottom:22px">
         <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:Inter,sans-serif">Senha</label>
         <div style="position:relative">
           <input id="r-pass" type="password" placeholder="Mínimo 6 caracteres"
             style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:16px;padding:0 48px 0 16px;font-size:15px;color:#0F172A;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
-            onfocus="this.style.borderColor='#0C44BA'" onblur="this.style.borderColor='#E2E8F0'"
+            onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'"
             onkeydown="if(event.key==='Enter')loginRegister()">
           <button type="button" onclick="togglePass('r-pass',this)"
             style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;color:#64748B;display:flex;align-items:center;padding:4px">
@@ -807,7 +807,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
         </div>
       </div>
       <button onclick="loginRegister()" id="l-btn-reg"
-        style="width:100%;height:54px;background:#0C44BA;border:0;border-radius:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Inter,sans-serif;box-shadow:0 14px 32px rgba(12,68,186,.28)">
+        style="width:100%;height:54px;background:#0A2F6B;border:0;border-radius:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Inter,sans-serif;box-shadow:0 14px 32px rgba(12,68,186,.28)">
         Criar conta
       </button>
       <div id="r-err" style="color:#EF4444;font-size:13px;text-align:center;margin-top:12px;display:none;font-family:Inter,sans-serif"></div>
@@ -822,11 +822,11 @@ h1.hd-title{font-family:var(--font-brand)!important}
         <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:Inter,sans-serif">Email</label>
         <input id="f-email" type="email" inputmode="email" placeholder="seuemail@gmail.com"
           style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:16px;padding:0 16px;font-size:15px;color:#0F172A;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
-          onfocus="this.style.borderColor='#0C44BA'" onblur="this.style.borderColor='#E2E8F0'"
+          onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'"
           onkeydown="if(event.key==='Enter')loginForgot()">
       </div>
       <button onclick="loginForgot()" id="l-btn-forgot"
-        style="width:100%;height:54px;background:#0C44BA;border:0;border-radius:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Inter,sans-serif;box-shadow:0 14px 32px rgba(12,68,186,.28)">
+        style="width:100%;height:54px;background:#0A2F6B;border:0;border-radius:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Inter,sans-serif;box-shadow:0 14px 32px rgba(12,68,186,.28)">
         Enviar link
       </button>
       <div id="f-msg" style="font-size:13px;text-align:center;margin-top:12px;display:none;font-family:Inter,sans-serif"></div>
@@ -1504,7 +1504,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
   </div>
   <div class="center" id="bn-jornada">
     <div class="start" id="gps-btn" onclick="navTo('jornada')">
-      <svg viewBox="0 0 24 24" id="gps-icon" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l1.4-4.2A3 3 0 0 1 9.2 7h5.6a3 3 0 0 1 2.8 1.8L19 13"/><path d="M4 13h16v5H4z"/><circle cx="7.5" cy="18" r="1.4" fill="currentColor"/><circle cx="16.5" cy="18" r="1.4" fill="currentColor"/></svg>
+      <svg viewBox="0 0 28 36" fill="none" xmlns="http://www.w3.org/2000/svg">  <!-- Pin teardrop — preenchimento branco, corpo do logo -->  <path d="M14 1C8.48 1 4 5.48 4 11c0 8.5 10 24 10 24s10-15.5 10-24C24 5.48 19.52 1 14 1z" fill="white"/>  <!-- Carro — espaço negativo (fundo do botão aparece) -->  <!-- Cabine -->  <path d="M10 12 L11.6 8.8a.7.7 0 0 1 .63-.38h3.54a.7.7 0 0 1 .63.38L17.5 12z" fill="rgba(0,0,0,0.22)"/>  <!-- Para-brisa interior (branco semi-transp) -->  <path d="M10.8 12 L12 9.4h4l1.2 2.6z" fill="rgba(255,255,255,0.45)"/>  <!-- Corpo do carro -->  <rect x="8.5" y="11.5" width="11" height="5" rx="1.3" fill="rgba(0,0,0,0.18)"/>  <!-- Grade frontal / detalhe inferior -->  <rect x="11" y="15.5" width="6" height="1" rx="0.5" fill="rgba(255,255,255,0.5)"/>  <!-- Arcos de roda -->  <circle cx="10.5" cy="16.5" r="2" fill="rgba(0,0,0,0.22)"/>  <circle cx="17.5" cy="16.5" r="2" fill="rgba(0,0,0,0.22)"/>  <!-- Rodas (brancos pequenos no centro) -->  <circle cx="10.5" cy="16.5" r="0.9" fill="rgba(255,255,255,0.4)"/>  <circle cx="17.5" cy="16.5" r="0.9" fill="rgba(255,255,255,0.4)"/></svg>
     </div>
   </div>
   <div class="nav" id="bn-fav" onclick="navToFav()">
