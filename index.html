@@ -796,6 +796,87 @@ h1.hd-title{font-family:var(--font-brand)!important}
   <p style="position:absolute;bottom:20px;font-size:11px;color:#CBD5E1;font-family:var(--font-app)">MōB · A ferramenta da sua jornada</p>
 </div>
 
+<div class="hg-info-tip" id="hg-info-tip"></div>
+  <section class="hg-period-card" style="margin:12px 16px 0">
+    <div class="hg-period-top">
+      <div class="hg-period-tabs">
+        <button id="hg-tab-w" class="active" onclick="setHomePeriod('w')">Semana</button>
+        <button id="hg-tab-m" onclick="setHomePeriod('m')">Mês</button>
+        <button id="hg-tab-y" onclick="setHomePeriod('y')">Ano</button>
+      </div>
+      <button class="hg-filter-btn" onclick="openHgFilter()"><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/></svg></button>
+    </div>
+    <div class="hg-main-value">
+      <label>Faturamento</label>
+      <h1 id="hg-amount">R$ 0</h1>
+      <p id="hg-sub">0 corridas · 0,0 km</p>
+    </div>
+    <div class="hg-insight" id="hg-insight" style="display:none">
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:.5;margin-top:2px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <p id="hg-insight-txt"></p>
+    </div>
+    <div class="hg-metrics">
+      <div class="hg-metric"><strong id="hg-rpkm">—</strong><span>R$/Km</span></div>
+      <div class="hg-metric"><strong id="hg-rphr">—</strong><span>R$/Hora</span></div>
+      <div class="hg-metric"><strong id="hg-trips">0</strong><span>Corridas</span></div>
+      <div class="hg-metric"><strong id="hg-exp">R$ 0</strong><span>Despesas</span></div>
+      <div class="hg-metric"><strong id="hg-profit">R$ 0</strong><span>Lucro</span></div>
+      <div class="hg-metric"><strong id="hg-pct">0%</strong><span>% Lucro</span></div>
+    </div>
+    <div class="hg-goals" id="hg-goals"></div>
+  </section>
+
+  <section class="hg-chart-card" style="margin:14px 16px 0">
+    <div class="hg-chart-head"><div><h2>Dia/Semana <button class="hg-info-btn" onclick="showChartInfo(this,'Soma por dia da semana, dentro do período selecionado acima.')">?</button></h2></div>
+      <div class="hg-mini-tabs"><button class="active" id="hg-dia-d" onclick="setHgDiaMode('d')">Dia</button><button id="hg-dia-w" onclick="setHgDiaMode('w')">Semana</button></div>
+    </div>
+    <p class="hg-chart-highlight" id="hg-dia-insight"></p>
+    <div class="hg-bar-chart" id="hg-chart-dia"></div>
+  </section>
+
+  <section class="hg-chart-card" style="margin:14px 16px 0">
+    <div class="hg-chart-head"><div><h2>Hora/Turno <button class="hg-info-btn" onclick="showChartInfo(this,'Soma por horário, dentro do período selecionado acima.')">?</button></h2></div>
+      <div class="hg-mini-tabs"><button class="active" id="hg-hora-h" onclick="setHgHoraMode('h')">Hora</button><button id="hg-hora-t" onclick="setHgHoraMode('t')">Turno</button></div>
+    </div>
+    <p class="hg-chart-highlight" id="hg-hora-insight"></p>
+    <div class="hg-bar-chart hour" id="hg-chart-hora"></div>
+  </section>
+
+  <div class="ad-carousel" id="ad-carousel-1"></div>
+
+  <section class="hg-chart-card" style="margin:14px 16px 0">
+    <div class="hg-chart-head"><div><h2>Mês/Ano <button class="hg-info-btn" onclick="showChartInfo(this,'Soma por mês/ano, dentro do período selecionado acima — com Semana ou Mês escolhido aqui em cima, vira 1 barra só.')">?</button></h2></div>
+      <div class="hg-mini-tabs"><button class="active" id="hg-mes-m" onclick="setHgMesMode('m')">Mês</button><button id="hg-mes-y" onclick="setHgMesMode('y')">Ano</button></div>
+    </div>
+    <div class="hg-bar-chart month" id="hg-chart-mes"></div>
+  </section>
+
+  <section class="hg-chart-card" style="margin:14px 16px 0">
+    <div class="hg-chart-head"><div><h2>Plataformas <button class="hg-info-btn" onclick="showChartInfo(this,'Distribuição por app ou origem.')">?</button></h2></div></div>
+    <div class="hg-pie-wrap">
+      <div class="hg-pie" id="hg-pie-plat"></div>
+      <div class="hg-pie-list" id="hg-pie-plat-list"></div>
+    </div>
+  </section>
+
+  <section class="hg-chart-card" style="margin:14px 16px 0">
+    <div class="hg-chart-head"><div><h2>Receitas x Despesas <button class="hg-info-btn" onclick="showChartInfo(this,'Distribuição por categoria conforme o tipo selecionado.')">?</button></h2></div></div>
+    <div class="hg-category-tabs"><button class="active" id="hg-rd-receita" onclick="setHgRevDesp('receita')">Receitas</button><button id="hg-rd-despesa" onclick="setHgRevDesp('despesa')">Despesas</button></div>
+    <div class="hg-pie-wrap">
+      <div class="hg-pie" id="hg-pie-cat"></div>
+      <div class="hg-pie-list" id="hg-pie-cat-list"></div>
+    </div>
+    <div class="hg-category-panel" id="hg-cat-panel"></div>
+  </section>
+  <section class="entries" style="margin:14px 16px 0">
+    <div class="eheader"><h3>Últimos lançamentos</h3><button onclick="navTo('lancamentos')">Ver tudo</button></div>
+    <div id="home-entries"><div class="empty">Nenhum lançamento ainda</div></div>
+  </section>
+  <div style="height:8px"></div>
+</div>
+
+<!-- ══ TELA JORNADA ══════════════════════════════════════════════════════ -->
+
 <!-- ══ TELA JORNADA ══════════════════════════════════════════════════════ -->
 <div class="screen" id="sc-jornada">
   <div style="padding:4px 16px 0">
@@ -4376,7 +4457,9 @@ function gpsPause() {
   if (S.sec === 'jornada') renderJornada();
 }
 function gpsStop() {
-  const g = S.gps; g.st='idle';
+  const g = S.gps;
+  if (g.st === 'idle' || !g.start) return; // guard: evita duplo encerramento
+  g.st = 'idle';
   if (g.wid) navigator.geolocation.clearWatch(g.wid);
   clearInterval(g.ti);
   if (window.SmartMobiNative && typeof SmartMobiNative.stopFloating === 'function') {
@@ -4411,6 +4494,7 @@ function gpsStop() {
   g.start=null; g.pausedMs=0; g.km=0; g.pts=[]; g.baseKm=0; g.baseElapsed=0; g.pa=null;
   releaseWakeLock();
   if (S.sec==='jornada') renderJornada();
+  if (S.sec==='home') renderHome();  // atualiza card da home ao encerrar
   if (km > 0.1) setTimeout(() => showEndJourneyToast(km), 300);
 }
 function getElapsed() {
