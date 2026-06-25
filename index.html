@@ -490,7 +490,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 /* dropdown busca */
 
 /* ── Favoritos ── */
-.inf-favs{position:fixed;top:50px;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--bg);border-bottom:1px solid var(--line);z-index:104;padding:6px 14px 7px;display:none}
+.inf-favs{padding:4px 14px 6px;display:none}
 .inf-favs.has-favs{display:block}
 .inf-favs-lbl{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
 .inf-favs-lbl span{font-size:9.5px;font-weight:800;color:var(--muted2);text-transform:uppercase;letter-spacing:.07em}
@@ -735,19 +735,35 @@ h1.hd-title{font-family:var(--font-brand)!important}
 <div id="sc-login" style="display:none;position:fixed;inset:0;z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;background:#F8FAFC;overflow-y:auto">
 
   <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:32px">
-    <svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg" aria-label="MōB" style="height:52px">
-  <path d="M20 4C13.4 4 8 9.4 8 16c0 9 12 26 12 26s12-17 12-26C32 9.4 26.6 4 20 4z" fill="#22C55E"/>
-  <path d="M14.5 17L16.5 12.5a.8.8 0 0 1 .75-.45h5.5a.8.8 0 0 1 .75.45L25.5 17z" fill="rgba(0,0,0,0.18)"/>
-  <path d="M15.5 17L17.2 13a.5.5 0 0 1 .5-.3h4.6a.5.5 0 0 1 .5.3L24.5 17z" fill="rgba(255,255,255,0.45)"/>
-  <rect x="13" y="16.5" width="14" height="6.5" rx="1.5" fill="rgba(0,0,0,0.16)"/>
-  <circle cx="15.5" cy="23.5" r="2.5" fill="rgba(0,0,0,0.2)"/>
-  <circle cx="24.5" cy="23.5" r="2.5" fill="rgba(0,0,0,0.2)"/>
-  <circle cx="15.5" cy="23.5" r="1.1" fill="rgba(255,255,255,0.45)"/>
-  <circle cx="24.5" cy="23.5" r="1.1" fill="rgba(255,255,255,0.45)"/>
-  <text x="42" y="42" font-family="Poppins,Inter,sans-serif" font-weight="700" font-size="40" fill="#0A2F6B" letter-spacing="-1">M</text>
-  <text x="70" y="42" font-family="Poppins,Inter,sans-serif" font-weight="700" font-size="40" fill="#0A2F6B">ō</text>
-  <rect x="70" y="20" width="17" height="3.5" rx="1.75" fill="#22C55E"/>
-  <text x="89" y="42" font-family="Poppins,Inter,sans-serif" font-weight="700" font-size="40" fill="#0A2F6B">B</text>
+    <svg viewBox="0 0 220 72" xmlns="http://www.w3.org/2000/svg" aria-label="MōB" style="height:60px;display:block">
+  <!-- Pin teardrop verde -->
+  <path d="M36 4C24.95 4 16 12.95 16 24c0 16.5 20 44 20 44s20-27.5 20-44C56 12.95 47.05 4 36 4z" fill="#22C55E"/>
+  <!-- Carro branco dentro do pin -->
+  <!-- Cabine -->
+  <path d="M25 24.5L28.2 18a1 1 0 0 1 .9-.55h13.8a1 1 0 0 1 .9.55L47 24.5z" fill="white"/>
+  <!-- Para-brisa (transparência para dar profundidade) -->
+  <path d="M26.5 24.5L29.2 19.2h13.6l2.7 5.3z" fill="rgba(10,47,107,0.2)"/>
+  <!-- Carroceria -->
+  <rect x="23" y="24" width="26" height="10" rx="2.5" fill="white"/>
+  <!-- Para-choque / linha inferior -->
+  <rect x="26" y="32.5" width="20" height="2" rx="1" fill="rgba(10,47,107,0.12)"/>
+  <!-- Roda esquerda -->
+  <circle cx="28" cy="35" r="4.5" fill="#22C55E"/>
+  <circle cx="28" cy="35" r="2.8" fill="#0A2F6B"/>
+  <circle cx="28" cy="35" r="1.3" fill="white"/>
+  <!-- Roda direita -->
+  <circle cx="44" cy="35" r="4.5" fill="#22C55E"/>
+  <circle cx="44" cy="35" r="2.8" fill="#0A2F6B"/>
+  <circle cx="44" cy="35" r="1.3" fill="white"/>
+  <!-- Faróis -->
+  <rect x="23" y="25.5" width="6" height="3.5" rx="1.75" fill="rgba(219,234,254,0.85)"/>
+  <rect x="43" y="25.5" width="6" height="3.5" rx="1.75" fill="rgba(219,234,254,0.85)"/>
+  <!-- Texto MōB — Poppins bold -->
+  <text x="76" y="52" font-family="Poppins,Inter,sans-serif" font-weight="700" font-size="50" fill="#0A2F6B" letter-spacing="-2">M</text>
+  <text x="110" y="52" font-family="Poppins,Inter,sans-serif" font-weight="700" font-size="50" fill="#0A2F6B" letter-spacing="-2">ō</text>
+  <!-- Traço verde sobre o ō (característica da marca) -->
+  <rect x="110" y="26" width="20" height="4.5" rx="2.25" fill="#22C55E"/>
+  <text x="132" y="52" font-family="Poppins,Inter,sans-serif" font-weight="700" font-size="50" fill="#0A2F6B">B</text>
 </svg>
     <p style="font-size:13px;color:#94A3B8;margin-top:10px;font-family:var(--font-app)">A ferramenta da sua jornada</p>
   </div>
@@ -1256,7 +1272,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
     </div>
   </div>
 
-  <div style="height:110px"></div>
+  <div style="height:90px"></div>
   </div><!-- /inf-scroll-content -->
 
   <!-- 4 categorias fixas -->
