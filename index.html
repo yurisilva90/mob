@@ -732,198 +732,77 @@ h1.hd-title{font-family:var(--font-brand)!important}
 <div class="scroll" id="main-scroll">
 
 <!-- ══ TELA LOGIN ══════════════════════════════════════════════════════════ -->
-<div id="sc-login" style="display:none;position:fixed;inset:0;z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;background:#fff;overflow-y:auto">
+<div id="sc-login" style="display:none;position:fixed;inset:0;z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;background:#F8FAFC;overflow-y:auto">
 
-  <img src="icon-512.png" alt="MōB" style="width:230px;height:230px;object-fit:contain;margin-bottom:20px">
+  <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:32px">
+    <svg viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg" aria-label="MōB" style="height:52px">
+  <path d="M20 4C13.4 4 8 9.4 8 16c0 9 12 26 12 26s12-17 12-26C32 9.4 26.6 4 20 4z" fill="#22C55E"/>
+  <path d="M14.5 17L16.5 12.5a.8.8 0 0 1 .75-.45h5.5a.8.8 0 0 1 .75.45L25.5 17z" fill="rgba(0,0,0,0.18)"/>
+  <path d="M15.5 17L17.2 13a.5.5 0 0 1 .5-.3h4.6a.5.5 0 0 1 .5.3L24.5 17z" fill="rgba(255,255,255,0.45)"/>
+  <rect x="13" y="16.5" width="14" height="6.5" rx="1.5" fill="rgba(0,0,0,0.16)"/>
+  <circle cx="15.5" cy="23.5" r="2.5" fill="rgba(0,0,0,0.2)"/>
+  <circle cx="24.5" cy="23.5" r="2.5" fill="rgba(0,0,0,0.2)"/>
+  <circle cx="15.5" cy="23.5" r="1.1" fill="rgba(255,255,255,0.45)"/>
+  <circle cx="24.5" cy="23.5" r="1.1" fill="rgba(255,255,255,0.45)"/>
+  <text x="42" y="42" font-family="Poppins,Inter,sans-serif" font-weight="700" font-size="40" fill="#0A2F6B" letter-spacing="-1">M</text>
+  <text x="70" y="42" font-family="Poppins,Inter,sans-serif" font-weight="700" font-size="40" fill="#0A2F6B">ō</text>
+  <rect x="70" y="20" width="17" height="3.5" rx="1.75" fill="#22C55E"/>
+  <text x="89" y="42" font-family="Poppins,Inter,sans-serif" font-weight="700" font-size="40" fill="#0A2F6B">B</text>
+</svg>
+    <p style="font-size:13px;color:#94A3B8;margin-top:10px;font-family:var(--font-app)">A ferramenta da sua jornada</p>
+  </div>
 
   <div style="width:100%;max-width:360px">
 
-    <!-- ENTRAR -->
     <div id="lsLogin">
-      <div style="margin-bottom:12px">
-        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:Inter,sans-serif">Email</label>
-        <input id="l-email" type="email" inputmode="email" placeholder="seuemail@gmail.com"
-          style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:16px;padding:0 16px;font-size:15px;color:#0F172A;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
-          onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'">
+      <h2 style="font-size:22px;font-weight:700;color:#0A2F6B;margin-bottom:4px;font-family:var(--font-brand)">Bem-vindo ao MōB</h2>
+      <p style="font-size:13px;color:#94A3B8;margin-bottom:24px;font-family:var(--font-app)">Faça login para continuar</p>
+      <div style="margin-bottom:14px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Email</label>
+        <input id="l-email" type="email" inputmode="email" placeholder="seuemail@gmail.com" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'">
       </div>
-      <div style="margin-bottom:6px">
-        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:Inter,sans-serif">Senha</label>
+      <div style="margin-bottom:6px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Senha</label>
         <div style="position:relative">
-          <input id="l-pass" type="password" placeholder="Sua senha"
-            style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:16px;padding:0 48px 0 16px;font-size:15px;color:#0F172A;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
-            onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'"
-            onkeydown="if(event.key==='Enter')loginEnter()">
-          <button type="button" onclick="togglePass('l-pass',this)"
-            style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;color:#64748B;display:flex;align-items:center;padding:4px">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
+          <input id="l-pass" type="password" placeholder="Sua senha" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 48px 0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'" onkeydown="if(event.key==='Enter')loginEnter()">
+          <button type="button" onclick="togglePass('l-pass',this)" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;color:#94A3B8;display:flex;align-items:center;padding:4px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
         </div>
       </div>
-      <div style="text-align:right;margin-bottom:18px">
-        <button onclick="lsShow('lsForgot')"
-          style="background:transparent;border:0;color:#64748B;font-size:12px;cursor:pointer;font-family:Inter,sans-serif;text-decoration:underline;text-underline-offset:2px">
-          Esqueci minha senha
-        </button>
+      <div style="text-align:right;margin-bottom:20px">
+        <button onclick="lsShow('lsForgot')" style="background:transparent;border:0;color:#64748B;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-app);text-decoration:underline;text-underline-offset:3px">Esqueci minha senha</button>
       </div>
-      <button onclick="loginEnter()" id="l-btn-enter"
-        style="width:100%;height:54px;background:#0A2F6B;border:0;border-radius:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Inter,sans-serif;box-shadow:0 14px 32px rgba(12,68,186,.28);margin-bottom:16px">
-        Entrar
-      </button>
-      <div id="l-err" style="color:#EF4444;font-size:13px;text-align:center;margin-bottom:12px;display:none;font-family:Inter,sans-serif"></div>
+      <button onclick="loginEnter()" id="l-btn-enter" style="width:100%;height:52px;background:#22C55E;border:0;border-radius:14px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:var(--font-brand);box-shadow:0 10px 24px rgba(34,197,94,.3);margin-bottom:16px">Entrar</button>
+      <div id="l-err" style="color:#EF4444;font-size:13px;text-align:center;margin-bottom:12px;display:none;font-family:var(--font-app)"></div>
       <div style="text-align:center">
-        <button onclick="lsShow('lsReg')"
-          style="background:transparent;border:0;color:#64748B;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;text-decoration:underline;text-underline-offset:3px">
-          Não tenho conta — Criar conta
-        </button>
+        <button onclick="lsShow('lsReg')" style="background:transparent;border:0;color:#64748B;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-app);text-decoration:underline;text-underline-offset:3px">Não tenho conta — Criar conta</button>
       </div>
     </div>
 
-    <!-- CRIAR CONTA -->
     <div id="lsReg" style="display:none">
-      <button onclick="lsShow('lsLogin')" style="background:transparent;border:0;color:#64748B;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;margin-bottom:20px;padding:0">← Voltar</button>
-      <div style="font-size:18px;font-weight:800;color:#0F172A;margin-bottom:20px;font-family:Inter,sans-serif">Criar conta</div>
-      <div style="margin-bottom:12px">
-        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:Inter,sans-serif">Nome completo</label>
-        <input id="r-name" type="text" placeholder="Seu nome"
-          style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:16px;padding:0 16px;font-size:15px;color:#0F172A;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
-          onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'">
-      </div>
-      <div style="margin-bottom:12px">
-        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:Inter,sans-serif">Email</label>
-        <input id="r-email" type="email" inputmode="email" placeholder="seuemail@gmail.com"
-          style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:16px;padding:0 16px;font-size:15px;color:#0F172A;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
-          onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'">
-      </div>
-      <div style="margin-bottom:12px">
-        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:Inter,sans-serif">Celular (WhatsApp)</label>
-        <input id="r-phone" type="tel" inputmode="tel" placeholder="(21) 99999-9999"
-          style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:16px;padding:0 16px;font-size:15px;color:#0F172A;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
-          onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'">
-      </div>
-      <div style="margin-bottom:22px">
-        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:Inter,sans-serif">Senha</label>
+      <button onclick="lsShow('lsLogin')" style="background:transparent;border:0;color:#64748B;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-app);text-decoration:underline;text-underline-offset:3px;margin-bottom:20px;display:block">← Voltar</button>
+      <h2 style="font-size:22px;font-weight:700;color:#0A2F6B;margin-bottom:20px;font-family:var(--font-brand)">Criar conta</h2>
+      <div style="margin-bottom:14px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Nome completo</label><input id="r-name" type="text" placeholder="Seu nome" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'"></div>
+      <div style="margin-bottom:14px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Email</label><input id="r-email" type="email" inputmode="email" placeholder="seuemail@gmail.com" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'"></div>
+      <div style="margin-bottom:14px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Celular (WhatsApp)</label><input id="r-phone" type="tel" inputmode="tel" placeholder="(21) 99999-9999" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'"></div>
+      <div style="margin-bottom:24px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Senha</label>
         <div style="position:relative">
-          <input id="r-pass" type="password" placeholder="Mínimo 6 caracteres"
-            style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:16px;padding:0 48px 0 16px;font-size:15px;color:#0F172A;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
-            onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'"
-            onkeydown="if(event.key==='Enter')loginRegister()">
-          <button type="button" onclick="togglePass('r-pass',this)"
-            style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;color:#64748B;display:flex;align-items:center;padding:4px">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
+          <input id="r-pass" type="password" placeholder="Mínimo 6 caracteres" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 48px 0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'" onkeydown="if(event.key==='Enter')loginRegister()">
+          <button type="button" onclick="togglePass('r-pass',this)" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;color:#94A3B8;display:flex;align-items:center;padding:4px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
         </div>
       </div>
-      <button onclick="loginRegister()" id="l-btn-reg"
-        style="width:100%;height:54px;background:#0A2F6B;border:0;border-radius:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Inter,sans-serif;box-shadow:0 14px 32px rgba(12,68,186,.28)">
-        Criar conta
-      </button>
-      <div id="r-err" style="color:#EF4444;font-size:13px;text-align:center;margin-top:12px;display:none;font-family:Inter,sans-serif"></div>
+      <button onclick="loginRegister()" id="l-btn-reg" style="width:100%;height:52px;background:#22C55E;border:0;border-radius:14px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:var(--font-brand);box-shadow:0 10px 24px rgba(34,197,94,.3)">Criar conta</button>
+      <div id="r-err" style="color:#EF4444;font-size:13px;text-align:center;margin-top:12px;display:none;font-family:var(--font-app)"></div>
     </div>
 
-    <!-- ESQUECI SENHA -->
     <div id="lsForgot" style="display:none">
-      <button onclick="lsShow('lsLogin')" style="background:transparent;border:0;color:#64748B;font-size:13px;cursor:pointer;font-family:Inter,sans-serif;margin-bottom:20px;padding:0">← Voltar</button>
-      <div style="font-size:18px;font-weight:800;color:#0F172A;margin-bottom:8px;font-family:Inter,sans-serif">Recuperar senha</div>
-      <div style="font-size:13px;color:#64748B;margin-bottom:20px;font-family:Inter,sans-serif">Enviaremos um link de redefinição para seu email.</div>
-      <div style="margin-bottom:20px">
-        <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:Inter,sans-serif">Email</label>
-        <input id="f-email" type="email" inputmode="email" placeholder="seuemail@gmail.com"
-          style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:16px;padding:0 16px;font-size:15px;color:#0F172A;outline:none;font-family:Inter,sans-serif;box-sizing:border-box"
-          onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'"
-          onkeydown="if(event.key==='Enter')loginForgot()">
-      </div>
-      <button onclick="loginForgot()" id="l-btn-forgot"
-        style="width:100%;height:54px;background:#0A2F6B;border:0;border-radius:18px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:Inter,sans-serif;box-shadow:0 14px 32px rgba(12,68,186,.28)">
-        Enviar link
-      </button>
-      <div id="f-msg" style="font-size:13px;text-align:center;margin-top:12px;display:none;font-family:Inter,sans-serif"></div>
+      <button onclick="lsShow('lsLogin')" style="background:transparent;border:0;color:#64748B;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-app);text-decoration:underline;text-underline-offset:3px;margin-bottom:20px;display:block">← Voltar</button>
+      <h2 style="font-size:22px;font-weight:700;color:#0A2F6B;margin-bottom:6px;font-family:var(--font-brand)">Recuperar senha</h2>
+      <p style="font-size:13px;color:#64748B;margin-bottom:20px;font-family:var(--font-app)">Enviaremos um link de redefinição para seu email.</p>
+      <div style="margin-bottom:20px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Email</label><input id="f-email" type="email" inputmode="email" placeholder="seuemail@gmail.com" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'" onkeydown="if(event.key==='Enter')loginForgot()"></div>
+      <button onclick="loginForgot()" id="l-btn-forgot" style="width:100%;height:52px;background:#22C55E;border:0;border-radius:14px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:var(--font-brand);box-shadow:0 10px 24px rgba(34,197,94,.3)">Enviar link</button>
+      <div id="f-err" style="color:#22C55E;font-size:13px;text-align:center;margin-top:12px;display:none;font-family:var(--font-app)"></div>
     </div>
 
   </div>
-</div>
-
-<!-- ══ TELA HOME ══════════════════════════════════════════════════════════ -->
-<div class="screen on" id="sc-home">
-  <div style="padding:0 16px">
-    <div class="ad-carousel" id="ad-carousel-0"></div>
-  </div>
-  <div class="hg-info-tip" id="hg-info-tip"></div>
-  <section class="hg-period-card" style="margin:12px 16px 0">
-    <div class="hg-period-top">
-      <div class="hg-period-tabs">
-        <button id="hg-tab-w" class="active" onclick="setHomePeriod('w')">Semana</button>
-        <button id="hg-tab-m" onclick="setHomePeriod('m')">Mês</button>
-        <button id="hg-tab-y" onclick="setHomePeriod('y')">Ano</button>
-      </div>
-      <button class="hg-filter-btn" onclick="openHgFilter()"><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/></svg></button>
-    </div>
-    <div class="hg-main-value">
-      <label>Faturamento</label>
-      <h1 id="hg-amount">R$ 0</h1>
-      <p id="hg-sub">0 corridas · 0,0 km</p>
-    </div>
-    <div class="hg-insight" id="hg-insight" style="display:none">
-      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:.5;margin-top:2px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <p id="hg-insight-txt"></p>
-    </div>
-    <div class="hg-metrics">
-      <div class="hg-metric"><strong id="hg-rpkm">—</strong><span>R$/Km</span></div>
-      <div class="hg-metric"><strong id="hg-rphr">—</strong><span>R$/Hora</span></div>
-      <div class="hg-metric"><strong id="hg-trips">0</strong><span>Corridas</span></div>
-      <div class="hg-metric"><strong id="hg-exp">R$ 0</strong><span>Despesas</span></div>
-      <div class="hg-metric"><strong id="hg-profit">R$ 0</strong><span>Lucro</span></div>
-      <div class="hg-metric"><strong id="hg-pct">0%</strong><span>% Lucro</span></div>
-    </div>
-    <div class="hg-goals" id="hg-goals"></div>
-  </section>
-
-  <section class="hg-chart-card" style="margin:14px 16px 0">
-    <div class="hg-chart-head"><div><h2>Dia/Semana <button class="hg-info-btn" onclick="showChartInfo(this,'Soma por dia da semana, dentro do período selecionado acima.')">?</button></h2></div>
-      <div class="hg-mini-tabs"><button class="active" id="hg-dia-d" onclick="setHgDiaMode('d')">Dia</button><button id="hg-dia-w" onclick="setHgDiaMode('w')">Semana</button></div>
-    </div>
-    <p class="hg-chart-highlight" id="hg-dia-insight"></p>
-    <div class="hg-bar-chart" id="hg-chart-dia"></div>
-  </section>
-
-  <section class="hg-chart-card" style="margin:14px 16px 0">
-    <div class="hg-chart-head"><div><h2>Hora/Turno <button class="hg-info-btn" onclick="showChartInfo(this,'Soma por horário, dentro do período selecionado acima.')">?</button></h2></div>
-      <div class="hg-mini-tabs"><button class="active" id="hg-hora-h" onclick="setHgHoraMode('h')">Hora</button><button id="hg-hora-t" onclick="setHgHoraMode('t')">Turno</button></div>
-    </div>
-    <p class="hg-chart-highlight" id="hg-hora-insight"></p>
-    <div class="hg-bar-chart hour" id="hg-chart-hora"></div>
-  </section>
-
-  <div class="ad-carousel" id="ad-carousel-1"></div>
-
-  <section class="hg-chart-card" style="margin:14px 16px 0">
-    <div class="hg-chart-head"><div><h2>Mês/Ano <button class="hg-info-btn" onclick="showChartInfo(this,'Soma por mês/ano, dentro do período selecionado acima — com Semana ou Mês escolhido aqui em cima, vira 1 barra só.')">?</button></h2></div>
-      <div class="hg-mini-tabs"><button class="active" id="hg-mes-m" onclick="setHgMesMode('m')">Mês</button><button id="hg-mes-y" onclick="setHgMesMode('y')">Ano</button></div>
-    </div>
-    <div class="hg-bar-chart month" id="hg-chart-mes"></div>
-  </section>
-
-  <section class="hg-chart-card" style="margin:14px 16px 0">
-    <div class="hg-chart-head"><div><h2>Plataformas <button class="hg-info-btn" onclick="showChartInfo(this,'Distribuição por app ou origem.')">?</button></h2></div></div>
-    <div class="hg-pie-wrap">
-      <div class="hg-pie" id="hg-pie-plat"></div>
-      <div class="hg-pie-list" id="hg-pie-plat-list"></div>
-    </div>
-  </section>
-
-  <section class="hg-chart-card" style="margin:14px 16px 0">
-    <div class="hg-chart-head"><div><h2>Receitas x Despesas <button class="hg-info-btn" onclick="showChartInfo(this,'Distribuição por categoria conforme o tipo selecionado.')">?</button></h2></div></div>
-    <div class="hg-category-tabs"><button class="active" id="hg-rd-receita" onclick="setHgRevDesp('receita')">Receitas</button><button id="hg-rd-despesa" onclick="setHgRevDesp('despesa')">Despesas</button></div>
-    <div class="hg-pie-wrap">
-      <div class="hg-pie" id="hg-pie-cat"></div>
-      <div class="hg-pie-list" id="hg-pie-cat-list"></div>
-    </div>
-    <div class="hg-category-panel" id="hg-cat-panel"></div>
-  </section>
-  <section class="entries" style="margin:14px 16px 0">
-    <div class="eheader"><h3>Últimos lançamentos</h3><button onclick="navTo('lancamentos')">Ver tudo</button></div>
-    <div id="home-entries"><div class="empty">Nenhum lançamento ainda</div></div>
-  </section>
-  <div style="height:8px"></div>
+  <p style="position:absolute;bottom:20px;font-size:11px;color:#CBD5E1;font-family:var(--font-app)">MōB · A ferramenta da sua jornada</p>
 </div>
 
 <!-- ══ TELA JORNADA ══════════════════════════════════════════════════════ -->
