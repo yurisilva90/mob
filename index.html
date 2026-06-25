@@ -688,6 +688,14 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .jss-kpi .jv.g{color:var(--green)}
 .jss-kpi .jl{font-size:8px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em;margin-top:1px;display:block}
 .jss-acts{display:flex;gap:4px;flex-shrink:0;margin-left:6px}
+.jss-trips{display:none;border-top:1px solid var(--line);padding:8px 0 4px}
+.jss-card.open .jss-trips{display:block}
+.jss-trips-head{display:flex;align-items:center;justify-content:space-between;padding:4px 14px 8px}
+.jss-trips-head h4{font-size:10.5px;font-weight:800;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em}
+.jss-trips-head span{font-size:11px;font-weight:700;color:var(--muted2)}
+.jss-trips .li-row{padding:9px 14px;margin:0;border-radius:0;border-top:1px solid #F8FAFC}
+.jss-trips .li-row:first-of-type{border-top:0}
+.jss-trips-empty{padding:12px 14px;font-size:12px;color:var(--muted2);text-align:center}
 .jss-act{border:0;background:#F1F5F9;cursor:pointer;color:#64748B;padding:10px;display:flex;align-items:center;border-radius:10px;touch-action:manipulation}.jss-act.del{color:#EF4444;background:#FEF2F2}
 /* ── Lançamentos — tabs pago / a pagar ── */
 .lanc-tabs{display:flex;background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:3px;gap:3px;margin-bottom:12px}
@@ -3124,11 +3132,15 @@ function sessionItem(label, sess, origIdx, dateStr, day, live) {
   const badgeCls = live ? (S.gps.st==='paused' ? 'pau' : 'live') : 'end';
   const cardId = 'jss-' + dateStr + '-' + origIdx;
 
-  // Corridas e ganhos desta sessão (por horário)
+  // Corridas desta sessão — filtrar por horário (suporta t.ts e t.time HH:MM)
   const trips = (day?.trips||[]).filter(t => {
-    const ts = t.ts || 0;
+    let ts = t.ts || 0;
+    if (!ts && t.time && dateStr) {
+      // Construir timestamp a partir de "HH:MM" + data da sessão
+      ts = new Date(dateStr + 'T' + t.time + ':00').getTime();
+    }
     if (!ts) return false;
-    return ts >= startMs && (endMs ? ts <= endMs : true);
+    return ts >= startMs && (!endMs || ts <= endMs);
   });
   const corridas = trips.length;
   const ganhos = trips.reduce((s,t)=>s+(t.value||0),0);
@@ -3151,6 +3163,15 @@ function sessionItem(label, sess, origIdx, dateStr, day, live) {
       <div class="jss-kpi"><span class="jv">${corridas}</span><span class="jl">Corridas</span></div>
       <div class="jss-kpi"><span class="jv g">${DB.fR(ganhos)}</span><span class="jl">Ganhos</span></div>
       <div class="jss-acts">${editBtn}</div>
+    </div>
+    <div class="jss-trips">
+      <div class="jss-trips-head">
+        <h4>Corridas desta sessão</h4>
+        ${corridas > 0 ? `<span>${corridas} corrida${corridas !== 1 ? 's' : ''}</span>` : ''}
+      </div>
+      ${corridas > 0
+        ? trips.map(t => tripItem(t)).join('')
+        : '<div class="jss-trips-empty">Nenhuma corrida encontrada nesta sessão</div>'}
     </div>
   </div>`;
 }
