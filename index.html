@@ -6434,7 +6434,7 @@ function infAbrirGps(){
     const{latitude:lat,longitude:lon}=pos.coords;
     document.getElementById('inf-gps-list').innerHTML='<div class="inf-empty">Buscando ruas…</div>';
     try{
-      const revR=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&zoom=17&format=json&accept-language=pt`,{headers:{'User-Agent':'SmartMobi/1.0'}});
+      const revR=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&zoom=17&format=json&accept-language=pt`,{headers:{'User-Agent':'MoB/1.0'}});
       const rev=await revR.json();
       const ruaAtual=rev.address?.road||rev.address?.pedestrian||rev.address?.suburb||'Rua atual';
       const bairro=rev.address?.suburb||rev.address?.neighbourhood||'';
