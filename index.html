@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="description" content="SmartMobi — app para motoristas de aplicativo">
+<meta name="description" content="MōB — a ferramenta da sua jornada">
 <meta name="theme-color" content="#0A2F6B">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="MōB">
@@ -1102,7 +1102,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
-     TELA AGENDA — SmartMobi 1.1.0.0
+     TELA AGENDA — MōB
      Design: GPT  |  Funcionalidade: Claude
      ═══════════════════════════════════════════════════════════ -->
 <div class="screen" id="sc-agenda">
@@ -1812,7 +1812,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
         <div class="acc-badge" id="acc-badge">Free</div>
       </div>
       <div class="acc-exp" id="acc-exp" style="display:none"></div>
-      <button class="acc-upgrade" id="acc-upgrade-btn" onclick="openUpgrade()" style="display:none">Assinar SmartMobi Pro</button>
+      <button class="acc-upgrade" id="acc-upgrade-btn" onclick="openUpgrade()" style="display:none">Assinar MōB Pro</button>
     </div>
 
     <div class="field"><label class="lbl">Nome</label><input class="inp" type="text" id="p-nome" placeholder="Seu nome"></div>
@@ -1880,7 +1880,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
     <div style="width:56px;height:56px;border-radius:18px;background:#EFF6FF;color:#0EA5E9;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
       <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/></svg>
     </div>
-    <div style="font-size:18px;font-weight:800;margin-bottom:8px">Suporte SmartMobi</div>
+    <div style="font-size:18px;font-weight:800;margin-bottom:8px">Suporte MōB</div>
     <div style="font-size:13px;color:#64748B;margin-bottom:20px">Tem alguma dúvida ou sugestão? Entre em contato.</div>
     <div id="suporte-version" style="font-size:11.5px;color:#94A3B8;text-align:center;margin-bottom:14px;font-family:'Inter',system-ui,sans-serif"></div>
     <button class="btn-p" onclick="closeMo('mo-suporte')">Fechar</button>
@@ -1917,7 +1917,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
     <div style="padding:20px;text-align:center;color:#94A3B8">
       <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="#CBD5E1" stroke-width="1.5" style="margin-bottom:12px"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
       <div style="font-size:14px;font-weight:600;color:#64748B;margin-bottom:6px">Nenhuma notificação</div>
-      <div style="font-size:12px">Novidades do SmartMobi aparecerão aqui</div>
+      <div style="font-size:12px">Novidades do MōB aparecerão aqui</div>
     </div>
     <button class="btn-p" onclick="closeMo('mo-notif')" style="margin-top:8px">Fechar</button>
   </div>
@@ -4406,7 +4406,7 @@ function gpsStart() {
   // Verifica permissão overlay
   if (window.SmartMobiNative && typeof SmartMobiNative.hasOverlay === 'function') {
     if (!SmartMobiNative.hasOverlay()) {
-      setTimeout(() => showToast('Para ver a bolinha flutuante sobre o Uber:\nConfigurações → Apps → SmartMobi → Aparecer sobre outros apps → Ativar', 'info'), 500);
+      setTimeout(() => showToast('Para ver a bolinha flutuante sobre o Uber:\nConfigurações → Apps → MōB → Aparecer sobre outros apps → Ativar', 'info'), 500);
     }
   }
   requestWakeLock();
@@ -4693,7 +4693,7 @@ function openPerfil() {
 }
 function openUpgrade() {
   // Placeholder — ainda sem fluxo de pagamento real, so o botao por enquanto.
-  showToast('Em breve você poderá assinar o SmartMobi Pro por aqui.', 'info');
+  showToast('Em breve você poderá assinar o MōB Pro por aqui.', 'info');
 }
 function openConfig() {
   const cfg = DB.cfg();
@@ -4709,7 +4709,7 @@ function openConfig() {
   if (sub) sub.textContent = pending > 0 ? (pending+' lançamento'+(pending!==1?'s':'')+' aguardando conexão') : 'Tudo sincronizado';
 
   const verEl = document.getElementById('cfg-version');
-  if (verEl) verEl.textContent = 'SmartMobi · v' + (window.SmartMobiNative?.getVersion?.() || '—');
+  if (verEl) verEl.textContent = 'MōB · v' + (window.SmartMobiNative?.getVersion?.() || '—');
 
   openMo('mo-config');
 }
