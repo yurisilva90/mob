@@ -490,11 +490,12 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 /* dropdown busca */
 
 /* ── Favoritos ── */
-.inf-favs{padding:7px 14px 0}
-.inf-favs-lbl{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-.inf-favs-lbl span{font-size:10px;font-weight:800;color:var(--muted2);text-transform:uppercase;letter-spacing:.07em}
+.inf-favs{position:fixed;top:50px;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--bg);border-bottom:1px solid var(--line);z-index:104;padding:6px 14px 7px;display:none}
+.inf-favs.has-favs{display:block}
+.inf-favs-lbl{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.inf-favs-lbl span{font-size:9.5px;font-weight:800;color:var(--muted2);text-transform:uppercase;letter-spacing:.07em}
 .inf-favs-lbl a{font-size:11px;font-weight:700;color:#0A2F6B;cursor:pointer;text-decoration:none}
-.inf-favs-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.inf-favs-row{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
 .inf-fav-chip{background:var(--card);border:2px solid var(--line);border-radius:13px;
   padding:9px 5px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;
   gap:4px;position:relative;transition:border-color .15s,transform .1s;min-height:60px}
@@ -1303,7 +1304,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
   </div>
   <div class="inf-search-dd" id="inf-search-dd"></div>
 
-  <!-- 4 destaques 2x2 -->
+  <div id="inf-scroll-content"><!-- 4 destaques 2x2 -->
   <div class="inf-sec-lbl">Destaques</div>
   <div class="inf-feat-grid">
     <div class="inf-feat" id="inf-fl-gig" onclick="infAbrirLocal(this,'Galeão (GIG)','aero')">
@@ -1377,6 +1378,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
   </div>
 
   <div style="height:110px"></div>
+  </div><!-- /inf-scroll-content -->
 
   <!-- 4 categorias fixas -->
   <div class="inf-cat-row">
