@@ -708,6 +708,22 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .lanc-act-btn{border:0;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:9px;flex-shrink:0;transition:.12s}
 .lanc-act-btn.confirmar{background:#DCFCE7;color:#15803D}
 .lanc-act-btn.cancelar{background:#FEE2E2;color:#991B1B}
+/* ── Lançamentos Jornada: card compacto + detalhe inline ── */
+.lanc-item-wrap{margin-bottom:8px}
+.li-row-j{display:flex;gap:10px;align-items:center;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;cursor:pointer;touch-action:manipulation}
+.li-row-j.vencido{border-color:#FECACA}
+.li-row-j.open{border-radius:14px 14px 0 0;border-bottom:0}
+.li-line1{display:flex;align-items:center;gap:6px;margin-bottom:2px}
+.li-title-j{font-size:13px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.li-line2{display:flex;justify-content:space-between;align-items:center}
+.li-sub-j{font-size:11px;color:var(--muted2);font-weight:500}
+.li-val-j{font-size:14px;font-weight:800;flex-shrink:0;margin-left:4px}
+.li-val-j.neg{color:var(--red)}.li-val-j.pos{color:var(--green)}
+.lanc-detail-panel{background:var(--card);border:1.5px solid var(--line);border-top:0;border-radius:0 0 14px 14px;padding:10px 12px 12px}
+.lanc-detail-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);padding:5px 0;font-weight:500}
+.lanc-detail-row:not(:last-of-type){border-bottom:1px solid var(--line)}
+.lanc-detail-row strong{color:var(--text);font-weight:700}
+.btn-marcar-pago{width:100%;height:40px;border:0;border-radius:10px;background:var(--green);color:#fff;font-size:13px;font-weight:800;cursor:pointer;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:6px;font-family:var(--font-app);touch-action:manipulation}
 
 /* ── Tipografia MōB ─────────────────────────────────────────── */
 .logo,.brand-title,.hero-title,.banner-title,.onboarding-title,
@@ -956,12 +972,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
   <div style="padding:0 16px"><div id="trips-list"><div class="empty">Nenhuma corrida registrada</div></div></div>
 
   <div class="section" style="padding:16px 16px 4px"><h2>Lançamentos</h2><div style="display:flex;gap:8px;align-items:center"><button class="add" onclick="toggleLancView()" id="lanc-toggle" style="display:none">Ver todas &#8250;</button><button class="add" onclick="openLanc('receita')">+ Adicionar</button></div></div>
-  <div style="padding:4px 16px 0">
-    <div class="lanc-tabs">
-      <button class="lanc-tab on" id="lt-apagar" onclick="setLancTab('a_pagar')">A pagar / Vencido</button>
-      <button class="lanc-tab" id="lt-pago" onclick="setLancTab('pago')">Pagos</button>
-    </div>
-  </div>
+  
   <div style="padding:0 16px"><div id="jorn-lanc-list"><div class="empty">Nenhum lançamento registrado</div></div></div>
   <div style="height:8px"></div>
 </div>
@@ -2912,15 +2923,10 @@ function renderJornada() {
       ...day.revenues.map(r=>Object.assign({},r,{_type:'receita'})),
       ...day.expenses.map(e=>Object.assign({},e,{_type:'despesa'}))
     ];
-    const tabFilter = _lancTabSel || 'a_pagar';
-    const items = allItems.filter(it => {
-      const st = it.status || 'pago';
-      const venc = st==='a_pagar' && it.date && it.date < today;
-      if(tabFilter==='a_pagar') return st==='a_pagar' || venc;
-      return st==='pago';
-    });
+    // Mostrar todos os lançamentos do dia sem filtro de tab
+    const items = allItems;
     const show = S.lancExpanded ? items : items.slice(0,5);
-    lEl.innerHTML = show.length ? show.map(it => lancItem(it, true)).join('') : '<div class="empty">Nenhum lançamento registrado</div>';
+    lEl.innerHTML = show.length ? show.map(it => lancItemJornada(it)).join('') : '<div class="empty">Nenhum lançamento registrado</div>';
     if (lancToggleBtn) {
       lancToggleBtn.style.display = items.length > 5 ? '' : 'none';
       lancToggleBtn.innerHTML = S.lancExpanded ? 'Ver menos' : 'Ver todas &#8250;';
@@ -3267,6 +3273,84 @@ function tripItem(t) {
     <div class="li-val"><strong>${DB.fR(t.value)}</strong></div>
   </div>`;
 }
+function lancItemJornada(it) {
+  const isRec = it._type === 'receita';
+  const catKey = (it._type || 'despesa') + '_' + (it.scope || 'operacional');
+  const cats = DB.cats(catKey) || DEFAULT_CATS[catKey] || [];
+  const cat = cats.find(c => c.id === it.category);
+  const icoSvg = CAT_ICONS[cat?.icon] || CAT_ICONS.plus;
+  // Categoria como título principal (descrição vai pro detalhe)
+  const categoryTitle = it.categoryLabel || cat?.label || it.category || (isRec ? 'Receita' : 'Despesa');
+  const val = isRec ? '+'+DB.fR(it.amount) : '-'+DB.fR(it.amount);
+  const today = DB.today();
+  const status = it.status || 'pago';
+  const vencido = status === 'a_pagar' && it.date && it.date < today;
+  const badgeCls = status==='pago' ? 'st-badge st-pago' : vencido ? 'st-badge st-vencido' : 'st-badge st-apagar';
+  const badgeTxt = status==='pago' ? (isRec?'Recebido':'Pago') : vencido ? 'Vencido' : 'A pagar';
+  const rowCls = 'li-row-j' + (vencido ? ' vencido' : '');
+  const fmtD = d => d ? d.split('-').slice(1).reverse().join('/') : '';
+  const subTxt = (it.scope==='pessoal'?'Pessoal':'Operacional') + (it.date?' · '+fmtD(it.date):'');
+
+  const rows = [
+    it.desc    ? `<div class="lanc-detail-row"><span>Descrição</span><strong>${it.desc}</strong></div>` : '',
+    it.date    ? `<div class="lanc-detail-row"><span>Data</span><strong>${fmtD(it.date)}</strong></div>` : '',
+    `<div class="lanc-detail-row"><span>Tipo</span><strong>${isRec?'Receita':'Despesa'}</strong></div>`,
+  ].filter(Boolean).join('');
+
+  const pagarBtn = status !== 'pago'
+    ? `<button class="btn-marcar-pago" onclick="event.stopPropagation();markLancPago('${it.id}','${it.date||today}','${it._type||'despesa'}')">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Marcar como pago
+      </button>` : '';
+
+  return `<div class="lanc-item-wrap" id="li-wrap-${it.id}">
+    <div class="${rowCls}" id="li-row-${it.id}" onclick="toggleLancDetail('${it.id}')">
+      <div class="li-ico ${isRec?'green':'red'}">${icoSvg}</div>
+      <div style="flex:1;min-width:0">
+        <div class="li-line1">
+          <span class="li-title-j">${categoryTitle}</span>
+          <span class="${badgeCls}">${badgeTxt}</span>
+        </div>
+        <div class="li-line2">
+          <span class="li-sub-j">${subTxt}</span>
+          <span class="li-val-j ${isRec?'pos':'neg'}">${val}</span>
+        </div>
+      </div>
+    </div>
+    <div class="lanc-detail-panel" id="li-detail-${it.id}" style="display:none">
+      ${rows}${pagarBtn}
+    </div>
+  </div>`;
+}
+
+function toggleLancDetail(id) {
+  const detail = document.getElementById('li-detail-' + id);
+  const row    = document.getElementById('li-row-' + id);
+  if (!detail || !row) return;
+  const isOpen = detail.style.display !== 'none';
+  // Fechar todos
+  document.querySelectorAll('.lanc-detail-panel').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.li-row-j').forEach(el => el.classList.remove('open'));
+  // Abrir este se estava fechado
+  if (!isOpen) {
+    detail.style.display = 'block';
+    row.classList.add('open');
+  }
+}
+
+function markLancPago(id, date, type) {
+  const day = DB.day(date);
+  const arr = type === 'receita' ? day.revenues : day.expenses;
+  const item = arr.find(x => x.id === id);
+  if (!item) return;
+  item.status = 'pago';
+  DB.saveDay(day);
+  SYNC.push(type === 'receita' ? 'revenues' : 'expenses',
+    Object.assign({}, item, { date, status: 'pago' }));
+  renderJornada();
+  showToast(type === 'receita' ? 'Receita marcada como recebida' : 'Despesa marcada como paga');
+}
+
 function lancItem(it, showActBtn) {
   const isRec = it._type === 'receita';
   const catKey = (it._type || 'despesa') + '_' + (it.scope || 'operacional');
