@@ -1252,8 +1252,11 @@ h1.hd-title{font-family:var(--font-brand)!important}
 <div class="screen" id="sc-informes">
   <!-- topbar -->
   <div class="inf-topbar" id="inf-topbar">
-    <!-- Home: azul com ícone branco, fixo -->
-    <button class="inf-home-btn-blue" onclick="navTo('home')">
+    <!-- Botão voltar (visível ao entrar em venue) / Home (padrão) -->
+    <button id="inf-back-btn" style="display:none" class="inf-home-btn-blue" onclick="infFecharVenueSheet()">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <button id="inf-home-btn" class="inf-home-btn-blue" onclick="navTo('home')">
       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="2.5"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
     </button>
     <!-- Busca fixa — sempre visível, largura estável -->
@@ -2079,7 +2082,7 @@ function navTo(sec) {
   if (sec === 'lancamentos') renderLancamentos();
   if (sec === 'corridas')   renderCorridas();
   if (sec === 'mais')       renderMais();
-  if (sec === 'agenda')     { try { renderAgenda(); } catch(e) {} }
+  if (sec === 'agenda')     { setAgView(agView || 'resumo'); }
 }
 function openSuporte() {
   const el = document.getElementById('suporte-version');
@@ -6838,7 +6841,10 @@ function infAbrirLocal(el,nome,tipoKey){
   document.getElementById('inf-panel-meta').textContent='Carregando…';
   document.getElementById('inf-panel-fav').classList.toggle('on',_infFavs.some(f=>f.n===nome));
   document.getElementById('inf-panel').classList.add('open');
-  document.getElementById('inf-back-btn').style.display='flex';
+  const _ibb=document.getElementById('inf-back-btn');
+  const _ihb=document.getElementById('inf-home-btn');
+  if (_ibb) _ibb.style.display='flex';
+  if (_ihb) _ihb.style.display='none';
   infCarregarInformes(nome,tipoKey);
   // Realtime: assina novos informes para esse local
   infSubscribeRealtime(nome,tipoKey);
@@ -6937,7 +6943,10 @@ async function infVotar(infId,vote,btn){
 function infFecharPainel(){
   document.getElementById('inf-panel').classList.remove('open');
   const bn=document.querySelector('.bottom');if(bn)bn.style.display='none'; // informes mantém nav escondido, navTo restaura ao sair
-  document.getElementById('inf-back-btn').style.display='none';
+  const _ibb2=document.getElementById('inf-back-btn');
+  const _ihb2=document.getElementById('inf-home-btn');
+  if (_ibb2) _ibb2.style.display='none';
+  if (_ihb2) _ihb2.style.display='flex';
   document.querySelectorAll('.inf-feat,.inf-bchip,.inf-zcard').forEach(b=>b.classList.remove('active'));
   infUnsubscribeRealtime();
 }
@@ -7159,8 +7168,8 @@ function infToggleSearch(){ return; // campo fixo — sem toggle
   // Lupa isolada ↔ caixa de busca com lupa integrada
   const btn=document.getElementById('inf-search-btn');
   const wrap=document.getElementById('inf-search-wrap');
-  btn.style.display=_infSrchOpen?'none':'flex';
-  wrap.classList.toggle('show',_infSrchOpen);
+  if (btn) btn.style.display=_infSrchOpen?'none':'flex';
+  if (wrap) wrap.classList.toggle('show',_infSrchOpen);
   const sb=document.getElementById('inf-search-bar');
   if(_infSrchOpen){sb.value='';sb.focus();}
   else{sb.value='';document.getElementById('inf-search-dd').classList.remove('show');}
