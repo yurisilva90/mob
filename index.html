@@ -4143,7 +4143,20 @@ async function extractTripsFromBase64(b64, mt, plat) {
   const cashWarning = 'ATENÇÃO — confusão comum: "Dinheiro recebido" (ícone de câmera/recibo) NÃO é gorjeta nem dinâmico, é so a forma de pagamento (o passageiro pagou em espécie). Quando uma corrida tiver "Preço dinâmico" (ícone de raio) E "Dinheiro recebido" juntas, são DUAS linhas diferentes — extraia SÓ o valor do "Preço dinâmico" em dinamico, e NUNCA coloque o valor de "Dinheiro recebido" em gorjeta (nem em dinamico, nem em value). Exemplo: corrida com "R$ 12,50 Preço dinâmico" e "R$ 27,05 Dinheiro recebido" → dinamico:12.50, gorjeta:0.00 (o R$27,05 não entra em lugar nenhum do JSON).';
   const prompt = isUber
     ? 'Esta imagem mostra o "Histórico de ganhos" do Uber motorista, com uma linha divisória entre cada corrida (mesmo no modo escuro). Extraia CADA corrida, mas SÓ quando ela aparecer COMPLETA na imagem (com a linha divisória acima e abaixo) — se uma corrida estiver cortada no topo ou na base da imagem (incompleta), IGNORE essa corrida, não tente adivinhar ou completar com dados de outra. Ignore Missão (R$ 0,00). ' + cashWarning + ' Abaixo do valor principal de cada corrida também pode aparecer "Valor extra" (ícone de mão/coração — é a gorjeta do passageiro) — extraia esse valor em gorjeta quando existir. Retorne SOMENTE JSON array: [{"time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"Black","origin":"bairro","dest":"bairro","dinamico":0.00,"gorjeta":0.00}]. duration=minutos inteiros. dinamico e gorjeta ficam 0.00 quando não aparecerem na corrida. Se vazio retorne [].'
-    : 'Histórico do 99, com uma linha divisória entre cada corrida (mesmo no modo escuro). Extraia CADA corrida, mas SÓ quando ela aparecer COMPLETA na imagem (linha divisória acima e abaixo) — se estiver cortada no topo ou na base, IGNORE essa corrida. ' + cashWarning + ' Se aparecer tarifa dinâmica ou gorjeta separadas do valor principal (e não forem "Dinheiro recebido"), extraia as duas. Retorne SOMENTE JSON array: [{"time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"99Pop","origin":"bairro","dest":"bairro","dinamico":0.00,"gorjeta":0.00}]. dinamico e gorjeta ficam 0.00 quando não aparecerem. Se vazio retorne [].';
+    : 'Esta é a tela "Histórico de corridas" do app 99 Motorista. ' +
+      'Estrutura de CADA corrida, sempre nesta ordem: ' +
+      '(1) Data e hora no formato "DD/MM/AAAA HH:MM" — extraia SOMENTE o HH:MM como campo "time". ' +
+      '(2) Forma de pagamento: "Ganhos pagos no app" ou "Ganhos pagos em dinheiro" — IGNORE, não é valor nem corrida. ' +
+      '(3) Ícone de carro + texto "Pop" + valor "R$X,XX" à direita — este R$X,XX é o "value" da corrida. Converta vírgula para ponto (R$7,90 → 7.90). ' +
+      '(4) Tag laranja "Taxa Fixa de X%" — IGNORE completamente, não é gorjeta nem dinâmico. ' +
+      '(5) Endereço de origem (ícone seta pra cima) e endereço de destino (ícone seta pra baixo) — extraia o bairro/rua como "origin" e "dest". ' +
+      '(6) Status verde "Pago" ou "Pedido finalizado" — marca o FIM desta corrida. ' +
+      'REGRAS: ' +
+      'Extraia SOMENTE corridas COMPLETAS que mostrem data+hora, linha com "Pop" e valor, e pelo menos um endereço. ' +
+      'Se uma corrida estiver cortada no topo ou base da tela (sem data/hora ou sem status final), IGNORE. ' +
+      '"km" e "duration" sempre 0 pois não aparecem no histórico. ' +
+      '"dinamico" e "gorjeta" sempre 0.00 pois não aparecem no histórico da 99. ' +
+      'Retorne SOMENTE JSON array sem texto extra: [{"time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"99Pop","origin":"bairro","dest":"bairro","dinamico":0.00,"gorjeta":0.00}]. Se não houver corridas completas retorne [].';
   const resp = await fetch('https://smartmobi-proxy.yurisilva1990.workers.dev', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({model:'claude-haiku-4-5-20251001', max_tokens:1500,
