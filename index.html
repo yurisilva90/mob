@@ -52,7 +52,7 @@ html.dark{
 html.dark body{background:var(--bg)}
 /* Cards com gradiente colorido fixo (nao usam variavel) ficam neutros no escuro,
    seguindo a direcao aprovada — cor só em pontos pontuais, nao no fundo todo */
-html.dark .journey.idle,html.dark .journey.ended,html.dark .journey.running,html.dark .journey.paused{
+html.dark .journey.idle,html.dark .journey.ended,html.dark .journey.running{
   background:var(--card);border:1px solid var(--line);box-shadow:none
 }
 html.dark .hero{background:var(--card);border:1px solid var(--line);box-shadow:none}
@@ -128,7 +128,7 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .journey.idle{background:linear-gradient(135deg,#475569,#64748b)}
 .journey.ended{background:linear-gradient(135deg,#0c4a6e 0%,#0ea5e9 75%)}
 .journey.running{background:radial-gradient(circle at 18% 0%,rgba(255,255,255,.18),transparent 34%),linear-gradient(135deg,#15803d 0%,#22c55e 58%,#63e18b 100%)}
-.journey.paused{background:radial-gradient(circle at 18% 0%,rgba(255,255,255,.18),transparent 34%),linear-gradient(135deg,#b45309 0%,#f59e0b 70%)}
+/* .journey.paused removido */
 .j-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px}
 .j-status{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:7px 10px;font-size:11px;font-weight:760;text-transform:uppercase;letter-spacing:.06em;flex:0 0 auto}
 .j-status i{width:8px;height:8px;border-radius:50%;background:#fff;flex-shrink:0}
@@ -2024,7 +2024,7 @@ let S = {
   sessionsExpanded: false,
   lancExpanded: false,
   gps: {
-    st: 'idle',  // idle | running | paused
+    st: 'idle',  // idle | running
     start: null, pausedMs: 0, pauseAt: null,
     km: 0, pts: [], wid: null, ti: null
   }
@@ -2520,7 +2520,7 @@ function renderHgGoals(dates, days, rev) {
     });
   });
   const isToday = d => d === DB.today();
-  const liveOn = S.gps.st==='running' || S.gps.st==='paused';
+  const liveOn = S.gps.st==='running';
   const kmReal = days.reduce((s,d,i) => {
     const liveKm = (liveOn && isToday(dates[i])) ? S.gps.km : 0;
     return s + (d.sessions||[]).reduce((a,x)=>a+(x.km||0),0) + liveKm + (d.kmAdjust||0);
@@ -2884,7 +2884,7 @@ function renderJornada() {
     const finishedAll = (day.sessions||[]).slice().reverse()
       .map((s,ri)=>sessionItem('Sessão '+(total-ri), s, total-1-ri, S.curDate, day, false));
     const finishedShown = S.sessionsExpanded ? finishedAll : finishedAll.slice(0,3);
-    const liveRow = (isToday && (S.gps.st==='running'||S.gps.st==='paused')) ? [sessionItem('Sessão atual', {start:S.gps.start,end:null,km:S.gps.km,elapsed:getElapsed()}, -1, S.curDate, day, true)] : [];
+    const liveRow = (isToday && S.gps.st==='running') ? [sessionItem('Sessão atual', {start:S.gps.start,end:null,km:S.gps.km,elapsed:getElapsed()}, -1, S.curDate, day, true)] : [];
     const rows = [...liveRow, ...finishedShown];
     sessEl.innerHTML = rows.length ? rows.join('') : '<div class="empty">Nenhuma sessão registrada</div>';
   }
@@ -2936,7 +2936,7 @@ function renderJourneyCard(day, isToday) {
   const finished = day.sessions || [];
   const finishedElapsed = finished.reduce((s,x)=>s+(x.elapsed||0),0);
   const finishedKm = finished.reduce((s,x)=>s+(x.km||0),0);
-  const live = isToday && (g.st === 'running' || g.st === 'paused');
+  const live = isToday && g.st === 'running';
   const liveElapsed = live ? getElapsed() : 0;
   const liveKm = live ? g.km : 0;
   const totalElapsed = Math.max(0, finishedElapsed + liveElapsed + (day.tempoAdjust || 0));
@@ -2945,20 +2945,17 @@ function renderJourneyCard(day, isToday) {
 
   let cls = 'idle';
   if (state === 'running') cls = 'running';
-  else if (state === 'paused') cls = 'paused';
   else if (finished.length > 0) cls = 'ended';
   jc.className = 'journey ' + cls;
 
   setText('jc-status-text',
     state === 'running' ? 'Online' :
-    state === 'paused'  ? 'Pausado' :
     finished.length > 0 ? 'Concluído' : 'Iniciar'
   );
   const th = Math.floor(liveElapsed/3600), tm = Math.floor(liveElapsed%3600/60), ts = liveElapsed%60;
   setText('jc-timer', p2(th)+':'+p2(tm)+':'+p2(ts));
   setText('jc-sub',
     state === 'running' ? 'Sessão atual · iniciada '+fmtHM(g.start) :
-    state === 'paused'  ? 'Pausada às '+fmtHM(g.pa) :
     finished.length > 0 ? finished.length+(finished.length===1?' sessão hoje':' sessões hoje') :
     'Nenhuma sessão iniciada'
   );
@@ -2979,13 +2976,10 @@ function renderJourneyCard(day, isToday) {
   } else if (state === 'idle') {
     const label = 'Iniciar jornada';
     actions.className = 'j-actions single';
-    actions.innerHTML = `<button class="j-btn go" onclick="gpsStart()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>${label}</button>`;
+    actions.innerHTML = `<button class="j-btn solid-light" onclick="gpsStart()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>${label}</button>`;
   } else if (state === 'running') {
-    actions.className = 'j-actions two';
-    actions.innerHTML = '<button class="j-btn ghost" onclick="gpsPause()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H6v16h4z"/><path d="M18 4h-4v16h4z"/></svg>Pausar</button><button class="j-btn solid-light danger" onclick="confirmStop()"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>Encerrar</button>';
-  } else if (state === 'paused') {
-    actions.className = 'j-actions two';
-    actions.innerHTML = '<button class="j-btn solid-light" onclick="gpsPause()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>Retomar</button><button class="j-btn solid-light danger" onclick="confirmStop()"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>Encerrar</button>';
+    actions.className = 'j-actions single';
+    actions.innerHTML = '<button class="j-btn solid-light danger" onclick="confirmStop()"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>Encerrar jornada</button>';
   }
 }
 
@@ -3000,7 +2994,7 @@ function renderMetasDoDia(day) {
   if (!stack) return;
   const rev = day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0);
   const isToday = day.date === DB.today();
-  const liveOn = isToday && (S.gps.st==='running'||S.gps.st==='paused');
+  const liveOn = isToday && S.gps.st==='running';
   const totalKm = (day.sessions||[]).reduce((s,x)=>s+(x.km||0),0) + (liveOn ? S.gps.km : 0) + (day.kmAdjust || 0);
   const totalElapsed = Math.max(0, (day.sessions||[]).reduce((s,x)=>s+(x.elapsed||0),0) + (liveOn ? getElapsed() : 0) + (day.tempoAdjust || 0));
   const dow = new Date(day.date+'T12:00').getDay();
@@ -3120,8 +3114,8 @@ function sessionItem(label, sess, origIdx, dateStr, day, live) {
   const km = sess.km || 0, elapsedSecs = sess.elapsed || 0;
   const dur = fmtDur((elapsedSecs||0)/60);
   const range = fmtHM(startMs) + '–' + (endMs ? fmtHM(endMs) : (live ? 'Agora' : '—'));
-  const status = live ? (S.gps.st==='paused' ? 'Pausada' : 'Online') : 'Encerrada';
-  const badgeCls = live ? (S.gps.st==='paused' ? 'pau' : 'live') : 'end';
+  const status = live ? 'Online' : 'Encerrada';
+  const badgeCls = live ? 'live' : 'end';
   const cardId = 'jss-' + dateStr + '-' + origIdx;
 
   // Corridas desta sessão — filtrar por horário (suporta t.ts e t.time HH:MM)
@@ -3786,7 +3780,7 @@ let kmAdjBase = 0;
 function openKmAdjust() {
   const day = DB.day(S.curDate);
   const isToday = S.curDate === DB.today();
-  const live = isToday && (S.gps.st === 'running' || S.gps.st === 'paused');
+  const live = isToday && S.gps.st === 'running';
   const liveKm = live ? S.gps.km : 0;
   const finishedKm = (day.sessions || []).reduce((s,x)=>s+(x.km||0),0);
   kmAdjBase = finishedKm + liveKm;
@@ -3819,7 +3813,7 @@ let tempoAdjBaseSecs = 0, tempoAdjCurSecs = 0;
 function openTempoAdjust() {
   const day = DB.day(S.curDate);
   const isToday = S.curDate === DB.today();
-  const live = isToday && (S.gps.st === 'running' || S.gps.st === 'paused');
+  const live = isToday && S.gps.st === 'running';
   const liveElapsed = live ? getElapsed() : 0;
   const finishedElapsed = (day.sessions || []).reduce((s,x)=>s+(x.elapsed||0),0);
   tempoAdjBaseSecs = finishedElapsed + liveElapsed;
@@ -4537,7 +4531,7 @@ async function confirmUberZipImport() {
 
 function gpsAction() {
   if (S.gps.st === 'idle') { gpsStart(); return; }
-  gpsPause();
+  // pausar removido
 }
 function gpsOnPosition(pos) {
   const g = S.gps;
@@ -4672,22 +4666,7 @@ function showConfirm(msg, onConfirm, opts) {
   document.getElementById('app-confirm-ok').onclick = () => { el.remove(); onConfirm(); };
 }
 
-function gpsPause() {
-  const g = S.gps;
-  if (g.st === 'running') {
-    g.st='paused'; g.pa=Date.now(); g.pts=[]; g.lastFixTime=null;
-    syncNavButton();
-    if (window.SmartMobiNative?.updateFloatingStatus) try { SmartMobiNative.updateFloatingStatus('paused'); } catch(e) {}
-    if (window.SmartMobiNative?.pauseGpsService) try { SmartMobiNative.pauseGpsService(); } catch(e) {}
-  } else if (g.st === 'paused') {
-    g.pausedMs += Date.now()-g.pa; g.st='running'; g.pa=null;
-    if (window.SmartMobiNative?.updateFloatingStatus) try { SmartMobiNative.updateFloatingStatus('running'); } catch(e) {}
-    if (window.SmartMobiNative?.resumeGpsService) try { SmartMobiNative.resumeGpsService(); } catch(e) {}
-    syncNavButton();
-  }
-  persistGps();
-  if (S.sec === 'jornada') renderJornada();
-}
+function gpsPause() { /* removido — app usa só Iniciar / Encerrar */ }
 function gpsStop() {
   const g = S.gps;
   if (g.st === 'idle' || !g.start) return; // guard: evita duplo encerramento
@@ -4853,7 +4832,6 @@ function syncNavButton() {
   const g = S.gps;
   let cls = 'idle';
   if (g.st === 'running') cls = 'running';
-  else if (g.st === 'paused') cls = 'paused';
   else if ((DB.day(DB.today()).sessions||[]).length > 0) cls = 'ended';
   updateGpsBtn(cls);
 }
@@ -4934,7 +4912,7 @@ function toggleOverlayPref(el) {
   try {
     if (el.checked) {
       // Se a jornada já estiver rolando, mostra o ícone na hora, sem esperar o próximo sync.
-      if (S.gps.st === 'running' || S.gps.st === 'paused') {
+      if (S.gps.st === 'running') {
         SmartMobiNative.startFloating?.(S.gps.start, S.gps.km || 0);
         SmartMobiNative.updateFloatingStatus?.(S.gps.st);
       }
@@ -5211,7 +5189,7 @@ function renderAgTimeline() {
     agAddCard(tl, top, Math.max(20,bot-top), 'online', 'Online',
       `${fmtHM(s.start)} → ${fmtHM(s.end)} · ${formatElapsed(s.elapsed)} · ${(s.km||0).toFixed(1)} km`, null);
   });
-  if (isToday && (S.gps.st === 'running' || S.gps.st === 'paused') && S.gps.start) {
+  if (isToday && S.gps.st === 'running' && S.gps.start) {
     const top = agTimeToY(fmtHM(S.gps.start));
     const now = new Date();
     const bot = agTimeToY(p2(now.getHours())+':'+p2(now.getMinutes()));
@@ -5899,10 +5877,10 @@ const SYNC = {
           if (ageMs < 16*3600*1000) { // sessão de menos de 16h
             // Grava no localStorage para restoreGpsSession() retomar
             DB.set('sm_gps_session', {
-              st: ativa.is_paused ? 'paused' : 'running',
+              st: 'running',
               start:     Number(ativa.start_ms),
               pausedMs:  Number(ativa.paused_ms || 0),
-              pa:        ativa.is_paused ? Date.now() : null,
+              pa:        null,
               km:        parseFloat(ativa.km) || 0,
               baseKm:    0, baseElapsed: 0, lastPt: null,
               sessionId: ativa.id
@@ -6283,7 +6261,7 @@ function nativeSyncGps(km, startMs, pausedMs) {
   if (window.SmartMobiNative && DB.cfg().overlayEnabled !== false) {
     try {
       if (typeof SmartMobiNative.startFloating === 'function') SmartMobiNative.startFloating(S.gps.start, kmFinal);
-      if (typeof SmartMobiNative.updateFloatingStatus === 'function') SmartMobiNative.updateFloatingStatus(S.gps.st === 'paused' ? 'paused' : 'running');
+      if (typeof SmartMobiNative.updateFloatingStatus === 'function') SmartMobiNative.updateFloatingStatus('running');
     } catch(e) {}
   }
 }
@@ -6462,7 +6440,7 @@ setInterval(function() {
       if (typeof SmartMobiNative.startFloating === 'function')
         SmartMobiNative.startFloating(S.gps.start, S.gps.km || 0);
       if (typeof SmartMobiNative.updateFloatingStatus === 'function')
-        SmartMobiNative.updateFloatingStatus(S.gps.st === 'paused' ? 'paused' : 'running');
+        SmartMobiNative.updateFloatingStatus('running');
     }
   } catch(e) {}
 }, 20000); // verifica a cada 20 segundos
