@@ -1484,11 +1484,10 @@ h1.hd-title{font-family:var(--font-brand)!important}
     <div class="sheet-handle"></div>
     <div class="sheet-head"><h2>Editar sessão</h2><button class="xbtn" onclick="closeMo('mo-jss-edit')">&#x2715;</button></div>
     <input type="hidden" id="jss-edit-date"><input type="hidden" id="jss-edit-idx">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-      <div class="field" style="margin-bottom:0"><label class="lbl">Km ativo</label><input class="inp" type="number" id="jss-edit-km" step="0.1" style="height:48px"></div>
-      <div class="field" style="margin-bottom:0"><label class="lbl">Km deslocamento</label><input class="inp" type="number" id="jss-edit-desloc" step="0.1" style="height:48px"></div>
-    </div>
-    <div class="field"><label class="lbl">Tempo ativo (HH:MM)</label><input class="inp" type="text" id="jss-edit-tempo" placeholder="03:17" style="height:48px"></div>
+    <div class="field"><label class="lbl">Km rodada</label><input class="inp" type="number" id="jss-edit-km" step="0.1" style="height:48px;text-align:center"></div>
+    <div class="field"><label class="lbl">Hora início</label><input class="inp" type="time" id="jss-edit-inicio" style="height:48px;width:100%;box-sizing:border-box"></div>
+    <div class="field"><label class="lbl">Hora fim</label><input class="inp" type="time" id="jss-edit-fim" style="height:48px;width:100%;box-sizing:border-box"></div>
+    <p style="font-size:11px;color:#B0BEC5;text-align:center;margin-bottom:12px;line-height:1.5">Km ativo e deslocamento são<br>calculados pelas corridas</p>
     <button class="save receita" onclick="saveJss()">Salvar alterações</button>
   </div>
 </div>
@@ -3141,6 +3140,7 @@ function sessionItem(label, sess, origIdx, dateStr, day, live) {
         <div class="jss-top"><span class="jss-name">${label}</span><span class="jss-badge ${badgeCls}">${status}</span></div>
         <div class="jss-sub">${range} · ${dur}</div>
       </div>
+      <span style="font-size:14px;font-weight:800;color:var(--text);flex-shrink:0;margin-right:4px">${(sess.km||0).toFixed(1)} km</span>
       <div class="jss-chev"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg></div>
     </div>
     <div class="jss-kpi-row">
@@ -3169,16 +3169,16 @@ function editJss(dateStr, idx) {
 
   document.getElementById('jss-edit-date').value = dateStr;
   document.getElementById('jss-edit-idx').value  = idx;
+  document.getElementById('jss-edit-km').value   = (sess.km || 0).toFixed(1);
 
-  // Preencher campos com valores atuais
-  document.getElementById('jss-edit-km').value    = (sess.km || 0).toFixed(1);
-  document.getElementById('jss-edit-desloc').value = (sess.kmDesloc || 0).toFixed(1);
-
-  // Converter elapsed (segundos) para HH:MM
-  const secs = sess.elapsed || 0;
-  const hh = String(Math.floor(secs / 3600)).padStart(2,'0');
-  const mm = String(Math.floor((secs % 3600) / 60)).padStart(2,'0');
-  document.getElementById('jss-edit-tempo').value = hh + ':' + mm;
+  // Hora início e fim a partir dos timestamps da sessão
+  const fmt = ms => {
+    if (!ms) return '';
+    const d = new Date(ms);
+    return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  };
+  document.getElementById('jss-edit-inicio').value = fmt(sess.start);
+  document.getElementById('jss-edit-fim').value    = fmt(sess.end);
 
   openMo('mo-jss-edit');
 }
@@ -3187,30 +3187,40 @@ function saveJss() {
   const dateStr = document.getElementById('jss-edit-date').value;
   const idx     = parseInt(document.getElementById('jss-edit-idx').value);
   const km      = parseFloat(document.getElementById('jss-edit-km').value) || 0;
-  const desloc  = parseFloat(document.getElementById('jss-edit-desloc').value) || 0;
-  const tempoStr= document.getElementById('jss-edit-tempo').value.trim();
-
-  // Converter HH:MM para segundos
-  const parts = tempoStr.split(':');
-  const elapsed = parts.length === 2
-    ? (parseInt(parts[0]) || 0) * 3600 + (parseInt(parts[1]) || 0) * 60
-    : 0;
+  const inicioStr = document.getElementById('jss-edit-inicio').value; // "HH:MM"
+  const fimStr    = document.getElementById('jss-edit-fim').value;    // "HH:MM"
 
   const day = DB.day(dateStr);
   if (!day.sessions || !day.sessions[idx]) { closeMo('mo-jss-edit'); return; }
 
-  day.sessions[idx].km       = km;
-  day.sessions[idx].kmDesloc = desloc;
-  day.sessions[idx].elapsed  = elapsed;
+  const sess = day.sessions[idx];
+
+  // Recalcular timestamps de início e fim mantendo a data original
+  const toMs = (base, timeStr) => {
+    if (!timeStr) return base;
+    const [hh, mm] = timeStr.split(':').map(Number);
+    const d = new Date(base || Date.now());
+    d.setHours(hh, mm, 0, 0);
+    return d.getTime();
+  };
+  const newStart = toMs(sess.start, inicioStr);
+  const newEnd   = toMs(sess.end || sess.start, fimStr);
+  // Elapsed recalculado a partir da diferença início→fim
+  const elapsed  = newEnd > newStart ? Math.round((newEnd - newStart) / 1000) : (sess.elapsed || 0);
+
+  sess.km      = km;
+  sess.start   = newStart;
+  sess.end     = newEnd;
+  sess.elapsed = elapsed;
   DB.saveDay(day);
 
   // Sincronizar com Supabase
-  const sess = day.sessions[idx];
   if (_supaUser && sess.id) {
     _SUPA.from('sessions').update({
-      km: parseFloat(km.toFixed(3)),
-      elapsed_secs: elapsed,
-      km_desloc: parseFloat(desloc.toFixed(3))
+      km:           parseFloat(km.toFixed(3)),
+      start_ms:     newStart,
+      end_ms:       newEnd,
+      elapsed_secs: elapsed
     }).eq('id', sess.id).then(() => {}).catch(() => {});
   }
 
