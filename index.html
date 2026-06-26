@@ -4771,15 +4771,17 @@ function gpsStop() {
   const day = DB.day(DB.today());
   const elapsed = getElapsed();
   if (!day.sessions) day.sessions = [];
-  const sess = { id: DB.uid(), start: g.start, end: Date.now(), km: g.km, elapsed: elapsed };
-  day.sessions.push(sess);
+  // Usar o mesmo ID local e Supabase — evita duplicata no pullAll após reabrir
+  const cloudId = S.gps.sessionId || DB.uid();
+  const sess = { id: cloudId, start: g.start, end: Date.now(), km: g.km, elapsed: elapsed };
+  // Atualiza se ID já existe localmente (ex: restaurado do cloud), senão adiciona
+  const _sIdx = day.sessions.findIndex(s => s.id === cloudId);
+  if (_sIdx >= 0) day.sessions[_sIdx] = sess; else day.sessions.push(sess);
   const totalKm = day.sessions.reduce((s,x)=>s+(x.km||0),0);
   const totalElapsed = day.sessions.reduce((s,x)=>s+(x.elapsed||0),0);
   day.session = { km: totalKm, elapsed: totalElapsed }; // compat com Agenda
   if (!day.kmTotal && totalKm > 0.1) day.kmTotal = parseFloat(totalKm.toFixed(1));
   DB.saveDay(day);
-  // Usa o sessionId que veio do gpsStart (garante upsert correto no cloud)
-  const cloudId = S.gps.sessionId || sess.id;
   _SUPA.from('sessions').upsert({
     id: cloudId, user_id: _supaUser?.id, date: DB.today(),
     start_ms: sess.start, end_ms: sess.end,
