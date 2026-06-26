@@ -3245,11 +3245,9 @@ function deleteJss(dateStr, idx) {
     day.sessions.splice(idx, 1);
     DB.saveDay(day);
 
-    // Remover do Supabase
-    if (_supaUser && sess.id) {
-      _SUPA.from('sessions').update({ end_ms: -1 })
-        .eq('id', sess.id)
-        .then(() => {}).catch(() => {});
+    // Remover do Supabase (delete real, não update)
+    if (sess.id) {
+      SYNC.del('sessions', { id: sess.id });
     }
 
     renderJornada();
@@ -4821,7 +4819,9 @@ function gpsUpdate() {
   const el = getElapsed(), h=Math.floor(el/3600), m=Math.floor(el%3600/60), s=el%60;
   setText('jc-timer', p2(h)+':'+p2(m)+':'+p2(s));
   const day = DB.day(S.curDate);
-  const total = Math.max(0, (S.gps.baseElapsed||0) + el + (day.tempoAdjust || 0));
+  // Recalcular ao vivo a partir das sessões atuais (reflete exclusões/edições)
+  const finishedElapsed = (day.sessions||[]).reduce((a,x)=>a+(x.elapsed||0),0);
+  const total = Math.max(0, finishedElapsed + el + (day.tempoAdjust || 0));
   const th=Math.floor(total/3600), tm=Math.floor(total%3600/60);
   setText('jc-total', th+'h'+p2(tm));
 }
@@ -5980,10 +5980,17 @@ const SYNC = {
       (sessions.data || []).forEach(s => {
         const day = ensure(s.date);
         if (!day.sessions) day.sessions = [];
-        if (!day.sessions.find(x => x.id === s.id)) day.sessions.push({
-          id: s.id, start: Number(s.start_ms), end: s.end_ms ? Number(s.end_ms) : null,
-          km: parseFloat(s.km) || 0, elapsed: s.elapsed_secs || 0
-        });
+        // Ignorar sessões deletadas (end_ms=-1) e elapsed absurdo (> 20h)
+        const sElapsed = s.elapsed_secs || 0;
+        const sEnd = s.end_ms ? Number(s.end_ms) : null;
+        const isDeleted = sEnd === -1;
+        const isBogus = sElapsed > 72000; // > 20h = dado corrompido
+        if (!isDeleted && !isBogus && !day.sessions.find(x => x.id === s.id)) {
+          day.sessions.push({
+            id: s.id, start: Number(s.start_ms), end: sEnd,
+            km: parseFloat(s.km) || 0, elapsed: sElapsed
+          });
+        }
       });
       // Restaurar sessão ativa do cloud caso o app foi reinstalado
       if (S.gps.st === 'idle' && !DB.get('sm_gps_session')) {
@@ -6386,7 +6393,9 @@ function nativeSyncGps(km, startMs, pausedMs) {
   // Só atualiza DOM se o usuário estiver vendo hoje
   if (S.curDate === DB.today()) {
     setText('jc-km', kmFinal.toFixed(1));
-    setText('jc-kmtotal', ((S.gps.baseKm||0)+kmFinal).toFixed(1)+' km');
+    const dayNow = DB.day(DB.today());
+    const finKm = (dayNow.sessions||[]).reduce((a,x)=>a+(x.km||0),0);
+    setText('jc-kmtotal', (finKm + kmFinal + (dayNow.kmAdjust||0)).toFixed(1)+' km');
   }
 
   // Recria a bolinha flutuante se o Android tiver matado o overlay.
