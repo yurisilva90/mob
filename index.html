@@ -4701,6 +4701,9 @@ function gpsStop() {
   S.gps.sessionId = null;
   syncNavButton();
   DB.del('sm_gps_session');
+  // Tombstone: garante que pullAll() não restaure esta sessão mesmo se
+  // o upsert de fechamento ainda não chegou ao Supabase (race / offline).
+  try { localStorage.setItem('sm_gps_last_closed', JSON.stringify({id: cloudId, end: sess.end})); } catch(e) {}
   const km = g.km;
   g.start=null; g.pausedMs=0; g.km=0; g.pts=[]; g.baseKm=0; g.baseElapsed=0; g.pa=null;
   releaseWakeLock();
@@ -4717,6 +4720,10 @@ let _gpsCloudTick = 0;
 function gpsUpdate() {
   _gpsCloudTick++;
   if (_gpsCloudTick % 300 === 0) _persistGpsCloud().catch(()=>{}); // a cada 5 min
+  // Só atualiza os elementos visuais se o usuário estiver vendo hoje.
+  // Se navegar para outro dia, o timer continua rodando internamente mas
+  // não sobrescreve o card que está mostrando dados daquele dia.
+  if (S.curDate !== DB.today()) return;
   const el = getElapsed(), h=Math.floor(el/3600), m=Math.floor(el%3600/60), s=el%60;
   setText('jc-timer', p2(h)+':'+p2(m)+':'+p2(s));
   const day = DB.day(S.curDate);
@@ -4743,18 +4750,34 @@ async function _persistGpsCloud() {
   if (!_supaUser || !S.gps.start || S.gps.st === 'idle') return;
   const g = S.gps;
   if (!g.sessionId) g.sessionId = DB.uid();
+  const snapId = g.sessionId; // capturar antes do await
   await _SUPA.from('sessions').upsert({
-    id:         g.sessionId,
+    id:         snapId,
     user_id:    _supaUser.id,
     date:       DB.today(),
     start_ms:   g.start,
     end_ms:     null,
     km:         parseFloat((g.km||0).toFixed(3)),
     elapsed_secs: getElapsed(),
-    paused_ms:  g.pausedMs || 0,
-    is_paused:  g.st === 'paused',
+    paused_ms:  0,
+    is_paused:  false,
     km_desloc:  null
   }, { onConflict: 'id' });
+  // Guard de corrida: se gpsStop() foi chamado enquanto este await estava
+  // pendente, o nosso write (end_ms=null) pode ter chegado ao Supabase
+  // DEPOIS do write de fechamento, reabrindo a sessão. Re-aplicar o tombstone.
+  if (S.gps.st === 'idle') {
+    try {
+      const closed = JSON.parse(localStorage.getItem('sm_gps_last_closed') || 'null');
+      if (closed && closed.id === snapId) {
+        await _SUPA.from('sessions').upsert({
+          id: snapId, user_id: _supaUser.id,
+          end_ms: closed.end, is_paused: false, paused_ms: 0
+        }, { onConflict: 'id' });
+        console.log('[_persistGpsCloud] Race condition detectada — fechamento re-aplicado:', snapId);
+      }
+    } catch(e) {}
+  }
 }
 function restoreGpsSession() {
   const g = S.gps;
@@ -5875,17 +5898,30 @@ const SYNC = {
         if (ativa) {
           const ageMs = Date.now() - Number(ativa.start_ms);
           if (ageMs < 16*3600*1000) { // sessão de menos de 16h
-            // Grava no localStorage para restoreGpsSession() retomar
-            DB.set('sm_gps_session', {
-              st: 'running',
-              start:     Number(ativa.start_ms),
-              pausedMs:  Number(ativa.paused_ms || 0),
-              pa:        null,
-              km:        parseFloat(ativa.km) || 0,
-              baseKm:    0, baseElapsed: 0, lastPt: null,
-              sessionId: ativa.id
-            });
-            console.log('[SmartMobi] Sessão ativa restaurada do Supabase:', ativa.id);
+            // Checar tombstone: se foi encerrada localmente mas o cloud ainda
+            // não refletiu (race condition ou falta de rede), não restaurar.
+            let tombstone = null;
+            try { tombstone = JSON.parse(localStorage.getItem('sm_gps_last_closed') || 'null'); } catch(e) {}
+            if (tombstone && tombstone.id === ativa.id) {
+              // Re-enviar o fechamento que não chegou ao Supabase
+              _SUPA.from('sessions').upsert({
+                id: ativa.id, user_id: uid,
+                end_ms: tombstone.end, is_paused: false, paused_ms: 0
+              }, { onConflict: 'id' }).catch(() => {});
+              console.log('[pullAll] Sessão tombstoned — fechamento re-enviado, não restaurar:', ativa.id);
+            } else {
+              // Sessão genuinamente ativa (ex: app foi morto sem encerrar)
+              DB.set('sm_gps_session', {
+                st: 'running',
+                start:     Number(ativa.start_ms),
+                pausedMs:  Number(ativa.paused_ms || 0),
+                pa:        null,
+                km:        parseFloat(ativa.km) || 0,
+                baseKm:    0, baseElapsed: 0, lastPt: null,
+                sessionId: ativa.id
+              });
+              console.log('[pullAll] Sessão ativa restaurada do Supabase:', ativa.id);
+            }
           }
         }
       }
@@ -6253,8 +6289,11 @@ function nativeSyncGps(km, startMs, pausedMs) {
   S.gps.lastFixTime = null;
 
   const kmFinal = S.gps.km;
-  setText('jc-km', kmFinal.toFixed(1));
-  setText('jc-kmtotal', ((S.gps.baseKm||0)+kmFinal).toFixed(1)+' km');
+  // Só atualiza DOM se o usuário estiver vendo hoje
+  if (S.curDate === DB.today()) {
+    setText('jc-km', kmFinal.toFixed(1));
+    setText('jc-kmtotal', ((S.gps.baseKm||0)+kmFinal).toFixed(1)+' km');
+  }
 
   // Recria a bolinha flutuante se o Android tiver matado o overlay.
   // startFloating e seguro de chamar de novo: se ja existe, so atualiza o km.
