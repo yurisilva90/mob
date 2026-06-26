@@ -185,7 +185,7 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .li-info{flex:1;min-width:0}.li-info h3{font-size:13.5px;font-weight:760}.li-info p{font-size:11.5px;color:var(--muted);margin-top:2px}
 .trip-title{font-size:12.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .li-val{text-align:right;font-size:11px;color:var(--muted);font-weight:600;flex:0 0 auto}.li-val strong{display:block;color:var(--text);font-size:13.5px;font-weight:760;font-family:'Inter',system-ui,sans-serif}
-.li-extra{display:flex;gap:6px;margin-top:5px}.chip{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px;font-family:'Inter',system-ui,sans-serif;letter-spacing:-.01em}.chip svg{flex-shrink:0}.chip-d{background:#FFF7ED;color:#F59E0B}.chip-g{background:#F5F3FF;color:#7C3AED}
+.li-extra{display:flex;gap:6px;margin-top:5px}.chip{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px;font-family:'Inter',system-ui,sans-serif;letter-spacing:-.01em}.chip svg{flex-shrink:0}.chip-d{background:#FFF7ED;color:#F59E0B}.chip-g{background:#F5F3FF;color:#7C3AED}.chip-taxa{background:#FEF9C3;color:#854D0E;display:inline-flex;align-items:center;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px}.chip-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;border-radius:7px;flex-shrink:0}.chip-cash{background:#DCFCE7;color:#15803D}.trip-item-wrap{margin-bottom:6px}.li-row.open{border-radius:14px 14px 0 0;border-bottom:0!important}.trip-detail-panel{background:var(--card);border:1.5px solid var(--line);border-top:0;border-radius:0 0 12px 12px;padding:8px 12px 10px}.det-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);padding:4px 0;font-weight:500}.det-row:not(:last-child){border-bottom:1px solid var(--line)}.det-row strong{color:var(--text);font-weight:700}
 .sw{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0}.sw input{opacity:0;width:0;height:0;position:absolute}.sw .trk{position:absolute;inset:0;background:#E2E8F0;border-radius:99px;transition:.2s;cursor:pointer}.sw .trk:before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}.sw input:checked + .trk{background:#22C55E}.sw input:checked + .trk:before{transform:translateX(20px)}
 .acc-card{background:#F8FAFC;border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:14px}
 .acc-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -3258,17 +3258,45 @@ function deleteJss(dateStr, idx) {
 
 
 function toggleJss(id){const el=document.getElementById(id);if(el)el.classList.toggle('open');}
+function toggleTripDetail(tid) {
+  const det = document.getElementById('td-'+tid);
+  const row = document.getElementById('tr-'+tid);
+  if (!det||!row) return;
+  const open = det.style.display!=='none';
+  document.querySelectorAll('.trip-detail-panel').forEach(el=>el.style.display='none');
+  document.querySelectorAll('.li-row[id^="tr-"]').forEach(el=>el.classList.remove('open'));
+  if (!open){det.style.display='block';row.classList.add('open');}
+}
+
 function tripItem(t) {
   const plat = {uber:'Uber','99':'99',particular:'Particular'}[t.platform||'uber'] || 'Uber';
   const dest = t.dest ? ' → '+t.dest : '';
   const dur = t.duration ? ' · '+fmtDur(t.duration) : '';
+  const tid = t.id||('t'+Math.random().toString(36).slice(2,8));
+  const cashSvg = `<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M2 10h20" stroke="white" stroke-width="1.2" fill="none"/><path d="M2 17h20" stroke="white" stroke-width="1.2" fill="none"/><circle cx="12" cy="13" r="2.5" fill="white"/></svg>`;
   const extras = [];
-  if (t.dinamico > 0) extras.push(`<span class="chip chip-d"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg> ${DB.fR(t.dinamico)}</span>`);
-  if (t.tip > 0) extras.push(`<span class="chip chip-g"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.5 4.05 3 5.5l7 7Z"/></svg> ${DB.fR(t.tip)}</span>`);
-  const extraRow = extras.length ? `<div class="li-extra">${extras.join('')}</div>` : '';
-  return `<div class="li-row">
-    <div class="li-info"><h3 class="trip-title">${t.origin||'—'}${dest}</h3><p>${plat} · ${(t.km||0).toFixed(1)} km${dur}</p>${extraRow}</div>
-    <div class="li-val"><strong>${DB.fR(t.value)}</strong></div>
+  if (t.dinamico>0) extras.push(`<span class="chip chip-d"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><strong>${DB.fR(t.dinamico)}</strong></span>`);
+  if (t.tip>0)     extras.push(`<span class="chip chip-g"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.5 4.05 3 5.5l7 7Z"/></svg><strong>${DB.fR(t.tip)}</strong></span>`);
+  if (t.taxaZero)  extras.push(`<span class="chip chip-taxa">0%</span>`);
+  if (t.dinheiro)  extras.push(`<span class="chip-icon chip-cash">${cashSvg}</span>`);
+  const extraRow = extras.length?`<div class="li-extra">${extras.join('')}</div>`:'';
+  const detRows = [
+    `<div class="det-row"><span>Plataforma</span><strong>${plat}</strong></div>`,
+    t.origin?`<div class="det-row"><span>Origem</span><strong>${t.origin}</strong></div>`:'',
+    t.dest?`<div class="det-row"><span>Destino</span><strong>${t.dest}</strong></div>`:'',
+    t.km>0?`<div class="det-row"><span>Distância</span><strong>${(t.km||0).toFixed(1)} km</strong></div>`:'',
+    t.duration>0?`<div class="det-row"><span>Duração</span><strong>${fmtDur(t.duration)}</strong></div>`:'',
+    t.dinamico>0?`<div class="det-row"><span>Preço dinâmico</span><strong style="color:#F59E0B">+ ${DB.fR(t.dinamico)}</strong></div>`:'',
+    t.tip>0?`<div class="det-row"><span>Gorjeta</span><strong style="color:#7C3AED">+ ${DB.fR(t.tip)}</strong></div>`:'',
+    t.taxaZero?`<div class="det-row"><span>Taxa plataforma</span><strong style="color:#15803D">0%</strong></div>`:'',
+    t.dinheiro?`<div class="det-row"><span>Pagamento</span><strong>Dinheiro</strong></div>`:'',
+  ].filter(Boolean).join('');
+  return `<div class="trip-item-wrap" id="tw-${tid}">
+    <div class="li-row" id="tr-${tid}" onclick="toggleTripDetail('${tid}')">
+      <div class="li-info"><h3 class="trip-title">${t.origin||'—'}${dest}</h3><p>${plat} · ${(t.km||0).toFixed(1)} km${dur}</p>${extraRow}</div>
+      <div class="li-val"><strong>${DB.fR(t.value)}</strong></div>
+    </div>
+    <div class="trip-detail-panel" id="td-${tid}" style="display:none">${detRows}</div>
   </div>`;
 }
 function lancItemJornada(it) {
@@ -4142,7 +4170,7 @@ async function extractTripsFromBase64(b64, mt, plat) {
   const isUber = plat.toLowerCase() === 'uber';
   const cashWarning = 'ATENÇÃO — confusão comum: "Dinheiro recebido" (ícone de câmera/recibo) NÃO é gorjeta nem dinâmico, é so a forma de pagamento (o passageiro pagou em espécie). Quando uma corrida tiver "Preço dinâmico" (ícone de raio) E "Dinheiro recebido" juntas, são DUAS linhas diferentes — extraia SÓ o valor do "Preço dinâmico" em dinamico, e NUNCA coloque o valor de "Dinheiro recebido" em gorjeta (nem em dinamico, nem em value). Exemplo: corrida com "R$ 12,50 Preço dinâmico" e "R$ 27,05 Dinheiro recebido" → dinamico:12.50, gorjeta:0.00 (o R$27,05 não entra em lugar nenhum do JSON).';
   const prompt = isUber
-    ? 'Esta imagem mostra o "Histórico de ganhos" do Uber motorista, com uma linha divisória entre cada corrida (mesmo no modo escuro). Extraia CADA corrida, mas SÓ quando ela aparecer COMPLETA na imagem (com a linha divisória acima e abaixo) — se uma corrida estiver cortada no topo ou na base da imagem (incompleta), IGNORE essa corrida, não tente adivinhar ou completar com dados de outra. Ignore Missão (R$ 0,00). ' + cashWarning + ' Abaixo do valor principal de cada corrida também pode aparecer "Valor extra" (ícone de mão/coração — é a gorjeta do passageiro) — extraia esse valor em gorjeta quando existir. Retorne SOMENTE JSON array: [{"time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"Black","origin":"bairro","dest":"bairro","dinamico":0.00,"gorjeta":0.00}]. duration=minutos inteiros. dinamico e gorjeta ficam 0.00 quando não aparecerem na corrida. Se vazio retorne [].'
+    ? 'Esta imagem mostra o "Histórico de ganhos" do Uber motorista, com uma linha divisória entre cada corrida (mesmo no modo escuro). Extraia CADA corrida, mas SÓ quando ela aparecer COMPLETA na imagem (com a linha divisória acima e abaixo) — se uma corrida estiver cortada no topo ou na base da imagem (incompleta), IGNORE essa corrida, não tente adivinhar ou completar com dados de outra. Ignore Missão (R$ 0,00). ' + cashWarning + ' Abaixo do valor principal de cada corrida também pode aparecer "Valor extra" (ícone de mão/coração — é a gorjeta do passageiro) — extraia esse valor em gorjeta quando existir. Retorne SOMENTE JSON array: [{"time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"Black","origin":"bairro","dest":"bairro","dinamico":0.00,"gorjeta":0.00,"taxaZero":false,"dinheiro":false}]. duration=minutos inteiros. dinamico e gorjeta ficam 0.00 quando não aparecerem. "taxaZero":true se houver indicação de 0% de taxa. "dinheiro":true se pagamento em dinheiro. Se vazio retorne [].'
     : 'Esta é a tela "Histórico de corridas" do app 99 Motorista. ' +
       'Estrutura de CADA corrida, sempre nesta ordem: ' +
       '(1) Data e hora no formato "DD/MM/AAAA HH:MM" — extraia SOMENTE o HH:MM como campo "time". ' +
@@ -4156,7 +4184,7 @@ async function extractTripsFromBase64(b64, mt, plat) {
       'Se uma corrida estiver cortada no topo ou base da tela (sem data/hora ou sem status final), IGNORE. ' +
       '"km" e "duration" sempre 0 pois não aparecem no histórico. ' +
       '"dinamico" e "gorjeta" sempre 0.00 pois não aparecem no histórico da 99. ' +
-      'Retorne SOMENTE JSON array sem texto extra: [{"time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"99Pop","origin":"bairro","dest":"bairro","dinamico":0.00,"gorjeta":0.00}]. Se não houver corridas completas retorne [].';
+      'Retorne SOMENTE JSON array sem texto extra: [{"time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"99Pop","origin":"bairro","dest":"bairro","dinamico":0.00,"gorjeta":0.00,"taxaZero":false,"dinheiro":false}]. "taxaZero":true quando aparecer "Taxa Fixa de 0%". "dinheiro":true quando aparecer "Ganhos pagos em dinheiro". Se não houver corridas completas retorne [].';
   const resp = await fetch('https://smartmobi-proxy.yurisilva1990.workers.dev', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({model:'claude-haiku-4-5-20251001', max_tokens:1500,
@@ -4172,7 +4200,9 @@ async function extractTripsFromBase64(b64, mt, plat) {
     return {...t,
       value:parseFloat(String(t.value||0).replace(',','.'))||0,
       km:parseFloat(String(t.km||0).replace(',','.'))||0,
-      duration:parseInt(t.duration)||0, dinamico, tip, surge: dinamico > 0 };
+      duration:parseInt(t.duration)||0, dinamico, tip, surge: dinamico > 0,
+      taxaZero: t.taxaZero===true||t.taxaZero==='true'||t.taxaZero===1,
+      dinheiro:  t.dinheiro===true||t.dinheiro==='true'||t.dinheiro===1 };
   }) : [];
 }
 
