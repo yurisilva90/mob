@@ -2070,6 +2070,9 @@ document.addEventListener('click', e => {
 
 // ── MAIS SCREEN ───────────────────────────────────────────────
 function renderMais() {
+  const vEl = document.getElementById("app-code-ver");
+  if (vEl) vEl.textContent = typeof _APP_CODE_VER !== "undefined" ? _APP_CODE_VER : "?";
+
   const cfg = DB.cfg();
   const favId = cfg.favModule || 'financeiro';
   const container = document.getElementById('mais-modules');
@@ -4215,6 +4218,9 @@ function toggleImportTrip(i) {
 }
 
 // Detecta corrida duplicada (hora+valor, hora+km, valor+rota)
+// Versão do código — atualizar para verificar se cache está correto
+const _APP_CODE_VER = "v24-trip99-fix";
+
 function isTripDuplicate(newT, existing) {
   return existing.some(t => {
     // Plataformas diferentes = corridas diferentes (nunca duplicata)
