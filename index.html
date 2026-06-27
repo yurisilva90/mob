@@ -4360,9 +4360,11 @@ function confirmImport() {
   let added=0, skipped=0;
   const toPush = [];
   selected.forEach(t => {
-    // Rejeita corridas claramente inválidas (0min E 0km mas tem valor)
+    // Rejeita corridas claramente inválidas (0min E 0km E sem endereço)
+    // NOTA: 99 não reporta km nem duration — mas tem origin/dest. Não bloquear.
     const hasValue = parseFloat(t.value) > 0;
-    const isGhost  = (t.duration||0) === 0 && (parseFloat(t.km)||0) < 0.1 && hasValue;
+    const isGhost  = (t.duration||0) === 0 && (parseFloat(t.km)||0) < 0.1
+                     && hasValue && !t.origin && !t.dest;
     if (isGhost) { skipped++; return; }
     if (isTripDuplicate(t, day.trips)) { skipped++; return; }
     const trip = {id:DB.uid(), platform:t.platform||'uber', time:t.time||'',
