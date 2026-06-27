@@ -1549,46 +1549,6 @@ h1.hd-title{font-family:var(--font-brand)!important}
   </div>
 </div>
 
-<!-- Nova Corrida -->
-<div class="mo" id="mo-corrida">
-  <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-head"><h2>Nova corrida</h2><button class="xbtn" onclick="closeMo('mo-corrida')">&#x2715;</button></div>
-    <div class="field"><label class="lbl">Plataforma</label>
-      <div style="display:flex;gap:8px">
-        <button id="cp-uber" class="type-btn active" onclick="setCorPlat('uber')" style="flex:1">Uber</button>
-        <button id="cp-99" class="type-btn" onclick="setCorPlat('99')" style="flex:1">99</button>
-        <button id="cp-priv" class="type-btn" onclick="setCorPlat('particular')" style="flex:1">Particular</button>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-      <div class="field" style="margin-bottom:0"><label class="lbl">Hora</label><input class="inp" type="time" id="c-time" style="height:48px"></div>
-      <div class="field" style="margin-bottom:0"><label class="lbl">Duração (min)</label><input class="inp" type="number" id="c-dur" placeholder="20" inputmode="numeric" style="height:48px"></div>
-    </div>
-    <div class="field"><label class="lbl">Origem</label><input class="inp" type="text" id="c-orig" placeholder="Bairro ou endereço"></div>
-    <div class="field"><label class="lbl">Destino</label><input class="inp" type="text" id="c-dest" placeholder="Bairro ou endereço"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-      <div class="field" style="margin-bottom:0"><label class="lbl">Valor (R$)</label><input class="inp" type="number" id="c-val" step="0.01" placeholder="0,00" inputmode="decimal" style="height:48px;font-family:'Inter',system-ui,sans-serif;font-weight:700"></div>
-      <div class="field" style="margin-bottom:0"><label class="lbl">Km</label><input class="inp" type="number" id="c-km" step="0.1" placeholder="0,0" inputmode="decimal" style="height:48px;font-family:'Inter',system-ui,sans-serif;font-weight:700"></div>
-    </div>
-    <button class="btn-p" style="background:#22C55E;box-shadow:0 8px 22px rgba(34,197,94,.25)" onclick="saveCorrida()">Salvar corrida</button>
-    <button class="btn-s" onclick="closeMo('mo-corrida')">Cancelar</button>
-  </div>
-</div>
-
-<!-- KM Total -->
-<div class="mo ctr" id="mo-km">
-  <div class="sheet ctr">
-    <div class="sheet-head"><h2>Km total do dia</h2><button class="xbtn" onclick="closeMo('mo-km')">&#x2715;</button></div>
-    <div class="field">
-      <label class="lbl">Total de km rodados hoje</label>
-      <input class="inp" type="number" id="km-inp" step="0.1" placeholder="ex: 120,5" inputmode="decimal" style="font-size:26px;text-align:center;font-family:'Inter',system-ui,sans-serif;font-weight:700;height:64px">
-    </div>
-    <div style="font-size:12px;color:#64748B;text-align:center;margin-bottom:16px">O sistema calcula o deslocamento vazio automaticamente</div>
-    <button class="btn-p" onclick="saveKm()">Confirmar</button>
-    <button class="btn-s" onclick="closeMo('mo-km')">Cancelar</button>
-  </div>
-</div>
 
 <!-- Ajustar Km (GPS impreciso) -->
 <div class="mo ctr" id="mo-hg-filter">
@@ -1857,6 +1817,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
     </div>
     <div style="font-size:18px;font-weight:800;margin-bottom:8px">Suporte MōB</div>
     <div style="font-size:13px;color:#64748B;margin-bottom:20px">Tem alguma dúvida ou sugestão? Entre em contato.</div>
+    <a href="mailto:suporte@mob.app?subject=Suporte+M%C5%8DB" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:46px;border-radius:14px;background:#0A2F6B;color:#fff;font-size:14px;font-weight:800;text-decoration:none;margin:12px 0 4px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Enviar e-mail</a>
     <div id="suporte-version" style="font-size:11.5px;color:#94A3B8;text-align:center;margin-bottom:14px;font-family:'Inter',system-ui,sans-serif"></div>
     <button class="btn-p" onclick="closeMo('mo-suporte')">Fechar</button>
   </div>
@@ -4767,6 +4728,16 @@ function gpsOnPosition(pos) {
     try { SmartMobiNative.updateFloating(g.km); } catch(e) {}
   }
 }
+// ── Tombstone SET: múltiplas sessões fechadas ───────────────
+function _gcss(){try{return new Set(JSON.parse(localStorage.getItem('sm_gps_closed_set')||'[]'));}catch(e){return new Set();}}
+function _addCss(id,endMs){
+  try{
+    const s=_gcss();s.add(id);
+    localStorage.setItem('sm_gps_closed_set',JSON.stringify([...s].slice(-30)));
+    localStorage.setItem('sm_gps_last_closed',JSON.stringify({id,end:endMs}));
+  }catch(e){}
+}
+
 function gpsStart() {
   const g = S.gps; g.st='running'; g.start=Date.now(); g.km=0; g.pts=[]; g.pausedMs=0; g.pa=null;
   g.sessionId = DB.uid(); // ID único desta sessão, usado para upsert no cloud
@@ -4903,7 +4874,7 @@ function gpsStop() {
   DB.del('sm_gps_session');
   // Tombstone: garante que pullAll() não restaure esta sessão mesmo se
   // o upsert de fechamento ainda não chegou ao Supabase (race / offline).
-  try { localStorage.setItem('sm_gps_last_closed', JSON.stringify({id: cloudId, end: sess.end})); } catch(e) {}
+  _addCss(cloudId, sess.end);
   const km = g.km;
   g.start=null; g.pausedMs=0; g.km=0; g.pts=[]; g.baseKm=0; g.baseElapsed=0; g.pa=null;
   releaseWakeLock();
@@ -4970,13 +4941,11 @@ async function _persistGpsCloud() {
   // DEPOIS do write de fechamento, reabrindo a sessão. Re-aplicar o tombstone.
   if (S.gps.st === 'idle') {
     try {
-      const closed = JSON.parse(localStorage.getItem('sm_gps_last_closed') || 'null');
-      if (closed && closed.id === snapId) {
-        await _SUPA.from('sessions').upsert({
-          id: snapId, user_id: _supaUser.id,
-          end_ms: closed.end, is_paused: false, paused_ms: 0
-        }, { onConflict: 'id' });
-        console.log('[_persistGpsCloud] Race condition detectada — fechamento re-aplicado:', snapId);
+      if (_gcss().has(snapId)) {
+        const _cl=JSON.parse(localStorage.getItem('sm_gps_last_closed')||'null');
+        const _em=(_cl&&_cl.id===snapId)?_cl.end:Date.now();
+        await _SUPA.from('sessions').upsert({id:snapId,user_id:_supaUser.id,end_ms:_em,is_paused:false,paused_ms:0},{onConflict:'id'});
+        console.log('[_persistGpsCloud] Race condition — fechamento re-aplicado:',snapId);
       }
     } catch(e) {}
   }
@@ -6100,38 +6069,47 @@ const SYNC = {
           });
         }
       });
-      // Restaurar sessão ativa do cloud caso o app foi reinstalado
+      // ── Restaurar / limpar sessões abertas no Supabase ─────────────
       if (S.gps.st === 'idle' && !DB.get('sm_gps_session')) {
         const hoje = DB.today();
-        const ativa = (sessions.data||[]).find(s => !s.end_ms && s.date === hoje);
-        if (ativa) {
-          const ageMs = Date.now() - Number(ativa.start_ms);
-          if (ageMs < 16*3600*1000) { // sessão de menos de 16h
-            // Checar tombstone: se foi encerrada localmente mas o cloud ainda
-            // não refletiu (race condition ou falta de rede), não restaurar.
-            let tombstone = null;
-            try { tombstone = JSON.parse(localStorage.getItem('sm_gps_last_closed') || 'null'); } catch(e) {}
-            if (tombstone && tombstone.id === ativa.id) {
-              // Re-enviar o fechamento que não chegou ao Supabase
-              _SUPA.from('sessions').upsert({
-                id: ativa.id, user_id: uid,
-                end_ms: tombstone.end, is_paused: false, paused_ms: 0
-              }, { onConflict: 'id' }).catch(() => {});
-              console.log('[pullAll] Sessão tombstoned — fechamento re-enviado, não restaurar:', ativa.id);
-            } else {
-              // Sessão genuinamente ativa (ex: app foi morto sem encerrar)
-              DB.set('sm_gps_session', {
-                st: 'running',
-                start:     Number(ativa.start_ms),
-                pausedMs:  Number(ativa.paused_ms || 0),
-                pa:        null,
-                km:        parseFloat(ativa.km) || 0,
-                baseKm:    0, baseElapsed: 0, lastPt: null,
-                sessionId: ativa.id
-              });
-              console.log('[pullAll] Sessão ativa restaurada do Supabase:', ativa.id);
-            }
+        const closedSet = _gcss();
+        try{const _o=JSON.parse(localStorage.getItem('sm_gps_last_closed')||'null');if(_o&&_o.id)closedSet.add(_o.id);}catch(e){}
+
+        // 1. Auto-fechar sessões de dias anteriores (nunca devem ficar abertas)
+        (sessions.data||[]).filter(s=>!s.end_ms&&s.date!==hoje).forEach(s=>{
+          const est=Number(s.start_ms)+(s.elapsed_secs||0)*1000||Date.now();
+          _SUPA.from('sessions').upsert({id:s.id,user_id:uid,end_ms:est,is_paused:false,paused_ms:0},{onConflict:'id'}).catch(()=>{});
+          console.log('[pullAll] Auto-fechando sessão dia anterior:',s.id,s.date);
+        });
+
+        // 2. Sessões abertas de HOJE — mais recente primeiro
+        const abertas=(sessions.data||[]).filter(s=>!s.end_ms&&s.date===hoje)
+          .sort((a,b)=>Number(b.start_ms)-Number(a.start_ms));
+
+        for(let i=0;i<abertas.length;i++){
+          const ativa=abertas[i];
+          const ageMs=Date.now()-Number(ativa.start_ms);
+          // Cross-check com localStorage: sessão já foi encerrada localmente?
+          const localDay=DB.day(hoje);
+          const localSess=(localDay.sessions||[]).find(ls=>ls.id===ativa.id);
+          const isClosedLocally=(localSess&&localSess.end)||closedSet.has(ativa.id);
+          const isTooOld=ageMs>16*3600*1000;
+          const isExtra=i>0; // só a mais recente pode ser restaurada
+
+          if(isClosedLocally||isTooOld||isExtra){
+            const bestEnd=(localSess&&localSess.end)||(()=>{
+              const c=JSON.parse(localStorage.getItem('sm_gps_last_closed')||'null');
+              return(c&&c.id===ativa.id)?c.end:(Number(ativa.start_ms)+(ativa.elapsed_secs||0)*1000||Date.now());
+            })();
+            _SUPA.from('sessions').upsert({id:ativa.id,user_id:uid,end_ms:bestEnd,is_paused:false,paused_ms:0},{onConflict:'id'}).catch(()=>{});
+            console.log('[pullAll] Sessão encerrada — não restaurar:',ativa.id,{isClosedLocally,isTooOld,isExtra});
+            continue;
           }
+          // Sessão genuinamente ativa — restaurar
+          DB.set('sm_gps_session',{st:'running',start:Number(ativa.start_ms),pausedMs:0,pa:null,
+            km:parseFloat(ativa.km)||0,baseKm:0,baseElapsed:0,lastPt:null,sessionId:ativa.id});
+          console.log('[pullAll] Sessão restaurada:',ativa.id);
+          break;
         }
       }
       (dayMeta.data || []).forEach(m => {
@@ -7177,7 +7155,16 @@ function infToggleSearch(){ return; // campo fixo — sem toggle
 function infBuscarGlobal(q){
   const dd=document.getElementById('inf-search-dd');
   if(!q.trim()){dd.classList.remove('show');return;}
-  const res=INF_SDBDB.filter(x=>x.n.toLowerCase().includes(q.toLowerCase())).slice(0,7);
+  const qL=q.toLowerCase();
+  let res=INF_SDBDB.filter(x=>x.n.toLowerCase().includes(qL));
+  for(const [,v] of Object.entries(INF_VENUES)){
+    for(const item of (v.itens||[])){
+      if(item.n.toLowerCase().includes(qL)||(item.sub&&item.sub.toLowerCase().includes(qL))){
+        res.push({n:item.n+(item.sub?' ('+item.sub+')':''),t:v.tipo||'bairro'});
+      }
+    }
+  }
+  const _seen=new Set(); res=res.filter(x=>{if(_seen.has(x.n))return false;_seen.add(x.n);return true;}).slice(0,8);
   dd.innerHTML=res.length?res.map(x=>{const t=INF_TIPOS[x.t]||INF_TIPOS.bairro;return`<div class="inf-sd-item" onclick="infToggleSearch();infAbrirLocal(null,'${x.n}','${x.t}')"><div class="inf-sd-ic" style="background:${t.bg}">${infIconSvg(x.t,t.cor,14)}</div><div><div class="inf-sd-name">${x.n}</div><div class="inf-sd-sub">${t.label}</div></div></div>`;}).join(''):'<div class="inf-sd-empty">Nenhum resultado</div>';
   dd.classList.add('show');
 }
