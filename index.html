@@ -185,7 +185,7 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .li-info{flex:1;min-width:0}.li-info h3{font-size:13.5px;font-weight:760}.li-info p{font-size:11.5px;color:var(--muted);margin-top:2px}
 .trip-title{font-size:12.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .li-val{text-align:right;font-size:11px;color:var(--muted);font-weight:600;flex:0 0 auto}.li-val strong{display:block;color:var(--text);font-size:13.5px;font-weight:760;font-family:'Inter',system-ui,sans-serif}
-.li-extra{display:flex;gap:6px;margin-top:5px}.chip{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px;font-family:'Inter',system-ui,sans-serif;letter-spacing:-.01em}.chip svg{flex-shrink:0}.chip-d{background:#FFF7ED;color:#F59E0B}.chip-g{background:#F5F3FF;color:#7C3AED}.chip-taxa{background:#FEF9C3;color:#854D0E;display:inline-flex;align-items:center;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px}.chip-toll{background:#F1F5F9;color:#475569;display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;border-radius:7px;flex-shrink:0}.chip-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;border-radius:7px;flex-shrink:0}.chip-cash{background:#DCFCE7;color:#15803D}.trip-item-wrap{margin-bottom:6px}.li-row.open{border-radius:14px 14px 0 0;border-bottom:0!important}.trip-detail-panel{background:var(--card);border:1.5px solid var(--line);border-top:0;border-radius:0 0 12px 12px;padding:8px 12px 10px}.det-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);padding:4px 0;font-weight:500}.det-row:not(:last-child){border-bottom:1px solid var(--line)}.det-row strong{color:var(--text);font-weight:700}
+.li-extra{display:flex;gap:6px;margin-top:5px}.chip{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px;font-family:'Inter',system-ui,sans-serif;letter-spacing:-.01em}.chip svg{flex-shrink:0}.chip-d{background:#FFF7ED;color:#F59E0B}.chip-g{background:#F5F3FF;color:#7C3AED}.chip-taxa{background:#FEF9C3;color:#854D0E;display:inline-flex;align-items:center;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px}.chip-toll{background:#F1F5F9;color:#475569;display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;border-radius:7px;flex-shrink:0}.chip-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;border-radius:7px;flex-shrink:0}.chip-cash{background:#DCFCE7;color:#15803D}.trip-item-wrap{margin-bottom:6px}.li-row.open{border-radius:14px 14px 0 0;border-bottom:0!important}.trip-detail-panel{background:var(--card);border:1.5px solid var(--line);border-top:0;border-radius:0 0 12px 12px;padding:8px 12px 10px}.det-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);padding:4px 0;font-weight:500}.det-row:not(:last-child){border-bottom:1px solid var(--line)}.det-row strong{color:var(--text);font-weight:700}.det-del-btn{display:flex;align-items:center;gap:6px;width:100%;margin-top:8px;padding:8px 0 2px;background:none;border:none;border-top:1px solid var(--line);font-size:12px;font-weight:700;color:#EF4444;cursor:pointer;font-family:inherit}
 .sw{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0}.sw input{opacity:0;width:0;height:0;position:absolute}.sw .trk{position:absolute;inset:0;background:#E2E8F0;border-radius:99px;transition:.2s;cursor:pointer}.sw .trk:before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}.sw input:checked + .trk{background:#22C55E}.sw input:checked + .trk:before{transform:translateX(20px)}
 .acc-card{background:#F8FAFC;border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:14px}
 .acc-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -2041,7 +2041,11 @@ function navTo(sec) {
   if (sec === 'jornada')    renderJornada();
   if (sec === 'financeiro') renderFin();
   if (sec === 'lancamentos') renderLancamentos();
-  if (sec === 'corridas')   renderCorridas();
+  if (sec === 'corridas') {
+    // Ao entrar em Corridas, garantir que o filtro mostra todas as datas
+    // (evitar trips de outros dias não aparecerem com filtro 'hoje')
+    renderCorridas();
+  }
   if (sec === 'mais')       renderMais();
   if (sec === 'agenda')     { setAgView(agView || 'resumo'); }
 }
@@ -2790,23 +2794,11 @@ function renderCorridas() {
     if (d === todayStr) return 'Hoje · ' + d.split('-').reverse().slice(0,2).join('/');
     return d.split('-').reverse().slice(0,2).join('/') + '/' + d.slice(0,4);
   };
-  listEl.innerHTML = groups.map(g => {
-    const rows = g.trips.map(t => {
-      const plat = {uber:'Uber','99':'99',particular:'Particular'}[t.platform||'uber'] || 'Uber';
-      const dest = t.dest ? ' → '+t.dest : '';
-      const dur = t.duration ? ' · '+fmtDur(t.duration) : '';
-      const extras = [];
-      if (t.dinamico > 0) extras.push(`<span class="chip chip-d"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg> ${DB.fR(t.dinamico)}</span>`);
-      if (t.tip > 0) extras.push(`<span class="chip chip-g"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.5 4.05 3 5.5l7 7Z"/></svg> ${DB.fR(t.tip)}</span>`);
-      const extraRow = extras.length ? `<div class="li-extra">${extras.join('')}</div>` : '';
-      return `<div class="li-row">
-        <div class="li-info"><h3 class="trip-title">${t.origin||'—'}${dest}</h3><p>${plat} · ${(t.km||0).toFixed(1)} km${dur}</p>${extraRow}</div>
-        <div class="li-val"><strong>${DB.fR(t.value)}</strong></div>
-        <button class="del-btn" onclick="confirmDeleteTrip('${g.date}','${t.id}')" aria-label="Excluir corrida"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button>
-      </div>`;
-    }).join('');
-    return `<div class="day-sep">${fmtSep(g.date)}</div>${rows}`;
-  }).join('');
+  // Usa tripItem() → chips + detalhe ao tocar + botão excluir no painel
+  listEl.innerHTML = groups.map(g =>
+    `<div class="day-sep">${fmtSep(g.date)}</div>`
+    + g.trips.map(t => tripItem(t, g.date)).join('')
+  ).join('');
 }
 function confirmDeleteTrip(date, id) {
   const day = DB.day(date);
@@ -3105,13 +3097,12 @@ function sessionItem(label, sess, origIdx, dateStr, day, live) {
         <button class="jss-act del" onclick="event.stopPropagation();deleteJss('${dateStr}',${origIdx})" title="Excluir"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>` : '';
 
   return `<div class="jss-card" id="${cardId}">
-    <div class="jss-row" onclick="toggleJss('${cardId}')">
+    <div class="jss-row">
       <div class="jss-info">
         <div class="jss-top"><span class="jss-name">${label}</span><span class="jss-badge ${badgeCls}">${status}</span></div>
         <div class="jss-sub">${range} · ${dur}</div>
       </div>
       <span style="font-size:14px;font-weight:800;color:var(--text);flex-shrink:0;margin-right:4px">${(sess.km||0).toFixed(1)} km</span>
-      <div class="jss-chev"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg></div>
     </div>
     <div class="jss-kpi-row">
       <div class="jss-kpi"><span class="jv">${km.toFixed(1)}</span><span class="jl">Km ativo</span></div>
@@ -3120,16 +3111,7 @@ function sessionItem(label, sess, origIdx, dateStr, day, live) {
       <div class="jss-kpi"><span class="jv g">${DB.fR(ganhos)}</span><span class="jl">Ganhos</span></div>
       <div class="jss-acts">${editBtn}</div>
     </div>
-    <div class="jss-trips">
-      <div class="jss-trips-head">
-        <h4>Corridas desta sessão</h4>
-        ${corridas > 0 ? `<span>${corridas} corrida${corridas !== 1 ? 's' : ''}</span>` : ''}
-      </div>
-      ${corridas > 0
-        ? trips.map(t => tripItem(t)).join('')
-        : '<div class="jss-trips-empty">Nenhuma corrida encontrada nesta sessão</div>'}
-    </div>
-  </div>`;
+  </div>`; // trips removidas da Jornada — ver tela Corridas
 }
 // ── Editar sessão ─────────────────────────────────────────────────────────
 function editJss(dateStr, idx) {
@@ -3232,7 +3214,7 @@ function toggleTripDetail(tid) {
   if (!open){det.style.display='block';row.classList.add('open');}
 }
 
-function tripItem(t) {
+function tripItem(t, tripDate) {
   const plat = {uber:'Uber','99':'99',particular:'Particular'}[t.platform||'uber'] || 'Uber';
   const dest = t.dest ? ' → '+t.dest : '';
   const dur = t.duration ? ' · '+fmtDur(t.duration) : '';
@@ -3259,6 +3241,7 @@ function tripItem(t) {
     (_feePct!==null)?`<div class="det-row"><span>Taxa Uber</span><strong style="${_feePct==='0%'?'color:#15803D':''}">"${_feePct}</strong></div>`:'',
     t.pedagio?`<div class="det-row"><span>Pedágio</span><strong>Sim</strong></div>`:'',
     t.dinheiro?`<div class="det-row"><span>Pagamento</span><strong>Dinheiro</strong></div>`:'',
+    tripDate?`<button class="det-del-btn" onclick="event.stopPropagation();confirmDeleteTrip('${tripDate}','${t.id}')"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> Excluir corrida</button>`:'',
   ].filter(Boolean).join('');
   return `<div class="trip-item-wrap" id="tw-${tid}">
     <div class="li-row" id="tr-${tid}" onclick="toggleTripDetail('${tid}')">
