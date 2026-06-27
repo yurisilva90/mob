@@ -1067,10 +1067,10 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <button class="type-btn" onclick="setCorridasPlat('particular')">Particular</button>
     </div>
     <div style="display:flex;gap:5px;align-items:center;padding-bottom:6px;position:relative" id="cor-per-row">
-      <button class="pchip active" id="cpb-hoje" onclick="setCorridasPeriod('hoje')">Hoje</button>
-      <button class="pchip" id="cpb-7d" onclick="setCorridasPeriod('7d')">7 dias</button>
-      <button class="pchip" id="cpb-mes" onclick="setCorridasPeriod('mes')">Mês</button>
-      <button class="pchip" id="cpb-tudo" onclick="setCorridasPeriod('tudo')">Tudo</button>
+      <button class="pchip active" id="cpb-hoje" style="flex:1" onclick="setCorridasPeriod('hoje')">Hoje</button>
+      <button class="pchip" id="cpb-7d" style="flex:1" onclick="setCorridasPeriod('7d')">7 dias</button>
+      <button class="pchip" id="cpb-mes" style="flex:1" onclick="setCorridasPeriod('mes')">Mês</button>
+      <button class="pchip" id="cpb-tudo" style="flex:1" onclick="setCorridasPeriod('tudo')">Tudo</button>
       <button id="cor-date-btn" onclick="toggleCorDate()" title="Buscar por data" style="width:34px;min-width:34px;height:34px;flex-shrink:0;border-radius:10px;border:1.5px solid #E2E8F0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#475569" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>
     </div>
     <input type="date" id="cor-date-input" onchange="setCorridasDate(this.value)" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none">
@@ -3243,9 +3243,11 @@ function tripItem(t, tripDate) {
   const extras = [];
   if (t.dinamico>0) extras.push(`<span class="chip chip-d"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><strong>${DB.fR(t.dinamico)}</strong></span>`);
   if (t.tip>0)     extras.push(`<span class="chip chip-g"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.5 4.05 3 5.5l7 7Z"/></svg><strong>${DB.fR(t.tip)}</strong></span>`);
-  const _feePct = t.serviceFee !== undefined && t.serviceFee !== null
-    ? (t.serviceFee*100).toFixed(1).replace('.',',')+'%'
-    : t.taxaZero ? '0%' : null;
+  // Taxa: só mostra quando há dado real do zip ou OCR confirmando 0%
+  let _feePct = null;
+  if (t.serviceFee !== undefined && t.serviceFee !== null) {
+    _feePct = t.serviceFee === 0 ? '0%' : (t.serviceFee*100).toFixed(1).replace('.',',')+'%';
+  } else if (t.taxaZero) { _feePct = '0%'; }
   if (_feePct !== null) extras.push(`<span class="chip chip-taxa">${_feePct}</span>`);
   if (t.pedagio)    extras.push(`<span class="chip-icon chip-toll"><svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><rect x="3" y="3" width="2" height="18" rx="1"/><rect x="19" y="3" width="2" height="18" rx="1"/><rect x="5" y="10" width="11" height="3" rx="1.5"/></svg></span>`);
   if (t.dinheiro)  extras.push(`<span class="chip-icon chip-cash">${cashSvg}</span>`);
