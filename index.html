@@ -4825,11 +4825,14 @@ function showToast(msg, type) {
   el.addEventListener('click', () => el.remove());
   setTimeout(() => { if (document.getElementById('app-toast-center') === el) el.remove(); }, 3400);
 }
-function showEndJourneyToast(km) {
+function showEndJourneyToast(km, cloudSaved) {
   const existing = document.getElementById('app-toast-center'); if (existing) existing.remove();
   const el = document.createElement('div');
   el.id = 'app-toast-center';
   el.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(15,23,42,.35)';
+  const cloudLine = cloudSaved === true
+    ? '<div style="font-size:12.5px;color:#16A34A;margin-top:8px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:5px"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Dados enviados ao servidor</div>'
+    : '<div style="font-size:12.5px;color:#D97706;margin-top:8px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:5px"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Salvo local — sincronizando em breve</div>';
   el.innerHTML = `
     <div style="background:#fff;border-radius:26px;padding:36px 28px;max-width:320px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(15,23,42,.25)">
       <div style="width:68px;height:68px;border-radius:50%;background:#ECFDF3;color:#16A34A;display:flex;align-items:center;justify-content:center;margin:0 auto 18px">
@@ -4837,10 +4840,11 @@ function showEndJourneyToast(km) {
       </div>
       <div style="font-size:18px;font-weight:800;color:#0F172A;margin-bottom:6px">Jornada encerrada</div>
       <div style="font-size:14.5px;color:#64748B">${km.toFixed(1)} km registrados</div>
+      ${cloudLine}
     </div>`;
   document.body.appendChild(el);
   el.addEventListener('click', () => el.remove());
-  setTimeout(() => el.remove(), 3500);
+  setTimeout(() => el.remove(), 4500);
 }
 // Confirmação central (substitui o confirm() nativo do navegador), com a identidade visual do app.
 function showConfirm(msg, onConfirm, opts) {
@@ -4867,12 +4871,13 @@ function showConfirm(msg, onConfirm, opts) {
 }
 
 function gpsPause() { /* removido — app usa só Iniciar / Encerrar */ }
-function gpsStop() {
+async function gpsStop() {
   const g = S.gps;
   if (g.st === 'idle' || !g.start) return; // guard: evita duplo encerramento
   g.st = 'idle';
-  if (g.wid) navigator.geolocation.clearWatch(g.wid);
-  clearInterval(g.ti);
+  // Parar GPS e timer — nullar IDs para restoreGpsSession() não ficar bloqueado
+  if (g.wid) { navigator.geolocation.clearWatch(g.wid); g.wid = null; }
+  clearInterval(g.ti); g.ti = null;
   if (window.SmartMobiNative && typeof SmartMobiNative.stopFloating === 'function') {
     try { SmartMobiNative.stopFloating(); } catch(e) {}
   }
@@ -4890,32 +4895,44 @@ function gpsStop() {
   day.session = { km: totalKm, elapsed: totalElapsed }; // compat com Agenda
   if (!day.kmTotal && totalKm > 0.1) day.kmTotal = parseFloat(totalKm.toFixed(1));
   DB.saveDay(day);
-  _SUPA.from('sessions').upsert({
-    id: cloudId, user_id: _supaUser?.id, date: DB.today(),
-    start_ms: sess.start, end_ms: sess.end,
-    km: parseFloat((sess.km||0).toFixed(3)),
-    elapsed_secs: sess.elapsed,
-    paused_ms: 0, is_paused: false
-  }, { onConflict: 'id' }).catch(()=>
-    SYNC.push('sessions', { id: cloudId, date: DB.today(), start_ms: sess.start, end_ms: sess.end,
-      km: sess.km, elapsed_secs: sess.elapsed })
-  );
+  // Tombstone ANTES do Supabase: garante que pullAll() não restaure esta sessão
+  // mesmo se o upsert ainda não chegou ao cloud (race condition / offline)
   S.gps.sessionId = null;
-  syncNavButton();
   DB.del('sm_gps_session');
-  // Tombstone: garante que pullAll() não restaure esta sessão mesmo se
-  // o upsert de fechamento ainda não chegou ao Supabase (race / offline).
   _addCss(cloudId, sess.end);
   const km = g.km;
   g.start=null; g.pausedMs=0; g.km=0; g.pts=[]; g.baseKm=0; g.baseElapsed=0; g.pa=null;
   releaseWakeLock();
-  // Render forçado após 80ms — garante que fechar o modal de confirmação
-  // complete antes de atualizar a UI, independente de qual tela está ativa
+  // Render imediato — card muda para estado encerrado SEM precisar clicar no nav
+  syncNavButton();
+  try { renderJourneyCard(day, true); } catch(e) {}
   setTimeout(() => {
     try { renderJornada(); } catch(e) {}
     try { renderHome(); } catch(e) {}
   }, 80);
-  if (km > 0.1) setTimeout(() => showEndJourneyToast(km), 500);
+  // Salvar no Supabase com await — rastreia erro e confirma envio ao usuário
+  let cloudSaved = false;
+  try {
+    const { error } = await _SUPA.from('sessions').upsert({
+      id: cloudId, user_id: _supaUser?.id, date: DB.today(),
+      start_ms: sess.start, end_ms: sess.end,
+      km: parseFloat((sess.km||0).toFixed(3)),
+      elapsed_secs: sess.elapsed,
+      paused_ms: 0, is_paused: false
+    }, { onConflict: 'id' });
+    cloudSaved = !error;
+    if (error) console.warn('[gpsStop] Supabase error:', error.message);
+  } catch(e) {
+    console.warn('[gpsStop] Supabase exception:', e);
+  }
+  if (!cloudSaved) {
+    // Fallback: fila de sync — será tentado novamente ao reconectar
+    SYNC.push('sessions', { id: cloudId, date: DB.today(), start_ms: sess.start, end_ms: sess.end,
+      km: sess.km, elapsed_secs: sess.elapsed });
+    console.warn('[gpsStop] Sessão adicionada à fila de sync:', cloudId);
+  }
+  // Toast com resumo da jornada + status do cloud
+  if (km > 0.1) setTimeout(() => showEndJourneyToast(km, cloudSaved), 300);
 }
 function getElapsed() {
   const g = S.gps; if (!g.start) return 0;
