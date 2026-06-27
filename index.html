@@ -4375,7 +4375,9 @@ function confirmImport() {
       duration:t.duration||0, origin:t.origin||'', dest:t.dest||'',
       value:parseFloat(t.value)||0, km:parseFloat(t.km)||0,
       category:'', surge:t.surge||false, airport:t.airport||false,
-      dinamico:parseFloat(t.dinamico)||0, tip:parseFloat(t.tip)||0};
+      dinamico:parseFloat(t.dinamico)||0, tip:parseFloat(t.tip)||0,
+      dinheiro:!!t.dinheiro, pedagio:!!t.pedagio,
+      serviceFee:t.serviceFee??null, taxaZero:!!t.taxaZero};
     day.trips.push(trip);
     toPush.push(trip);
     added++;
@@ -4403,17 +4405,19 @@ function confirmImport() {
     showConfirm(
       baseMsg + `\n\nAlgumas corridas ficaram fora de sessões GPS: ${reconMsg}. Confirmar ajuste automático?`,
       () => {
-        reconcileSessionsForDay(S.curDate); // aplica de verdade
-        if (S.sec==='jornada') renderJornada();
-        if (S.sec==='home') renderHome();
+        reconcileSessionsForDay(S.curDate);
+        try{renderJornada();}catch(e){}
+        try{renderHome();}catch(e){}
+        try{if(S.sec==='corridas')renderCorridas();}catch(e){}
         showToast('Sessões ajustadas!', 'success');
       },
       { confirmLabel: 'Confirmar', cancelLabel: 'Manter como está',
-        onCancel: () => { if (S.sec==='jornada') renderJornada(); if (S.sec==='home') renderHome(); } }
+        onCancel: () => { try{renderJornada();}catch(e){} try{renderHome();}catch(e){} try{if(S.sec==='corridas')renderCorridas();}catch(e){} } }
     );
   } else {
-    if (S.sec==='jornada') renderJornada();
-    if (S.sec==='home') renderHome();
+    try{renderJornada();}catch(e){}
+    try{renderHome();}catch(e){}
+    try{if(S.sec==='corridas')renderCorridas();}catch(e){}
     showToast(baseMsg, skipped > 0 ? 'info' : 'success');
   }
 }
@@ -4878,9 +4882,13 @@ function gpsStop() {
   const km = g.km;
   g.start=null; g.pausedMs=0; g.km=0; g.pts=[]; g.baseKm=0; g.baseElapsed=0; g.pa=null;
   releaseWakeLock();
-  if (S.sec==='jornada') renderJornada();
-  if (S.sec==='home') renderHome();  // atualiza card da home ao encerrar
-  if (km > 0.1) setTimeout(() => showEndJourneyToast(km), 300);
+  // Render forçado após 80ms — garante que fechar o modal de confirmação
+  // complete antes de atualizar a UI, independente de qual tela está ativa
+  setTimeout(() => {
+    try { renderJornada(); } catch(e) {}
+    try { renderHome(); } catch(e) {}
+  }, 80);
+  if (km > 0.1) setTimeout(() => showEndJourneyToast(km), 500);
 }
 function getElapsed() {
   const g = S.gps; if (!g.start) return 0;
@@ -6033,7 +6041,9 @@ const SYNC = {
           duration: t.duration || 0, origin: t.origin || '', dest: t.dest || '',
           value: parseFloat(t.value) || 0, km: parseFloat(t.km) || 0,
           category: t.category || '', surge: t.surge || false, airport: t.airport || false,
-          dinamico: parseFloat(t.dinamico) || 0, tip: parseFloat(t.tip) || 0
+          dinamico: parseFloat(t.dinamico) || 0, tip: parseFloat(t.tip) || 0,
+          dinheiro: t.dinheiro || false, pedagio: t.pedagio || false,
+          serviceFee: t.serviceFee ?? null, taxaZero: t.taxaZero || false
         });
       });
       (expenses.data || []).forEach(e => {
@@ -6076,11 +6086,13 @@ const SYNC = {
         try{const _o=JSON.parse(localStorage.getItem('sm_gps_last_closed')||'null');if(_o&&_o.id)closedSet.add(_o.id);}catch(e){}
 
         // 1. Auto-fechar sessões de dias anteriores (nunca devem ficar abertas)
-        (sessions.data||[]).filter(s=>!s.end_ms&&s.date!==hoje).forEach(s=>{
-          const est=Number(s.start_ms)+(s.elapsed_secs||0)*1000||Date.now();
-          _SUPA.from('sessions').upsert({id:s.id,user_id:uid,end_ms:est,is_paused:false,paused_ms:0},{onConflict:'id'}).catch(()=>{});
-          console.log('[pullAll] Auto-fechando sessão dia anterior:',s.id,s.date);
-        });
+        try {
+          (sessions.data||[]).filter(s=>!s.end_ms&&s.date!==hoje).forEach(s=>{
+            const est=Number(s.start_ms)+(s.elapsed_secs||0)*1000||Date.now();
+            _SUPA.from('sessions').upsert({id:s.id,user_id:uid,end_ms:est,is_paused:false,paused_ms:0},{onConflict:'id'}).catch(()=>{});
+            console.log('[pullAll] Auto-fechando sessão dia anterior:',s.id,s.date);
+          });
+        } catch(e) { console.warn('[pullAll] auto-close error:',e); }
 
         // 2. Sessões abertas de HOJE — mais recente primeiro
         const abertas=(sessions.data||[]).filter(s=>!s.end_ms&&s.date===hoje)
