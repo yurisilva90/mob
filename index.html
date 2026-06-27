@@ -4217,23 +4217,24 @@ function toggleImportTrip(i) {
 // Detecta corrida duplicada (hora+valor, hora+km, valor+rota)
 function isTripDuplicate(newT, existing) {
   return existing.some(t => {
-    const sameTime  = t.time && newT.time && t.time === newT.time;
-    const sameVal   = Math.abs((t.value||0)-(newT.value||0)) < 0.02;
-    const sameKm    = newT.km > 0 && t.km > 0 && Math.abs((t.km||0)-(newT.km||0)) < 0.5;
-    const sameRoute = t.origin && newT.origin &&
-      t.origin.toLowerCase().slice(0,8) === newT.origin.toLowerCase().slice(0,8) &&
-      t.dest && newT.dest &&
-      t.dest.toLowerCase().slice(0,8) === newT.dest.toLowerCase().slice(0,8);
-    // Mesmo valor + horários próximos (até 5 min) = duplicata
+    // Plataformas diferentes = corridas diferentes (nunca duplicata)
+    const samePlat = (t.platform||'uber') === (newT.platform||'uber');
+    if (!samePlat) return false;
+    const sameTime = t.time && newT.time && t.time === newT.time;
+    const sameVal  = Math.abs((t.value||0)-(newT.value||0)) < 0.02;
+    const sameKm   = newT.km > 0 && t.km > 0 && Math.abs((t.km||0)-(newT.km||0)) < 0.5;
     const nearTime = t.time && newT.time && (() => {
       const [h1,m1] = t.time.split(':').map(Number);
       const [h2,m2] = newT.time.split(':').map(Number);
       return Math.abs((h1*60+m1)-(h2*60+m2)) <= 5;
     })();
+    // Mesmo horário + mesmo valor = duplicata clara
     if (sameTime && sameVal) return true;
+    // Mesmo horário + mesma km (proteção contra OCR com valor diferente)
     if (sameTime && sameKm && newT.km > 0) return true;
-    if (sameVal && sameRoute) return true;
+    // Próximo horário + mesmo valor + mesma km = duplicata provável
     if (sameVal && nearTime && sameKm) return true;
+    // REMOVIDO: sameVal && sameRoute sem tempo = falso positivo entre plataformas
     return false;
   });
 }
@@ -4729,7 +4730,7 @@ function gpsOnPosition(pos) {
 async function _autoSyncLocalData() {
   if (!_supaUser) return;
   try {
-    const cutoff = new Date(Date.now()-7*24*3600*1000).toISOString().slice(0,10);
+    const cutoff = new Date(Date.now()-30*24*3600*1000).toISOString().slice(0,10); // 30 dias
     const dates = DB.allDates().filter(d=>d>=cutoff);
     for (const date of dates) {
       const day = DB.day(date);
@@ -6038,7 +6039,7 @@ const SYNC = {
     const uid = _supaUser.id;
     try {
       const [trips, expenses, revenues, sessions, planJ, cats, dayMeta, eventsRes, settingsRes, favsRes] = await Promise.all([
-        _SUPA.from('trips').select('*').eq('user_id', uid),
+        await (async () => { let all=[],from=0; while(true) { const {data:chunk,error} = await _SUPA.from('trips').select('*').eq('user_id',uid).range(from,from+999);if(error||!chunk||!chunk.length) break; all.push(...chunk); if(chunk.length<1000) break; from+=1000; } return {data:all}; })(),
         _SUPA.from('expenses').select('*').eq('user_id', uid),
         _SUPA.from('revenues').select('*').eq('user_id', uid),
         _SUPA.from('sessions').select('*').eq('user_id', uid),
