@@ -174,6 +174,15 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .goal-locked{display:flex;align-items:center;justify-content:space-between;background:#F8FAFC;border:1px dashed #D8E0EA;border-radius:14px;padding:10px 12px;cursor:pointer;touch-action:manipulation}
 .goal-locked span{font-size:12px;color:var(--muted);font-weight:600}
 .goal-edit-link{display:block;width:100%;border:0;background:transparent;color:var(--muted);font-size:11.5px;font-weight:700;text-align:center;margin-top:12px;padding-top:12px;border-top:1px solid #edf1f6;cursor:pointer;touch-action:manipulation}
+.goal-edit-link.override{color:#C2410C}
+.meta-field-card{flex:1;min-width:0;background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:16px;padding:12px 8px 10px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.meta-field-card:focus-within{border-color:var(--blue);background:#EFF6FF}
+.meta-field-label{font-size:11px;font-weight:700;color:#64748B;text-align:center}
+.meta-field-wrap{display:flex;align-items:baseline;justify-content:center;gap:3px;width:100%}
+.meta-field-pfx{font-size:12px;font-weight:700;color:#94A3B8}
+.meta-field-sfx{font-size:11px;font-weight:600;color:#94A3B8}
+.meta-field-input{width:100%;min-width:0;max-width:72px;border:0;background:transparent;font-size:18px;font-weight:800;color:#0F172A;font-family:inherit;outline:none;text-align:center}
+.meta-field-input::placeholder{color:#CBD5E1}
 .goal-locked b{font-size:12px;color:#0A2F6B;font-weight:800}
 
 /* ── Listas (sessões / corridas / lançamentos) ── */
@@ -959,10 +968,10 @@ h1.hd-title{font-family:var(--font-brand)!important}
   <div class="card" style="margin:0 16px 14px;padding:16px">
     <div class="card-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <h2 style="font-size:15.5px;font-weight:760;letter-spacing:-.03em">Metas do dia</h2>
-      <span style="background:#EFF6FF;color:var(--blue2);border-radius:999px;padding:6px 10px;font-size:11px;font-weight:720">Planejado</span>
+      <span id="meta-dia-badge" style="background:#EFF6FF;color:var(--blue2);border-radius:999px;padding:6px 10px;font-size:11px;font-weight:720">Planejado</span>
     </div>
     <div id="metas-dia-stack"></div>
-    <button class="goal-edit-link" onclick="openPlanJornada()">Editar jornada planejada</button>
+    <button id="meta-dia-btn" class="goal-edit-link" onclick="openMetaDia()">Ajustar meta de hoje</button>
   </div>
 
   <div class="section" style="padding:0 16px 8px"><h2>Jornadas do dia</h2><button class="add" onclick="toggleSessionsView()" id="sessions-toggle" style="display:none">Ver todas &#8250;</button></div>
@@ -1488,6 +1497,44 @@ h1.hd-title{font-family:var(--font-brand)!important}
 <!-- ════ MODAIS ════ -->
 
 <!-- Lançamento (Receita / Despesa) -->
+
+<!-- Modal meta do dia -->
+<div class="mo" id="mo-meta-dia">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head"><h2>Meta de hoje</h2><button class="xbtn" onclick="closeMo('mo-meta-dia')">&#x2715;</button></div>
+    <div style="margin:8px 20px 16px;background:#FFF7ED;color:#92400E;border-radius:12px;padding:10px 13px;font-size:12px;font-weight:600;line-height:1.5;display:flex;gap:8px;align-items:center">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+      Vale só hoje. O planejamento dos outros dias não muda.
+    </div>
+    <div style="display:flex;gap:8px;padding:0 20px">
+      <div class="meta-field-card">
+        <div class="meta-field-label">Financeira</div>
+        <div class="meta-field-wrap">
+          <span class="meta-field-pfx">R$</span>
+          <input id="mdi-money" class="meta-field-input" type="number" inputmode="decimal" placeholder="—">
+        </div>
+      </div>
+      <div class="meta-field-card">
+        <div class="meta-field-label">Tempo</div>
+        <div class="meta-field-wrap">
+          <input id="mdi-time" class="meta-field-input" type="number" inputmode="numeric" placeholder="—">
+          <span class="meta-field-sfx">h</span>
+        </div>
+      </div>
+      <div class="meta-field-card">
+        <div class="meta-field-label">Km</div>
+        <div class="meta-field-wrap">
+          <input id="mdi-km" class="meta-field-input" type="number" inputmode="decimal" placeholder="—">
+          <span class="meta-field-sfx">km</span>
+        </div>
+      </div>
+    </div>
+    <hr style="border:0;border-top:1px solid #F1F5F9;margin:16px 20px">
+    <button class="save receita" onclick="saveMetaDia()">Salvar para hoje</button>
+    <button onclick="clearMetaDia()" style="display:block;width:calc(100% - 40px);margin:10px 20px 0;height:44px;border-radius:14px;border:1.5px solid #E2E8F0;background:#F8FAFC;color:#64748B;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">Usar planejamento padrão</button>
+  </div>
+</div>
 
 <!-- Modal editar jornada -->
 <div class="mo" id="mo-jss-edit">
@@ -2954,30 +3001,84 @@ function renderMetasDoDia(day) {
   const plan = DB.planJornada().find(p => p.days && p.days.includes(dow));
   const meta = DB.meta();
   const dimMes = new Date(new Date(day.date+'T12:00').getFullYear(), new Date(day.date+'T12:00').getMonth()+1, 0).getDate();
-  const moneyGoal = (plan && plan.moneyGoal) ? plan.moneyGoal : (meta.general ? meta.general/dimMes : 0);
+  const ov = day.goalOverride || null;
+
+  // Override do dia tem prioridade; fallback para o plano
+  const moneyGoal = (ov && ov.moneyGoal != null) ? ov.moneyGoal
+    : (plan && plan.moneyGoal) ? plan.moneyGoal
+    : (meta.general ? meta.general/dimMes : 0);
+  const kmGoal = (ov && ov.kmGoal != null) ? ov.kmGoal : (plan && plan.kmGoal ? plan.kmGoal : null);
+  const schedMin = (ov && ov.schedMin != null) ? ov.schedMin
+    : (plan ? (plan.schedules||[]).reduce((s,b)=>s+agMinutesBetween(b.start,b.end),0) : 0);
+
+  // Atualizar badge e botão
+  const badge = document.getElementById('meta-dia-badge');
+  if (badge) {
+    badge.textContent = ov ? 'Ajustado hoje' : 'Planejado';
+    badge.style.cssText = ov
+      ? 'background:#FFF7ED;color:#C2410C;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:720'
+      : 'background:#EFF6FF;color:var(--blue2);border-radius:999px;padding:6px 10px;font-size:11px;font-weight:720';
+  }
+  const btn = document.getElementById('meta-dia-btn');
+  if (btn) {
+    btn.textContent = ov ? 'Ajuste de hoje · Editar' : 'Ajustar meta de hoje';
+    btn.className = 'goal-edit-link' + (ov ? ' override' : '');
+  }
 
   let html = '';
   if (moneyGoal) {
     const pct = Math.min(100, Math.round(rev/moneyGoal*100));
     html += `<div class="goal-item"><div class="goal-top"><strong>Financeiro</strong><span>${DB.fRI(rev)} de ${DB.fRI(moneyGoal)} · ${pct}%</span></div><div class="gbar money"><i style="width:${pct}%"></i></div></div>`;
   } else {
-    html += `<div class="goal-item"><div class="goal-locked" onclick="openPlanJornada()"><span>Financeiro — meta não definida</span><b>Planejar</b></div></div>`;
+    html += `<div class="goal-item"><div class="goal-locked" onclick="openMetaDia()"><span>Financeiro — meta não definida</span><b>Ajustar</b></div></div>`;
   }
-  if (plan && plan.kmGoal) {
-    const pct = Math.min(100, Math.round(totalKm/plan.kmGoal*100));
-    html += `<div class="goal-item"><div class="goal-top"><strong>Quilometragem</strong><span>${totalKm.toFixed(1)} de ${plan.kmGoal} km · ${pct}%</span></div><div class="gbar km"><i style="width:${pct}%"></i></div></div>`;
+  if (kmGoal) {
+    const pct = Math.min(100, Math.round(totalKm/kmGoal*100));
+    html += `<div class="goal-item"><div class="goal-top"><strong>Quilometragem</strong><span>${totalKm.toFixed(1)} de ${kmGoal} km · ${pct}%</span></div><div class="gbar km"><i style="width:${pct}%"></i></div></div>`;
   } else {
-    html += `<div class="goal-item"><div class="goal-locked" onclick="openPlanJornada()"><span>Quilometragem — meta não definida</span><b>Planejar</b></div></div>`;
+    html += `<div class="goal-item"><div class="goal-locked" onclick="openMetaDia()"><span>Quilometragem — meta não definida</span><b>Ajustar</b></div></div>`;
   }
-  const schedMin = plan ? (plan.schedules||[]).reduce((s,b)=>s+agMinutesBetween(b.start,b.end),0) : 0;
   if (schedMin > 0) {
     const liveMin = Math.round(totalElapsed/60);
     const pct = Math.min(100, Math.round(liveMin/schedMin*100));
     html += `<div class="goal-item" style="border-bottom:0;margin-bottom:0"><div class="goal-top"><strong>Tempo online</strong><span>${Math.floor(liveMin/60)}h${p2(liveMin%60)} de ${Math.floor(schedMin/60)}h${p2(schedMin%60)} · ${pct}%</span></div><div class="gbar time"><i style="width:${pct}%"></i></div></div>`;
   } else {
-    html += `<div class="goal-item" style="border-bottom:0;margin-bottom:0"><div class="goal-locked" onclick="openPlanJornada()"><span>Tempo online — meta não definida</span><b>Planejar</b></div></div>`;
+    html += `<div class="goal-item" style="border-bottom:0;margin-bottom:0"><div class="goal-locked" onclick="openMetaDia()"><span>Tempo online — meta não definida</span><b>Ajustar</b></div></div>`;
   }
   stack.innerHTML = html;
+}
+
+// ── Meta do dia (override pontual sem alterar o plano) ───────
+function openMetaDia() {
+  const day = DB.day(S.curDate);
+  const dow = new Date(day.date+'T12:00').getDay();
+  const plan = DB.planJornada().find(p => p.days && p.days.includes(dow));
+  const ov = day.goalOverride || {};
+  const schedMinPlan = plan ? (plan.schedules||[]).reduce((s,b)=>s+agMinutesBetween(b.start,b.end),0) : 0;
+  const moneyEl = document.getElementById('mdi-money');
+  const timeEl  = document.getElementById('mdi-time');
+  const kmEl    = document.getElementById('mdi-km');
+  if (moneyEl) moneyEl.value = ov.moneyGoal != null ? ov.moneyGoal : (plan && plan.moneyGoal ? plan.moneyGoal : '');
+  if (timeEl)  timeEl.value  = ov.schedMin  != null ? Math.round(ov.schedMin/60)  : (schedMinPlan ? Math.round(schedMinPlan/60) : '');
+  if (kmEl)    kmEl.value    = ov.kmGoal    != null ? ov.kmGoal    : (plan && plan.kmGoal ? plan.kmGoal : '');
+  openMo('mo-meta-dia');
+}
+function saveMetaDia() {
+  const day = DB.day(S.curDate);
+  const money = parseFloat(document.getElementById('mdi-money')?.value) || null;
+  const timeH = parseFloat(document.getElementById('mdi-time')?.value)  || null;
+  const km    = parseFloat(document.getElementById('mdi-km')?.value)    || null;
+  day.goalOverride = { moneyGoal: money, schedMin: timeH != null ? timeH*60 : null, kmGoal: km };
+  DB.saveDay(day);
+  closeMo('mo-meta-dia');
+  renderMetasDoDia(day);
+}
+function clearMetaDia() {
+  const day = DB.day(S.curDate);
+  delete day.goalOverride;
+  DB.saveDay(day);
+  closeMo('mo-meta-dia');
+  renderMetasDoDia(day);
 }
 
 // ── Planejar Jornada ─────────────────────────────────────────
