@@ -1060,7 +1060,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
     <span id="cor-cnt" style="font-size:11.5px;color:#64748B;font-weight:700">0 corridas</span>
   </div>
   <div style="padding:10px 16px 4px">
-    <div class="type-switch" id="cor-plat-switch">
+    <div class="type-switch" id="cor-plat-switch" style="margin-bottom:8px">
       <button class="type-btn active" onclick="setCorridasPlat('all')">Todas</button>
       <button class="type-btn" onclick="setCorridasPlat('uber')">Uber</button>
       <button class="type-btn" onclick="setCorridasPlat('99')">99</button>
@@ -1078,7 +1078,12 @@ h1.hd-title{font-family:var(--font-brand)!important}
     </div>
   </div>
 
-  <div style="padding:14px 16px 30px" id="cor-list"></div>
+  <div style="display:flex;background:#fff;border-top:1px solid #E2E8F0;border-bottom:1px solid #E2E8F0;padding:10px 16px" id="cor-summary">
+    <div style="flex:1;text-align:center"><span style="display:block;font-size:9px;color:#94A3B8;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Total</span><strong id="cor-sum-val" style="font-size:14px;font-weight:800;color:#0F172A">R$ 0,00</strong></div>
+    <div style="flex:1;text-align:center;border-left:1px solid #F1F5F9"><span style="display:block;font-size:9px;color:#94A3B8;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Km</span><strong id="cor-sum-km" style="font-size:14px;font-weight:800;color:#0F172A">0,0</strong></div>
+    <div style="flex:1;text-align:center;border-left:1px solid #F1F5F9"><span style="display:block;font-size:9px;color:#94A3B8;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Corridas</span><strong id="cor-sum-n" style="font-size:14px;font-weight:800;color:#0F172A">0</strong></div>
+  </div>
+  <div style="padding:12px 16px 30px" id="cor-list"></div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
@@ -1449,6 +1454,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
   <div id="mais-modules" style="padding:0 16px;display:flex;flex-direction:column;gap:10px"></div>
   <div style="padding:16px 16px 8px"><div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Ferramentas</div></div>
   <div style="padding:0 16px;display:flex;flex-direction:column;gap:8px">
+    <div class="mais-item" onclick="navTo('corridas')"><div class="mais-ico" style="background:#EFF6FF"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2563EB" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div><div><div class="mais-t">Corridas</div><div class="mais-s">Histórico e filtros de corridas</div></div><div class="mais-arr">›</div></div>
     <div class="mais-item" onclick="navTo('agenda')"><div class="mais-ico blue"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><div><div class="mais-t">Agenda</div><div class="mais-s">Planejamento e horários de trabalho</div></div><div class="mais-arr">›</div></div>
   </div>
   <div style="padding:16px 16px 8px"><div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Configurações</div></div>
@@ -2041,9 +2047,7 @@ function navTo(sec) {
   if (sec === 'financeiro') renderFin();
   if (sec === 'lancamentos') renderLancamentos();
   if (sec === 'corridas') {
-    S.corridasPlat = 'all'; // reset plataforma ao entrar
-    S.corridasPeriod = 'tudo'; // reset período ao entrar pra mostrar tudo
-    setCorridasPlat('all');
+    setCorridasPlat('all'); // reseta sempre plataforma para 'Todas'
     renderCorridas();
   }
   if (sec === 'mais')       renderMais();
@@ -2784,11 +2788,10 @@ function renderCorridas() {
     trips.forEach(t => { totalVal += (t.value||0); totalKm += (t.km||0); totalN++; });
     groups.push({ date: d, trips });
   });
-  // Breakdown por plataforma (diagnóstico)
-  const _pb={}; dates.forEach(d=>DB.day(d).trips.forEach(t=>{const p=t.platform||'uber';_pb[p]=(_pb[p]||0)+1;}));
-  const _pbStr=Object.entries(_pb).map(([p,n])=>`${p}:${n}`).join(' · ');
-  setText('cor-cnt', totalN + (totalN===1?' corrida':' corridas') + (_pbStr?' ('+_pbStr+')':''));
-  // summary removido
+  setText('cor-cnt', totalN + (totalN===1?' corrida':' corridas'));
+  setText('cor-sum-val', DB.fR(totalVal));
+  setText('cor-sum-km', totalKm.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}));
+  setText('cor-sum-n', totalN);
 
   const listEl = document.getElementById('cor-list');
   if (!listEl) return;
