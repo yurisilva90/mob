@@ -4375,9 +4375,11 @@ function confirmImport() {
   const recon = reconcileSessionsForDay(S.curDate, true);
   const hasChanges = recon.grouped > 0 || recon.created > 0;
 
+  const dateHint = S.curDate !== DB.today()
+    ? ` (data: ${S.curDate.split('-').reverse().slice(0,2).join('/')})` : '';
   const baseMsg = skipped > 0
-    ? `${added} corrida${added!==1?'s':''} importada${added!==1?'s':''}. ${skipped} ignorada${skipped!==1?'s':''} (já existente${skipped!==1?'s':''}).`
-    : `${added} corrida${added!==1?'s':''} importada${added!==1?'s':''}!`;
+    ? `${added} corrida${added!==1?'s':''} importada${added!==1?'s':''}${added?dateHint:''}. ${skipped} ignorada${skipped!==1?'s':''} (já existente${skipped!==1?'s':''}).`
+    : `${added} corrida${added!==1?'s':''} importada${added!==1?'s':''}!${dateHint}`;
 
   if (hasChanges) {
     const reconMsg = [
@@ -4391,16 +4393,19 @@ function confirmImport() {
         reconcileSessionsForDay(S.curDate);
         try{renderJornada();}catch(e){}
         try{renderHome();}catch(e){}
-        try{if(S.sec==='corridas')renderCorridas();}catch(e){}
+        if (S.curDate !== DB.today()) S.corridasPeriod = 'tudo';
+        try{renderCorridas();}catch(e){}
         showToast('Sessões ajustadas!', 'success');
       },
       { confirmLabel: 'Confirmar', cancelLabel: 'Manter como está',
-        onCancel: () => { try{renderJornada();}catch(e){} try{renderHome();}catch(e){} try{if(S.sec==='corridas')renderCorridas();}catch(e){} } }
+        onCancel: () => { try{renderJornada();}catch(e){} try{renderHome();}catch(e){} if(S.curDate!==DB.today())S.corridasPeriod='tudo'; try{renderCorridas();}catch(e){} } }
     );
   } else {
     try{renderJornada();}catch(e){}
     try{renderHome();}catch(e){}
-    try{if(S.sec==='corridas')renderCorridas();}catch(e){}
+    // Garantir que Corridas mostra a data certa independente do filtro
+    if (S.curDate !== DB.today()) S.corridasPeriod = 'tudo';
+    try{renderCorridas();}catch(e){}
     showToast(baseMsg, skipped > 0 ? 'info' : 'success');
   }
 }
