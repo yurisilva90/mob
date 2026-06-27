@@ -2042,8 +2042,9 @@ function navTo(sec) {
   if (sec === 'financeiro') renderFin();
   if (sec === 'lancamentos') renderLancamentos();
   if (sec === 'corridas') {
-    // Ao entrar em Corridas, garantir que o filtro mostra todas as datas
-    // (evitar trips de outros dias não aparecerem com filtro 'hoje')
+    S.corridasPlat = 'all'; // reset plataforma ao entrar
+    S.corridasPeriod = 'tudo'; // reset período ao entrar pra mostrar tudo
+    setCorridasPlat('all');
     renderCorridas();
   }
   if (sec === 'mais')       renderMais();
@@ -2774,7 +2775,10 @@ function renderCorridas() {
     trips.forEach(t => { totalVal += (t.value||0); totalKm += (t.km||0); totalN++; });
     groups.push({ date: d, trips });
   });
-  setText('cor-cnt', totalN + (totalN===1?' corrida':' corridas'));
+  // Breakdown por plataforma (diagnóstico)
+  const _pb={}; dates.forEach(d=>DB.day(d).trips.forEach(t=>{const p=t.platform||'uber';_pb[p]=(_pb[p]||0)+1;}));
+  const _pbStr=Object.entries(_pb).map(([p,n])=>`${p}:${n}`).join(' · ');
+  setText('cor-cnt', totalN + (totalN===1?' corrida':' corridas') + (_pbStr?' ('+_pbStr+')':''));
   setText('cor-sum-val', DB.fR(totalVal));
   setText('cor-sum-km', totalKm.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}));
   setText('cor-sum-n', totalN);
@@ -4721,6 +4725,32 @@ function gpsOnPosition(pos) {
   }
 }
 // ── Tombstone SET: múltiplas sessões fechadas ───────────────
+// ── Auto-sync local → Supabase ───────────────────────────────────
+async function _autoSyncLocalData() {
+  if (!_supaUser) return;
+  try {
+    const cutoff = new Date(Date.now()-7*24*3600*1000).toISOString().slice(0,10);
+    const dates = DB.allDates().filter(d=>d>=cutoff);
+    for (const date of dates) {
+      const day = DB.day(date);
+      for (const t of (day.trips||[])) {
+        if (!t.id) continue;
+        await _SUPA.from('trips').upsert({
+          id:t.id, user_id:_supaUser.id, date,
+          platform:t.platform||'uber', time:t.time||null,
+          duration:t.duration||0, origin:t.origin||'', dest:t.dest||'',
+          value:t.value||0, km:t.km||0, category:t.category||'',
+          surge:!!t.surge, airport:!!t.airport, dinamico:t.dinamico||0,
+          tip:t.tip||0, source:t.source||'import_ai',
+          dinheiro:!!t.dinheiro, pedagio:!!t.pedagio,
+          serviceFee:t.serviceFee??null, taxaZero:!!t.taxaZero
+        }, {onConflict:'id'}).catch(()=>{});
+      }
+    }
+  } catch(e) { console.warn('[autoSync]', e); }
+}
+setTimeout(()=>{ _autoSyncLocalData(); setInterval(_autoSyncLocalData,5*60*1000); },2*60*1000);
+
 function _gcss(){try{return new Set(JSON.parse(localStorage.getItem('sm_gps_closed_set')||'[]'));}catch(e){return new Set();}}
 function _addCss(id,endMs){
   try{
