@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smartmobi-v22-icon-mark';
+const CACHE_NAME = 'mob-v24-trip99-fix';
 const ASSETS = [
   '/',
   '/index.html',
@@ -7,9 +7,7 @@ const ASSETS = [
   '/icon-512.png',
   '/icon-mark-192.png',
   '/icon-mark-512.png',
-  '/apple-touch-icon.png',
-  '/screenshot-home.png',
-  '/screenshot-wide.png'
+  '/apple-touch-icon.png'
 ];
 
 self.addEventListener('install', event => {
@@ -27,13 +25,9 @@ self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
   const isAppShell = event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('/index.html');
-
   if (isAppShell) {
-    // Network-first pro HTML: o app SEMPRE busca a versão mais nova primeiro.
-    // Só cai pro cache se estiver de verdade offline (sem internet).
-    // Isso evita o app ficar "preso" numa versão antiga mesmo depois de eu corrigir algo.
     event.respondWith(
-      fetch(event.request).then(response => {
+      fetch(event.request, {cache:'no-cache'}).then(response => {
         const copy = response.clone();
         caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
         return response;
@@ -41,26 +35,18 @@ self.addEventListener('fetch', event => {
     );
     return;
   }
-
-  // Demais assets (ícones, manifest) — cache-first, ok serem mais "lentos" pra atualizar.
   event.respondWith(
     caches.match(event.request).then(cached => cached || fetch(event.request).then(response => {
       const copy = response.clone();
       caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
       return response;
-    }).catch(() => caches.match('/index.html')))
+    }))
   );
 });
 
-self.addEventListener('sync', event => {
-  if (event.tag === 'smartmobi-v20-header-menu-fix') event.waitUntil(Promise.resolve());
-});
-
 self.addEventListener('push', event => {
-  const data = event.data ? event.data.text() : 'SmartMobi';
-  event.waitUntil(self.registration.showNotification('SmartMobi', {
-    body: data,
-    icon: '/icon-192.png',
-    badge: '/icon-192.png'
+  const data = event.data ? event.data.text() : 'MoB';
+  event.waitUntil(self.registration.showNotification('MōB', {
+    body: data, icon: '/icon-192.png', badge: '/icon-192.png'
   }));
 });
