@@ -1066,19 +1066,18 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <button class="type-btn" onclick="setCorridasPlat('99')">99</button>
       <button class="type-btn" onclick="setCorridasPlat('particular')">Particular</button>
     </div>
-    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px" id="cor-per-row">
-      <button class="pchip active" onclick="setCorridasPeriod('hoje')">Hoje</button>
-      <button class="pchip" onclick="setCorridasPeriod('7d')">7 dias</button>
-      <button class="pchip" onclick="setCorridasPeriod('30d')">30 dias</button>
-      <button class="pchip" onclick="setCorridasPeriod('mes')">Este mês</button>
-      <button class="pchip" onclick="setCorridasPeriod('tudo')">Tudo</button>
+    <div style="display:flex;gap:5px;align-items:center;padding-bottom:6px" id="cor-per-row">
+      <button class="pchip active" id="cpb-hoje" onclick="setCorridasPeriod('hoje')">Hoje</button>
+      <button class="pchip" id="cpb-7d" onclick="setCorridasPeriod('7d')">7 dias</button>
+      <button class="pchip" id="cpb-mes" onclick="setCorridasPeriod('mes')">Mês</button>
+      <button class="pchip" id="cpb-tudo" onclick="setCorridasPeriod('tudo')">Tudo</button>
+      <button id="cor-date-btn" onclick="toggleCorDate()" title="Buscar por data" style="width:32px;height:32px;flex-shrink:0;border-radius:10px;border:1.5px solid #E2E8F0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#475569" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>
+    </div>
+    <div id="cor-date-picker" style="display:none;padding-bottom:8px">
+      <input type="date" id="cor-date-input" onchange="setCorridasDate(this.value)" style="width:100%;height:36px;border-radius:10px;border:1.5px solid #E2E8F0;background:#fff;padding:0 12px;font-size:12.5px;font-family:'Inter',system-ui;color:#0F172A;outline:none">
     </div>
   </div>
-  <div style="display:flex;background:#fff;border-top:1px solid #E2E8F0;padding:11px 16px" id="cor-summary">
-    <div style="flex:1;text-align:center"><span style="display:block;font-size:9.5px;color:#64748B;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Total</span><strong id="cor-sum-val" style="font-family:'Inter',system-ui,sans-serif;font-size:14px">R$ 0,00</strong></div>
-    <div style="flex:1;text-align:center"><span style="display:block;font-size:9.5px;color:#64748B;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Km</span><strong id="cor-sum-km" style="font-family:'Inter',system-ui,sans-serif;font-size:14px">0,0</strong></div>
-    <div style="flex:1;text-align:center"><span style="display:block;font-size:9.5px;color:#64748B;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Corridas</span><strong id="cor-sum-n" style="font-family:'Inter',system-ui,sans-serif;font-size:14px">0</strong></div>
-  </div>
+
   <div style="padding:14px 16px 30px" id="cor-list"></div>
 </div>
 
@@ -1992,7 +1991,7 @@ let S = {
   lancScope: 'operacional',
   lancRecFreq: 'Semanal',
   corPlat: 'uber',
-  corridasPeriod: 'hoje',
+  corridasPeriod: 'hoje', corridasDate: null,
   corridasPlat: 'all',
   tripsExpanded: false,
   sessionsExpanded: false,
@@ -2736,26 +2735,33 @@ function toggleTripsView() { S.tripsExpanded = !S.tripsExpanded; renderJornada()
 
 // ── TELA CORRIDAS (lista dedicada, com filtro de período/plataforma e exclusão) ──
 function getCorridasDays() {
-  const today = new Date();
-  const fmt = d => d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
-  const p = S.corridasPeriod;
-  if (p === 'hoje') return [fmt(today)];
-  if (p === '7d' || p === '30d') {
-    const n = p === '7d' ? 7 : 30, out = [];
-    for (let i=0;i<n;i++) { const d=new Date(today); d.setDate(d.getDate()-i); out.push(fmt(d)); }
-    return out;
-  }
-  if (p === 'mes') {
-    return Array.from({length: today.getDate()}, (_,i) => fmt(new Date(today.getFullYear(), today.getMonth(), i+1)));
-  }
-  return DB.allDates(); // 'tudo'
+  const today=new Date();
+  const fmt=d=>d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+  const p=S.corridasPeriod;
+  if(p==='date'&&S.corridasDate) return [S.corridasDate];
+  if(p==='hoje') return [fmt(today)];
+  if(p==='7d') { const out=[]; for(let i=0;i<7;i++){const d=new Date(today);d.setDate(d.getDate()-i);out.push(fmt(d));} return out; }
+  if(p==='mes') { const m=today.getMonth(),y=today.getFullYear(); return DB.allDates().filter(d=>d.startsWith(y+'-'+p2(m+1))); }
+  return DB.allDates();
 }
 function setCorridasPeriod(p) {
-  S.corridasPeriod = p;
-  document.querySelectorAll('#cor-per-row .pchip').forEach(b => b.classList.remove('active'));
-  const idx = ['hoje','7d','30d','mes','tudo'].indexOf(p);
-  const btn = document.querySelectorAll('#cor-per-row .pchip')[idx];
-  if (btn) btn.classList.add('active');
+  S.corridasPeriod=p; S.corridasDate=null;
+  ['hoje','7d','mes','tudo'].forEach(id=>{ const b=document.getElementById('cpb-'+id); if(b) b.classList.toggle('active',id===p); });
+  const dp=document.getElementById('cor-date-picker'),db=document.getElementById('cor-date-btn');
+  if(dp) dp.style.display='none'; if(db){db.style.background='#fff';db.style.borderColor='#E2E8F0';}
+  renderCorridas();
+}
+function toggleCorDate() {
+  const dp=document.getElementById('cor-date-picker'),db=document.getElementById('cor-date-btn');
+  if(!dp) return; const open=dp.style.display==='block';
+  dp.style.display=open?'none':'block';
+  if(db){db.style.background=open?'#fff':'#EFF6FF';db.style.borderColor=open?'#E2E8F0':'#2563EB';}
+  if(!open){const inp=document.getElementById('cor-date-input');if(inp)inp.focus();}
+}
+function setCorridasDate(d) {
+  if(!d) return; S.corridasDate=d; S.corridasPeriod='date';
+  ['hoje','7d','mes','tudo'].forEach(id=>{ const b=document.getElementById('cpb-'+id); if(b) b.classList.remove('active'); });
+  const db=document.getElementById('cor-date-btn'); if(db){db.style.background='#EFF6FF';db.style.borderColor='#2563EB';}
   renderCorridas();
 }
 function setCorridasPlat(p) {
@@ -2782,9 +2788,7 @@ function renderCorridas() {
   const _pb={}; dates.forEach(d=>DB.day(d).trips.forEach(t=>{const p=t.platform||'uber';_pb[p]=(_pb[p]||0)+1;}));
   const _pbStr=Object.entries(_pb).map(([p,n])=>`${p}:${n}`).join(' · ');
   setText('cor-cnt', totalN + (totalN===1?' corrida':' corridas') + (_pbStr?' ('+_pbStr+')':''));
-  setText('cor-sum-val', DB.fR(totalVal));
-  setText('cor-sum-km', totalKm.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}));
-  setText('cor-sum-n', totalN);
+  // summary removido
 
   const listEl = document.getElementById('cor-list');
   if (!listEl) return;
