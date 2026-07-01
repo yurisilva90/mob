@@ -510,7 +510,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .inf-fav-empty-ic{opacity:.3}
 .inf-fav-empty-lbl{font-size:9px;color:var(--muted2);font-weight:600}
 
-.inf-search-dd{position:fixed;left:14px;right:14px;top:56px;background:var(--card);border:1.5px solid var(--line);border-radius:16px;box-shadow:0 8px 28px rgba(15,23,42,.13);z-index:35;overflow:hidden;display:none;max-height:55vh;overflow-y:auto}
+.inf-search-dd{position:fixed;left:14px;right:14px;top:88px;background:var(--card);border:1.5px solid var(--line);border-radius:16px;box-shadow:0 8px 28px rgba(15,23,42,.13);z-index:35;overflow:hidden;display:none;max-height:55vh;overflow-y:auto}
 .inf-search-dd.show{display:block}
 .inf-sd-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line);cursor:pointer}
 .inf-sd-item:last-child{border-bottom:0}
@@ -566,6 +566,77 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .inf-ccard:active{transform:scale(.96)}
 .inf-ccard-ic{width:27px;height:27px;border-radius:8px;display:flex;align-items:center;justify-content:center}
 .inf-ccard-name{font-size:9.5px;font-weight:800;text-align:center;line-height:1.2}
+
+/* ══════════════════════════════════════════════
+   INFORMES v2 — topbar 2 linhas, abas, cards full-width, feed
+   ══════════════════════════════════════════════ */
+.inf-topbar{display:flex!important;flex-direction:column;gap:7px;align-items:stretch!important}
+.inf-topbar-row1{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.inf-search-fixed{flex:none!important;width:100%}
+.inf-tabs-wrap{position:sticky;top:74px;background:var(--bg);z-index:9;border-bottom:1px solid var(--line);padding-bottom:2px;margin-bottom:2px}
+.inf-tabs{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 14px 9px}
+.inf-tabs::-webkit-scrollbar{display:none}
+.inf-tab{flex-shrink:0;border:1.5px solid var(--line);background:var(--card);color:var(--muted);font-size:12px;font-weight:700;font-family:inherit;padding:7px 13px;border-radius:99px;white-space:nowrap;cursor:pointer}
+.inf-tab.active{background:#0A2F6B;border-color:#0A2F6B;color:#fff}
+.inf-panelbody{padding-bottom:110px}
+.inf-panelbody.hide{display:none}
+.inf-panelbody.inf-fill{display:flex;flex-direction:column;min-height:calc(100% - 2px)}
+/* cards largura cheia (aeroportos/rodoviárias/minha área) */
+.inf-featF{background:var(--card);border:2px solid var(--line);border-radius:17px;padding:14px 15px 14px;margin:0 14px 9px;display:flex;flex-direction:column;cursor:pointer;transition:border-color .15s,transform .1s}
+.inf-featF:active{transform:scale(.98)}
+.inf-featF-top{display:flex;align-items:center;justify-content:space-between}
+.inf-featF-id{display:flex;align-items:center;gap:10px}
+.inf-featF-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-featF-name{font-size:15px;font-weight:800}
+.inf-featF-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.inf-featF-mode{color:#94A3B8;vertical-align:-2px;margin-left:3px}
+.inf-featF-ct{font-size:10px;font-weight:800;background:var(--red);color:#fff;border-radius:99px;padding:3px 9px;flex-shrink:0}
+.inf-featF-mini{margin-top:12px;background:var(--soft);border-radius:10px;padding:9px 11px;display:grid;grid-template-columns:repeat(3,1fr);gap:7px 10px}
+.inf-featF-mstat{display:flex;align-items:center;gap:5px}
+.inf-featF-mstat-ic{color:var(--muted);flex-shrink:0}
+.inf-featF-mstat-val{font-size:11px;font-weight:800;color:var(--text)}
+.inf-featF-arriving{margin-top:9px;display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:var(--muted2)}
+/* feed de informes — lista única, linha fina */
+.inf-feed-list{margin:0 14px;background:var(--card);border:1.5px solid var(--line);border-radius:14px;overflow:hidden}
+.inf-feed-fill{flex:1;display:flex;flex-direction:column}
+.inf-feed-row{display:flex;align-items:center;gap:9px;padding:10px 12px;border-bottom:1px solid #EEF1F5;cursor:pointer}
+.inf-feed-row:last-child{border-bottom:0}
+.inf-feed-row:active{background:var(--soft)}
+.inf-feed-ic{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-feed-body{flex:1;min-width:0}
+.inf-feed-txt{font-size:11.5px;font-weight:700}
+.inf-feed-loc{font-size:10px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.inf-feed-right{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.inf-feed-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:800;color:#fff;flex-shrink:0}
+.inf-feed-votes{display:flex;flex-direction:column;gap:2px}
+.inf-feed-votes .inf-vbtn{border:0;background:transparent;padding:0;display:flex;align-items:center;gap:2px;font-size:9px;font-weight:700;color:var(--muted2);cursor:pointer;font-family:inherit}
+.inf-feed-votes .inf-vbtn.up.on{color:#22C55E}
+.inf-feed-votes .inf-vbtn.dn.on{color:var(--red)}
+.inf-empty-feed{padding:18px 14px;text-align:center;color:var(--muted);font-size:12.5px;font-weight:600}
+/* áreas atendidas (bairros) — chips maiores, roláveis, agrupadas */
+.inf-area-grp-lbl{display:flex;align-items:center;gap:6px;padding:8px 14px 6px}
+.inf-area-grp-name{font-size:12.5px;font-weight:800;color:var(--text)}
+.inf-area-grp-dot{width:6px;height:6px;border-radius:50%;background:#22C55E}
+.inf-bchip-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:0 14px}
+.inf-bchip-scroll::-webkit-scrollbar{display:none}
+.inf-bchip-scroll.inf-fill-scroll{flex:1;display:flex;align-items:stretch}
+.inf-bchip-2row{display:grid;grid-template-rows:repeat(2,auto);grid-auto-flow:column;grid-auto-columns:192px;gap:10px;min-width:max-content}
+.inf-bchip-1row{display:grid;grid-template-rows:repeat(1,auto);grid-auto-flow:column;grid-auto-columns:208px;gap:10px;min-width:max-content}
+.inf-fill-scroll .inf-bchip-1row{height:100%}
+.inf-bchip{border-radius:16px!important;padding:16px 15px 15px!important;gap:9px!important}
+.inf-fill-scroll .inf-bchip{height:100%;justify-content:center}
+.inf-bchip-ic{width:36px!important;height:36px!important;border-radius:11px!important}
+.inf-bchip-name{font-size:14px!important;line-height:1.25!important}
+.inf-bchip-ct{font-size:10px!important;padding:2px 7px!important}
+/* listas de venues (bares/hotéis/eventos/turístico/shoppings) */
+.inf-vlist{padding:0 14px}
+.inf-vitem{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border:1.5px solid var(--line);border-radius:13px;margin-bottom:7px;cursor:pointer}
+.inf-vitem:active{background:var(--soft)}
+.inf-vitem-ic{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-vitem-name{font-size:12.5px;font-weight:700}
+.inf-vitem-sub{font-size:10.5px;color:var(--muted);margin-top:1px}
+.inf-vitem-ct{margin-left:auto;font-size:9px;font-weight:800;background:var(--red);color:#fff;border-radius:99px;padding:2px 7px;flex-shrink:0}
+.inf-vitem-ct.z{background:var(--line);color:var(--muted)}
 .inf-ccard-ct{position:absolute;top:5px;right:5px;font-size:8px;font-weight:800;background:var(--red);color:#fff;border-radius:99px;padding:1px 4px}
 /* painel de informes full-screen */
 .inf-panel{position:fixed;left:0;right:0;top:100%;bottom:0;background:var(--card);z-index:110;transition:top .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}
@@ -627,7 +698,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .inf-rep-wrap{padding:9px 14px 14px;flex-shrink:0}
 .inf-rep-btn{width:100%;height:48px;border-radius:14px;border:0;background:#F59E0B;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px}
 /* Overlay sheets */
-.inf-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:40;opacity:0;pointer-events:none;transition:opacity .2s;display:flex;align-items:flex-end;justify-content:center}
+.inf-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:120;opacity:0;pointer-events:none;transition:opacity .2s;display:flex;align-items:flex-end;justify-content:center}
 .inf-ov.open{opacity:1;pointer-events:all}
 .inf-sheet{background:var(--card);border-radius:24px 24px 0 0;padding:14px 16px 38px;width:100%;max-width:430px;transform:translateY(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);max-height:88vh;overflow-y:auto}
 .inf-ov.open .inf-sheet{transform:translateY(0)}
@@ -1252,131 +1323,122 @@ h1.hd-title{font-family:var(--font-brand)!important}
 
 <!-- ══ TELA MAIS ══════════════════════════════════════════════════════════ -->
 <div class="screen" id="sc-informes">
-  <!-- topbar -->
+  <!-- topbar: linha 1 = filtro de tempo + cidade | linha 2 = busca -->
   <div class="inf-topbar" id="inf-topbar">
-    <!-- Botão voltar (visível ao entrar em venue) / Home (padrão) -->
-    <button id="inf-back-btn" style="display:none" class="inf-home-btn-blue" onclick="infFecharVenueSheet()">
-      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
-    </button>
-    <button id="inf-home-btn" class="inf-home-btn-blue" onclick="navTo('home')">
-      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="2.5"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
-    </button>
-    <!-- Busca fixa — sempre visível, largura estável -->
+    <div class="inf-topbar-row1">
+      <div class="inf-time-pill">
+        <button class="inf-tp" onclick="infSetTime(this,'30')">30m</button>
+        <button class="inf-tp active" id="inf-tp-active" onclick="infSetTime(this,'60')">1h</button>
+        <button class="inf-tp" onclick="infSetTime(this,'240')">4h</button>
+      </div>
+      <div class="inf-city"><div class="inf-city-dot"></div><span>Rio de Janeiro</span></div>
+    </div>
     <div class="inf-search-fixed">
       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input id="inf-search-bar" type="text" placeholder="Buscar local…" oninput="infBuscarGlobal(this.value)">
     </div>
-    <!-- Direita: filtros fixos — nunca se movem -->
-    <div class="inf-topbar-right">
-      <div class="inf-city"><div class="inf-city-dot"></div><span>Rio</span></div>
-      <div class="inf-time-pill">
-        <button class="inf-tp" onclick="infSetTime(this,'5')">5m</button>
-        <button class="inf-tp active" id="inf-tp-active" onclick="infSetTime(this,'15')">15m</button>
-        <button class="inf-tp" onclick="infSetTime(this,'60')">1h</button>
-      </div>
-    </div>
   </div>
   <div class="inf-search-dd" id="inf-search-dd"></div>
 
-  <div id="inf-scroll-content"><!-- 4 destaques 2x2 -->
-  <div class="inf-sec-lbl">Destaques</div>
-  <div class="inf-feat-grid">
-    <div class="inf-feat" id="inf-fl-gig" onclick="infAbrirLocal(this,'Galeão (GIG)','aero')">
-      <div class="inf-feat-bar"></div>
-      <div class="inf-feat-ct" id="inf-ct-gig">–</div>
-      <div class="inf-feat-ic" style="background:#EFF6FF"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#0A2F6B" stroke-width="2"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></div>
-      <div class="inf-feat-name">Galeão</div>
-    </div>
-    <div class="inf-feat" id="inf-fl-sdu" onclick="infAbrirLocal(this,'Santos Dumont (SDU)','aero')">
-      <div class="inf-feat-bar"></div>
-      <div class="inf-feat-ct" id="inf-ct-sdu">–</div>
-      <div class="inf-feat-ic" style="background:#EFF6FF"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#0A2F6B" stroke-width="2"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></div>
-      <div class="inf-feat-name">Santos Dumont</div>
-    </div>
-    <div class="inf-feat" id="inf-fl-rod" onclick="infAbrirLocal(this,'Rodoviária Novo Rio','term')">
-      <div class="inf-feat-bar"></div>
-      <div class="inf-feat-ct" id="inf-ct-rod">–</div>
-      <div class="inf-feat-ic" style="background:#EEF2FF"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#6366F1" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
-      <div class="inf-feat-name">Rodoviária</div>
-    </div>
-    <div class="inf-feat inf-gps" onclick="infAbrirGps()">
-      <div class="inf-feat-ct">GPS</div>
-      <div class="inf-feat-ic"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div>
-      <div class="inf-feat-name">Minha área</div>
+  <!-- abas -->
+  <div class="inf-tabs-wrap">
+    <div class="inf-tabs" id="inf-tabs">
+      <button class="inf-tab active" data-tab="agora" onclick="infTab('agora')">Agora</button>
+      <button class="inf-tab" data-tab="aero" onclick="infTab('aero')">Aeroportos</button>
+      <button class="inf-tab" data-tab="rod" onclick="infTab('rod')">Rodoviárias</button>
+      <button class="inf-tab" data-tab="bairros" onclick="infTab('bairros')">Bairros</button>
+      <button class="inf-tab" data-tab="shop" onclick="infTab('shop')">Shoppings</button>
+      <button class="inf-tab" data-tab="bares" onclick="infTab('bares')">Bares</button>
+      <button class="inf-tab" data-tab="hoteis" onclick="infTab('hoteis')">Hotéis</button>
+      <button class="inf-tab" data-tab="eventos" onclick="infTab('eventos')">Eventos</button>
+      <button class="inf-tab" data-tab="tur" onclick="infTab('tur')">Turístico</button>
     </div>
   </div>
 
-  <!-- FAVORITOS -->
-  <div class="inf-favs" id="inf-favs-section">
-    <div class="inf-favs-lbl">
-      <span>Favoritos</span>
-      <a onclick="infEditarFavs()">Editar</a>
-    </div>
-    <div class="inf-favs-row" id="inf-favs-row">
-      <!-- renderizado pelo JS via infRenderFavs() -->
-    </div>
-  </div>
+  <div id="inf-scroll-content">
 
-  <!-- zonas + bairros inline -->
-  <div class="inf-sec-lbl">Bairros por zona</div>
-  <div id="inf-zona-section">
-    <div class="inf-zona-grid" id="inf-zona-grid">
-      <div class="inf-zcard" onclick="infAbrirZona('sul')">
-        <div class="inf-zcard-top"><div class="inf-zcard-ic" style="background:#F1F5F9"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#475569" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.333-8 14-8 14S4 15.333 4 10a8 8 0 0 1 8-8z"/></svg></div><div class="inf-zcard-ct" id="inf-zct-sul">–</div></div>
-        <div class="inf-zcard-name">Zona Sul</div><div class="inf-zcard-sub">Copa · Ipanema · Leblon +5</div>
+    <!-- ═══ ABA: AGORA ═══ -->
+    <div class="inf-panelbody inf-fill" id="inf-tab-agora">
+      <div class="inf-sec-lbl">Minha área</div>
+      <div class="inf-featF" id="inf-minha-card" style="background:linear-gradient(135deg,#0EA5E9,#0284C7);border-color:transparent;padding:20px 18px 19px" onclick="infAbrirGps()">
+        <div class="inf-featF-top">
+          <div class="inf-featF-id">
+            <div class="inf-featF-ic" style="background:rgba(255,255,255,.2);width:44px;height:44px;border-radius:12px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div>
+            <div><div class="inf-featF-name" style="color:#fff;font-size:18px">Minha área</div><div class="inf-featF-sub" id="inf-minha-sub" style="color:rgba(255,255,255,.75)">Raio de 300m · toque para ver ruas</div></div>
+          </div>
+          <div class="inf-featF-ct" id="inf-minha-ct" style="display:none">0</div>
+        </div>
+        <div class="inf-featF-mini" id="inf-minha-mini" style="background:rgba(255,255,255,.16);display:none"></div>
       </div>
-      <div class="inf-zcard" onclick="infAbrirZona('norte')">
-        <div class="inf-zcard-top"><div class="inf-zcard-ic" style="background:#F1F5F9"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#475569" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.333-8 14-8 14S4 15.333 4 10a8 8 0 0 1 8-8z"/></svg></div><div class="inf-zcard-ct" id="inf-zct-norte">–</div></div>
-        <div class="inf-zcard-name">Zona Norte</div><div class="inf-zcard-sub">Tijuca · Maracanã · Méier +4</div>
-      </div>
-      <div class="inf-zcard" onclick="infAbrirZona('oeste')">
-        <div class="inf-zcard-top"><div class="inf-zcard-ic" style="background:#F1F5F9"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#475569" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.333-8 14-8 14S4 15.333 4 10a8 8 0 0 1 8-8z"/></svg></div><div class="inf-zcard-ct" id="inf-zct-oeste">–</div></div>
-        <div class="inf-zcard-name">Zona Oeste</div><div class="inf-zcard-sub">Barra · Recreio · Jacarepaguá +2</div>
-      </div>
-      <div class="inf-zcard" onclick="infAbrirZona('centro')">
-        <div class="inf-zcard-top"><div class="inf-zcard-ic" style="background:#F1F5F9"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#475569" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.333-8 14-8 14S4 15.333 4 10a8 8 0 0 1 8-8z"/></svg></div><div class="inf-zcard-ct" id="inf-zct-centro">–</div></div>
-        <div class="inf-zcard-name">Centro</div><div class="inf-zcard-sub">Lapa · Santa Teresa · Glória +3</div>
-      </div>
-    </div>
-    <div class="inf-bairros-inline" id="inf-bairros-inline">
-      <div class="inf-bairros-back">
-        <button class="inf-bairros-back-btn" onclick="infVoltarZonas()">
-          <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>Zonas
-        </button>
-        <span class="inf-bairros-zona-nome" id="inf-bairros-zona-nome"></span>
-      </div>
-      <div class="inf-bairros-scroll-wrap">
-        <div class="inf-bchip-grid" id="inf-bchip-grid"></div>
-      </div>
-    </div>
-  </div>
 
-  <div style="height:90px"></div>
+      <div class="inf-sec-lbl">Informe da área</div>
+      <div class="inf-feed-list" id="inf-feed-area" style="margin-bottom:2px"><div class="inf-empty-feed">Ative o GPS pra ver os informes perto de você</div></div>
+
+      <div class="inf-sec-lbl">Últimos informes</div>
+      <div class="inf-feed-list inf-feed-fill" id="inf-feed-city"><div class="inf-empty-feed">Carregando…</div></div>
+    </div>
+
+    <!-- ═══ ABA: AEROPORTOS ═══ -->
+    <div class="inf-panelbody hide" id="inf-tab-aero">
+      <div class="inf-featF" onclick="infAbrirLocal(this,'Galeão (GIG)','aero')">
+        <div class="inf-featF-top">
+          <div class="inf-featF-id">
+            <div class="inf-featF-ic" style="background:#EFF6FF"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#0A2F6B" stroke-width="2"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></div>
+            <div><div class="inf-featF-name">Galeão <svg class="inf-featF-mode" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg></div><div class="inf-featF-sub">Terminal 1 e 2</div></div>
+          </div>
+          <div class="inf-featF-ct" id="inf-ct-gig">–</div>
+        </div>
+        <div class="inf-featF-mini" id="inf-mini-gig"></div>
+        <div class="inf-featF-arriving"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg>Chegando: — (em breve via FlightRadar)</div>
+      </div>
+      <div class="inf-featF" onclick="infAbrirLocal(this,'Santos Dumont (SDU)','aero')">
+        <div class="inf-featF-top">
+          <div class="inf-featF-id">
+            <div class="inf-featF-ic" style="background:#EFF6FF"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#0A2F6B" stroke-width="2"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></div>
+            <div><div class="inf-featF-name">Santos Dumont <svg class="inf-featF-mode" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg></div><div class="inf-featF-sub">Centro</div></div>
+          </div>
+          <div class="inf-featF-ct" id="inf-ct-sdu">–</div>
+        </div>
+        <div class="inf-featF-mini" id="inf-mini-sdu"></div>
+        <div class="inf-featF-arriving"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg>Chegando: — (em breve via FlightRadar)</div>
+      </div>
+    </div>
+
+    <!-- ═══ ABA: RODOVIÁRIAS ═══ -->
+    <div class="inf-panelbody hide" id="inf-tab-rod">
+      <div class="inf-featF" onclick="infAbrirLocal(this,'Rodoviária Novo Rio','term')">
+        <div class="inf-featF-top">
+          <div class="inf-featF-id">
+            <div class="inf-featF-ic" style="background:#EEF2FF"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#6366F1" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+            <div><div class="inf-featF-name">Rodoviária Novo Rio <svg class="inf-featF-mode" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="4" width="16" height="12" rx="2.5"/><path d="M4 11h16"/><path d="M7.5 16v2M16.5 16v2"/></svg></div><div class="inf-featF-sub">Santo Cristo</div></div>
+          </div>
+          <div class="inf-featF-ct" id="inf-ct-rod">–</div>
+        </div>
+        <div class="inf-featF-mini" id="inf-mini-rod"></div>
+        <div class="inf-featF-arriving"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="4" width="16" height="12" rx="2.5"/><path d="M4 11h16"/><path d="M7.5 16v2M16.5 16v2"/></svg>Chegando: — (em breve via sistema da rodoviária)</div>
+      </div>
+    </div>
+
+    <!-- ═══ ABA: BAIRROS ═══ -->
+    <div class="inf-panelbody hide inf-fill" id="inf-tab-bairros">
+      <div class="inf-area-grp-lbl"><div class="inf-area-grp-dot"></div><span class="inf-area-grp-name">Zona Sul</span></div>
+      <div class="inf-bchip-scroll">
+        <div class="inf-bchip-2row" id="inf-bchip-sul"></div>
+      </div>
+      <div class="inf-area-grp-lbl"><div class="inf-area-grp-dot"></div><span class="inf-area-grp-name">Barra / Recreio</span></div>
+      <div class="inf-bchip-scroll inf-fill-scroll">
+        <div class="inf-bchip-1row" id="inf-bchip-barra"></div>
+      </div>
+    </div>
+
+    <!-- ═══ ABAS: SHOPPINGS / BARES / HOTÉIS / EVENTOS / TURÍSTICO ═══ -->
+    <div class="inf-panelbody hide" id="inf-tab-shop"><div class="inf-vlist" id="inf-vlist-shoppings"></div></div>
+    <div class="inf-panelbody hide" id="inf-tab-bares"><div class="inf-vlist" id="inf-vlist-bares"></div></div>
+    <div class="inf-panelbody hide" id="inf-tab-hoteis"><div class="inf-vlist" id="inf-vlist-hoteis"></div></div>
+    <div class="inf-panelbody hide" id="inf-tab-eventos"><div class="inf-vlist" id="inf-vlist-eventos"></div></div>
+    <div class="inf-panelbody hide" id="inf-tab-tur"><div class="inf-vlist" id="inf-vlist-turistico"></div></div>
+
   </div><!-- /inf-scroll-content -->
-
-  <!-- 4 categorias fixas -->
-  <div class="inf-cat-row">
-    <div class="inf-ccard" onclick="infAbrirVenue('bares')">
-      <div class="inf-ccard-ct" id="inf-cct-bares">–</div>
-      <div class="inf-ccard-ic" style="background:#EDE9FE"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#8B5CF6" stroke-width="2"><path d="M17 11H3v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1z"/><path d="M3 11v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg></div>
-      <div class="inf-ccard-name">Bares e Rest.</div>
-    </div>
-    <div class="inf-ccard" onclick="infAbrirVenue('hoteis')">
-      <div class="inf-ccard-ct" id="inf-cct-hoteis">–</div>
-      <div class="inf-ccard-ic" style="background:#FDF2F8"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#EC4899" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M2 12h20"/><path d="M8 7V5a4 4 0 0 1 8 0v2"/></svg></div>
-      <div class="inf-ccard-name">Hotéis</div>
-    </div>
-    <div class="inf-ccard" onclick="infAbrirVenue('eventos')">
-      <div class="inf-ccard-ct" id="inf-cct-eventos">–</div>
-      <div class="inf-ccard-ic" style="background:#FFF7ED"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#F59E0B" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg></div>
-      <div class="inf-ccard-name">Eventos</div>
-    </div>
-    <div class="inf-ccard" onclick="infAbrirVenue('turistico')">
-      <div class="inf-ccard-ct" id="inf-cct-turistico">–</div>
-      <div class="inf-ccard-ic" style="background:#F0FDF4"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#22C55E" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
-      <div class="inf-ccard-name">Turístico</div>
-    </div>
-  </div>
 
   <!-- painel de informes full-screen -->
   <div class="inf-panel" id="inf-panel">
@@ -1417,7 +1479,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
     </div>
   </div>
 
-  <!-- Sheet: venue list -->
+  <!-- Sheet: venue list (usado como fallback de busca detalhada) -->
   <div class="inf-ov" id="inf-ov-venue">
     <div class="inf-sheet">
       <div class="inf-sh-handle"></div>
@@ -1446,7 +1508,6 @@ h1.hd-title{font-family:var(--font-brand)!important}
     </div>
   </div>
 </div>
-
 <div class="screen" id="sc-mais">
   <div style="padding:16px 16px 8px"><div style="font-size:22px;font-weight:800;letter-spacing:-.04em">Mais</div></div>
   <div id="mais-modules" style="padding:0 16px;display:flex;flex-direction:column;gap:10px"></div>
@@ -2024,7 +2085,7 @@ const MODULE_ICONS_COLOR = {blue:'#0A2F6B', purple:'#7C3AED', green:'#22C55E', o
 function navTo(sec) {
   // Ocultar/mostrar nav na tela de Informes (o painel usa z-index alto mas o cat-row precisa da nav escondida)
   const bottomNav = document.querySelector('.bottom');
-  if (bottomNav) bottomNav.style.display = sec === 'informes' ? 'none' : 'flex';
+  if (bottomNav) bottomNav.style.display = 'flex';
   document.querySelectorAll('.screen').forEach(s => {
     s.classList.remove('on');
     s.style.display = '';  // limpa inline style para CSS funcionar
@@ -2061,6 +2122,7 @@ function navTo(sec) {
   }
   if (sec === 'mais')       renderMais();
   if (sec === 'agenda')     { setAgView(agView || 'resumo'); }
+  if (sec === 'informes')   renderInformes();
 }
 function openSuporte() {
   const el = document.getElementById('suporte-version');
@@ -6955,6 +7017,9 @@ const INF_TIPOS = {
   hotel: {cor:'#EC4899',bg:'#FDF2F8',label:'Hotel',
     r1:['demanda','lotacao'], r2:['dinamico'],
     modal:['lotacao','fila','demanda','fiscalizacao']},
+  shop:  {cor:'#B45309',bg:'#FEF3C7',label:'Shopping',
+    r1:['demanda','lotacao'], r2:['transito','fiscalizacao','dinamico'],
+    modal:['lotacao','fila','demanda','fiscalizacao','dinamico']},
 };
 const INF_PARAMS = {
   transito:    {label:'Trânsito',     expMin:30, opts:[{v:'Fluindo',c:'g'},{v:'Leve',c:''},{v:'Lento',c:'a'},{v:'Parado',c:'r'}]},
@@ -6971,6 +7036,8 @@ const INF_BAIRROS = {
   norte: ['Tijuca','Maracanã','Vila Isabel','Méier','Penha','Niterói','Ilha do Gov.','Ramos','Engenho'],
   oeste: ['Barra da Tijuca','Recreio','Jacarepaguá','Campo Grande','Bangu','Santa Cruz'],
   centro:['Lapa','Cinelândia','Glória','Santa Teresa','Catete','Cosme Velho','Gamboa'],
+  // cobertura inicial da aba Bairros: só Zona Sul + Barra/Recreio (ver Contexto do projeto)
+  barra: ['Barra da Tijuca','Recreio','Vargem Grande','Vargem Pequena','Anil','Joá','Itanhangá','Mangaratiba'],
 };
 const INF_ZNOMES = {sul:'Zona Sul',norte:'Zona Norte',oeste:'Zona Oeste',centro:'Centro'};
 const INF_VENUES = {
@@ -6978,6 +7045,7 @@ const INF_VENUES = {
   hoteis:{titulo:'Hotéis',tipo:'hotel',itens:[{n:'Copacabana Palace',sub:'Copacabana'},{n:'Fairmont Rio',sub:'Copacabana'},{n:'Intercontinental',sub:'São Conrado'},{n:'Windsor Barra',sub:'Barra'},{n:'Sheraton Grand',sub:'Leblon'},{n:'Ibis Copacabana',sub:'Copacabana'},{n:'Arena Hotel',sub:'Barra'}]},
   eventos:{titulo:'Eventos e Shows',tipo:'ev',itens:[{n:'Vivo Rio',sub:'Glória'},{n:'Fundição Progresso',sub:'Lapa'},{n:'Circo Voador',sub:'Lapa'},{n:'Teatro Municipal',sub:'Centro'},{n:'MAM',sub:'Flamengo'},{n:'Maracanã',sub:'Zona Norte'},{n:'Arena Jeunesse',sub:'Barra'}]},
   turistico:{titulo:'Pontos Turísticos',tipo:'tur',itens:[{n:'Museu do Amanhã',sub:'Porto Maravilha'},{n:'Pão de Açúcar',sub:'Urca'},{n:'Arcos da Lapa',sub:'Lapa'},{n:'Cristo Redentor',sub:'Corcovado'},{n:'Jardim Botânico',sub:'Lagoa'},{n:'MAM',sub:'Flamengo'},{n:'Quinta da Boa Vista',sub:'São Cristóvão'}]},
+  shoppings:{titulo:'Shoppings',tipo:'shop',itens:[{n:'BarraShopping',sub:'Barra da Tijuca'},{n:'VillageMall',sub:'Barra da Tijuca'},{n:'NorteShopping',sub:'Zona Norte'},{n:'Rio Design Leblon',sub:'Leblon'}]},
 };
 const INF_SDBDB = [
   // Aeroportos e terminais
@@ -7007,7 +7075,111 @@ let _infFavs=JSON.parse(localStorage.getItem('sm_inf_favs')||'[]');
 const INF_AVC=['#6D28D9','#0369A1','#B45309','#0F766E','#15803D','#BE123C','#7C3AED','#0284C7'];
 const INF_BADGE={dinamico:'infbd',transito:'infbt',fiscalizacao:'infbf',fila:'infbfi',demanda:'infbde',lotacao:'infblo',acidente:'infbac'};
 
-function renderInformes(){ infCarregarContagens(); infRenderFavs(); }
+function renderInformes(){
+  infCarregarContagens();
+  infRenderBairrosTab();
+  infRenderVenueLists();
+  infCarregarFeedCidade();
+  infCarregarMinhaArea();
+}
+
+function infTab(id){
+  document.querySelectorAll('.inf-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));
+  document.querySelectorAll('#inf-scroll-content > .inf-panelbody').forEach(p=>p.classList.add('hide'));
+  const p=document.getElementById('inf-tab-'+id);if(p)p.classList.remove('hide');
+}
+
+function infRenderBairrosTab(){
+  const bic=`<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#475569" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.333-8 14-8 14S4 15.333 4 10a8 8 0 0 1 8-8z"/></svg>`;
+  const chip=b=>`<div class="inf-bchip" onclick="infAbrirLocal(this,'${b}','bairro')"><div class="inf-bchip-ct z">–</div><div class="inf-bchip-ic">${bic}</div><div class="inf-bchip-name">${b}</div></div>`;
+  const sulEl=document.getElementById('inf-bchip-sul');if(sulEl)sulEl.innerHTML=INF_BAIRROS.sul.map(chip).join('');
+  const barraEl=document.getElementById('inf-bchip-barra');if(barraEl)barraEl.innerHTML=INF_BAIRROS.barra.map(chip).join('');
+  infCarregarContagens();
+}
+
+function infRenderVenueLists(){
+  Object.entries({shoppings:'shoppings',bares:'bares',hoteis:'hoteis',eventos:'eventos',turistico:'turistico'}).forEach(([tabKey,venueKey])=>{
+    const el=document.getElementById('inf-vlist-'+tabKey);if(!el)return;
+    const v=INF_VENUES[venueKey];if(!v)return;
+    const t=INF_TIPOS[v.tipo]||INF_TIPOS.bairro;
+    el.innerHTML=v.itens.map(item=>`<div class="inf-vitem" onclick="infAbrirLocal(this,'${item.n.replace(/'/g,"\\'")}','${v.tipo}')">
+      <div class="inf-vitem-ic" style="background:${t.bg}">${infIconSvg(v.tipo,t.cor,15)}</div>
+      <div><div class="inf-vitem-name">${item.n}</div><div class="inf-vitem-sub">${item.sub||''}</div></div>
+      <div class="inf-vitem-ct z">–</div>
+    </div>`).join('');
+  });
+  infCarregarContagens();
+}
+
+// ── Feed genérico: renderiza uma lista de informes com avatar + votos ──
+function infRenderFeedList(elId,informes,vazioMsg){
+  const el=document.getElementById(elId);if(!el)return;
+  if(!informes||!informes.length){el.innerHTML=`<div class="inf-empty-feed">${vazioMsg}</div>`;return;}
+  el.innerHTML=informes.map(inf=>{
+    const badge=INF_BADGE[inf.param_type]||'infbt';
+    const t=INF_TIPOS.bairro; // ícone de fallback visual, cor vem do badge
+    const lbl=INF_PLBL[inf.param_type]||inf.param_type;
+    const desc=lbl+' · '+(inf.param_value||'')+(inf.param_detail?' · '+inf.param_detail:'');
+    const ageMin=Math.max(0,Math.round((Date.now()-new Date(inf.created_at))/60000));
+    const ageStr=ageMin<1?'agora':'há '+ageMin+' min';
+    const av=INF_AVC[Math.abs((inf.user_id||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0))%INF_AVC.length];
+    const ltr=(inf.user_id||'MO').slice(0,2).toUpperCase();
+    return`<div class="inf-feed-row" onclick="infAbrirLocal(null,'${(inf.location_name||'').replace(/'/g,"\\'")}','bairro')">
+      <div class="inf-feed-ic ${badge}">${INF_PICONS[inf.param_type]||''}</div>
+      <div class="inf-feed-body"><div class="inf-feed-txt">${desc}</div><div class="inf-feed-loc">${inf.location_name||''} · ${ageStr}</div></div>
+      <div class="inf-feed-right">
+        <div class="inf-feed-av" style="background:${av}">${ltr}</div>
+        <div class="inf-feed-votes inf-votes">
+          <button class="inf-vbtn up" onclick="event.stopPropagation();infVotar('${inf.id}','up',this)"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>${inf.votes_up||0}</button>
+          <button class="inf-vbtn dn" onclick="event.stopPropagation();infVotar('${inf.id}','dn',this)"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>${inf.votes_dn||0}</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function infCarregarFeedCidade(){
+  if(!_SUPA){infRenderFeedList('inf-feed-city',[],'Sem conexão');return;}
+  try{
+    const{data}=await _SUPA.from('informes')
+      .select('*').eq('is_active',true)
+      .gt('expires_at',new Date().toISOString())
+      .order('created_at',{ascending:false}).limit(20);
+    infRenderFeedList('inf-feed-city',data,'Nenhum informe recente · seja o primeiro a reportar!');
+  }catch(e){console.warn('feed cidade',e);infRenderFeedList('inf-feed-city',[],'Erro ao carregar');}
+}
+
+// ── Minha área: geolocaliza, acha o bairro mais próximo e carrega stats + feed local ──
+async function infCarregarMinhaArea(){
+  const subEl=document.getElementById('inf-minha-sub');
+  const ctEl=document.getElementById('inf-minha-ct');
+  const miniEl=document.getElementById('inf-minha-mini');
+  if(!navigator.geolocation){infRenderFeedList('inf-feed-area',[],'GPS não disponível');return;}
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    try{
+      const{latitude:lat,longitude:lon}=pos.coords;
+      const revR=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&zoom=16&format=json&accept-language=pt`,{headers:{'User-Agent':'MoB/1.0'}});
+      const rev=await revR.json();
+      const bairro=rev.address?.suburb||rev.address?.neighbourhood||rev.address?.city_district||'';
+      if(subEl)subEl.textContent=(bairro?bairro+' · ':'')+'raio de 300m';
+      if(!_SUPA||!bairro)return;
+      const{data}=await _SUPA.from('informes')
+        .select('*').eq('location_name',bairro).eq('is_active',true)
+        .gt('expires_at',new Date().toISOString())
+        .order('created_at',{ascending:false}).limit(10);
+      const n=data?data.length:0;
+      if(ctEl){ctEl.style.display=n>0?'flex':'none';ctEl.textContent=n;}
+      if(miniEl && n>0){
+        const pp={};(data||[]).forEach(r=>{if(!pp[r.param_type])pp[r.param_type]=r;});
+        const stat=(pid)=>{const inf=pp[pid];if(!inf)return'';
+          return`<div class="inf-featF-mstat"><span class="inf-featF-mstat-ic" style="color:#fff">${INF_PICONS[pid]||''}</span><span class="inf-featF-mstat-val" style="color:#fff">${inf.param_value}</span></div>`;};
+        const html=Object.keys(pp).slice(0,6).map(stat).join('');
+        if(html){miniEl.innerHTML=html;miniEl.style.display='grid';}
+      }
+      infRenderFeedList('inf-feed-area',(data||[]).slice(0,3),'Nenhum informe recente na sua área');
+    }catch(e){console.warn('minha area',e);infRenderFeedList('inf-feed-area',[],'Erro ao carregar');}
+  },()=>{if(subEl)subEl.textContent='Permissão de GPS negada';infRenderFeedList('inf-feed-area',[],'Ative o GPS pra ver os informes perto de você');},{timeout:10000,enableHighAccuracy:true});
+}
 
 async function infCarregarContagens(){
   if(!_SUPA)return;
@@ -7036,11 +7208,17 @@ async function infCarregarContagens(){
       const total=itens.reduce((s,i)=>s+(cnt[i.n]||0),0);
       const el=document.getElementById('inf-cct-'+cat);if(el)el.textContent=total||'–';
     });
+    // Badges individuais nas listas de venues das abas (bares/hotéis/eventos/turístico/shoppings)
+    document.querySelectorAll('.inf-vitem-ct').forEach(el=>{
+      const nome=el.closest('.inf-vitem')?.querySelector('.inf-vitem-name')?.textContent||'';
+      const n=cnt[nome]||0;
+      el.textContent=n||'–';el.className='inf-vitem-ct'+(n===0?' z':'');
+    });
   }catch(e){console.warn('inf cnt',e);}
 }
 
 function infAbrirLocal(el,nome,tipoKey){
-  document.querySelectorAll('.inf-feat,.inf-bchip,.inf-zcard').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.inf-feat,.inf-featF,.inf-bchip,.inf-zcard,.inf-vitem').forEach(b=>b.classList.remove('active'));
   if(el)el.classList.add('active');
   _infLoc=nome;_infTipoKey=tipoKey;
   const t=INF_TIPOS[tipoKey]||INF_TIPOS.bairro;
@@ -7052,10 +7230,6 @@ function infAbrirLocal(el,nome,tipoKey){
   document.getElementById('inf-panel-meta').textContent='Carregando…';
   document.getElementById('inf-panel-fav').classList.toggle('on',_infFavs.some(f=>f.n===nome));
   document.getElementById('inf-panel').classList.add('open');
-  const _ibb=document.getElementById('inf-back-btn');
-  const _ihb=document.getElementById('inf-home-btn');
-  if (_ibb) _ibb.style.display='flex';
-  if (_ihb) _ihb.style.display='none';
   infCarregarInformes(nome,tipoKey);
   // Realtime: assina novos informes para esse local
   infSubscribeRealtime(nome,tipoKey);
@@ -7153,12 +7327,7 @@ async function infVotar(infId,vote,btn){
 
 function infFecharPainel(){
   document.getElementById('inf-panel').classList.remove('open');
-  const bn=document.querySelector('.bottom');if(bn)bn.style.display='none'; // informes mantém nav escondido, navTo restaura ao sair
-  const _ibb2=document.getElementById('inf-back-btn');
-  const _ihb2=document.getElementById('inf-home-btn');
-  if (_ibb2) _ibb2.style.display='none';
-  if (_ihb2) _ihb2.style.display='flex';
-  document.querySelectorAll('.inf-feat,.inf-bchip,.inf-zcard').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.inf-feat,.inf-featF,.inf-bchip,.inf-zcard,.inf-vitem').forEach(b=>b.classList.remove('active'));
   infUnsubscribeRealtime();
 }
 let _infChannel=null;
@@ -7413,7 +7582,7 @@ function infFiltrarSheet(inp,listId){
 }
 function infIconSvg(tipo,cor,sz){
   const a=`viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="none" stroke="${cor}" stroke-width="2"`;
-  const m={aero:`<svg ${a}><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>`,term:`<svg ${a}><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,bairro:`<svg ${a}><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.333-8 14-8 14S4 15.333 4 10a8 8 0 0 1 8-8z"/></svg>`,rua:`<svg ${a}><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>`,ev:`<svg ${a}><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>`,tur:`<svg ${a}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`,bar:`<svg ${a}><path d="M17 11H3v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1z"/><path d="M3 11v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>`,hotel:`<svg ${a}><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M2 12h20"/><path d="M8 7V5a4 4 0 0 1 8 0v2"/></svg>`};
+  const m={aero:`<svg ${a}><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>`,term:`<svg ${a}><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,bairro:`<svg ${a}><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.333-8 14-8 14S4 15.333 4 10a8 8 0 0 1 8-8z"/></svg>`,rua:`<svg ${a}><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>`,ev:`<svg ${a}><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>`,tur:`<svg ${a}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`,bar:`<svg ${a}><path d="M17 11H3v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1z"/><path d="M3 11v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>`,hotel:`<svg ${a}><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M2 12h20"/><path d="M8 7V5a4 4 0 0 1 8 0v2"/></svg>`,shop:`<svg ${a}><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>`};
   return m[tipo]||m.bairro;
 }
 // Gesto swipe down para fechar o painel
