@@ -680,8 +680,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .jss-badge.end{background:#EFF6FF;color:#0369A1}
 .jss-sub{font-size:11.5px;color:var(--muted);font-weight:600}
 .jss-chev{flex-shrink:0;color:var(--muted2);transition:transform .22s;display:flex;align-items:center}
-.jss-card.open .jss-chev{transform:rotate(180deg)}
-.jss-kpi-row{display:none;align-items:center;padding:0 14px 11px;gap:0}
+.jss-card.open .jss-kpi-row{display:none;align-items:center;padding:0 14px 11px;gap:0}
 .jss-card.open .jss-kpi-row{display:flex}
 .jss-kpi{flex:1;text-align:center}
 .jss-kpi .jv{font-size:14px;font-weight:800;letter-spacing:-.03em;display:block}
@@ -965,7 +964,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
     <button class="goal-edit-link" onclick="openPlanJornada()">Editar jornada planejada</button>
   </div>
 
-  <div class="section" style="padding:0 16px 8px"><h2>Sessões do dia</h2><button class="add" onclick="toggleSessionsView()" id="sessions-toggle" style="display:none">Ver todas &#8250;</button></div>
+  <div class="section" style="padding:0 16px 8px"><h2>Jornadas do dia</h2><button class="add" onclick="toggleSessionsView()" id="sessions-toggle" style="display:none">Ver todas &#8250;</button></div>
   <div style="padding:0 16px"><div id="sessions-list"><div class="empty">Nenhuma sessão registrada</div></div></div>
 
   <div class="section" style="padding:16px 16px 8px"><h2>Corridas</h2><button class="add" onclick="navTo('corridas')" id="trips-toggle">Ver todas &#8250;</button></div>
@@ -2041,7 +2040,19 @@ function navTo(sec) {
   const ms = document.getElementById('main-scroll');
   if (ms) ms.scrollTop = 0;
   if (sec === 'home')       renderHome();
-  if (sec === 'jornada')    renderJornada();
+  if (sec === 'jornada') {
+    // Verificar status da sessão no Supabase pra garantir cor correta do card
+    if (_supaUser && S.gps.st !== 'idle' && S.gps.sessionId) {
+      _SUPA.from('sessions').select('id,end_ms').eq('id',S.gps.sessionId).maybeSingle()
+        .then(({data}) => {
+          if (data && data.end_ms) { // sessão encerrada no Supabase mas não localmente
+            S.gps.st='idle'; S.gps.start=null;
+            clearInterval(S.gps.ti);
+          }
+          renderJornada();
+        }).catch(()=>renderJornada());
+    } else { renderJornada(); }
+  }
   if (sec === 'financeiro') renderFin();
   if (sec === 'lancamentos') renderLancamentos();
   if (sec === 'corridas') {
@@ -2857,9 +2868,9 @@ function renderJornada() {
   if (sessEl) {
     const total = (day.sessions||[]).length;
     const finishedAll = (day.sessions||[]).slice().reverse()
-      .map((s,ri)=>sessionItem('Sessão '+(total-ri), s, total-1-ri, S.curDate, day, false));
+      .map((s,ri)=>sessionItem('Jornada '+(total-ri), s, total-1-ri, S.curDate, day, false));
     const finishedShown = S.sessionsExpanded ? finishedAll : finishedAll.slice(0,3);
-    const liveRow = (isToday && S.gps.st==='running') ? [sessionItem('Sessão atual', {start:S.gps.start,end:null,km:S.gps.km,elapsed:getElapsed()}, -1, S.curDate, day, true)] : [];
+    const liveRow = (isToday && S.gps.st==='running') ? [sessionItem('Jornada atual', {start:S.gps.start,end:null,km:S.gps.km,elapsed:getElapsed()}, -1, S.curDate, day, true)] : [];
     const rows = [...liveRow, ...finishedShown];
     sessEl.innerHTML = rows.length ? rows.join('') : '<div class="empty">Nenhuma sessão registrada</div>';
   }
@@ -2926,7 +2937,7 @@ function renderJourneyCard(day, isToday) {
   setText('jc-timer', p2(th)+':'+p2(tm)+':'+p2(ts));
   setText('jc-sub',
     state === 'running' ? 'Sessão atual · iniciada '+fmtHM(g.start) :
-    finished.length > 0 ? finished.length+(finished.length===1?' sessão hoje':' sessões hoje') :
+    finished.length > 0 ? finished.length+(finished.length===1?' jornada hoje':' jornadas hoje') :
     'Nenhuma sessão iniciada'
   );
   setText('jc-km', liveKm.toFixed(1));
@@ -3123,12 +3134,12 @@ function sessionItem(label, sess, origIdx, dateStr, day, live) {
     </div>
     <div class="jss-trips">
       <div class="jss-trips-head">
-        <h4>Corridas desta sessão</h4>
+        <h4>Corridas desta jornada</h4>
         ${corridas > 0 ? `<span>${corridas} corrida${corridas !== 1 ? 's' : ''}</span>` : ''}
       </div>
       ${corridas > 0
         ? trips.map(t => tripItem(t)).join('')
-        : '<div class="jss-trips-empty">Nenhuma corrida encontrada nesta sessão</div>'}
+        : '<div class="jss-trips-empty">Nenhuma corrida nesta jornada</div>'}
     </div>
   </div>`;
 
@@ -4801,6 +4812,14 @@ function gpsStart() {
   }
   syncNavButton();
   persistGps();
+  // Registra imediatamente no Supabase — não espera checkpoint
+  if (_supaUser) {
+    _SUPA.from('sessions').upsert({
+      id: g.sessionId, user_id: _supaUser.id, date: DB.today(),
+      start_ms: g.start, end_ms: null, km: 0, elapsed_secs: 0,
+      paused_ms: 0, is_paused: false
+    }, { onConflict: 'id' }).catch(()=>{});
+  }
   g.ti = setInterval(gpsUpdate, 1000);
   if (navigator.geolocation) {
     g.wid = navigator.geolocation.watchPosition(gpsOnPosition, null, {enableHighAccuracy:true, maximumAge:3000, timeout:10000});
