@@ -902,6 +902,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
 <!-- ══ TELA JORNADA ══════════════════════════════════════════════════════ -->
 <div class="screen" id="sc-jornada">
   <div style="padding:4px 16px 0">
+    <div id="net-status-badge" style="display:none;align-items:center;gap:5px;justify-content:center;padding:4px 10px;border-radius:99px;font-size:10.5px;font-weight:800;margin:0 auto 6px;width:fit-content"><span id="net-status-dot" style="width:6px;height:6px;border-radius:50%"></span><span id="net-status-text"></span></div>
     <div class="daybar">
       <button class="arrow" onclick="chgDay(-1)">&#8249;</button>
       <div class="datebox">
@@ -2041,17 +2042,11 @@ function navTo(sec) {
   if (ms) ms.scrollTop = 0;
   if (sec === 'home')       renderHome();
   if (sec === 'jornada') {
-    // Verificar status da sessão no Supabase pra garantir cor correta do card
-    if (_supaUser && S.gps.st !== 'idle' && S.gps.sessionId) {
-      _SUPA.from('sessions').select('id,end_ms').eq('id',S.gps.sessionId).maybeSingle()
-        .then(({data}) => {
-          if (data && data.end_ms) { // sessão encerrada no Supabase mas não localmente
-            S.gps.st='idle'; S.gps.start=null;
-            clearInterval(S.gps.ti);
-          }
-          renderJornada();
-        }).catch(()=>renderJornada());
-    } else { renderJornada(); }
+    renderJornada(); // render imediato com dado local (nunca trava esperando rede)
+    updateNetStatus();
+    if (_supaUser && navigator.onLine) {
+      reconcileJornadaHoje().then(() => renderJornada()).catch(()=>{});
+    }
   }
   if (sec === 'financeiro') renderFin();
   if (sec === 'lancamentos') renderLancamentos();
@@ -4786,6 +4781,82 @@ async function _autoSyncLocalData() {
 }
 setTimeout(()=>{ _autoSyncLocalData(); setInterval(_autoSyncLocalData,5*60*1000); },2*60*1000);
 
+// ── Status de rede: indicador visual + reconciliação ao voltar online ──
+let _netSyncing = false;
+function updateNetStatus() {
+  const badge = document.getElementById("net-status-badge");
+  const dot = document.getElementById("net-status-dot");
+  const txt = document.getElementById("net-status-text");
+  if (!badge) return;
+  if (!navigator.onLine) {
+    badge.style.display = "flex";
+    badge.style.background = "#FEF2F2";
+    dot.style.background = "#EF4444";
+    txt.style.color = "#B91C1C";
+    txt.textContent = "Offline — dados salvos localmente";
+  } else if (_netSyncing) {
+    badge.style.display = "flex";
+    badge.style.background = "#FFF7ED";
+    dot.style.background = "#F59E0B";
+    txt.style.color = "#C2410C";
+    txt.textContent = "Sincronizando...";
+  } else {
+    badge.style.display = "none"; // tudo ok, não precisa mostrar nada
+  }
+}
+window.addEventListener("offline", updateNetStatus);
+window.addEventListener("online", async () => {
+  _netSyncing = true; updateNetStatus();
+  try { await SYNC.flushQueue(); await reconcileJornadaHoje(); } catch(e) {}
+  _netSyncing = false; updateNetStatus();
+  try { renderJornada(); } catch(e) {}
+});
+
+// ── Reconciliação: Supabase é a fonte de verdade, local é o cache ──────
+async function reconcileJornadaHoje() {
+  if (!_supaUser || !navigator.onLine) return;
+  const today = DB.today();
+  try {
+    const {data: remote, error} = await _SUPA.from("sessions").select("*")
+      .eq("user_id", _supaUser.id).eq("date", today);
+    if (error || !remote) return;
+    const day = DB.day(today);
+    if (!day.sessions) day.sessions = [];
+    let changed = false;
+    // 1. Toda sessão remota vira a verdade local (upsert por id)
+    remote.forEach(r => {
+      if (!r.end_ms) return; // sessão ainda ativa remotamente — não mexe (pode ser a atual)
+      const local = { id: r.id, start: r.start_ms, end: r.end_ms, km: parseFloat(r.km)||0, elapsed: r.elapsed_secs||0 };
+      const idx = day.sessions.findIndex(s => s.id === r.id);
+      if (idx === -1) { day.sessions.push(local); changed = true; }
+      else if (day.sessions[idx].end !== local.end || day.sessions[idx].km !== local.km) {
+        day.sessions[idx] = local; changed = true;
+      }
+    });
+    // 2. Sessão local encerrada que não existe no remoto — reenviar (não apagar)
+    const remoteIds = new Set(remote.map(r => r.id));
+    for (const s of day.sessions) {
+      if (!remoteIds.has(s.id) && s.end) {
+        await _SUPA.from("sessions").upsert({
+          id: s.id, user_id: _supaUser.id, date: today,
+          start_ms: s.start, end_ms: s.end, km: s.km, elapsed_secs: s.elapsed,
+          paused_ms: 0, is_paused: false
+        }, {onConflict:"id"}).catch(()=>{});
+      }
+    }
+    // 3. Sessão ativa: se remoto diz que já encerrou mas o app local acha que continua
+    if (S.gps.st !== "idle" && S.gps.sessionId) {
+      const remoteActive = remote.find(r => r.id === S.gps.sessionId);
+      if (remoteActive && remoteActive.end_ms) {
+        S.gps.st = "idle"; S.gps.start = null;
+        clearInterval(S.gps.ti);
+        changed = true;
+      }
+    }
+    if (changed) DB.saveDay(day);
+  } catch(e) { console.warn("[reconcileJornadaHoje]", e); }
+}
+
 function _gcss(){try{return new Set(JSON.parse(localStorage.getItem('sm_gps_closed_set')||'[]'));}catch(e){return new Set();}}
 function _addCss(id,endMs){
   try{
@@ -6385,6 +6456,7 @@ async function showApp() {
     if (removidas > 0) console.log('[boot] zip wipe: removidas', removidas, 'corridas do localStorage');
   }
   if (!_appBooted) {
+    setTimeout(updateNetStatus, 500);
     try { await SYNC.pullAll(); } catch(e) { console.error('pullAll boot:', e); }
     try { await SYNC.flushQueue(); } catch(e) { console.error('flushQueue boot:', e); }
   }
