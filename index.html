@@ -4975,52 +4975,66 @@ function gpsPause() { /* removido — app usa só Iniciar / Encerrar */ }
 function gpsStop() {
   const g = S.gps;
   if (g.st === 'idle' || !g.start) return; // guard: evita duplo encerramento
+
+  // ═══ FASE 1 — CLEANUP CRÍTICO. Cada linha em try/catch isolado: uma
+  // exceção em qualquer uma NUNCA pode impedir as outras de rodar. Isso
+  // garante que a jornada SEMPRE é marcada como encerrada local e no
+  // Supabase, mesmo se algo mais adiante falhar. ═══
+  const cloudId = g.sessionId || DB.uid();
+  const startMs = g.start, kmSnap = g.km || 0, endMs = Date.now();
+  let elapsedSnap = 0;
+  try { elapsedSnap = getElapsed(); } catch(e) { console.error('[gpsStop] getElapsed:', e); }
+
   g.st = 'idle';
-  if (g.wid) navigator.geolocation.clearWatch(g.wid);
-  clearInterval(g.ti);
+  if (g.wid) { try { navigator.geolocation.clearWatch(g.wid); } catch(e) { console.error('[gpsStop] clearWatch:', e); } }
+  if (g.ti)  { try { clearInterval(g.ti); } catch(e) { console.error('[gpsStop] clearInterval:', e); } }
   if (window.SmartMobiNative && typeof SmartMobiNative.stopFloating === 'function') {
-    try { SmartMobiNative.stopFloating(); } catch(e) {}
+    try { SmartMobiNative.stopFloating(); } catch(e) { console.error('[gpsStop] stopFloating:', e); }
   }
-  const day = DB.day(DB.today());
-  const elapsed = getElapsed();
-  if (!day.sessions) day.sessions = [];
-  // Usar o mesmo ID local e Supabase — evita duplicata no pullAll após reabrir
-  const cloudId = S.gps.sessionId || DB.uid();
-  const sess = { id: cloudId, start: g.start, end: Date.now(), km: g.km, elapsed: elapsed };
-  // Atualiza se ID já existe localmente (ex: restaurado do cloud), senão adiciona
-  const _sIdx = day.sessions.findIndex(s => s.id === cloudId);
-  if (_sIdx >= 0) day.sessions[_sIdx] = sess; else day.sessions.push(sess);
-  const totalKm = day.sessions.reduce((s,x)=>s+(x.km||0),0);
-  const totalElapsed = day.sessions.reduce((s,x)=>s+(x.elapsed||0),0);
-  day.session = { km: totalKm, elapsed: totalElapsed }; // compat com Agenda
-  if (!day.kmTotal && totalKm > 0.1) day.kmTotal = parseFloat(totalKm.toFixed(1));
-  DB.saveDay(day);
-  _SUPA.from('sessions').upsert({
-    id: cloudId, user_id: _supaUser?.id, date: DB.today(),
-    start_ms: sess.start, end_ms: sess.end,
-    km: parseFloat((sess.km||0).toFixed(3)),
-    elapsed_secs: sess.elapsed,
-    paused_ms: 0, is_paused: false
-  }, { onConflict: 'id' }).catch(()=>
-    SYNC.push('sessions', { id: cloudId, date: DB.today(), start_ms: sess.start, end_ms: sess.end,
-      km: sess.km, elapsed_secs: sess.elapsed })
-  );
-  S.gps.sessionId = null;
-  syncNavButton();
-  DB.del('sm_gps_session');
-  // Tombstone: garante que pullAll() não restaure esta sessão mesmo se
-  // o upsert de fechamento ainda não chegou ao Supabase (race / offline).
-  _addCss(cloudId, sess.end);
-  const km = g.km;
+  // Apaga o marcador local IMEDIATAMENTE — é isso que impede a app de
+  // 'ressuscitar' esta jornada como ativa da próxima vez que abrir.
+  try { DB.del('sm_gps_session'); } catch(e) { console.error('[gpsStop] DB.del:', e); }
+  try { _addCss(cloudId, endMs); } catch(e) { console.error('[gpsStop] _addCss:', e); }
+  // Avisa o Supabase do fechamento JÁ, antes de qualquer lógica que possa
+  // falhar — o servidor precisa saber que a jornada acabou o quanto antes.
+  if (_supaUser) {
+    _SUPA.from('sessions').upsert({
+      id: cloudId, user_id: _supaUser.id, date: DB.today(),
+      start_ms: startMs, end_ms: endMs,
+      km: parseFloat(kmSnap.toFixed(3)), elapsed_secs: elapsedSnap,
+      paused_ms: 0, is_paused: false
+    }, { onConflict: 'id' }).catch(()=>{
+      SYNC.push('sessions', { id: cloudId, date: DB.today(), start_ms: startMs, end_ms: endMs,
+        km: kmSnap, elapsed_secs: elapsedSnap });
+    });
+  }
   g.start=null; g.pausedMs=0; g.km=0; g.pts=[]; g.baseKm=0; g.baseElapsed=0; g.pa=null;
-  releaseWakeLock();
-  // Render forçado após 80ms — garante que fechar o modal de confirmação
-  // complete antes de atualizar a UI, independente de qual tela está ativa
+  g.sessionId = null;
+  try { syncNavButton(); } catch(e) { console.error('[gpsStop] syncNavButton:', e); }
+  try { releaseWakeLock(); } catch(e) { console.error('[gpsStop] releaseWakeLock:', e); }
+
+  // ═══ FASE 2 — detalhamento local (lista de jornadas do dia). Se algo
+  // aqui falhar, a jornada JÁ está marcada como encerrada na Fase 1 —
+  // o pior caso é essa jornada específica não aparecer na listagem local
+  // até a próxima reconciliação com o Supabase, nunca ficar 'presa'. ═══
+  try {
+    const day = DB.day(DB.today());
+    if (!day.sessions) day.sessions = [];
+    const sess = { id: cloudId, start: startMs, end: endMs, km: kmSnap, elapsed: elapsedSnap };
+    const _sIdx = day.sessions.findIndex(s => s.id === cloudId);
+    if (_sIdx >= 0) day.sessions[_sIdx] = sess; else day.sessions.push(sess);
+    const totalKm = day.sessions.reduce((s,x)=>s+(x.km||0),0);
+    const totalElapsed = day.sessions.reduce((s,x)=>s+(x.elapsed||0),0);
+    day.session = { km: totalKm, elapsed: totalElapsed };
+    if (!day.kmTotal && totalKm > 0.1) day.kmTotal = parseFloat(totalKm.toFixed(1));
+    DB.saveDay(day);
+  } catch(e) { console.error('[gpsStop] Falha ao salvar detalhe local (fechamento já confirmado):', e); }
+
   setTimeout(() => {
     try { renderJornada(); } catch(e) {}
     try { renderHome(); } catch(e) {}
   }, 80);
-  if (km > 0.1) setTimeout(() => showEndJourneyToast(km), 500);
+  if (kmSnap > 0.1) setTimeout(() => showEndJourneyToast(kmSnap), 500);
 }
 function getElapsed() {
   const g = S.gps; if (!g.start) return 0;
@@ -5102,6 +5116,24 @@ function restoreGpsSession() {
   // Sessão muito antiga (app ficou fechado por mais de 16h) — não tenta retomar
   const ageMs = Date.now() - (saved.start || 0);
   if (!saved.start || ageMs > 16*3600*1000) { DB.del('sm_gps_session'); return; }
+  // Defesa extra: se o Supabase já sabe que esta sessão foi encerrada
+  // (ex: gpsStop rodou parcialmente numa tentativa anterior — fechou lá
+  // mas não apagou o marcador local), NÃO resume. Confia no servidor.
+  if (_supaUser && saved.sessionId && navigator.onLine) {
+    _SUPA.from('sessions').select('end_ms').eq('id', saved.sessionId).maybeSingle()
+      .then(({data}) => {
+        if (data && data.end_ms) {
+          console.warn('[restoreGpsSession] Sessão já encerrada no Supabase — descartando marcador local stale');
+          DB.del('sm_gps_session');
+          if (S.gps.st !== 'idle') {
+            S.gps.st = 'idle'; S.gps.start = null;
+            if (S.gps.wid) { try{navigator.geolocation.clearWatch(S.gps.wid);}catch(e){} }
+            if (S.gps.ti) clearInterval(S.gps.ti);
+            try { renderJornada(); renderHome(); } catch(e) {}
+          }
+        }
+      }).catch(()=>{});
+  }
   // Limpeza defensiva — garante que não sobra nenhum watcher/timer órfão
   if (g.wid) { try{ navigator.geolocation.clearWatch(g.wid); }catch(e){} }
   if (g.ti) clearInterval(g.ti);
