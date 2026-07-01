@@ -680,7 +680,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .jss-badge.end{background:#EFF6FF;color:#0369A1}
 .jss-sub{font-size:11.5px;color:var(--muted);font-weight:600}
 .jss-chev{flex-shrink:0;color:var(--muted2);transition:transform .22s;display:flex;align-items:center}
-.jss-card.open .jss-kpi-row{display:none;align-items:center;padding:0 14px 11px;gap:0}
+.jss-kpi-row{display:none;align-items:center;padding:0 14px 11px;gap:0}
 .jss-card.open .jss-kpi-row{display:flex}
 .jss-kpi{flex:1;text-align:center}
 .jss-kpi .jv{font-size:14px;font-weight:800;letter-spacing:-.03em;display:block}
@@ -2046,6 +2046,11 @@ function navTo(sec) {
     updateNetStatus();
     if (_supaUser && navigator.onLine) {
       reconcileJornadaHoje().then(() => renderJornada()).catch(()=>{});
+      // Se o app local acha que está idle mas existe jornada aberta no
+      // Supabase há mais de 15min (provável órfã), fecha automaticamente
+      if (S.gps.st === 'idle') {
+        _closeOrphanSessions().then(n => { if (n) renderJornada(); }).catch(()=>{});
+      }
     }
   }
   if (sec === 'financeiro') renderFin();
@@ -4866,8 +4871,54 @@ function _addCss(id,endMs){
   }catch(e){}
 }
 
+// ── Trava de segurança: nunca permite duas jornadas abertas ao mesmo tempo.
+// Roda antes de iniciar uma nova jornada. Se encontrar alguma jornada aberta
+// no Supabase (end_ms=null) — de uma aba/instância esquecida, do serviço nativo
+// que não parou, ou de um fechamento anterior que falhou — fecha automaticamente
+// com os últimos dados que o servidor tem, e avisa o usuário.
+async function _closeOrphanSessions() {
+  if (!_supaUser || !navigator.onLine) return null;
+  try {
+    const { data: allOpen } = await _SUPA.from("sessions").select("*")
+      .eq("user_id", _supaUser.id).is("end_ms", null);
+    if (!allOpen || !allOpen.length) return null;
+    const staleCutoff = Date.now() - 10*60*1000; // 10 min sem checkpoint = órfã
+    const orphans = allOpen.filter(o => {
+      if (o.id === S.gps.sessionId) return false; // nunca fecha a sessão desta própria instância
+      const lastSeen = o.updated_at ? new Date(o.updated_at).getTime() : 0;
+      return lastSeen < staleCutoff; // só órfã se não recebeu checkpoint recente
+    });
+    if (!orphans.length) return null;
+    for (const o of orphans) {
+      const estEnd = o.start_ms + (o.elapsed_secs||0)*1000;
+      await _SUPA.from("sessions").upsert({
+        id: o.id, user_id: _supaUser.id, end_ms: Math.max(estEnd, o.start_ms+60000),
+        is_paused: false, paused_ms: 0
+      }, {onConflict:"id"}).catch(()=>{});
+      // Atualiza também o histórico local do dia, se existir
+      try {
+        const day = DB.day(o.date);
+        if (day.sessions) {
+          const idx = day.sessions.findIndex(s => s.id === o.id);
+          const sess = { id:o.id, start:o.start_ms, end:estEnd, km:parseFloat(o.km)||0, elapsed:o.elapsed_secs||0 };
+          if (idx >= 0) day.sessions[idx] = sess; else day.sessions.push(sess);
+          DB.saveDay(day);
+        }
+      } catch(e) {}
+    }
+    console.warn(`[_closeOrphanSessions] ${orphans.length} jornada(s) órfã(s) encerrada(s) automaticamente`);
+    return orphans.length;
+  } catch(e) { console.error("[_closeOrphanSessions]", e); return null; }
+}
+
 function gpsStart() {
+  // Defesa: limpa qualquer interval/watcher residual de uma sessão anterior
+  // que não tenha sido corretamente encerrada (evita contagem duplicada de km)
+  if (S.gps.ti) { try{ clearInterval(S.gps.ti); }catch(e){} }
+  if (S.gps.wid) { try{ navigator.geolocation.clearWatch(S.gps.wid); }catch(e){} }
   const g = S.gps; g.st='running'; g.start=Date.now(); g.km=0; g.pts=[]; g.pausedMs=0; g.pa=null;
+  // Fecha em segundo plano qualquer jornada órfã (não bloqueia o início desta)
+  _closeOrphanSessions().then(n => { if (n) showToast(n+' jornada(s) antiga(s) que ficaram aberta(s) foram encerrada(s) automaticamente.', 'info'); }).catch(()=>{});
   g.sessionId = DB.uid(); // ID único desta sessão, usado para upsert no cloud
   const day0 = DB.day(DB.today());
   g.baseKm = (day0.sessions||[]).reduce((s,x)=>s+(x.km||0),0);
@@ -6495,6 +6546,11 @@ async function showApp() {
   try{renderHome();}    catch(e){console.error('renderHome:',e);}
   try{restoreGpsSession();} catch(e){console.error('restoreGpsSession:',e);}
   try{renderJornada();}  catch(e){console.error('renderJornada:',e);}
+  // Verifica jornadas órfãs (de outra aba/instância que não fechou corretamente)
+  // toda vez que o app abre, não só ao navegar manualmente pra Jornada
+  if (_supaUser && navigator.onLine) {
+    _closeOrphanSessions().then(n => { if (n) { renderJornada(); renderHome(); } }).catch(()=>{});
+  }
   try{syncNavButton();}  catch(e){console.error('syncNavButton:',e);}
   try{renderFin();}      catch(e){console.error('renderFin:',e);}
   try{updateFavBtn();}   catch(e){console.error('updateFavBtn:',e);}
