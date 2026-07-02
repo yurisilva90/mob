@@ -121,11 +121,36 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 
 /* ── Jornada screen extras ── */
 .daybar{display:flex;align-items:center;gap:10px;margin:4px 0 12px;padding:0 16px}.arrow{width:38px;height:38px;border-radius:14px;background:#fff;border:1px solid var(--line);box-shadow:0 3px 14px rgba(15,23,42,.06);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:20px;cursor:pointer;touch-action:manipulation}.datebox{flex:1;text-align:center}.datebox h1{font-size:19px;line-height:1.1;letter-spacing:-.04em}.datebox p{font-size:12px;color:var(--muted);margin-top:3px;font-weight:600}.today{font-size:10px;padding:2px 8px;border-radius:999px;background:rgba(14,165,233,.12);color:#0A2F6B;margin-left:5px}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px;margin-bottom:12px}.stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px 8px;text-align:center;box-shadow:0 3px 14px rgba(15,23,42,.06)}.stat .v{font-family:'Inter',system-ui,sans-serif;font-size:15px;font-weight:700;white-space:nowrap}.stat .l{font-size:9px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-top:5px}.green{color:var(--green2)}.red{color:var(--red)}.blue{color:#0A2F6B}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px;margin-bottom:12px}
+.stats-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stats-cards .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 4px;text-align:center}
+.stats-cards .v{font-size:14px;font-weight:800}
+.stats-cards .v.green{color:var(--green)}
+.stats-cards .v.red{color:#EF4444}
+.stats-cards .l{font-size:9px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin-top:3px}
+/* R$/h e R$/km — largura total, preenchendo até as bordas do card */
+.j-wide{display:flex;gap:8px;margin-top:8px}
+.j-wide-cell{flex:1;background:rgba(255,255,255,.16);border-radius:12px;padding:11px 4px;text-align:center}
+.j-wide-cell strong{display:block;font-size:17px;font-weight:800;color:#BBF7D0}
+.j-wide-cell span{font-size:9px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+/* Metas do dia dentro do card da jornada (fundo escuro) */
+.j-metas-inline{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.18)}
+.j-metas-inline-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.j-metas-inline-head span{font-size:10.5px;font-weight:800;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.04em}
+.j-metas-inline-head a{font-size:10px;color:rgba(255,255,255,.65);font-weight:700;cursor:pointer}
+.j-metas-inline .goal-item{margin-bottom:8px}
+.j-metas-inline .goal-item:last-child{margin-bottom:0}
+.j-metas-inline .goal-top{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.8);font-weight:700;margin-bottom:4px}
+.j-metas-inline .goal-top strong{color:#fff;font-weight:800}
+.j-metas-inline .gbar{height:5px;background:rgba(255,255,255,.2);border-radius:99px;overflow:hidden}
+.j-metas-inline .gbar i{display:block;height:100%;background:#fff;border-radius:99px}
+.j-metas-inline .goal-locked{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:rgba(255,255,255,.75);font-weight:700;cursor:pointer}
+.j-metas-inline .goal-locked b{color:#fff;font-weight:800}
+.stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px 8px;text-align:center;box-shadow:0 3px 14px rgba(15,23,42,.06)}.stat .v{font-family:'Inter',system-ui,sans-serif;font-size:15px;font-weight:700;white-space:nowrap}.stat .l{font-size:9px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-top:5px}.green{color:var(--green2)}.red{color:var(--red)}.blue{color:#0A2F6B}
 
 /* ── Journey card (controles embutidos) ── */
 .journey{margin:0 16px 12px;border-radius:26px;padding:16px;color:#fff;box-shadow:0 18px 42px rgba(34,197,94,.18);transition:background .25s;min-height:300px;box-sizing:border-box}
-.journey.idle{background:linear-gradient(135deg,#475569,#64748b)}
+.journey.idle{background:linear-gradient(150deg,#0A2F6B 0%,#153e8c 55%,#1a4ba3 100%)}
 .journey.ended{background:linear-gradient(135deg,#0c4a6e 0%,#0ea5e9 75%)}
 .journey.running{background:radial-gradient(circle at 18% 0%,rgba(255,255,255,.18),transparent 34%),linear-gradient(135deg,#15803d 0%,#22c55e 58%,#63e18b 100%)}
 /* .journey.paused removido */
@@ -986,18 +1011,19 @@ h1.hd-title{font-family:var(--font-brand)!important}
     <div id="net-status-badge" style="display:none;align-items:center;gap:5px;justify-content:center;padding:4px 10px;border-radius:99px;font-size:10.5px;font-weight:800;margin:0 auto 6px;width:fit-content"><span id="net-status-dot" style="width:6px;height:6px;border-radius:50%"></span><span id="net-status-text"></span></div>
     <div class="daybar">
       <button class="arrow" onclick="chgDay(-1)">&#8249;</button>
-      <div class="datebox">
+      <div class="datebox" onclick="document.getElementById('jorn-date-input').showPicker ? document.getElementById('jorn-date-input').showPicker() : document.getElementById('jorn-date-input').click()">
         <h1 id="dn-date">Hoje</h1>
         <p id="dn-dow"></p>
       </div>
       <button class="arrow" onclick="chgDay(1)">&#8250;</button>
+      <input type="date" id="jorn-date-input" onchange="setJornadaDate(this.value)" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px">
     </div>
   </div>
 
   <div class="journey idle" id="journey-card">
     <div class="j-head">
       <div class="j-status"><i></i><span id="jc-status-text">Iniciar</span></div>
-      <button class="j-import" onclick="openMo('mo-import')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Importar corridas</button>
+      <button class="j-import" onclick="openMo('mo-import')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Corridas</button>
     </div>
     <div class="j-current">
       <div><h2 id="jc-timer">00:00:00</h2><p id="jc-sub">Nenhuma sessão iniciada</p></div>
@@ -1028,33 +1054,31 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <div class="j-mini sm"><strong id="jc-kmativo">0,0</strong><span>Km ativo</span></div>
       <div class="j-mini sm"><strong id="jc-kmdesl">0,0</strong><span>Km deslc.</span></div>
     </div>
+    <div class="j-wide">
+      <div class="j-wide-cell"><strong id="jc-rsh">R$0,00</strong><span>R$ por hora</span></div>
+      <div class="j-wide-cell"><strong id="jc-rskm">R$0,00</strong><span>R$ por km</span></div>
+    </div>
+    <div class="j-metas-inline">
+      <div class="j-metas-inline-head"><span>Metas do dia</span><a onclick="openPlanJornada()">Editar &#8250;</a></div>
+      <div id="metas-dia-stack"></div>
+    </div>
     <div class="j-actions" id="jc-actions"></div>
   </div>
 
-  <div class="stats" style="padding:0 16px">
+  <div class="stats-cards" style="padding:0 16px 14px">
     <div class="stat"><div class="v green" id="d-rev">R$0</div><div class="l">Receitas</div></div>
     <div class="stat"><div class="v red" id="d-exp">R$0</div><div class="l">Despesas</div></div>
     <div class="stat"><div class="v" id="d-net">R$0</div><div class="l">Resultado</div></div>
   </div>
 
-  <div class="card" style="margin:0 16px 14px;padding:16px">
-    <div class="card-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <h2 style="font-size:15.5px;font-weight:760;letter-spacing:-.03em">Metas do dia</h2>
-      <span style="background:#EFF6FF;color:var(--blue2);border-radius:999px;padding:6px 10px;font-size:11px;font-weight:720">Planejado</span>
-    </div>
-    <div id="metas-dia-stack"></div>
-    <button class="goal-edit-link" onclick="openPlanJornada()">Editar jornada planejada</button>
-  </div>
+  <div class="section" style="padding:0 16px 8px"><h2>Lançamentos</h2><div style="display:flex;gap:8px;align-items:center"><button class="add" onclick="toggleLancView()" id="lanc-toggle" style="display:none">Ver todas &#8250;</button><button class="add" onclick="openLanc('receita')">+ Adicionar</button></div></div>
+  <div style="padding:0 16px"><div id="jorn-lanc-list"><div class="empty">Nenhum lançamento registrado</div></div></div>
 
-  <div class="section" style="padding:0 16px 8px"><h2>Jornadas do dia</h2><button class="add" onclick="toggleSessionsView()" id="sessions-toggle" style="display:none">Ver todas &#8250;</button></div>
+  <div class="section" style="padding:16px 16px 8px"><h2>Jornadas do dia</h2><button class="add" onclick="toggleSessionsView()" id="sessions-toggle" style="display:none">Ver todas &#8250;</button></div>
   <div style="padding:0 16px"><div id="sessions-list"><div class="empty">Nenhuma sessão registrada</div></div></div>
 
   <div class="section" style="padding:16px 16px 8px"><h2>Corridas</h2><button class="add" onclick="navTo('corridas')" id="trips-toggle">Ver todas &#8250;</button></div>
   <div style="padding:0 16px"><div id="trips-list"><div class="empty">Nenhuma corrida registrada</div></div></div>
-
-  <div class="section" style="padding:16px 16px 4px"><h2>Lançamentos</h2><div style="display:flex;gap:8px;align-items:center"><button class="add" onclick="toggleLancView()" id="lanc-toggle" style="display:none">Ver todas &#8250;</button><button class="add" onclick="openLanc('receita')">+ Adicionar</button></div></div>
-  
-  <div style="padding:0 16px"><div id="jorn-lanc-list"><div class="empty">Nenhum lançamento registrado</div></div></div>
   <div style="height:8px"></div>
 </div>
 
@@ -2815,6 +2839,11 @@ function chgDay(d) {
   S.curDate = dt.getFullYear()+'-'+p2(dt.getMonth()+1)+'-'+p2(dt.getDate());
   renderJornada();
 }
+function setJornadaDate(dateStr) {
+  if (!dateStr) return;
+  S.curDate = dateStr;
+  renderJornada();
+}
 function fmtHM(ms) { if (!ms) return '--:--'; const dd=new Date(ms); return p2(dd.getHours())+':'+p2(dd.getMinutes()); }
 function toggleTripsView() { S.tripsExpanded = !S.tripsExpanded; renderJornada(); }
 
@@ -2919,7 +2948,7 @@ function renderJornada() {
   const msLong= ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
   const dateEl = document.getElementById('dn-date');
   // Formato compacto: "23 jun 2026" — cabe em 1 linha
-  if (dateEl) dateEl.textContent = dt.getDate()+' de '+msLong[dt.getMonth()]+' de '+dt.getFullYear();
+  if (dateEl) dateEl.textContent = isToday ? 'Hoje' : (dt.getDate()+' de '+msLong[dt.getMonth()]+' de '+dt.getFullYear());
   const dowEl = document.getElementById('dn-dow');
   // Dia da semana + badge "Hoje" na mesma linha
   if (dowEl) dowEl.innerHTML = dows[dt.getDay()] + (isToday ? ' <span class="dn-hoje">Hoje</span>' : '');
@@ -3021,6 +3050,10 @@ function renderJourneyCard(day, isToday) {
   const kmDesl = Math.max(0, totalKm - kmAtivo);
   setText('jc-kmativo', kmAtivo.toFixed(1));
   setText('jc-kmdesl', kmDesl.toFixed(1));
+  const ganhosDia = day.trips.reduce((s,t)=>s+(t.value||0),0);
+  const horasDecimal = totalElapsed > 0 ? totalElapsed/3600 : 0;
+  setText('jc-rsh', horasDecimal > 0 ? DB.fRI(ganhosDia/horasDecimal) : 'R$0,00');
+  setText('jc-rskm', totalKm > 0 ? DB.fRI(ganhosDia/totalKm) : 'R$0,00');
 
   const actions = document.getElementById('jc-actions');
   if (!actions) return;
