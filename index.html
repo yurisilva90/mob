@@ -5058,7 +5058,12 @@ function gpsStart() {
     }
   }
   requestWakeLock();
-  if (S.sec === 'jornada') renderJornada();
+  // Render forçado, sem depender de qual tela está ativa no momento do
+  // clique — mesmo padrão robusto já usado no gpsStop()
+  setTimeout(() => {
+    try { renderJornada(); } catch(e) {}
+    try { renderHome(); } catch(e) {}
+  }, 80);
 }
 
 function confirmStop() {
@@ -6216,8 +6221,10 @@ function receiveOverlayTrip(trip) {
     dest: trip.dest || '', value: parseFloat(trip.value) || 0, km: parseFloat(trip.km) || 0,
     category: trip.category || '', surge: trip.surge || false, airport: trip.airport || false,
     source: 'overlay' });
-  if (S.sec === 'jornada') renderJornada();
-  if (S.sec === 'home')    renderHome();
+  setTimeout(() => {
+    try { renderJornada(); } catch(e) {}
+    try { renderHome(); } catch(e) {}
+  }, 80);
   // Vibração de confirmação
   if (window.SmartMobiNative) SmartMobiNative.vibrate(80);
 }
