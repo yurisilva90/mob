@@ -142,7 +142,8 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .j-metas-inline .goal-item:last-child{margin-bottom:0}
 .j-metas-inline .goal-top{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.8);font-weight:700;margin-bottom:4px}
 .j-metas-inline .goal-top strong{color:#fff;font-weight:800}
-.j-metas-inline .gbar{height:5px;background:rgba(255,255,255,.2);border-radius:99px;overflow:hidden}
+.j-metas-inline .goal-top span:last-child{color:rgba(255,255,255,.85) !important;font-weight:700}
+.j-metas-inline .gbar{height:6px;background:rgba(0,0,0,.22);border-radius:99px;overflow:hidden}
 .j-metas-inline .gbar i,.j-metas-inline .gbar.money i,.j-metas-inline .gbar.km i,.j-metas-inline .gbar.time i{display:block;height:100%;background:#fff !important;border-radius:99px}
 .j-metas-inline .goal-locked{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:rgba(255,255,255,.75);font-weight:700;cursor:pointer}
 .j-metas-inline .goal-locked b{color:#fff;font-weight:800}
@@ -169,7 +170,7 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .j-km span{display:block;margin-top:5px;opacity:.88}
 .j-metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px}
 .j-mini{background:transparent;border:none;border-radius:0;padding:6px 4px;text-align:center}
-.j-mini strong{display:block;font-family:'Inter',system-ui,sans-serif;font-size:16px;font-weight:700}
+.j-mini strong{display:block;font-family:'Inter',system-ui,sans-serif;font-size:22px;font-weight:800;text-align:center}
 .j-mini span{display:block;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;opacity:.78;margin-top:3px}
 .j-metrics2{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px}
 .j-mini.sm{padding:6px 5px;background:rgba(255,255,255,.12);border-radius:12px}
@@ -3046,7 +3047,7 @@ function renderJourneyCard(day, isToday) {
   );
   setText('jc-km', liveKm.toFixed(1));
   const tth = Math.floor(totalElapsed/3600), ttm = Math.floor(totalElapsed%3600/60);
-  setText('jc-total', tth+'h'+p2(ttm));
+  setText('jc-total', tth+'h'+p2(ttm)+'m');
   setText('jc-kmtotal', totalKm.toFixed(1)+' km');
   setText('jc-trips', day.trips.length);
   const kmAtivo = day.trips.reduce((s,t)=>s+(t.km||0),0);
@@ -5414,7 +5415,7 @@ function gpsUpdate() {
   const finishedElapsed = (day.sessions||[]).reduce((a,x)=>a+(x.elapsed||0),0);
   const total = Math.max(0, finishedElapsed + el + (day.tempoAdjust || 0));
   const th=Math.floor(total/3600), tm=Math.floor(total%3600/60);
-  setText('jc-total', th+'h'+p2(tm));
+  setText('jc-total', th+'h'+p2(tm)+'m');
 }
 
 // ── PERSISTÊNCIA DA SESSÃO GPS (sobrevive a reload do WebView) ─────────────
@@ -5529,6 +5530,13 @@ function restoreGpsSession() {
           const nativeKm = SmartMobiNative.getGpsKm();
           const nativeStart = SmartMobiNative.getGpsStartTime();
           const nativePaused = SmartMobiNative.getGpsPausedMs();
+          // Mesmo guard de plausibilidade do nativeSyncGps — protege contra
+          // herdar km de uma sessão fantasma anterior que o nativo nunca zerou
+          const elapsedMinR = sessionAgeMs / 60000;
+          const maxPlausibleR = (elapsedMinR * 3) + 0.5;
+          if (typeof nativeKm === 'number' && nativeKm > maxPlausibleR) {
+            console.warn('[restoreGpsSession] km nativo implausível ignorado:', nativeKm, 'em', elapsedMinR.toFixed(1), 'min');
+          } else
           // So adota o km nativo se ele for MAIOR que o que a sessao web ja tem.
           // Nunca deixa essa reconciliacao DIMINUIR o km exibido — isso e o que
           // causava o "pulo pra baixo" quando havia uma correcao manual (kmAdjust)
@@ -7020,7 +7028,18 @@ function nativeSyncGps(km, startMs, pausedMs) {
   // nativeSyncGps com km < do que ja temos em memoria. Nesse caso mantemos
   // o valor maior (o que estava em S.gps.km ou no nativo, o que for maior).
   const kmNat = (typeof km === 'number' && isFinite(km)) ? km : S.gps.km;
-  if (kmNat > (S.gps.km || 0)) {
+  // GUARD DE PLAUSIBILIDADE: se o serviço nativo Android nunca for
+  // efetivamente resetado entre uma jornada e outra (não existe um comando
+  // nativo pra isso hoje), ele pode reportar o km ACUMULADO de uma jornada
+  // ANTERIOR logo no início de uma jornada NOVA — e como o guard acima
+  // nunca deixa diminuir, esse km 'órfão' seria herdado silenciosamente.
+  // Rejeita qualquer salto que implique velocidade fisicamente impossível
+  // (>180km/h) dado o tempo decorrido desde o início desta sessão.
+  const elapsedMin = S.gps.start ? (Date.now() - S.gps.start) / 60000 : 0;
+  const maxPlausibleKm = (elapsedMin * 3) + 0.5; // 180km/h + margem
+  if (kmNat > maxPlausibleKm) {
+    console.warn('[nativeSyncGps] Ignorado — km implausível pro tempo decorrido:', kmNat.toFixed(1), 'km em', elapsedMin.toFixed(1), 'min (provável km órfão do serviço nativo)');
+  } else if (kmNat > (S.gps.km || 0)) {
     S.gps.km = kmNat;
   }
   if (startMs && !S.gps.start) S.gps.start = startMs;
