@@ -4975,7 +4975,23 @@ async function _routeDistanceOSRM(p1, p2) {
     return data.routes[0].distance / 1000; // metros → km
   } catch(e) { console.warn("[_routeDistanceOSRM]", e); return null; }
 }
+// Verifica se o endereço tem informação suficiente pra geocodificar com
+// confiança (nome de rua real) — 'Tijuca' ou '230, Tijuca' sozinhos são
+// ambíguos demais (podem cair em qualquer ponto do bairro).
+function _hasReliableAddress(addr) {
+  if (!addr) return false;
+  const firstPart = addr.split(',')[0].trim();
+  // Primeira parte só com dígitos (número de prédio solto, sem rua) → não confiável
+  if (/^\d+$/.test(firstPart)) return false;
+  // Primeira parte com menos de 4 letras (ex: nome de bairro sozinho) → não confiável
+  if (firstPart.replace(/[^a-zA-ZÀ-ÿ]/g,'').length < 4) return false;
+  return true;
+}
 async function _estimateTripKm(origin, dest) {
+  if (!_hasReliableAddress(origin) || !_hasReliableAddress(dest)) {
+    console.warn('[_estimateTripKm] Endereço sem rua identificável — pulando estimativa:', origin, '/', dest);
+    return null;
+  }
   const p1 = await _geocodeAddress(origin);
   await new Promise(r => setTimeout(r, 1100)); // respeita 1 req/s do Nominatim
   const p2 = await _geocodeAddress(dest);
