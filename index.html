@@ -3280,9 +3280,10 @@ function tripItem(t, tripDate) {
   const extraRow = extras.length?`<div class="li-extra">${extras.join('')}</div>`:'';
   const detRows = [
     `<div class="det-row"><span>Plataforma</span><strong>${plat}</strong></div>`,
-    t.origin?`<div class="det-row"><span>Origem</span><strong>${t.origin}</strong></div>`:'',
-    t.dest?`<div class="det-row"><span>Destino</span><strong>${t.dest}</strong></div>`:'',
+    t.origin?`<div class="det-row"><span>Origem</span><strong>${t.originFull||t.origin}</strong></div>`:'',
+    t.dest?`<div class="det-row"><span>Destino</span><strong>${t.destFull||t.dest}</strong></div>`:'',
     t.km>0?`<div class="det-row"><span>Distância${t.kmEstimado?' (estimada)':''}</span><strong>${t.kmEstimado?'~':''}${(t.km||0).toFixed(1)} km</strong></div>`:'',
+    t.pedagioValor>0?`<div class="det-row"><span>Pedágio</span><strong>${DB.fR(t.pedagioValor)}</strong></div>`:'',
     t.duration>0?`<div class="det-row"><span>Duração</span><strong>${fmtDur(t.duration)}</strong></div>`:'',
     t.dinamico>0?`<div class="det-row"><span>Preço dinâmico</span><strong style="color:#F59E0B">+ ${DB.fR(t.dinamico)}</strong></div>`:'',
     t.tip>0?`<div class="det-row"><span>Gorjeta</span><strong style="color:#7C3AED">+ ${DB.fR(t.tip)}</strong></div>`:'',
@@ -4170,21 +4171,22 @@ async function extractTripsFromBase64(b64, mt, plat) {
   const isUber = plat.toLowerCase() === 'uber';
   const cashWarning = 'ATENÇÃO — confusão comum: "Dinheiro recebido" (ícone de câmera/recibo) NÃO é gorjeta nem dinâmico, é so a forma de pagamento (o passageiro pagou em espécie). Quando uma corrida tiver "Preço dinâmico" (ícone de raio) E "Dinheiro recebido" juntas, são DUAS linhas diferentes — extraia SÓ o valor do "Preço dinâmico" em dinamico, e NUNCA coloque o valor de "Dinheiro recebido" em gorjeta (nem em dinamico, nem em value). Exemplo: corrida com "R$ 12,50 Preço dinâmico" e "R$ 27,05 Dinheiro recebido" → dinamico:12.50, gorjeta:0.00 (o R$27,05 não entra em lugar nenhum do JSON).';
   const prompt = isUber
-    ? 'Esta imagem mostra o "Histórico de ganhos" do Uber motorista, com uma linha divisória entre cada corrida (mesmo no modo escuro). Extraia CADA corrida, mas SÓ quando ela aparecer COMPLETA na imagem (com a linha divisória acima e abaixo) — se uma corrida estiver cortada no topo ou na base da imagem (incompleta), IGNORE essa corrida, não tente adivinhar ou completar com dados de outra. Ignore Missão (R$ 0,00). ' + cashWarning + ' Abaixo do valor principal de cada corrida também pode aparecer "Valor extra" (ícone de mão/coração — é a gorjeta do passageiro) — extraia esse valor em gorjeta quando existir. Retorne SOMENTE JSON array: [{"time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"Black","origin":"bairro","dest":"bairro","dinamico":0.00,"gorjeta":0.00,"taxaZero":false,"dinheiro":false}]. duration=minutos inteiros. dinamico e gorjeta ficam 0.00 quando não aparecerem. "taxaZero":true se houver indicação de 0% de taxa. "dinheiro":true se pagamento em dinheiro. Se vazio retorne [].'
+    ? 'Esta imagem mostra o "Histórico de ganhos" do Uber motorista, com uma linha divisória entre cada corrida (mesmo no modo escuro). Extraia CADA corrida, mas SÓ quando ela aparecer COMPLETA na imagem (com a linha divisória acima e abaixo) — se uma corrida estiver cortada no topo ou na base da imagem (incompleta), IGNORE essa corrida, não tente adivinhar ou completar com dados de outra. Ignore Missão (R$ 0,00). ' + cashWarning + ' Abaixo do valor principal de cada corrida também pode aparecer "Valor extra" (ícone de mão/coração — é a gorjeta do passageiro) — extraia esse valor em gorjeta quando existir. Também pode aparecer "Pedágio R$X,XX" — extraia esse valor em pedagio quando existir (0.00 quando não aparecer). Cada corrida mostra dois endereços (origem e destino): extraia o texto COMPLETO exatamente como aparece em "originFull"/"destFull", E TAMBÉM extraia só o nome do bairro (sem rua, número, cidade, UF ou CEP) em "origin"/"dest" — ex: se o endereço completo é "Rua Corcovado, 213, Jardim Botânico - Rio de Janeiro - RJ, 22460-050, BR", então origin="Jardim Botânico" e originFull=texto completo. Retorne SOMENTE JSON array: [{"time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"Black","origin":"bairro","originFull":"endereço completo","dest":"bairro","destFull":"endereço completo","dinamico":0.00,"gorjeta":0.00,"pedagio":0.00,"taxaZero":false,"dinheiro":false}]. duration=minutos inteiros. dinamico, gorjeta e pedagio ficam 0.00 quando não aparecerem. "taxaZero":true se houver indicação de 0% de taxa. "dinheiro":true se pagamento em dinheiro. Se vazio retorne [].'
     : 'Esta é a tela "Histórico de corridas" do app 99 Motorista. ' +
       'Estrutura de CADA corrida, sempre nesta ordem: ' +
       '(1) Data e hora no formato "DD/MM/AAAA HH:MM" — extraia SOMENTE o HH:MM como campo "time". ' +
       '(2) Forma de pagamento: "Ganhos pagos no app" ou "Ganhos pagos em dinheiro" — IGNORE, não é valor nem corrida. ' +
       '(3) Ícone de carro + texto "Pop" + valor "R$X,XX" à direita — este R$X,XX é o "value" da corrida. Converta vírgula para ponto (R$7,90 → 7.90). ' +
       '(4) Tag laranja "Taxa Fixa de X%" — extraia o número X como "serviceFee" em formato decimal (ex: "Taxa Fixa de 15%" → serviceFee:0.15, "Taxa Fixa de 0%" → serviceFee:0). Não é gorjeta nem dinâmico. ' +
-      '(5) Endereço de origem (ícone seta pra cima) e endereço de destino (ícone seta pra baixo) — extraia o bairro/rua como "origin" e "dest". ' +
+      '(5) Endereço de origem (ícone seta pra cima) e endereço de destino (ícone seta pra baixo) — extraia o texto COMPLETO exatamente como aparece em "originFull"/"destFull", E TAMBÉM extraia só o nome do bairro (sem rua, cidade, UF) em "origin"/"dest" — ex: se o endereço completo é "Rua Carmela Dutra, Agriões, Teresópolis - RJ", então origin="Agriões" e originFull=texto completo. ' +
+      '(5b) Pode aparecer "Pedágio R$X,XX" — extraia esse valor em pedagio quando existir (0.00 quando não aparecer). ' +
       '(6) Status verde "Pago" ou "Pedido finalizado" — marca o FIM desta corrida. ' +
       'REGRAS: ' +
       'Extraia SOMENTE corridas COMPLETAS que mostrem data+hora, linha com "Pop" e valor, e pelo menos um endereço. ' +
       'Se uma corrida estiver cortada no topo ou base da tela (sem data/hora ou sem status final), IGNORE. ' +
       '"km" e "duration" sempre 0 pois não aparecem no histórico. ' +
       '"dinamico" e "gorjeta" sempre 0.00 pois não aparecem no histórico da 99. ' +
-      'Retorne SOMENTE JSON array sem texto extra: [{"time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"99Pop","origin":"bairro","dest":"bairro","dinamico":0.00,"gorjeta":0.00,"serviceFee":0.00,"dinheiro":false}]. "serviceFee" é sempre o número da tag "Taxa Fixa de X%" convertido pra decimal (15% → 0.15). "dinheiro":true quando aparecer "Ganhos pagos em dinheiro". Se não houver corridas completas retorne [].';
+      'Retorne SOMENTE JSON array sem texto extra: [{"time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"99Pop","origin":"bairro","originFull":"endereço completo","dest":"bairro","destFull":"endereço completo","dinamico":0.00,"gorjeta":0.00,"pedagio":0.00,"serviceFee":0.00,"dinheiro":false}]. "serviceFee" é sempre o número da tag "Taxa Fixa de X%" convertido pra decimal (15% → 0.15). "dinheiro":true quando aparecer "Ganhos pagos em dinheiro". Se não houver corridas completas retorne [].';
   const resp = await fetch('https://smartmobi-proxy.yurisilva1990.workers.dev', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({model:'claude-haiku-4-5-20251001', max_tokens:1500,
@@ -4197,6 +4199,7 @@ async function extractTripsFromBase64(b64, mt, plat) {
   return Array.isArray(arr) ? arr.map(t => {
     const dinamico = parseFloat(String(t.dinamico||0).replace(',','.'))||0;
     const tip = parseFloat(String(t.gorjeta||0).replace(',','.'))||0;
+    const pedagioVal = parseFloat(String(t.pedagio||0).replace(',','.'))||0;
     // serviceFee: número real da taxa (0.15 = 15%). taxaZero mantido por
     // compat (código antigo), mas agora sempre derivado do serviceFee real.
     const hasFee = t.serviceFee !== undefined && t.serviceFee !== null && t.serviceFee !== '';
@@ -4205,6 +4208,8 @@ async function extractTripsFromBase64(b64, mt, plat) {
       value:parseFloat(String(t.value||0).replace(',','.'))||0,
       km:parseFloat(String(t.km||0).replace(',','.'))||0,
       duration:parseInt(t.duration)||0, dinamico, tip, surge: dinamico > 0,
+      pedagioValor: pedagioVal, pedagio: pedagioVal > 0,
+      originFull: t.originFull || t.origin || '', destFull: t.destFull || t.dest || '',
       serviceFee: serviceFee,
       taxaZero: serviceFee === 0 || t.taxaZero===true||t.taxaZero==='true'||t.taxaZero===1,
       dinheiro:  t.dinheiro===true||t.dinheiro==='true'||t.dinheiro===1 };
@@ -4415,10 +4420,11 @@ function confirmImport() {
     if (isTripDuplicate(t, day.trips)) { skipped++; return; }
     const trip = {id:DB.uid(), platform:t.platform||'uber', time:t.time||'',
       duration:t.duration||0, origin:t.origin||'', dest:t.dest||'',
+      originFull:t.originFull||t.origin||'', destFull:t.destFull||t.dest||'',
       value:parseFloat(t.value)||0, km:parseFloat(t.km)||0,
       category:'', surge:t.surge||false, airport:t.airport||false,
       dinamico:parseFloat(t.dinamico)||0, tip:parseFloat(t.tip)||0,
-      dinheiro:!!t.dinheiro, pedagio:!!t.pedagio,
+      dinheiro:!!t.dinheiro, pedagio:!!t.pedagio, pedagioValor:parseFloat(t.pedagioValor)||0,
       serviceFee:t.serviceFee??null, taxaZero:!!t.taxaZero};
     day.trips.push(trip);
     toPush.push(trip);
@@ -4434,9 +4440,10 @@ function confirmImport() {
   });
   toPush.forEach(trip => SYNC.push('trips', { id: trip.id, date: S.curDate, platform: trip.platform,
     time: trip.time || null, duration: trip.duration, origin: trip.origin, dest: trip.dest,
+    origin_full: trip.originFull || trip.origin, dest_full: trip.destFull || trip.dest,
     value: trip.value, km: trip.km, category: trip.category, surge: trip.surge, airport: trip.airport,
     dinamico: trip.dinamico, tip: trip.tip, source: 'import_ai',
-    dinheiro: !!trip.dinheiro, pedagio: !!trip.pedagio,
+    dinheiro: !!trip.dinheiro, pedagio: !!trip.pedagio, pedagio_valor: trip.pedagioValor||0,
     service_fee: trip.serviceFee ?? null, taxa_zero: !!trip.taxaZero,
     km_estimado: !!trip.kmEstimado }));
 
@@ -4807,7 +4814,8 @@ async function _autoSyncLocalData() {
           value:t.value||0, km:t.km||0, category:t.category||'',
           surge:!!t.surge, airport:!!t.airport, dinamico:t.dinamico||0,
           tip:t.tip||0, source:t.source||'import_ai',
-          dinheiro:!!t.dinheiro, pedagio:!!t.pedagio,
+          dinheiro:!!t.dinheiro, pedagio:!!t.pedagio, pedagio_valor:t.pedagioValor||0,
+          origin_full:t.originFull||t.origin||'', dest_full:t.destFull||t.dest||'',
           service_fee:t.serviceFee??null, taxa_zero:!!t.taxaZero,
           km_estimado:!!t.kmEstimado
         }, {onConflict:'id'}).catch(()=>{});
@@ -6377,7 +6385,8 @@ const SYNC = {
           value: parseFloat(t.value) || 0, km: parseFloat(t.km) || 0,
           category: t.category || '', surge: t.surge || false, airport: t.airport || false,
           dinamico: parseFloat(t.dinamico) || 0, tip: parseFloat(t.tip) || 0,
-          dinheiro: t.dinheiro || false, pedagio: t.pedagio || false,
+          dinheiro: t.dinheiro || false, pedagio: t.pedagio || false, pedagioValor: t.pedagio_valor || 0,
+          originFull: t.origin_full || t.origin || '', destFull: t.dest_full || t.dest || '',
           serviceFee: t.service_fee ?? null, taxaZero: t.taxa_zero || false,
           kmEstimado: t.km_estimado || false
         });
