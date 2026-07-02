@@ -4436,8 +4436,13 @@ function confirmImport() {
   // Corridas sem km (comum na 99, que não mostra km na tela) — estima via
   // endereço em segundo plano, não bloqueia a UI
   toPush.forEach(trip => {
-    if ((!trip.km || trip.km === 0) && trip.origin && trip.dest) {
-      _queueKmEstimate(S.curDate, trip.id, trip.origin, trip.dest);
+    // Usar endereço COMPLETO (com cidade/UF) pra geocodificar — só o bairro
+    // sozinho (ex: 'Tijuca') é ambíguo e pode resolver pra qualquer lugar
+    // do Brasil, gerando distâncias absurdas.
+    const oFull = trip.originFull || trip.origin;
+    const dFull = trip.destFull || trip.dest;
+    if ((!trip.km || trip.km === 0) && oFull && dFull) {
+      _queueKmEstimate(S.curDate, trip.id, oFull, dFull);
     }
   });
   toPush.forEach(trip => SYNC.push('trips', { id: trip.id, date: S.curDate, platform: trip.platform,
@@ -4934,9 +4939,31 @@ async function _estimateTripKm(origin, dest) {
   await new Promise(r => setTimeout(r, 1100)); // respeita 1 req/s do Nominatim
   const p2 = await _geocodeAddress(dest);
   if (!p1 || !p2) return null;
+  // Sanidade: se os pontos geocodificados ficam absurdamente longe um do
+  // outro (linha reta > 80km), a geocodificação quase certamente resolveu
+  // um endereço ambíguo pro lugar errado — descarta em vez de salvar lixo
+  const straightKm = _haversineKm(p1.lat, p1.lon, p2.lat, p2.lon);
+  if (straightKm > 80) {
+    console.warn('[_estimateTripKm] Descartado — distância implausível:', straightKm.toFixed(1), 'km entre', origin, 'e', dest);
+    return null;
+  }
   await new Promise(r => setTimeout(r, 1100));
   const km = await _routeDistanceOSRM(p1, p2);
-  return km !== null ? parseFloat(km.toFixed(1)) : null;
+  if (km === null) return null;
+  // Segunda checagem: a rota real também não deveria passar de ~120km
+  // pra corrida urbana local (margem maior que a linha reta, por curvas)
+  if (km > 120) {
+    console.warn('[_estimateTripKm] Descartado — rota implausível:', km.toFixed(1), 'km');
+    return null;
+  }
+  return parseFloat(km.toFixed(1));
+}
+function _haversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const toRad = d => d * Math.PI / 180;
+  const dLat = toRad(lat2-lat1), dLon = toRad(lon2-lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  return R * 2 * Math.asin(Math.sqrt(a));
 }
 // Fila: processa uma corrida por vez (respeitando o throttle acima),
 // atualiza o trip local + Supabase quando o km chegar, e re-renderiza.
