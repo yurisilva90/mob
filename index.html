@@ -184,7 +184,7 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .li-ico.green{background:#ECFDF3;color:var(--green2)}.li-ico.red{background:#FEF2F2;color:var(--red)}
 .li-info{flex:1;min-width:0}.li-info h3{font-size:13.5px;font-weight:760}.li-info p{font-size:11.5px;color:var(--muted);margin-top:2px}
 .trip-title{font-size:12.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.li-val{text-align:right;font-size:11px;color:var(--muted);font-weight:600;flex:0 0 auto}.li-val strong{display:block;color:var(--text);font-size:13.5px;font-weight:760;font-family:'Inter',system-ui,sans-serif}
+.li-val{text-align:right;font-size:11px;color:var(--muted);font-weight:600;flex:0 0 auto}.li-val strong{display:block;color:var(--text);font-size:13.5px;font-weight:760;font-family:'Inter',system-ui,sans-serif}.li-time{display:block;color:var(--muted2);font-size:10.5px;font-weight:600;margin-top:2px}
 .li-extra{display:flex;gap:6px;margin-top:5px}.chip{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px;font-family:'Inter',system-ui,sans-serif;letter-spacing:-.01em}.chip svg{flex-shrink:0}.chip-d{background:#FFF7ED;color:#F59E0B}.chip-g{background:#F5F3FF;color:#7C3AED}.chip-taxa{background:#FEF9C3;color:#854D0E;display:inline-flex;align-items:center;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px}.chip-toll{background:#F1F5F9;color:#475569;display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;border-radius:7px;flex-shrink:0}.chip-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;border-radius:7px;flex-shrink:0}.chip-cash{background:#DCFCE7;color:#15803D}.trip-item-wrap{margin-bottom:6px}.li-row.open{border-radius:14px 14px 0 0;border-bottom:0!important}.trip-detail-panel{background:var(--card);border:1.5px solid var(--line);border-top:0;border-radius:0 0 12px 12px;padding:8px 12px 10px}.det-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);padding:4px 0;font-weight:500}.det-row:not(:last-child){border-bottom:1px solid var(--line)}.det-row strong{color:var(--text);font-weight:700}.det-del-btn{display:flex;align-items:center;gap:6px;width:100%;margin-top:8px;padding:8px 0 2px;background:none;border:none;border-top:1px solid var(--line);font-size:12px;font-weight:700;color:#EF4444;cursor:pointer;font-family:inherit}
 .sw{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0}.sw input{opacity:0;width:0;height:0;position:absolute}.sw .trk{position:absolute;inset:0;background:#E2E8F0;border-radius:99px;transition:.2s;cursor:pointer}.sw .trk:before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}.sw input:checked + .trk{background:#22C55E}.sw input:checked + .trk:before{transform:translateX(20px)}
 .acc-card{background:#F8FAFC;border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:14px}
@@ -681,12 +681,14 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .jss-sub{font-size:11.5px;color:var(--muted);font-weight:600}
 .jss-chev{flex-shrink:0;color:var(--muted2);transition:transform .22s;display:flex;align-items:center}
 .jss-kpi-row{display:none;align-items:center;padding:0 14px 11px;gap:0}
-.jss-card.open .jss-kpi-row{display:flex}
+.jss-card.open .jss-kpi-row{display:grid;grid-template-columns:repeat(3,1fr);row-gap:10px;column-gap:0;align-items:start}
 .jss-kpi{flex:1;text-align:center}
 .jss-kpi .jv{font-size:14px;font-weight:800;letter-spacing:-.03em;display:block}
 .jss-kpi .jv.g{color:var(--green)}
+.jss-kpi .jv.b{color:var(--blue)}
 .jss-kpi .jl{font-size:8px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em;margin-top:1px;display:block}
-.jss-acts{display:flex;gap:4px;flex-shrink:0;margin-left:6px}
+.jss-acts{display:none;gap:4px;justify-content:flex-end;padding:2px 14px 0}
+.jss-card.open .jss-acts{display:flex}
 .jss-trips{display:none;border-top:1px solid var(--line);padding:8px 0 4px}
 .jss-card.open .jss-trips{display:block}
 .jss-trips-head{display:flex;align-items:center;justify-content:space-between;padding:4px 14px 8px}
@@ -3111,8 +3113,15 @@ function sessionItem(label, sess, origIdx, dateStr, day, live) {
   });
   const corridas = trips.length;
   const ganhos = trips.reduce((s,t)=>s+(t.value||0),0);
-  const kmDesloc = (sess.kmDesloc || km);
+  // Km ativo = soma do km de cada corrida realizada (tempo 'em corrida')
+  // Km deslocamento = km total do GPS MENOS o km ativo (tempo rodando sem
+  // corrida — indo pro ponto, retornando pra casa, esperando chamado etc.)
+  const kmAtivo = trips.reduce((s,t)=>s+(parseFloat(t.km)||0),0);
+  const kmDesloc = Math.max(0, km - kmAtivo);
 
+  const horasDecimal = elapsedSecs > 0 ? elapsedSecs/3600 : 0;
+  const rsPorHora = horasDecimal > 0 ? DB.fR(ganhos/horasDecimal) : '—';
+  const rsPorKm = km > 0 ? DB.fR(ganhos/km) : '—';
   const editBtn = !live ? `<button class="jss-act" onclick="event.stopPropagation();editJss('${dateStr}',${origIdx})" title="Editar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
         <button class="jss-act del" onclick="event.stopPropagation();deleteJss('${dateStr}',${origIdx})" title="Excluir"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>` : '';
 
@@ -3126,12 +3135,14 @@ function sessionItem(label, sess, origIdx, dateStr, day, live) {
       <div class="jss-chev"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg></div>
     </div>
     <div class="jss-kpi-row">
-      <div class="jss-kpi"><span class="jv">${km.toFixed(1)}</span><span class="jl">Km ativo</span></div>
+      <div class="jss-kpi"><span class="jv">${kmAtivo.toFixed(1)}</span><span class="jl">Km ativo</span></div>
       <div class="jss-kpi"><span class="jv">${kmDesloc.toFixed(1)}</span><span class="jl">Desloc.</span></div>
       <div class="jss-kpi"><span class="jv">${corridas}</span><span class="jl">Corridas</span></div>
       <div class="jss-kpi"><span class="jv g">${DB.fR(ganhos)}</span><span class="jl">Ganhos</span></div>
-      <div class="jss-acts">${editBtn}</div>
+      <div class="jss-kpi"><span class="jv b">${rsPorHora}</span><span class="jl">R$/h</span></div>
+      <div class="jss-kpi"><span class="jv b">${rsPorKm}</span><span class="jl">R$/km</span></div>
     </div>
+    ${editBtn ? `<div class="jss-acts">${editBtn}</div>` : ''}
     <div class="jss-trips">
       <div class="jss-trips-head">
         <h4>Corridas desta jornada</h4>
@@ -3249,7 +3260,11 @@ function tripItem(t, tripDate) {
   const plat = {uber:'Uber','99':'99',particular:'Particular'}[t.platform||'uber'] || 'Uber';
   const dest = t.dest ? ' → '+t.dest : '';
   const dur = t.duration ? ' · '+fmtDur(t.duration) : '';
-  const tid = t.id||('t'+Math.random().toString(36).slice(2,8));
+  // tid sempre único por renderização (nunca reusa t.id) — evita colisão de
+  // DOM id quando a mesma corrida aparece em mais de uma tela ao mesmo tempo
+  // (ex: dentro da Jornada e na tela Corridas), o que fazia o clique parecer
+  // não fazer nada (abria o painel de detalhe da OUTRA instância, escondida)
+  const tid = 'ti'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
   const cashSvg = `<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M2 10h20" stroke="white" stroke-width="1.2" fill="none"/><path d="M2 17h20" stroke="white" stroke-width="1.2" fill="none"/><circle cx="12" cy="13" r="2.5" fill="white"/></svg>`;
   const extras = [];
   if (t.dinamico>0) extras.push(`<span class="chip chip-d"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><strong>${DB.fR(t.dinamico)}</strong></span>`);
@@ -3279,7 +3294,7 @@ function tripItem(t, tripDate) {
   return `<div class="trip-item-wrap" id="tw-${tid}">
     <div class="li-row" id="tr-${tid}" onclick="toggleTripDetail('${tid}')">
       <div class="li-info"><h3 class="trip-title">${t.origin||'—'}${dest}</h3><p>${plat} · ${(t.km||0).toFixed(1)} km${dur}</p>${extraRow}</div>
-      <div class="li-val"><strong>${DB.fR(t.value)}</strong></div>
+      <div class="li-val"><strong>${DB.fR(t.value)}</strong>${t.time?`<span class="li-time">${t.time}</span>`:''}</div>
     </div>
     <div class="trip-detail-panel" id="td-${tid}" style="display:none">${detRows}</div>
   </div>`;
