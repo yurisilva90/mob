@@ -3853,10 +3853,12 @@ function saveLanc() {
   closeMo('mo-lancamento');
   document.getElementById('l-valor').value = '';
   document.getElementById('l-desc').value = '';
-  if (S.sec === 'jornada') renderJornada();
-  if (S.sec === 'home')    renderHome();
-  if (S.sec === 'financeiro') renderFin();
-  if (S.sec === 'lancamentos') renderLancamentos();
+  setTimeout(() => {
+    try { renderJornada(); } catch(e) {}
+    try { renderHome(); } catch(e) {}
+    try { renderFin(); } catch(e) {}
+    try { if (typeof renderLancamentos === 'function') renderLancamentos(); } catch(e) {}
+  }, 80);
 }
 
 // ── CORRIDA FORM ──────────────────────────────────────────────
@@ -4400,7 +4402,7 @@ async function reconcileAllExistingDays() {
       `${totalCreated} sessão(ões) criada(s) e ${totalGrouped} corrida(s) agrupada(s) automaticamente.`,
       'info', 5000
     );
-    if (S.sec === 'jornada') renderJornada();
+    setTimeout(() => { try { renderJornada(); } catch(e) {} }, 80);
   }
 }
 
@@ -4751,8 +4753,10 @@ async function confirmUberZipImport() {
   closeMo('mo-uberzip');
   closeMo('mo-import');
   _uzResult = null;
-  if (S.sec === 'jornada') renderJornada();
-  if (S.sec === 'home') renderHome();
+  setTimeout(() => {
+    try { renderJornada(); } catch(e) {}
+    try { renderHome(); } catch(e) {}
+  }, 80);
   showToast(res.added + ' corrida' + (res.added !== 1 ? 's' : '') + ' importada' + (res.added !== 1 ? 's' : '') + ' do histórico do Uber!', 'success');
 }
 
@@ -6160,8 +6164,8 @@ async function loadHistFile(input) {
     if (barEl) barEl.style.width = '100%';
     setTimeout(() => {
       closeMo('mo-hist-import');
-      if (S.sec === 'home')    renderHome();
-      if (S.sec === 'jornada') renderJornada();
+      try { renderHome(); } catch(e) {}
+      try { renderJornada(); } catch(e) {}
       showToast(`Histórico importado com sucesso!\n${added} corridas adicionadas em ${days_count} dias.`, 'success');
     }, 1200);
 
