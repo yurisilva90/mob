@@ -3282,7 +3282,7 @@ function tripItem(t, tripDate) {
     `<div class="det-row"><span>Plataforma</span><strong>${plat}</strong></div>`,
     t.origin?`<div class="det-row"><span>Origem</span><strong>${t.origin}</strong></div>`:'',
     t.dest?`<div class="det-row"><span>Destino</span><strong>${t.dest}</strong></div>`:'',
-    t.km>0?`<div class="det-row"><span>Distância</span><strong>${(t.km||0).toFixed(1)} km</strong></div>`:'',
+    t.km>0?`<div class="det-row"><span>Distância${t.kmEstimado?' (estimada)':''}</span><strong>${t.kmEstimado?'~':''}${(t.km||0).toFixed(1)} km</strong></div>`:'',
     t.duration>0?`<div class="det-row"><span>Duração</span><strong>${fmtDur(t.duration)}</strong></div>`:'',
     t.dinamico>0?`<div class="det-row"><span>Preço dinâmico</span><strong style="color:#F59E0B">+ ${DB.fR(t.dinamico)}</strong></div>`:'',
     t.tip>0?`<div class="det-row"><span>Gorjeta</span><strong style="color:#7C3AED">+ ${DB.fR(t.tip)}</strong></div>`:'',
@@ -3293,7 +3293,7 @@ function tripItem(t, tripDate) {
   ].filter(Boolean).join('');
   return `<div class="trip-item-wrap" id="tw-${tid}">
     <div class="li-row" id="tr-${tid}" onclick="toggleTripDetail('${tid}')">
-      <div class="li-info"><h3 class="trip-title">${t.origin||'—'}${dest}</h3><p>${plat} · ${(t.km||0).toFixed(1)} km${dur}</p>${extraRow}</div>
+      <div class="li-info"><h3 class="trip-title">${t.origin||'—'}${dest}</h3><p>${plat} · ${t.kmEstimado?'~':''}${(t.km||0).toFixed(1)} km${t.kmEstimado?' (estim.)':''}${dur}</p>${extraRow}</div>
       <div class="li-val"><strong>${DB.fR(t.value)}</strong>${t.time?`<span class="li-time">${t.time}</span>`:''}</div>
     </div>
     <div class="trip-detail-panel" id="td-${tid}" style="display:none">${detRows}</div>
@@ -4420,10 +4420,20 @@ function confirmImport() {
     added++;
   });
   DB.saveDay(day); closeMo('mo-import-confirm'); window._pendingTrips=null;
+  // Corridas sem km (comum na 99, que não mostra km na tela) — estima via
+  // endereço em segundo plano, não bloqueia a UI
+  toPush.forEach(trip => {
+    if ((!trip.km || trip.km === 0) && trip.origin && trip.dest) {
+      _queueKmEstimate(S.curDate, trip.id, trip.origin, trip.dest);
+    }
+  });
   toPush.forEach(trip => SYNC.push('trips', { id: trip.id, date: S.curDate, platform: trip.platform,
     time: trip.time || null, duration: trip.duration, origin: trip.origin, dest: trip.dest,
     value: trip.value, km: trip.km, category: trip.category, surge: trip.surge, airport: trip.airport,
-    dinamico: trip.dinamico, tip: trip.tip, source: 'import_ai' }));
+    dinamico: trip.dinamico, tip: trip.tip, source: 'import_ai',
+    dinheiro: !!trip.dinheiro, pedagio: !!trip.pedagio,
+    service_fee: trip.serviceFee ?? null, taxa_zero: !!trip.taxaZero,
+    km_estimado: !!trip.kmEstimado }));
 
   // Reconciliação de sessões — dry run para saber o que vai acontecer
   const recon = reconcileSessionsForDay(S.curDate, true);
@@ -4793,7 +4803,8 @@ async function _autoSyncLocalData() {
           surge:!!t.surge, airport:!!t.airport, dinamico:t.dinamico||0,
           tip:t.tip||0, source:t.source||'import_ai',
           dinheiro:!!t.dinheiro, pedagio:!!t.pedagio,
-          serviceFee:t.serviceFee??null, taxaZero:!!t.taxaZero
+          service_fee:t.serviceFee??null, taxa_zero:!!t.taxaZero,
+          km_estimado:!!t.kmEstimado
         }, {onConflict:'id'}).catch(()=>{});
       }
     }
@@ -4875,6 +4886,69 @@ async function reconcileJornadaHoje() {
     }
     if (changed) DB.saveDay(day);
   } catch(e) { console.warn("[reconcileJornadaHoje]", e); }
+}
+
+// ── Estimativa de km por endereço (Nominatim geocode + OSRM route) ────
+// Usado quando a plataforma não informa km (ex: 99 Motorista). Gratuito,
+// mas com throttle de 1 req/s no Nominatim — processar em fila sequencial.
+let _geoQueueBusy = false;
+const _geoQueue = [];
+async function _geocodeAddress(query) {
+  if (!query) return null;
+  try {
+    const url = "https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" + encodeURIComponent(query);
+    const r = await fetch(url, { headers: { "Accept-Language": "pt-BR" } });
+    const data = await r.json();
+    if (!data || !data.length) return null;
+    return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+  } catch(e) { console.warn("[_geocodeAddress]", e); return null; }
+}
+async function _routeDistanceOSRM(p1, p2) {
+  try {
+    const url = `https://router.project-osrm.org/route/v1/driving/${p1.lon},${p1.lat};${p2.lon},${p2.lat}?overview=false`;
+    const r = await fetch(url);
+    const data = await r.json();
+    if (!data.routes || !data.routes.length) return null;
+    return data.routes[0].distance / 1000; // metros → km
+  } catch(e) { console.warn("[_routeDistanceOSRM]", e); return null; }
+}
+async function _estimateTripKm(origin, dest) {
+  const p1 = await _geocodeAddress(origin);
+  await new Promise(r => setTimeout(r, 1100)); // respeita 1 req/s do Nominatim
+  const p2 = await _geocodeAddress(dest);
+  if (!p1 || !p2) return null;
+  await new Promise(r => setTimeout(r, 1100));
+  const km = await _routeDistanceOSRM(p1, p2);
+  return km !== null ? parseFloat(km.toFixed(1)) : null;
+}
+// Fila: processa uma corrida por vez (respeitando o throttle acima),
+// atualiza o trip local + Supabase quando o km chegar, e re-renderiza.
+function _queueKmEstimate(dateStr, tripId, origin, dest) {
+  _geoQueue.push({ dateStr, tripId, origin, dest });
+  if (!_geoQueueBusy) _processGeoQueue();
+}
+async function _processGeoQueue() {
+  _geoQueueBusy = true;
+  while (_geoQueue.length) {
+    const job = _geoQueue.shift();
+    try {
+      const km = await _estimateTripKm(job.origin, job.dest);
+      if (km !== null) {
+        const day = DB.day(job.dateStr);
+        const t = (day.trips||[]).find(x => x.id === job.tripId);
+        if (t) {
+          t.km = km; t.kmEstimado = true;
+          DB.saveDay(day);
+          if (_supaUser) {
+            _SUPA.from("trips").upsert({ id: t.id, user_id: _supaUser.id, km, km_estimado: true },
+              { onConflict: "id" }).catch(()=>{});
+          }
+          try { if (S.sec === "jornada") renderJornada(); if (S.sec === "corridas") renderCorridas(); } catch(e) {}
+        }
+      }
+    } catch(e) { console.warn("[_processGeoQueue]", e); }
+  }
+  _geoQueueBusy = false;
 }
 
 function _gcss(){try{return new Set(JSON.parse(localStorage.getItem('sm_gps_closed_set')||'[]'));}catch(e){return new Set();}}
@@ -6299,7 +6373,8 @@ const SYNC = {
           category: t.category || '', surge: t.surge || false, airport: t.airport || false,
           dinamico: parseFloat(t.dinamico) || 0, tip: parseFloat(t.tip) || 0,
           dinheiro: t.dinheiro || false, pedagio: t.pedagio || false,
-          serviceFee: t.serviceFee ?? null, taxaZero: t.taxaZero || false
+          serviceFee: t.service_fee ?? null, taxaZero: t.taxa_zero || false,
+          kmEstimado: t.km_estimado || false
         });
       });
       (expenses.data || []).forEach(e => {
