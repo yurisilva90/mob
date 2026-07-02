@@ -5052,15 +5052,18 @@ function gpsStop() {
   // Avisa o Supabase do fechamento JÁ, antes de qualquer lógica que possa
   // falhar — o servidor precisa saber que a jornada acabou o quanto antes.
   if (_supaUser) {
-    _SUPA.from('sessions').upsert({
-      id: cloudId, user_id: _supaUser.id, date: DB.today(),
-      start_ms: startMs, end_ms: endMs,
-      km: parseFloat(kmSnap.toFixed(3)), elapsed_secs: elapsedSnap,
-      paused_ms: 0, is_paused: false
-    }, { onConflict: 'id' }).catch(()=>{
-      SYNC.push('sessions', { id: cloudId, date: DB.today(), start_ms: startMs, end_ms: endMs,
-        km: kmSnap, elapsed_secs: elapsedSnap });
-    });
+    // 'Enfileira primeiro, tenta depois' — se o app for morto pelo Android
+    // NO MEIO da chamada de rede (antes dela resolver ou rejeitar), o
+    // fechamento não pode se perder. A intenção já está salva no localStorage
+    // ANTES de qualquer requisição de rede começar; só é removida da fila
+    // se a tentativa imediata realmente confirmar sucesso.
+    const closeRow = { id: cloudId, date: DB.today(), start_ms: startMs, end_ms: endMs,
+      km: parseFloat(kmSnap.toFixed(3)), elapsed_secs: elapsedSnap, paused_ms: 0, is_paused: false };
+    const queueId = SYNC.enqueue({ type: 'push', table: 'sessions', row: closeRow });
+    _SUPA.from('sessions').upsert(Object.assign({}, closeRow, { user_id: _supaUser.id }),
+      { onConflict: 'id' }
+    ).then(({error}) => { if (!error) SYNC.dequeue(queueId); })
+     .catch(()=>{}); // falhou — fica na fila, flushQueue() tenta de novo depois
   }
   g.start=null; g.pausedMs=0; g.km=0; g.pts=[]; g.baseKm=0; g.baseElapsed=0; g.pa=null;
   g.sessionId = null;
@@ -5129,6 +5132,19 @@ function persistGps() {
 
 async function _persistGpsCloud() {
   if (!_supaUser || !S.gps.start || S.gps.st === 'idle') return;
+  // Defesa contra instância fantasma: se outra aba/instância desta MESMA
+  // origem já encerrou a jornada (apagou o marcador local), esta instância
+  // deve se autodestruir em vez de continuar fazendo checkpoint de uma
+  // jornada que já não existe mais oficialmente. localStorage é compartilhado
+  // entre abas da mesma origem — isso funciona mesmo sem comunicação direta.
+  const localMarker = DB.get('sm_gps_session');
+  if (!localMarker || (localMarker.st !== 'running' && localMarker.st !== 'paused')) {
+    console.warn('[_persistGpsCloud] Marcador local ausente — outra instância já encerrou. Auto-parando esta.');
+    S.gps.st = 'idle'; S.gps.start = null;
+    if (S.gps.wid) { try{ navigator.geolocation.clearWatch(S.gps.wid); }catch(e){} }
+    if (S.gps.ti) { try{ clearInterval(S.gps.ti); }catch(e){} }
+    return;
+  }
   const g = S.gps;
   if (!g.sessionId) g.sessionId = DB.uid();
   const snapId = g.sessionId; // capturar antes do await
@@ -6137,7 +6153,14 @@ const SYNC = {
   // no meio de uma corrida). Fica salva no localStorage, sobrevive a fechar o app.
   enqueue(op) {
     const q = DB.syncQueue();
-    q.push(Object.assign({ id: Date.now()+'_'+Math.random().toString(36).slice(2), ts: Date.now() }, op));
+    const id = Date.now()+'_'+Math.random().toString(36).slice(2);
+    q.push(Object.assign({ id, ts: Date.now() }, op));
+    DB.saveSyncQueue(q);
+    this._updateBadge();
+    return id;
+  },
+  dequeue(id) {
+    const q = DB.syncQueue().filter(op => op.id !== id);
     DB.saveSyncQueue(q);
     this._updateBadge();
   },
