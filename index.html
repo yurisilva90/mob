@@ -4832,7 +4832,41 @@ async function _autoSyncLocalData() {
     }
   } catch(e) { console.warn('[autoSync]', e); }
 }
-setTimeout(()=>{ _autoSyncLocalData(); setInterval(_autoSyncLocalData,5*60*1000); },2*60*1000);
+// ── Traz de volta correções feitas direto no banco (ex: km ajustado
+// manualmente) — sem isso, o auto-sync só empurrava dado local pro
+// Supabase e nunca puxava correções de volta pro celular.
+async function _pullTripsCorrections() {
+  if (!_supaUser || !navigator.onLine) return;
+  try {
+    const cutoff = new Date(Date.now()-7*24*3600*1000).toISOString().slice(0,10); // últimos 7 dias
+    const { data: remote, error } = await _SUPA.from('trips').select('*')
+      .eq('user_id', _supaUser.id).gte('date', cutoff);
+    if (error || !remote) return;
+    let changed = false;
+    remote.forEach(r => {
+      const day = DB.day(r.date);
+      if (!day.trips) return;
+      const idx = day.trips.findIndex(t => t.id === r.id);
+      if (idx === -1) return;
+      const local = day.trips[idx];
+      // Só sobrescreve os campos que podem ter sido corrigidos manualmente
+      // no banco (km, taxa, pedágio) — não mexe em nada que o usuário
+      // possa ter editado localmente enquanto offline.
+      const rKm = parseFloat(r.km)||0;
+      if (Math.abs((local.km||0) - rKm) > 0.05 || !!local.kmEstimado !== !!r.km_estimado) {
+        local.km = rKm; local.kmEstimado = !!r.km_estimado; changed = true;
+        day.trips[idx] = local; DB.saveDay(day);
+      }
+    });
+    if (changed) {
+      try { if (S.sec==='corridas') renderCorridas(); } catch(e) {}
+      try { if (S.sec==='jornada') renderJornada(); } catch(e) {}
+      try { renderHome(); } catch(e) {}
+    }
+  } catch(e) { console.warn('[_pullTripsCorrections]', e); }
+}
+async function _syncTick() { await _autoSyncLocalData(); await _pullTripsCorrections(); }
+setTimeout(()=>{ _syncTick(); setInterval(_syncTick, 60*1000); }, 60*1000); // a cada 1 minuto
 
 // ── Status de rede: indicador visual + reconciliação ao voltar online ──
 let _netSyncing = false;
