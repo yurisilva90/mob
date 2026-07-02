@@ -5208,16 +5208,53 @@ async function _closeOrphanSessions() {
   } catch(e) { console.error("[_closeOrphanSessions]", e); return null; }
 }
 
-function gpsStart() {
+async function gpsStart() {
   // Guard: impede reentrada — clique duplo/rápido não pode criar uma
   // segunda jornada sobrepondo a que acabou de iniciar
   if (S.gps.st === 'running' || S.gps.st === 'paused') return;
+  // ═══ CONTINUIDADE: antes de criar uma jornada nova do zero, verifica
+  // se já existe uma sessão em aberto (sem end_ms) nas últimas 12h. Se
+  // existir, RETOMA ela em vez de começar outra — protege contra perda
+  // de km quando gpsStart() é chamado de forma inesperada (ex: toque no
+  // botão flutuante nativo) enquanto uma jornada anterior ainda deveria
+  // estar rodando mas o app local perdeu o estado dela.
+  if (_supaUser && navigator.onLine) {
+    try {
+      const cutoff = Date.now() - 12*3600*1000;
+      const { data: open } = await _SUPA.from('sessions').select('*')
+        .eq('user_id', _supaUser.id).is('end_ms', null)
+        .gte('start_ms', cutoff).order('start_ms', {ascending:false}).limit(1);
+      if (open && open.length) {
+        const s = open[0];
+        const g2 = S.gps;
+        g2.st = 'running'; g2.sessionId = s.id; g2.start = s.start_ms;
+        g2.km = parseFloat(s.km)||0; g2.pausedMs = s.paused_ms||0; g2.pa = null;
+        g2.pts = []; g2.lastFixTime = null;
+        const day1 = DB.day(s.date || DB.today());
+        g2.baseKm = (day1.sessions||[]).reduce((sum,x)=>sum+(x.km||0),0);
+        g2.baseElapsed = (day1.sessions||[]).reduce((sum,x)=>sum+(x.elapsed||0),0);
+        if (g2.ti) { try{ clearInterval(g2.ti); }catch(e){} }
+        if (g2.wid) { try{ navigator.geolocation.clearWatch(g2.wid); }catch(e){} }
+        persistGps();
+        syncNavButton();
+        g2.ti = setInterval(gpsUpdate, 1000);
+        if (navigator.geolocation) {
+          g2.wid = navigator.geolocation.watchPosition(gpsOnPosition, null, {enableHighAccuracy:true, maximumAge:3000, timeout:10000});
+        }
+        requestWakeLock();
+        showToast('Uma jornada em aberto foi encontrada e retomada (não iniciamos outra do zero).', 'info');
+        setTimeout(() => { try{renderJornada();}catch(e){} try{renderHome();}catch(e){} }, 80);
+        return; // NÃO cria sessão nova — já retomou a existente
+      }
+    } catch(e) { console.warn('[gpsStart] checagem de continuidade falhou:', e); }
+  }
   // Defesa: limpa qualquer interval/watcher residual de uma sessão anterior
   // que não tenha sido corretamente encerrada (evita contagem duplicada de km)
   if (S.gps.ti) { try{ clearInterval(S.gps.ti); }catch(e){} }
   if (S.gps.wid) { try{ navigator.geolocation.clearWatch(S.gps.wid); }catch(e){} }
   const g = S.gps; g.st='running'; g.start=Date.now(); g.km=0; g.pts=[]; g.pausedMs=0; g.pa=null;
-  // Fecha em segundo plano qualquer jornada órfã (não bloqueia o início desta)
+  // Fecha em segundo plano qualquer jornada órfã de verdade (mais de 12h,
+  // já não é candidata a retomada acima) — não bloqueia o início desta
   _closeOrphanSessions().then(n => { if (n) showToast(n+' jornada(s) antiga(s) que ficaram aberta(s) foram encerrada(s) automaticamente.', 'info'); }).catch(()=>{});
   g.sessionId = DB.uid(); // ID único desta sessão, usado para upsert no cloud
   const day0 = DB.day(DB.today());
