@@ -130,20 +130,20 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .stats-cards .l{font-size:9px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin-top:3px}
 /* R$/h e R$/km — largura total, preenchendo até as bordas do card */
 .j-wide{display:flex;gap:8px;margin-top:8px}
-.j-wide-cell{flex:1;background:rgba(255,255,255,.16);border-radius:12px;padding:11px 4px;text-align:center}
-.j-wide-cell strong{display:block;font-size:17px;font-weight:800;color:#BBF7D0}
+.j-wide-cell{flex:1;background:rgba(0,0,0,.16);border-radius:12px;padding:9px 4px;text-align:center}
+.j-wide-cell strong{display:block;font-size:16px;font-weight:800;color:#fff}
 .j-wide-cell span{font-size:9px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.05em;font-weight:700}
 /* Metas do dia dentro do card da jornada (fundo escuro) */
 .j-metas-inline{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.18)}
 .j-metas-inline-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 .j-metas-inline-head span{font-size:10.5px;font-weight:800;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.04em}
 .j-metas-inline-head a{font-size:10px;color:rgba(255,255,255,.65);font-weight:700;cursor:pointer}
-.j-metas-inline .goal-item{margin-bottom:8px}
+.j-metas-inline .goal-item{margin-bottom:6px;border-bottom:none !important;padding-bottom:0 !important}
 .j-metas-inline .goal-item:last-child{margin-bottom:0}
 .j-metas-inline .goal-top{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.8);font-weight:700;margin-bottom:4px}
 .j-metas-inline .goal-top strong{color:#fff;font-weight:800}
 .j-metas-inline .gbar{height:5px;background:rgba(255,255,255,.2);border-radius:99px;overflow:hidden}
-.j-metas-inline .gbar i{display:block;height:100%;background:#fff;border-radius:99px}
+.j-metas-inline .gbar i,.j-metas-inline .gbar.money i,.j-metas-inline .gbar.km i,.j-metas-inline .gbar.time i{display:block;height:100%;background:#fff !important;border-radius:99px}
 .j-metas-inline .goal-locked{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:rgba(255,255,255,.75);font-weight:700;cursor:pointer}
 .j-metas-inline .goal-locked b{color:#fff;font-weight:800}
 .stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px 8px;text-align:center;box-shadow:0 3px 14px rgba(15,23,42,.06)}.stat .v{font-family:'Inter',system-ui,sans-serif;font-size:15px;font-weight:700;white-space:nowrap}.stat .l{font-size:9px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-top:5px}.green{color:var(--green2)}.red{color:var(--red)}.blue{color:#0A2F6B}
@@ -168,11 +168,11 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .j-km strong{display:block;font-family:'Inter',system-ui,sans-serif;font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1}
 .j-km span{display:block;margin-top:5px;opacity:.88}
 .j-metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px}
-.j-mini{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.16);border-radius:16px;padding:10px;text-align:center}
+.j-mini{background:transparent;border:none;border-radius:0;padding:6px 4px;text-align:center}
 .j-mini strong{display:block;font-family:'Inter',system-ui,sans-serif;font-size:16px;font-weight:700}
 .j-mini span{display:block;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;opacity:.78;margin-top:3px}
 .j-metrics2{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px}
-.j-mini.sm{padding:7px 5px}
+.j-mini.sm{padding:6px 5px;background:rgba(255,255,255,.12);border-radius:12px}
 .j-mini.sm strong{font-size:13px}
 .j-mini.sm span{font-size:8.5px}
 .km-edit-btn{width:18px;height:18px;border-radius:50%;border:0;background:rgba(255,255,255,.22);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;flex-shrink:0;padding:0}
@@ -1012,7 +1012,10 @@ h1.hd-title{font-family:var(--font-brand)!important}
     <div class="daybar">
       <button class="arrow" onclick="chgDay(-1)">&#8249;</button>
       <div class="datebox" onclick="document.getElementById('jorn-date-input').showPicker ? document.getElementById('jorn-date-input').showPicker() : document.getElementById('jorn-date-input').click()">
-        <h1 id="dn-date">Hoje</h1>
+        <div style="display:flex;align-items:center;gap:5px">
+          <h1 id="dn-date">Hoje</h1>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
         <p id="dn-dow"></p>
       </div>
       <button class="arrow" onclick="chgDay(1)">&#8250;</button>
@@ -1023,7 +1026,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
   <div class="journey idle" id="journey-card">
     <div class="j-head">
       <div class="j-status"><i></i><span id="jc-status-text">Iniciar</span></div>
-      <button class="j-import" onclick="openMo('mo-import')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Corridas</button>
+      <button class="j-import" onclick="openMo('mo-import')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Importar corridas</button>
     </div>
     <div class="j-current">
       <div><h2 id="jc-timer">00:00:00</h2><p id="jc-sub">Nenhuma sessão iniciada</p></div>
@@ -2951,7 +2954,7 @@ function renderJornada() {
   if (dateEl) dateEl.textContent = isToday ? 'Hoje' : (dt.getDate()+' de '+msLong[dt.getMonth()]+' de '+dt.getFullYear());
   const dowEl = document.getElementById('dn-dow');
   // Dia da semana + badge "Hoje" na mesma linha
-  if (dowEl) dowEl.innerHTML = dows[dt.getDay()] + (isToday ? ' <span class="dn-hoje">Hoje</span>' : '');
+  if (dowEl) dowEl.innerHTML = dows[dt.getDay()];
   const day = DB.day(d);
   const rev = day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0);
   const exp = day.expenses.reduce((s,e)=>s+(e.amount||0),0);
@@ -3092,15 +3095,15 @@ function renderMetasDoDia(day) {
   let html = '';
   if (moneyGoal) {
     const pct = Math.min(100, Math.round(rev/moneyGoal*100));
-    html += `<div class="goal-item"><div class="goal-top"><strong>Financeiro</strong><span>${DB.fRI(rev)} de ${DB.fRI(moneyGoal)} · ${pct}%</span></div><div class="gbar money"><i style="width:${pct}%"></i></div></div>`;
+    html += `<div class="goal-item"><div class="goal-top"><strong>Financeira</strong><span>${DB.fRI(rev)} de ${DB.fRI(moneyGoal)} · ${pct}%</span></div><div class="gbar money"><i style="width:${pct}%"></i></div></div>`;
   } else {
-    html += `<div class="goal-item"><div class="goal-locked" onclick="openPlanJornada()"><span>Financeiro — meta não definida</span><b>Planejar</b></div></div>`;
+    html += `<div class="goal-item"><div class="goal-locked" onclick="openPlanJornada()"><span>Financeira — meta não definida</span><b>Planejar</b></div></div>`;
   }
   if (plan && plan.kmGoal) {
     const pct = Math.min(100, Math.round(totalKm/plan.kmGoal*100));
-    html += `<div class="goal-item"><div class="goal-top"><strong>Quilometragem</strong><span>${totalKm.toFixed(1)} de ${plan.kmGoal} km · ${pct}%</span></div><div class="gbar km"><i style="width:${pct}%"></i></div></div>`;
+    html += `<div class="goal-item"><div class="goal-top"><strong>Km</strong><span>${totalKm.toFixed(1)} de ${plan.kmGoal} km · ${pct}%</span></div><div class="gbar km"><i style="width:${pct}%"></i></div></div>`;
   } else {
-    html += `<div class="goal-item"><div class="goal-locked" onclick="openPlanJornada()"><span>Quilometragem — meta não definida</span><b>Planejar</b></div></div>`;
+    html += `<div class="goal-item"><div class="goal-locked" onclick="openPlanJornada()"><span>Km — meta não definida</span><b>Planejar</b></div></div>`;
   }
   const schedMin = plan ? (plan.schedules||[]).reduce((s,b)=>s+agMinutesBetween(b.start,b.end),0) : 0;
   if (schedMin > 0) {
