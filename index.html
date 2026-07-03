@@ -177,10 +177,10 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .j-mini.sm strong{font-size:13px}
 .j-mini.sm span{font-size:8.5px}
 .km-edit-btn{width:18px;height:18px;border-radius:50%;border:0;background:rgba(255,255,255,.22);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;flex-shrink:0;padding:0}
-.j-actions{display:grid;gap:10px}
+.j-actions{display:grid;gap:10px;margin-top:6px}
 .j-actions.two{grid-template-columns:1fr 1fr}
 .j-actions.single{display:flex;justify-content:center}
-.j-btn{height:48px;border:0;border-radius:16px;font-size:14px;font-weight:780;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;touch-action:manipulation;width:100%}
+.j-btn{height:52px;border:0;border-radius:16px;font-size:14px;font-weight:780;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;touch-action:manipulation;width:100%;position:relative;z-index:2}
 .j-btn svg{width:17px;height:17px}
 .j-btn.solid-light{background:#fff;color:var(--green2)}
 .j-btn.solid-light.danger{color:var(--red)}
@@ -1013,7 +1013,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
     <div class="daybar">
       <button class="arrow" onclick="chgDay(-1)">&#8249;</button>
       <div class="datebox" onclick="document.getElementById('jorn-date-input').showPicker ? document.getElementById('jorn-date-input').showPicker() : document.getElementById('jorn-date-input').click()">
-        <div style="display:flex;align-items:center;gap:5px">
+        <div style="display:flex;align-items:center;justify-content:center;gap:5px">
           <h1 id="dn-date">Hoje</h1>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         </div>
@@ -5297,7 +5297,15 @@ async function gpsStart() {
         const s = open[0];
         const g2 = S.gps;
         g2.st = 'running'; g2.sessionId = s.id; g2.start = s.start_ms;
-        g2.km = parseFloat(s.km)||0; g2.pausedMs = s.paused_ms||0; g2.pa = null;
+        g2.km = parseFloat(s.km)||0; g2.pa = null;
+        // Trata o intervalo em que o app ficou sem rastrear (entre o último
+        // elapsed salvo e agora) como se fosse uma pausa automática — preserva
+        // o horário real de início na tela, mas NÃO conta esse gap como tempo
+        // online de verdade (senão o 'Tempo total' fica inflado com tempo em
+        // que o app estava fechado, não rodando de fato).
+        const expectedNowMs = s.start_ms + (s.elapsed_secs||0)*1000 + (s.paused_ms||0);
+        const gapMs = Math.max(0, Date.now() - expectedNowMs);
+        g2.pausedMs = (s.paused_ms||0) + gapMs;
         g2.pts = []; g2.lastFixTime = null;
         const day1 = DB.day(s.date || DB.today());
         g2.baseKm = (day1.sessions||[]).reduce((sum,x)=>sum+(x.km||0),0);
