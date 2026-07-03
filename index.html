@@ -5913,12 +5913,24 @@ function closeJourneySummary() {
   const el = document.getElementById('app-toast-center');
   if (el) el.remove();
 }
-function showJourneySummary() {
+function showJourneySummary(sess) {
   const day = DB.day(DB.today());
-  const sessions = day.sessions || [];
-  const totalElapsed = Math.max(0, sessions.reduce((s,x)=>s+(x.elapsed||0),0) + (day.tempoAdjust||0));
-  const totalKm = sessions.reduce((s,x)=>s+(x.km||0),0) + (day.kmAdjust||0);
-  const trips = day.trips || [];
+  // Escopo é a jornada (sessão) que acabou de ser encerrada, não o dia
+  // inteiro — se a pessoa já tinha outras sessões hoje, elas não entram
+  // aqui (aparecem cada uma no próprio card ao expandir a lista de
+  // sessões da tela Jornada).
+  sess = sess || (day.sessions || [])[(day.sessions||[]).length - 1] || {};
+  const totalElapsed = sess.elapsed || 0;
+  const totalKm = sess.km || 0;
+  const startMs = sess.start || 0, endMs = sess.end || Date.now();
+  // Mesma lógica de sessionItem(): corrida pertence a esta sessão se o
+  // horário dela cai dentro da janela [start, end] da sessão.
+  const trips = (day.trips || []).filter(t => {
+    let ts = t.ts || 0;
+    if (!ts && t.time) ts = new Date(day.date + 'T' + t.time + ':00').getTime();
+    if (!ts) return false;
+    return ts >= startMs && (!endMs || ts <= endMs);
+  });
   const hasTrips = trips.length > 0;
   const th = Math.floor(totalElapsed/3600), tm = Math.floor(totalElapsed%3600/60);
   const kmh = totalElapsed > 0 ? (totalKm/(totalElapsed/3600)) : 0;
@@ -6113,10 +6125,10 @@ function gpsStop() {
   // aqui falhar, a jornada JÁ está marcada como encerrada na Fase 1 —
   // o pior caso é essa jornada específica não aparecer na listagem local
   // até a próxima reconciliação com o Supabase, nunca ficar 'presa'. ═══
+  let sess = { id: cloudId, start: startMs, end: endMs, km: kmSnap, elapsed: elapsedSnap };
   try {
     const day = DB.day(DB.today());
     if (!day.sessions) day.sessions = [];
-    const sess = { id: cloudId, start: startMs, end: endMs, km: kmSnap, elapsed: elapsedSnap };
     const _sIdx = day.sessions.findIndex(s => s.id === cloudId);
     if (_sIdx >= 0) day.sessions[_sIdx] = sess; else day.sessions.push(sess);
     const totalKm = day.sessions.reduce((s,x)=>s+(x.km||0),0);
@@ -6130,7 +6142,7 @@ function gpsStop() {
     try { renderJornada(); } catch(e) {}
     try { renderHome(); } catch(e) {}
   }, 80);
-  if (kmSnap > 0.1) setTimeout(() => showJourneySummary(), 500);
+  if (kmSnap > 0.1) setTimeout(() => showJourneySummary(sess), 500);
 }
 function getElapsed() {
   const g = S.gps; if (!g.start) return 0;
