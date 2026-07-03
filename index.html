@@ -1063,7 +1063,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <div class="j-wide-cell"><strong id="jc-rskm">R$0,00</strong><span>R$ por km</span></div>
     </div>
     <div class="j-metas-inline">
-      <div class="j-metas-inline-head"><span>Metas do dia</span><a onclick="openPlanJornada()">Editar &#8250;</a></div>
+      <div class="j-metas-inline-head"><span>Metas do dia</span><a onclick="openMetasHojeModal()">Editar &#8250;</a></div>
       <div id="metas-dia-stack"></div>
     </div>
     <div class="j-actions" id="jc-actions"></div>
@@ -1605,6 +1605,40 @@ h1.hd-title{font-family:var(--font-brand)!important}
     <div class="field"><label class="lbl">Hora fim</label><input class="inp" type="time" id="jss-edit-fim" style="height:48px;width:100%;box-sizing:border-box"></div>
     <p style="font-size:11px;color:#B0BEC5;text-align:center;margin-bottom:12px;line-height:1.5">Km ativo e deslocamento são<br>calculados pelas corridas</p>
     <button class="save receita" onclick="saveJss()">Salvar alterações</button>
+  </div>
+</div>
+
+<div class="mo" id="mo-metas-hoje">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+      <h2 style="font-size:16px;font-weight:800;color:var(--text)">Metas de hoje</h2>
+      <button onclick="closeMo('mo-metas-hoje')" style="background:#F1F5F9;border:none;width:28px;height:28px;border-radius:99px;font-size:14px;color:var(--muted)">&#10005;</button>
+    </div>
+    <p id="mh-sub" style="font-size:11.5px;color:var(--muted2);margin-bottom:16px">Vale só para hoje</p>
+    <div class="field" style="margin-bottom:14px">
+      <label class="lbl">Meta financeira</label>
+      <div style="display:flex;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:0 12px;height:46px">
+        <span style="font-size:14px;color:var(--muted2);font-weight:700;margin-right:6px">R$</span>
+        <input type="number" id="mh-money" inputmode="decimal" placeholder="0,00" style="border:none;outline:none;font-size:15px;font-weight:700;color:var(--text);flex:1;background:transparent">
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:14px">
+      <label class="lbl">Meta de quilometragem</label>
+      <div style="display:flex;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:0 12px;height:46px">
+        <input type="number" id="mh-km" inputmode="decimal" placeholder="0" style="border:none;outline:none;font-size:15px;font-weight:700;color:var(--text);flex:1;background:transparent">
+        <span style="font-size:14px;color:var(--muted2);font-weight:700;margin-left:6px">km</span>
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:6px">
+      <label class="lbl">Meta de tempo online</label>
+      <div style="display:flex;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:0 12px;height:46px">
+        <input type="number" id="mh-hours" inputmode="decimal" placeholder="0" style="border:none;outline:none;font-size:15px;font-weight:700;color:var(--text);flex:1;background:transparent">
+        <span style="font-size:14px;color:var(--muted2);font-weight:700;margin-left:6px">horas</span>
+      </div>
+    </div>
+    <button onclick="closeMo('mo-metas-hoje');openPlanJornada()" style="display:block;width:100%;border:0;background:transparent;color:var(--blue2);font-size:11.5px;font-weight:700;text-align:center;margin:6px 0 16px">Editar planejamento semanal completo &#8250;</button>
+    <button class="save receita" onclick="saveMetasHoje()">Salvar metas de hoje</button>
   </div>
 </div>
 
@@ -3079,6 +3113,39 @@ function agMinutesBetween(start, end) {
   const [h2,m2] = end.split(':').map(Number);
   return Math.max(0, (h2*60+m2) - (h1*60+m1));
 }
+function openMetasHojeModal() {
+  const date = S.curDate || DB.today();
+  const day = DB.day(date);
+  const dow = new Date(date+'T12:00').getDay();
+  const plan = DB.planJornada().find(p => p.days && p.days.includes(dow));
+  const meta = DB.meta();
+  const ov = day.metaOverride || null;
+  const dimMes = new Date(new Date(date+'T12:00').getFullYear(), new Date(date+'T12:00').getMonth()+1, 0).getDate();
+  const moneyGoal = (ov && ov.money) ? ov.money : ((plan && plan.moneyGoal) ? plan.moneyGoal : (meta.general ? meta.general/dimMes : 0));
+  const kmGoal = (ov && ov.km) ? ov.km : (plan && plan.kmGoal ? plan.kmGoal : 0);
+  const schedMin = (ov && ov.hours) ? ov.hours*60 : (plan ? (plan.schedules||[]).reduce((s,b)=>s+agMinutesBetween(b.start,b.end),0) : 0);
+  const mEl = document.getElementById('mh-money'); if (mEl) mEl.value = moneyGoal ? moneyGoal.toFixed(2) : '';
+  const kEl = document.getElementById('mh-km'); if (kEl) kEl.value = kmGoal || '';
+  const hEl = document.getElementById('mh-hours'); if (hEl) hEl.value = schedMin ? (schedMin/60).toFixed(1) : '';
+  const subEl = document.getElementById('mh-sub');
+  if (subEl) {
+    const isToday = date === DB.today();
+    subEl.textContent = isToday ? 'Vale só para hoje' : ('Vale só para ' + new Date(date+'T12:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}));
+  }
+  openMo('mo-metas-hoje');
+}
+function saveMetasHoje() {
+  const date = S.curDate || DB.today();
+  const day = DB.day(date);
+  const money = parseFloat((document.getElementById('mh-money')||{}).value) || 0;
+  const km = parseFloat((document.getElementById('mh-km')||{}).value) || 0;
+  const hours = parseFloat((document.getElementById('mh-hours')||{}).value) || 0;
+  day.metaOverride = { money, km, hours };
+  DB.saveDay(day);
+  closeMo('mo-metas-hoje');
+  try { renderMetasDoDia(day); } catch(e) {}
+  showToast('Metas de hoje atualizadas!', 'success');
+}
 function renderMetasDoDia(day) {
   const stack = document.getElementById('metas-dia-stack');
   if (!stack) return;
@@ -3090,8 +3157,9 @@ function renderMetasDoDia(day) {
   const dow = new Date(day.date+'T12:00').getDay();
   const plan = DB.planJornada().find(p => p.days && p.days.includes(dow));
   const meta = DB.meta();
+  const ov = day.metaOverride || null; // ajuste específico deste dia (via modal 'Metas de hoje')
   const dimMes = new Date(new Date(day.date+'T12:00').getFullYear(), new Date(day.date+'T12:00').getMonth()+1, 0).getDate();
-  const moneyGoal = (plan && plan.moneyGoal) ? plan.moneyGoal : (meta.general ? meta.general/dimMes : 0);
+  const moneyGoal = (ov && ov.money) ? ov.money : ((plan && plan.moneyGoal) ? plan.moneyGoal : (meta.general ? meta.general/dimMes : 0));
 
   let html = '';
   if (moneyGoal) {
@@ -3100,13 +3168,14 @@ function renderMetasDoDia(day) {
   } else {
     html += `<div class="goal-item"><div class="goal-locked" onclick="openPlanJornada()"><span>Financeira — meta não definida</span><b>Planejar</b></div></div>`;
   }
-  if (plan && plan.kmGoal) {
-    const pct = Math.min(100, Math.round(totalKm/plan.kmGoal*100));
-    html += `<div class="goal-item"><div class="goal-top"><strong>Km</strong><span>${totalKm.toFixed(1)} de ${plan.kmGoal} km · ${pct}%</span></div><div class="gbar km"><i style="width:${pct}%"></i></div></div>`;
+  const kmGoal = (ov && ov.km) ? ov.km : (plan && plan.kmGoal ? plan.kmGoal : 0);
+  if (kmGoal) {
+    const pct = Math.min(100, Math.round(totalKm/kmGoal*100));
+    html += `<div class="goal-item"><div class="goal-top"><strong>Km</strong><span>${totalKm.toFixed(1)} de ${kmGoal} km · ${pct}%</span></div><div class="gbar km"><i style="width:${pct}%"></i></div></div>`;
   } else {
     html += `<div class="goal-item"><div class="goal-locked" onclick="openPlanJornada()"><span>Km — meta não definida</span><b>Planejar</b></div></div>`;
   }
-  const schedMin = plan ? (plan.schedules||[]).reduce((s,b)=>s+agMinutesBetween(b.start,b.end),0) : 0;
+  const schedMin = (ov && ov.hours) ? ov.hours*60 : (plan ? (plan.schedules||[]).reduce((s,b)=>s+agMinutesBetween(b.start,b.end),0) : 0);
   if (schedMin > 0) {
     const liveMin = Math.round(totalElapsed/60);
     const pct = Math.min(100, Math.round(liveMin/schedMin*100));
