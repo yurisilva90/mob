@@ -1174,10 +1174,12 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <button class="pchip" id="lst-apagar" onclick="setLancStatus('a_pagar')">A pagar</button>
       <button class="pchip" id="lst-pago" onclick="setLancStatus('pago')">Pago</button>
     </div>
-    <div class="lanc-period-row">
+    <div class="lanc-period-row" style="position:relative">
       <button class="pchip active" id="lpp-7d" onclick="setLancPeriod('7d')">7 dias</button>
       <button class="pchip" id="lpp-mes" onclick="setLancPeriod('mes')">Mês</button>
       <button class="pchip" id="lpp-tudo" onclick="setLancPeriod('tudo')">Tudo</button>
+      <button id="lanc-date-btn" onclick="toggleLancDate()" title="Buscar por data" style="width:32px;min-width:32px;height:32px;flex-shrink:0;border-radius:9px;border:1.5px solid #E2E8F0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#475569" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>
+      <input type="date" id="lanc-date-input" onchange="setLancDate(this.value)" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none">
     </div>
   </div>
   <div style="padding:0 16px"><div id="lanc-list"><div class="empty">Nenhum lançamento</div></div></div>
@@ -2132,6 +2134,7 @@ let S = {
   lancFilter: 'all',
   lancStatus: 'all',
   lancPeriod: '7d',
+  lancDate: null,
   curDate: DB.today(),
   lancType: 'receita',
   lancScope: 'operacional',
@@ -3825,6 +3828,7 @@ function saveObjCfg() {
 function getLancDays() {
   const today = new Date(), fmt = d => d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
   const p = S.lancPeriod;
+  if (p === 'date' && S.lancDate) return [S.lancDate];
   if (p === '7d') { const out=[]; for(let i=0;i<7;i++){const d=new Date(today);d.setDate(d.getDate()-i);out.push(fmt(d));} return out; }
   if (p === 'mes') { const m=today.getMonth(),y=today.getFullYear(); return DB.allDates().filter(d=>d.startsWith(y+'-'+p2(m+1))); }
   return DB.allDates(); // 'tudo'
@@ -3845,10 +3849,26 @@ function setLancStatus(s) {
   renderLancamentos();
 }
 function setLancPeriod(p) {
-  S.lancPeriod = p;
+  S.lancPeriod = p; S.lancDate = null;
   ['7d','mes','tudo'].forEach(x => {
     const el = document.getElementById('lpp-'+x); if (el) el.classList.toggle('active', x === p);
   });
+  const db = document.getElementById('lanc-date-btn');
+  if (db) { db.style.background = '#fff'; db.style.borderColor = '#E2E8F0'; }
+  renderLancamentos();
+}
+// Filtro de data: abre o seletor nativo do celular direto (sem painel
+// customizado) — mesmo padrão já usado na tela Corridas.
+function toggleLancDate() {
+  const inp = document.getElementById('lanc-date-input');
+  if (inp) inp.showPicker ? inp.showPicker() : inp.click();
+}
+function setLancDate(d) {
+  if (!d) return;
+  S.lancDate = d; S.lancPeriod = 'date';
+  ['7d','mes','tudo'].forEach(x => { const el = document.getElementById('lpp-'+x); if (el) el.classList.remove('active'); });
+  const db = document.getElementById('lanc-date-btn');
+  if (db) { db.style.background = '#EFF6FF'; db.style.borderColor = '#2563EB'; }
   renderLancamentos();
 }
 // Lançamentos = só receitas/despesas manuais. Corridas ficam de fora de
@@ -3874,7 +3894,10 @@ function renderLancamentos() {
   const totalVal = filtered.reduce((s,it) => s + (it._type==='receita' ? (it.amount||0) : -(it.amount||0)), 0);
   setText('lt-val', DB.fRI(totalVal));
   setText('lt-count', filtered.length + (filtered.length===1?' item':' itens'));
-  setText('lt-period-label', {'7d':'7 dias','mes':'Este mês','tudo':'Tudo'}[S.lancPeriod] || '7 dias');
+  const periodLabel = S.lancPeriod === 'date' && S.lancDate
+    ? S.lancDate.split('-').reverse().slice(0,2).join('/')
+    : ({'7d':'7 dias','mes':'Este mês','tudo':'Tudo'}[S.lancPeriod] || '7 dias');
+  setText('lt-period-label', periodLabel);
   const valEl = document.getElementById('lt-val');
   if (valEl) valEl.style.color = totalVal < 0 ? '#FCA5A5' : '#fff';
 
@@ -4217,17 +4240,67 @@ function saveTempoAdjust() {
 }
 
 // ── IMPORT AI ─────────────────────────────────────────────────
+// Detecta vídeo por MIME type, com fallback por extensão do nome do
+// arquivo — em alguns celulares (Live Photo/Motion Photo, ou o picker de
+// Arquivos) o navegador reporta file.type vazio ou incorreto, e o print
+// (imagem) acabava sendo classificado errado e descartado.
+function isVideoFile(f) {
+  if (f.type) return f.type.startsWith('video/');
+  return /\.(mp4|mov|webm|mkv|avi|m4v|3gp)$/i.test(f.name||'');
+}
 function handleImport(input, plat) {
   if (!input.files.length) return;
   const files = Array.from(input.files);
   closeMo('mo-import');
-  const videos = files.filter(f => f.type.startsWith('video/'));
-  const images = files.filter(f => !f.type.startsWith('video/'));
-  if (videos.length > 0) {
-    processVideoImport(videos[0], plat);
-  } else if (images.length > 0) {
-    processMultipleImports(images, plat);
+  const videos = files.filter(isVideoFile);
+  const images = files.filter(f => !isVideoFile(f));
+  if (!videos.length && !images.length) return;
+  processImportBatch(images, videos, plat);
+}
+// Processa imagens E vídeos da mesma seleção juntos — antes, se um vídeo
+// viesse junto (ex: Live Photo confundida com foto), TODAS as imagens da
+// seleção eram silenciosamente descartadas (só processava videos[0]).
+async function processImportBatch(images, videos, plat) {
+  const totalImgs = images.length, totalVids = videos.length;
+  const label = [totalImgs?`${totalImgs} print${totalImgs>1?'s':''}`:'', totalVids?`${totalVids} vídeo${totalVids>1?'s':''}`:''].filter(Boolean).join(' + ');
+  document.getElementById('ic-title').textContent = 'Analisando ' + label + '...';
+  document.getElementById('ic-body').innerHTML = showSpinner('Iniciando...');
+  document.getElementById('ic-btn').style.display = 'none';
+  openMo('mo-import-confirm');
+  const allTrips = [];
+  for (let i = 0; i < images.length; i++) {
+    document.getElementById('ic-body').innerHTML = showSpinner('Processando print ' + (i+1) + ' de ' + totalImgs + '...');
+    try {
+      const trips = await extractTripsFromImage(images[i], plat);
+      allTrips.push(...trips);
+    } catch(e) { console.warn('Erro print '+(i+1)+':', e); }
   }
+  for (let v = 0; v < videos.length; v++) {
+    try {
+      document.getElementById('ic-body').innerHTML = showSpinner('Extraindo frames do vídeo ' + (v+1) + ' de ' + totalVids + '...');
+      const frames = await extractVideoFrames(videos[v]);
+      for (let i = 0; i < frames.length; i++) {
+        document.getElementById('ic-body').innerHTML = showSpinner('Analisando frame ' + (i+1) + ' de ' + frames.length + ' (vídeo ' + (v+1) + ')...');
+        try {
+          const trips = await extractTripsFromBase64(frames[i], 'image/jpeg', plat);
+          allTrips.push(...trips);
+        } catch(e) { console.warn('Frame erro:', e); }
+      }
+    } catch(e) { console.warn('Erro vídeo '+(v+1)+':', e); }
+  }
+  const day = DB.day(S.curDate);
+  const seen = new Set();
+  const unique = allTrips.filter(t => {
+    t.time = normTime(t.time);
+    const key = t.time+'_'+(t.value||0).toFixed(2);
+    if (seen.has(key)) return false;
+    seen.add(key); return true;
+  });
+  window._pendingTrips = unique.map((t,i) => ({...t, _sel:true, _idx:i,
+    platform: t.platform === '99' ? '99' : 'uber',
+    _exists: isTripDuplicate(t, day.trips)
+  }));
+  showImportConfirm();
 }
 
 function showSpinner(msg) {
