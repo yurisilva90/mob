@@ -4297,7 +4297,34 @@ async function extractVideoFrames(file) {
       for (let t = 0.5; t < duration; t += INTERVAL) times.push(parseFloat(t.toFixed(2)));
       if (!times.length) times.push(0);
 
+      // Fingerprint pequeno (32x32 grayscale) pra comparar frames e pular
+      // quando o scroll tá parado/lento — evita mandar quase-o-mesmo-frame
+      // pra IA, que é a causa de valores "fantasma" (leitura funde 2 frames
+      // parecidos com corrida cortada/sobreposta).
+      const FP = 32;
+      const fpCanvas = document.createElement('canvas');
+      fpCanvas.width = FP; fpCanvas.height = FP;
+      const fpCtx = fpCanvas.getContext('2d');
+      function frameFingerprint() {
+        fpCtx.drawImage(canvas, 0, 0, FP, FP);
+        const d = fpCtx.getImageData(0, 0, FP, FP).data;
+        const g = new Float32Array(FP*FP);
+        for (let i = 0; i < g.length; i++) {
+          const o = i*4;
+          g[i] = (d[o] + d[o+1] + d[o+2]) / 3;
+        }
+        return g;
+      }
+      function fpDiff(a, b) {
+        let sum = 0;
+        for (let i = 0; i < a.length; i++) sum += Math.abs(a[i]-b[i]);
+        return sum / (a.length * 255); // normalizado 0..1
+      }
+      const SIMILARITY_THRESHOLD = 0.02; // <2% de mudança = frame quase idêntico, pula
+
       const frames = [];
+      let lastFp = null;
+      let skipped = 0;
       for (const time of times) {
         try {
           await new Promise((res) => {
@@ -4316,11 +4343,17 @@ async function extractVideoFrames(file) {
           // Only keep frames with content (not blank/black)
           const px = ctx.getImageData(0, 0, 20, 20).data;
           const hasContent = Array.from(px).some(v => v > 10);
-          if (hasContent) {
-            frames.push(canvas.toDataURL('image/jpeg', 0.7).split(',')[1]);
+          if (!hasContent) continue;
+          const fp = frameFingerprint();
+          if (lastFp && fpDiff(fp, lastFp) < SIMILARITY_THRESHOLD) {
+            skipped++;
+            continue; // scroll parado/lento — quase igual ao frame anterior mantido
           }
+          lastFp = fp;
+          frames.push(canvas.toDataURL('image/jpeg', 0.7).split(',')[1]);
         } catch(e) { console.warn('Frame t='+time, e); }
       }
+      if (skipped) console.log('[extractVideoFrames] frames quase-duplicados pulados:', skipped);
 
       try{document.body.removeChild(video);}catch(e){}
       URL.revokeObjectURL(url);
