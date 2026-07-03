@@ -5476,6 +5476,141 @@ function showEndJourneyToast(km) {
   el.addEventListener('click', () => el.remove());
   setTimeout(() => el.remove(), 3500);
 }
+// Resumo de fechamento de jornada — mostrado ao encerrar. Antes de importar
+// as corridas do dia, só temos dados de GPS (tempo, km, km/h médio). Depois
+// de importar, mostramos o conjunto completo (ganhos, km ativo/desloc,
+// R$/h, R$/km, corridas, Uber/99, meta).
+function closeJourneySummary() {
+  const el = document.getElementById('app-toast-center');
+  if (el) el.remove();
+}
+function showJourneySummary() {
+  const day = DB.day(DB.today());
+  const sessions = day.sessions || [];
+  const totalElapsed = Math.max(0, sessions.reduce((s,x)=>s+(x.elapsed||0),0) + (day.tempoAdjust||0));
+  const totalKm = sessions.reduce((s,x)=>s+(x.km||0),0) + (day.kmAdjust||0);
+  const trips = day.trips || [];
+  const hasTrips = trips.length > 0;
+  const th = Math.floor(totalElapsed/3600), tm = Math.floor(totalElapsed%3600/60);
+  const kmh = totalElapsed > 0 ? (totalKm/(totalElapsed/3600)) : 0;
+
+  const kpiCard = (v,l) => `<div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:9px 8px;text-align:center">
+      <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:16px">${v}</div>
+      <div style="font-size:9.5px;color:rgba(255,255,255,.5);font-weight:600;margin-top:2px;text-transform:uppercase;letter-spacing:.04em">${l}</div>
+    </div>`;
+
+  let cardInner, extraSection, footer;
+
+  if (!hasTrips) {
+    cardInner = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.06em">Resumo da sessão</span>
+        <span style="font-size:10px;font-weight:800;background:rgba(34,197,94,.18);color:#4ADE80;border:1px solid rgba(74,222,128,.35);border-radius:99px;padding:3px 10px">ENCERRADA</span>
+      </div>
+      <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:32px;line-height:1;letter-spacing:-.01em">${th}h ${p2(tm)}min</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.55);font-weight:600;margin-top:4px">tempo online hoje</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">
+        ${kpiCard(totalKm.toFixed(1), 'Km percorrido')}
+        ${kpiCard(kmh.toFixed(1), 'Km/h médio')}
+      </div>`;
+    extraSection = `
+      <div style="display:flex;gap:10px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:12px;padding:11px 12px;margin:12px 0;align-items:flex-start">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.4" stroke-linecap="round" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l2.5 2.5"/></svg>
+        <span style="font-size:12px;color:#92400E;font-weight:500;line-height:1.45">Km ativo, corridas, ganhos, R$/h, R$/km e meta aparecem aqui depois que você <b>importar as corridas de hoje</b>.</span>
+      </div>`;
+    footer = `
+      <button onclick="closeJourneySummary(); openMo('mo-import')" style="width:100%;height:48px;border:none;border-radius:14px;font-family:'Inter',system-ui,sans-serif;font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;background:#22C55E;color:#fff;box-shadow:0 6px 16px rgba(34,197,94,.35)">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        Importar corridas de hoje
+      </button>
+      <div style="font-size:11px;color:#94A3B8;text-align:center;line-height:1.5;margin-top:8px;padding:0 6px">Escolha as fotos/vídeos do histórico Uber ou 99 — pode selecionar vários de uma vez.</div>
+      <button onclick="closeJourneySummary()" style="width:100%;height:40px;border:none;background:transparent;color:#94A3B8;font-weight:700;font-size:13px;margin-top:4px;cursor:pointer">Deixar para depois</button>`;
+  } else {
+    const ganhos = trips.reduce((s,t)=>s+(t.value||0),0);
+    const kmAtivo = trips.reduce((s,t)=>s+(t.km||0),0);
+    const kmDesl = Math.max(0, totalKm - kmAtivo);
+    const rsh = totalElapsed>0 ? ganhos/(totalElapsed/3600) : 0;
+    const rskm = totalKm>0 ? ganhos/totalKm : 0;
+    const uberTrips = trips.filter(t=>(t.platform||'uber')==='uber');
+    const p99Trips  = trips.filter(t=>t.platform==='99');
+    const uberR = uberTrips.reduce((s,t)=>s+(t.value||0),0);
+    const p99R  = p99Trips.reduce((s,t)=>s+(t.value||0),0);
+
+    const dow = new Date(day.date+'T12:00').getDay();
+    const plan = DB.planJornada().find(p => p.days && p.days.includes(dow));
+    const meta = DB.meta();
+    const ov = day.metaOverride || null;
+    const dimMes = new Date(new Date(day.date+'T12:00').getFullYear(), new Date(day.date+'T12:00').getMonth()+1, 0).getDate();
+    const revTotal = ganhos + (day.revenues||[]).reduce((s,r)=>s+(r.amount||0),0);
+    const moneyGoal = (ov && ov.money) ? ov.money : ((plan && plan.moneyGoal) ? plan.moneyGoal : (meta.general ? meta.general/dimMes : 0));
+
+    let metaHtml = '';
+    if (moneyGoal) {
+      const pct = Math.round(revTotal/moneyGoal*100);
+      metaHtml = `
+        <div style="margin-top:14px">
+          <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;margin-bottom:6px">
+            <span style="color:rgba(255,255,255,.6)">Meta do dia · ${DB.fRI(moneyGoal)}</span>
+            <span style="color:#4ADE80">${pct}%${pct>=100?' &#10003;':''}</span>
+          </div>
+          <div style="height:8px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden">
+            <div style="height:100%;border-radius:99px;background:linear-gradient(90deg,#22C55E,#4ADE80);width:${Math.min(100,pct)}%"></div>
+          </div>
+        </div>`;
+    }
+
+    cardInner = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.06em">Ganhos do dia</span>
+        <span style="font-size:10px;font-weight:800;background:rgba(34,197,94,.18);color:#4ADE80;border:1px solid rgba(74,222,128,.35);border-radius:99px;padding:3px 10px">${trips.length} CORRIDA${trips.length===1?'':'S'}</span>
+      </div>
+      <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:32px;line-height:1;letter-spacing:-.01em">${DB.fRI(ganhos)}</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.55);font-weight:600;margin-top:4px">bruto · ${th}h ${p2(tm)}min online</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">
+        ${kpiCard(kmAtivo.toFixed(1), 'Km ativo')}
+        ${kpiCard(kmDesl.toFixed(1), 'Km desloc.')}
+        ${kpiCard(DB.fRI(rsh).replace('R$ ',''), 'R$ / hora')}
+        ${kpiCard(rskm.toFixed(2).replace('.',','), 'R$ / km')}
+      </div>
+      ${metaHtml}`;
+
+    extraSection = `
+      <div style="font-size:11px;font-weight:800;color:#64748B;text-transform:uppercase;letter-spacing:.05em;margin:14px 0 6px">Uber / 99</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <div style="flex:1;border:1px solid #E2E8F0;border-radius:12px;padding:10px 12px;background:#F8FAFC">
+          <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#64748B">Uber</div>
+          <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:15px;color:#0A2F6B;margin-top:2px">${DB.fRI(uberR)}</div>
+          <div style="font-size:10px;color:#94A3B8;font-weight:600">${uberTrips.length} corrida${uberTrips.length===1?'':'s'}</div>
+        </div>
+        <div style="flex:1;border:1px solid #E2E8F0;border-radius:12px;padding:10px 12px;background:#F8FAFC">
+          <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#64748B">99</div>
+          <div style="font-family:'Poppins',sans-serif;font-weight:700;font-size:15px;color:#0A2F6B;margin-top:2px">${DB.fRI(p99R)}</div>
+          <div style="font-size:10px;color:#94A3B8;font-weight:600">${p99Trips.length} corrida${p99Trips.length===1?'':'s'}</div>
+        </div>
+      </div>`;
+
+    footer = `<button onclick="closeJourneySummary()" style="width:100%;height:48px;border:none;border-radius:14px;font-family:'Inter',system-ui,sans-serif;font-size:14px;font-weight:800;cursor:pointer;background:#0A2F6B;color:#fff">Fechar</button>`;
+  }
+
+  const existing = document.getElementById('app-toast-center'); if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.id = 'app-toast-center';
+  el.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:flex-end;justify-content:center;background:rgba(15,23,42,.45)';
+  const dateLabel = new Date(day.date+'T12:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
+  el.innerHTML = `
+    <div style="background:#fff;border-radius:24px 24px 0 0;padding:10px 18px 26px;box-shadow:0 -12px 40px rgba(10,47,107,.35);max-width:420px;width:100%;max-height:88vh;overflow-y:auto;font-family:'Inter',system-ui,sans-serif">
+      <div style="width:44px;height:5px;border-radius:99px;background:#E2E8F0;margin:0 auto 14px"></div>
+      <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:18px;color:#0A2F6B;text-align:center">${hasTrips ? 'Resumo do dia' : 'Jornada encerrada'}</div>
+      <div style="font-size:12px;color:#94A3B8;text-align:center;margin:3px 0 16px;font-weight:500">${dateLabel}</div>
+      <div style="background:linear-gradient(145deg,#0A2F6B 0%,#0D3E8C 60%,#0A2F6B 100%);border-radius:18px;padding:16px;color:#fff;margin-bottom:12px">
+        ${cardInner}
+      </div>
+      ${extraSection}
+      ${footer}
+    </div>`;
+  document.body.appendChild(el);
+  el.addEventListener('click', (e) => { if (e.target === el) closeJourneySummary(); });
+}
 // Confirmação central (substitui o confirm() nativo do navegador), com a identidade visual do app.
 function showConfirm(msg, onConfirm, opts) {
   opts = opts || {};
@@ -5566,7 +5701,7 @@ function gpsStop() {
     try { renderJornada(); } catch(e) {}
     try { renderHome(); } catch(e) {}
   }, 80);
-  if (kmSnap > 0.1) setTimeout(() => showEndJourneyToast(kmSnap), 500);
+  if (kmSnap > 0.1) setTimeout(() => showJourneySummary(), 500);
 }
 function getElapsed() {
   const g = S.gps; if (!g.start) return 0;
