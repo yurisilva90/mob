@@ -4458,6 +4458,9 @@ function isTripDuplicate(newT, existing) {
     const sameTime = t.time && newT.time && t.time === newT.time;
     const sameVal  = Math.abs((t.value||0)-(newT.value||0)) < 0.02;
     const sameKm   = newT.km > 0 && t.km > 0 && Math.abs((t.km||0)-(newT.km||0)) < 0.5;
+    // 99 não reporta km — usar origem+destino como sinal de rota nesse caso
+    const sameRoute = !!(t.origin && newT.origin && t.dest && newT.dest
+                       && t.origin === newT.origin && t.dest === newT.dest);
     const nearTime = t.time && newT.time && (() => {
       const [h1,m1] = t.time.split(':').map(Number);
       const [h2,m2] = newT.time.split(':').map(Number);
@@ -4469,6 +4472,8 @@ function isTripDuplicate(newT, existing) {
     if (sameTime && sameKm && newT.km > 0) return true;
     // Próximo horário + mesmo valor + mesma km = duplicata provável
     if (sameVal && nearTime && sameKm) return true;
+    // Próximo horário + mesmo valor + mesma rota (sem km, ex: 99) = duplicata provável
+    if (sameVal && nearTime && sameRoute) return true;
     // REMOVIDO: sameVal && sameRoute sem tempo = falso positivo entre plataformas
     return false;
   });
