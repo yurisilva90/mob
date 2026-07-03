@@ -2963,8 +2963,8 @@ function confirmDeleteTrip(date, id) {
   const day = DB.day(date);
   const t = (day.trips||[]).find(x => x.id === id);
   if (!t) return;
-  const dest = t.dest ? ' → '+t.dest : '';
-  showConfirm(`Excluir essa corrida?\n${DB.fR(t.value)} · ${t.origin||'—'}${dest}`, () => {
+  const dest = t.dest ? ' → '+esc(t.dest) : '';
+  showConfirm(`Excluir essa corrida?\n${DB.fR(t.value)} · ${t.origin?esc(t.origin):'—'}${dest}`, () => {
     day.trips = day.trips.filter(x => x.id !== id);
     DB.saveDay(day);
     SYNC.del('trips', { id });
@@ -3432,9 +3432,10 @@ function toggleTripDetail(tid) {
   if (!open){det.style.display='block';row.classList.add('open');}
 }
 
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function tripItem(t, tripDate) {
   const plat = {uber:'Uber','99':'99',particular:'Particular'}[t.platform||'uber'] || 'Uber';
-  const dest = t.dest ? ' → '+t.dest : '';
+  const dest = t.dest ? ' → '+esc(t.dest) : '';
   const dur = t.duration ? ' · '+fmtDur(t.duration) : '';
   // tid sempre único por renderização (nunca reusa t.id) — evita colisão de
   // DOM id quando a mesma corrida aparece em mais de uma tela ao mesmo tempo
@@ -3456,8 +3457,8 @@ function tripItem(t, tripDate) {
   const extraRow = extras.length?`<div class="li-extra">${extras.join('')}</div>`:'';
   const detRows = [
     `<div class="det-row"><span>Plataforma</span><strong>${plat}</strong></div>`,
-    t.origin?`<div class="det-row"><span>Origem</span><strong>${t.originFull||t.origin}</strong></div>`:'',
-    t.dest?`<div class="det-row"><span>Destino</span><strong>${t.destFull||t.dest}</strong></div>`:'',
+    t.origin?`<div class="det-row"><span>Origem</span><strong>${esc(t.originFull||t.origin)}</strong></div>`:'',
+    t.dest?`<div class="det-row"><span>Destino</span><strong>${esc(t.destFull||t.dest)}</strong></div>`:'',
     t.km>0?`<div class="det-row"><span>Distância${t.kmEstimado?' (estimada)':''}</span><strong>${t.kmEstimado?'~':''}${(t.km||0).toFixed(1)} km</strong></div>`:'',
     t.pedagioValor>0?`<div class="det-row"><span>Pedágio</span><strong>${DB.fR(t.pedagioValor)}</strong></div>`:'',
     t.duration>0?`<div class="det-row"><span>Duração</span><strong>${fmtDur(t.duration)}</strong></div>`:'',
@@ -3470,7 +3471,7 @@ function tripItem(t, tripDate) {
   ].filter(Boolean).join('');
   return `<div class="trip-item-wrap" id="tw-${tid}">
     <div class="li-row" id="tr-${tid}" onclick="toggleTripDetail('${tid}')">
-      <div class="li-info"><h3 class="trip-title">${t.origin||'—'}${dest}</h3><p>${plat} · ${t.kmEstimado?'~':''}${(t.km||0).toFixed(1)} km${t.kmEstimado?' (estim.)':''}${dur}</p>${extraRow}</div>
+      <div class="li-info"><h3 class="trip-title">${t.origin?esc(t.origin):'—'}${dest}</h3><p>${plat} · ${t.kmEstimado?'~':''}${(t.km||0).toFixed(1)} km${t.kmEstimado?' (estim.)':''}${dur}</p>${extraRow}</div>
       <div class="li-val"><strong>${DB.fR(t.value)}</strong>${t.time?`<span class="li-time">${t.time}</span>`:''}</div>
     </div>
     <div class="trip-detail-panel" id="td-${tid}" style="display:none">${detRows}</div>
@@ -7579,14 +7580,14 @@ function infRenderFeedList(elId,informes,vazioMsg){
     const badge=INF_BADGE[inf.param_type]||'infbt';
     const t=INF_TIPOS.bairro; // ícone de fallback visual, cor vem do badge
     const lbl=INF_PLBL[inf.param_type]||inf.param_type;
-    const desc=lbl+' · '+(inf.param_value||'')+(inf.param_detail?' · '+inf.param_detail:'');
+    const desc=esc(lbl)+' · '+esc(inf.param_value||'')+(inf.param_detail?' · '+esc(inf.param_detail):'');
     const ageMin=Math.max(0,Math.round((Date.now()-new Date(inf.created_at))/60000));
     const ageStr=ageMin<1?'agora':'há '+ageMin+' min';
     const av=INF_AVC[Math.abs((inf.user_id||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0))%INF_AVC.length];
     const ltr=(inf.user_id||'MO').slice(0,2).toUpperCase();
     return`<div class="inf-feed-row" onclick="infAbrirLocal(null,'${(inf.location_name||'').replace(/'/g,"\\'")}','bairro')">
       <div class="inf-feed-ic ${badge}">${INF_PICONS[inf.param_type]||''}</div>
-      <div class="inf-feed-body"><div class="inf-feed-txt">${desc}</div><div class="inf-feed-loc">${inf.location_name||''} · ${ageStr}</div></div>
+      <div class="inf-feed-body"><div class="inf-feed-txt">${desc}</div><div class="inf-feed-loc">${esc(inf.location_name||'')} · ${ageStr}</div></div>
       <div class="inf-feed-right">
         <div class="inf-feed-av" style="background:${av}">${ltr}</div>
         <div class="inf-feed-votes inf-votes">
@@ -7737,8 +7738,8 @@ async function infCarregarInformes(nome,tipoKey){
   if(!informes.length){document.getElementById('inf-list-wrap').innerHTML='<div class="inf-empty">Nenhum informe recente · seja o primeiro a reportar!</div>';return;}
   document.getElementById('inf-list-wrap').innerHTML=informes.map((inf,i)=>{
     const badge=INF_BADGE[inf.param_type]||'infbt';
-    const lbl=INF_PLBL[inf.param_type]||inf.param_type;
-    const desc=inf.param_value+(inf.param_detail?' · '+inf.param_detail:'');
+    const lbl=esc(INF_PLBL[inf.param_type]||inf.param_type);
+    const desc=esc(inf.param_value)+(inf.param_detail?' · '+esc(inf.param_detail):'');
     const ageMin=Math.max(0,Math.round((Date.now()-new Date(inf.created_at))/60000));
     const ageStr=ageMin<1?'agora':ageMin+'min';
     const conf=inf.votes_up>=10?3:inf.votes_up>=5?2:1;
