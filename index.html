@@ -234,6 +234,12 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 /* ── Lançamentos form extras ── */
 .type-switch,.scope-switch{display:flex;background:#EAF0F6;border:1px solid rgba(15,23,42,.06);padding:4px;border-radius:18px}.type-btn,.scope-btn{flex:1;border:none;background:transparent;color:var(--muted);padding:11px 8px;border-radius:14px;font-size:14px;font-weight:900;cursor:pointer;touch-action:manipulation}.type-btn.active,.scope-btn.active{background:#fff;color:var(--text);box-shadow:0 4px 12px rgba(15,23,42,.08)}
 .pchip{flex:1;border:1.5px solid var(--line);background:#fff;color:var(--muted);font-size:11.5px;font-weight:700;padding:7px 4px;border-radius:999px;cursor:pointer;touch-action:manipulation;font-family:var(--font-app);text-align:center;white-space:nowrap}.pchip.active{background:var(--text);color:#fff;border-color:var(--text)}
+.lanc-total-card{display:flex;justify-content:space-between;align-items:center;background:linear-gradient(145deg,#0A2F6B 0%,#0D3E8C 60%,#0A2F6B 100%);border-radius:16px;padding:14px 16px;color:#fff;margin-bottom:12px}
+.lanc-total-card .l{font-size:10px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.06em}
+.lanc-total-card .v{font-family:'Poppins',sans-serif;font-weight:800;font-size:20px;margin-top:2px}
+.lanc-total-card .side{text-align:right}
+.lanc-total-card .v2{font-size:12px;font-weight:700;margin-top:2px;color:rgba(255,255,255,.75)}
+.lanc-status-row,.lanc-period-row{display:flex;gap:6px;margin-bottom:8px}
 .del-btn{width:30px;height:30px;border-radius:10px;background:#FEF2F2;color:#EF4444;border:0;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;touch-action:manipulation}
 .day-sep{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:16px 4px 8px}.day-sep:first-child{margin-top:0}
 .amount-card{border-radius:30px;padding:24px 20px 22px;color:#fff;box-shadow:0 10px 26px rgba(15,23,42,.07);margin-bottom:14px;cursor:text}.amount-card.receita{background:linear-gradient(135deg,#16A34A,#22C55E)}.amount-card.despesa{background:linear-gradient(135deg,#DC2626,#EF4444)}.amount-label{font-size:12px;text-transform:uppercase;letter-spacing:.12em;font-weight:900;opacity:.78;margin-bottom:8px}.amount-input-wrap{display:flex;align-items:flex-end;gap:8px}.currency{font-size:24px;font-weight:900;opacity:.9;padding-bottom:7px}.amount-input{width:100%;border:none;outline:none;background:transparent;color:#fff;font-size:52px;line-height:1;font-weight:900;letter-spacing:-.06em;font-family:var(--font-app)}.amount-input::placeholder{color:rgba(255,255,255,.55)}
@@ -1154,10 +1160,24 @@ h1.hd-title{font-family:var(--font-brand)!important}
 <!-- ══ TELA LANÇAMENTOS ═══════════════════════════════════════════════════ -->
 <div class="screen" id="sc-lancamentos">
   <div style="padding:8px 16px 14px">
-    <div class="type-switch">
+    <div class="lanc-total-card">
+      <div><div class="l">Saldo no período</div><div class="v" id="lt-val">R$ 0,00</div></div>
+      <div class="side"><div class="l" id="lt-period-label">7 dias</div><div class="v2" id="lt-count">0 itens</div></div>
+    </div>
+    <div class="type-switch" style="margin-bottom:8px">
       <button class="type-btn active" id="lf-all" onclick="setLancFilter('all')">Todos</button>
       <button class="type-btn" id="lf-rec" onclick="setLancFilter('rec')">Receitas</button>
       <button class="type-btn" id="lf-dep" onclick="setLancFilter('dep')">Despesas</button>
+    </div>
+    <div class="lanc-status-row">
+      <button class="pchip active" id="lst-all" onclick="setLancStatus('all')">Todos</button>
+      <button class="pchip" id="lst-apagar" onclick="setLancStatus('a_pagar')">A pagar</button>
+      <button class="pchip" id="lst-pago" onclick="setLancStatus('pago')">Pago</button>
+    </div>
+    <div class="lanc-period-row">
+      <button class="pchip active" id="lpp-7d" onclick="setLancPeriod('7d')">7 dias</button>
+      <button class="pchip" id="lpp-mes" onclick="setLancPeriod('mes')">Mês</button>
+      <button class="pchip" id="lpp-tudo" onclick="setLancPeriod('tudo')">Tudo</button>
     </div>
   </div>
   <div style="padding:0 16px"><div id="lanc-list"><div class="empty">Nenhum lançamento</div></div></div>
@@ -2110,6 +2130,8 @@ let S = {
   finPer: 'month',
   finScope: 'all',
   lancFilter: 'all',
+  lancStatus: 'all',
+  lancPeriod: '7d',
   curDate: DB.today(),
   lancType: 'receita',
   lancScope: 'operacional',
@@ -3800,6 +3822,13 @@ function saveObjCfg() {
   renderObjetivos();
   showToast('Objetivos salvos.');
 }
+function getLancDays() {
+  const today = new Date(), fmt = d => d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+  const p = S.lancPeriod;
+  if (p === '7d') { const out=[]; for(let i=0;i<7;i++){const d=new Date(today);d.setDate(d.getDate()-i);out.push(fmt(d));} return out; }
+  if (p === 'mes') { const m=today.getMonth(),y=today.getFullYear(); return DB.allDates().filter(d=>d.startsWith(y+'-'+p2(m+1))); }
+  return DB.allDates(); // 'tudo'
+}
 function setLancFilter(f) {
   S.lancFilter = f;
   ['all','rec','dep'].forEach(x => {
@@ -3807,31 +3836,52 @@ function setLancFilter(f) {
   });
   renderLancamentos();
 }
+function setLancStatus(s) {
+  S.lancStatus = s;
+  const ids = {all:'lst-all', a_pagar:'lst-apagar', pago:'lst-pago'};
+  Object.keys(ids).forEach(x => {
+    const el = document.getElementById(ids[x]); if (el) el.classList.toggle('active', x === s);
+  });
+  renderLancamentos();
+}
+function setLancPeriod(p) {
+  S.lancPeriod = p;
+  ['7d','mes','tudo'].forEach(x => {
+    const el = document.getElementById('lpp-'+x); if (el) el.classList.toggle('active', x === p);
+  });
+  renderLancamentos();
+}
+// Lançamentos = só receitas/despesas manuais. Corridas ficam de fora de
+// propósito (telas separadas: Corridas, Jornada) — misturar as duas listas
+// fica confuso com muita informação junto.
 function renderLancamentos() {
-  // Gather all entries from last 30 days
-  const today = new Date(), items = [];
-  for (let i = 0; i < 30; i++) {
-    const d = new Date(today); d.setDate(today.getDate()-i);
-    const ds = d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+  const days = getLancDays();
+  const items = [];
+  days.forEach(ds => {
     const day = DB.day(ds);
-    if (S.lancFilter !== 'dep') {
-      day.trips.forEach(t => items.push({...t, _type:'corrida', _date:ds, _val:t.value, _pos:true}));
-      day.revenues.forEach(r => items.push({...r, _type:'receita', _date:ds, _val:r.amount, _pos:true}));
-    }
-    if (S.lancFilter !== 'rec') {
-      day.expenses.forEach(e => items.push({...e, _type:'despesa', _date:ds, _val:e.amount, _pos:false}));
-    }
-  }
-  items.sort((a,b) => b._date.localeCompare(a._date));
+    if (S.lancFilter !== 'dep') day.revenues.forEach(r => items.push({...r, _type:'receita'}));
+    if (S.lancFilter !== 'rec') day.expenses.forEach(e => items.push({...e, _type:'despesa'}));
+  });
+  const todayStr = DB.today();
+  const filtered = items.filter(it => {
+    if (S.lancStatus === 'all') return true;
+    const st = it.status || 'pago';
+    if (S.lancStatus === 'pago') return st === 'pago';
+    return st !== 'pago'; // 'a_pagar' inclui vencidos (são a_pagar com data passada)
+  });
+  filtered.sort((a,b) => (b.date||'').localeCompare(a.date||''));
+
+  const totalVal = filtered.reduce((s,it) => s + (it._type==='receita' ? (it.amount||0) : -(it.amount||0)), 0);
+  setText('lt-val', DB.fRI(totalVal));
+  setText('lt-count', filtered.length + (filtered.length===1?' item':' itens'));
+  setText('lt-period-label', {'7d':'7 dias','mes':'Este mês','tudo':'Tudo'}[S.lancPeriod] || '7 dias');
+  const valEl = document.getElementById('lt-val');
+  if (valEl) valEl.style.color = totalVal < 0 ? '#FCA5A5' : '#fff';
+
   const el = document.getElementById('lanc-list');
   if (!el) return;
-  if (!items.length) { el.innerHTML = '<div class="empty">Nenhum lançamento nos últimos 30 dias</div>'; return; }
-  el.innerHTML = '<div style="background:#fff;border:1px solid #E2E8F0;border-radius:20px;overflow:hidden;box-shadow:0 2px 10px rgba(15,23,42,.05)">' +
-    items.map(e => `<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid #E2E8F0">
-      <div style="width:38px;height:38px;border-radius:12px;background:${e._pos?'#ECFDF3':'#FEF2F2'};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;font-weight:800;color:${e._pos?'#16A34A':'#EF4444'}">${e._type.slice(0,3).toUpperCase()}</div>
-      <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.desc||e.origin||e.category||e._type}</div><div style="font-size:11px;color:#64748B;margin-top:2px">${e._type} · ${e._date}</div></div>
-      <div style="font-family:'Inter',system-ui,sans-serif;font-weight:700;font-size:14px;color:${e._pos?'#16A34A':'#EF4444'}">${e._pos?'+':'-'}${DB.fR(Math.abs(e._val))}</div>
-    </div>`).join('') + '</div>';
+  if (!filtered.length) { el.innerHTML = '<div class="empty">Nenhum lançamento neste período</div>'; return; }
+  el.innerHTML = filtered.map(it => lancItemJornada(it)).join('');
 }
 
 // ── LANÇAMENTO FORM ───────────────────────────────────────────
