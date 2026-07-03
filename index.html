@@ -5028,9 +5028,10 @@ async function _autoSyncLocalData() {
     const dates = DB.allDates().filter(d=>d>=cutoff);
     for (const date of dates) {
       const day = DB.day(date);
+      let dayChanged = false;
       for (const t of (day.trips||[])) {
         if (!t.id) continue;
-        await _SUPA.from('trips').upsert({
+        const { error } = await _SUPA.from('trips').upsert({
           id:t.id, user_id:_supaUser.id, date,
           platform:t.platform||'uber', time:t.time||null,
           duration:t.duration||0, origin:t.origin||'', dest:t.dest||'',
@@ -5041,8 +5042,12 @@ async function _autoSyncLocalData() {
           origin_full:t.originFull||t.origin||'', dest_full:t.destFull||t.dest||'',
           service_fee:t.serviceFee??null, taxa_zero:!!t.taxaZero,
           km_estimado:!!t.kmEstimado
-        }, {onConflict:'id'}).catch(()=>{});
+        }, {onConflict:'id'});
+        // Marca como confirmadamente sincronizada — só depois disso é seguro
+        // remover local se sumir do banco (ver _pullTripsCorrections)
+        if (!error && !t._synced) { t._synced = true; dayChanged = true; }
       }
+      if (dayChanged) DB.saveDay(day);
     }
   } catch(e) { console.warn('[autoSync]', e); }
 }
@@ -5057,6 +5062,7 @@ async function _pullTripsCorrections() {
       .eq('user_id', _supaUser.id).gte('date', cutoff);
     if (error || !remote) return;
     let changed = false;
+    const remoteIds = new Set(remote.map(r => r.id));
     remote.forEach(r => {
       const day = DB.day(r.date);
       if (!day.trips) return;
@@ -5064,14 +5070,28 @@ async function _pullTripsCorrections() {
       if (idx === -1) return;
       const local = day.trips[idx];
       // Só sobrescreve os campos que podem ter sido corrigidos manualmente
-      // no banco (km, taxa, pedágio) — não mexe em nada que o usuário
-      // possa ter editado localmente enquanto offline.
+      // no banco (km, plataforma, taxa, pedágio) — não mexe em nada que o
+      // usuário possa ter editado localmente enquanto offline.
       const rKm = parseFloat(r.km)||0;
       if (Math.abs((local.km||0) - rKm) > 0.05 || !!local.kmEstimado !== !!r.km_estimado) {
         local.km = rKm; local.kmEstimado = !!r.km_estimado; changed = true;
-        day.trips[idx] = local; DB.saveDay(day);
       }
+      if (r.platform && local.platform !== r.platform) {
+        local.platform = r.platform; changed = true;
+      }
+      if (changed) { day.trips[idx] = local; DB.saveDay(day); }
     });
+    // Remove local corridas que foram apagadas direto no banco — só quando
+    // a corrida já tinha sido confirmadamente sincronizada antes (_synced),
+    // pra nunca arriscar apagar algo criado localmente ainda não enviado.
+    const dates = DB.allDates().filter(d => d >= cutoff);
+    for (const date of dates) {
+      const day = DB.day(date);
+      if (!day.trips || !day.trips.length) continue;
+      const before = day.trips.length;
+      day.trips = day.trips.filter(t => !(t._synced && t.id && !remoteIds.has(t.id)));
+      if (day.trips.length !== before) { DB.saveDay(day); changed = true; }
+    }
     if (changed) {
       try { if (S.sec==='corridas') renderCorridas(); } catch(e) {}
       try { if (S.sec==='jornada') renderJornada(); } catch(e) {}
