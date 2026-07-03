@@ -43,10 +43,10 @@ try {
 html.dark{
   --bg:#0A0F1A;--card:#111723;--text:#E2E8F0;--muted:#94A3B8;--muted2:#64748B;
   --line:#1E2735;--soft-line:#1A2230;
-  --green:#4ADE80;--green2:#34D399;
-  --red:#F87171;--orange:#FBBF24;--amber:#FDE68A;--purple:#A78BFA;
-  --greenBg:rgba(74,222,128,.12);--orangeBg:rgba(251,191,36,.12);--redBg:rgba(248,113,113,.12);
-  --purpleBg:rgba(167,139,250,.12);--blueBg:rgba(56,189,248,.12);
+  --green:#10B981;--green2:#059669;
+  --red:#EF4444;--orange:#F59E0B;--amber:#EAB308;--purple:#8B5CF6;
+  --greenBg:rgba(16,185,129,.12);--orangeBg:rgba(245,158,11,.12);--redBg:rgba(239,68,68,.12);
+  --purpleBg:rgba(139,92,246,.12);--blueBg:rgba(14,165,233,.12);
   --shadow:0 10px 28px rgba(0,0,0,.35);--soft:0 3px 14px rgba(0,0,0,.25);
 }
 html.dark body{background:var(--bg)}
@@ -61,6 +61,10 @@ html.dark input,html.dark select,html.dark textarea{background:#0F1726;color:var
 html.dark .inp,html.dark .cat-inp2{background:#0F1726;color:var(--text)}
 html.dark .sheet,html.dark .mo .sheet{background:var(--card)}
 html.dark img.invert-dark{filter:invert(1) brightness(1.4)}
+/* Ícones do menu Mais viram neutros no escuro — cor só sobra pra dinheiro
+   (receita/despesa), não pra decoração de cada item de menu */
+html.dark .mais-ico,html.dark .mais-ico.blue,html.dark .mais-ico.orange,html.dark .mais-ico.purple,html.dark .mais-ico.green{background:#1A2230;color:#94A3B8}
+html.dark .mais-item{background:var(--card);border-color:var(--line)}
 /* ── Patch dark mode: componentes novos (resumo jornada, wizard custo,
    Lançamentos, import) que ainda usavam cor fixa ── */
 html.dark .pchip{background:var(--card)}
