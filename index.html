@@ -1658,7 +1658,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
   <div style="padding:0 16px;display:flex;flex-direction:column;gap:8px">
     <div class="mais-item" onclick="openPerfil()"><div class="mais-ico blue"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg></div><div><div class="mais-t">Perfil</div><div class="mais-s" id="mais-perfil-sub">Configure nome, placa e veículo</div></div><div class="mais-arr">›</div></div>
     <div class="mais-item" onclick="openConfig()"><div class="mais-ico green"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg></div><div><div class="mais-t">Configurações</div><div class="mais-s">Ícone flutuante, modo escuro e mais</div></div><div class="mais-arr">›</div></div>
-    <div class="mais-item" onclick="openMo('mo-cats');renderCatsModal()"><div class="mais-ico orange"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h8"/></svg></div><div><div class="mais-t">Categorias</div><div class="mais-s">Gerencie categorias de despesa</div></div><div class="mais-arr">›</div></div>
+    <div class="mais-item" onclick="navTo('categorias')"><div class="mais-ico orange"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h8"/></svg></div><div><div class="mais-t">Categorias</div><div class="mais-s">Gerencie categorias de despesa</div></div><div class="mais-arr">›</div></div>
     <div class="mais-item" onclick="openCustoVeiculo()"><div class="mais-ico green"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17h14M6 17l1-6 3-4h4l3 4 1 6"/><circle cx="7.5" cy="17" r="1.5"/><circle cx="16.5" cy="17" r="1.5"/></svg></div><div><div class="mais-t">Custo do veículo</div><div class="mais-s" id="mais-custo-sub">Configure pra ver o lucro líquido real</div></div><div class="mais-arr">›</div></div>
     <div class="mais-item" onclick="openSuporte()"><div class="mais-ico purple"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg></div><div><div class="mais-t">Suporte</div><div class="mais-s">Ajuda e feedback</div></div><div class="mais-arr">›</div></div>
   </div>
@@ -2089,14 +2089,13 @@ h1.hd-title{font-family:var(--font-brand)!important}
   </div>
 </div>
 <!-- MODAL: Categorias -->
-<div class="mo" id="mo-cats">
-  <div class="sheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-head" style="padding:0 0 12px"><h2>Categorias</h2><button class="xbtn" onclick="closeMo('mo-cats')">&#x2715;</button></div>
-    <div style="font-size:13px;color:#64748B;margin-bottom:14px">Gerencie suas categorias de despesa e receita.</div>
-    <div id="cats-groups"></div>
-    <button class="btn-p" onclick="closeMo('mo-cats')">Fechar</button>
+<div class="screen" id="sc-categorias">
+  <div style="display:flex;align-items:center;gap:10px;padding:14px 16px 6px">
+    <button onclick="navTo('mais')" style="width:32px;height:32px;border-radius:10px;background:#F1F5F9;border:0;display:flex;align-items:center;justify-content:center;color:#0F172A;cursor:pointer;flex-shrink:0"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+    <h2 style="font-size:17px;letter-spacing:-.02em;flex:1">Categorias</h2>
   </div>
+  <div style="font-size:13px;color:#64748B;margin:0 16px 14px">Gerencie suas categorias de despesa e receita.</div>
+  <div id="cats-groups" style="padding:0 16px 24px"></div>
 </div>
 
 <div class="mo" id="mo-obj-config">
@@ -2263,7 +2262,7 @@ function navTo(sec) {
   const sc = document.getElementById('sc-'+sec);
   if (sc) { sc.classList.add('on'); sc.style.display = 'block'; }
   // Map sub-screens to their nav parent
-  const navMap = {financeiro:'fav', lancamentos:'fav', 'planejar-jornada':'mais', corridas:'jornada', agenda:'mais', informes:'agenda'};
+  const navMap = {financeiro:'fav', lancamentos:'fav', 'planejar-jornada':'mais', corridas:'jornada', agenda:'mais', informes:'agenda', categorias:'mais'};
   const navId = navMap[sec] || sec;
   const bn = document.getElementById('bn-'+navId);
   if (bn) bn.classList.add('active');
@@ -2290,6 +2289,7 @@ function navTo(sec) {
     renderCorridas();
   }
   if (sec === 'mais')       renderMais();
+  if (sec === 'categorias') renderCatsModal();
   if (sec === 'agenda')     { setAgView(agView || 'resumo'); }
   if (sec === 'informes')   renderInformes();
 }
@@ -4289,35 +4289,58 @@ const CAT_SVG_ICONS = [
   {k:'other', svg:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'},
 ];
 let catAddState = { key: null, icon: 'plus' };
+let catEditState = { key: null, idx: null, icon: null };
 
 function renderCatsModal(resetState = true) {
   const el = document.getElementById('cats-groups');
   if (!el) return;
-  if (resetState) catAddState = { key: null, icon: 'plus' };
+  if (resetState) { catAddState = { key: null, icon: 'plus' }; catEditState = { key: null, idx: null, icon: null }; }
   el.innerHTML = Object.keys(CAT_GROUP_LABELS).map(catGroupHtml).join('');
+}
+
+function catIconPickerHtml(selectedIcon, pickFn, wrapId) {
+  return `<div id="${wrapId}" style="display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-bottom:12px">
+      ${CAT_SVG_ICONS.map(ic => `
+        <button onclick="${pickFn}('${ic.k}')" data-ic="${ic.k}"
+          style="width:44px;height:44px;border-radius:11px;border:1.5px solid ${selectedIcon===ic.k?'#22C55E':'#E2E8F0'};background:${selectedIcon===ic.k?'#F0FDF4':'#F8FAFC'};color:${selectedIcon===ic.k?'#16A34A':'#64748B'};display:flex;align-items:center;justify-content:center;cursor:pointer">${ic.svg}</button>
+      `).join('')}
+    </div>`;
 }
 
 function catGroupHtml(key) {
   const cats = DB.cats(key) || DEFAULT_CATS[key] || [];
   const isAdding = catAddState.key === key;
-  const rows = cats.map((c, i) => `
+  const isEditingHere = catEditState.key === key;
+
+  const rows = cats.map((c, i) => {
+    if (isEditingHere && catEditState.idx === i) {
+      return `
+        <div style="margin:8px 0;background:#fff;border:1.5px solid #2563EB;border-radius:14px;padding:12px">
+          <input id="cat-edit-name" type="text" value="${esc(c.l)}" placeholder="Nome da categoria"
+            style="width:100%;height:42px;border:1px solid #E2E8F0;border-radius:10px;padding:0 12px;font-size:14px;margin-bottom:10px;box-sizing:border-box;outline:none">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94A3B8;margin-bottom:8px">Ícone</div>
+          ${catIconPickerHtml(catEditState.icon, 'catPickIconEdit', 'cat-icon-picker-edit')}
+          <div style="display:flex;gap:8px">
+            <button onclick="catCancelEdit()" style="flex:1;height:40px;border-radius:10px;border:1px solid #E2E8F0;background:#fff;color:#64748B;font-size:13px;font-weight:600;cursor:pointer">Cancelar</button>
+            <button onclick="catConfirmEdit('${key}')" style="flex:1;height:40px;border-radius:10px;border:0;background:#2563EB;color:#fff;font-size:13px;font-weight:700;cursor:pointer">Salvar</button>
+          </div>
+        </div>`;
+    }
+    return `
     <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #EEF2F6">
       <div style="width:34px;height:34px;border-radius:10px;background:#fff;border:1px solid #E2E8F0;display:flex;align-items:center;justify-content:center;color:#475569;flex-shrink:0">${CAT_ICONS[c.icon]||CAT_ICONS.plus}</div>
-      <div style="flex:1;font-size:14px;font-weight:600;color:#1E293B">${c.l}</div>
+      <div style="flex:1;font-size:14px;font-weight:600;color:#1E293B">${esc(c.l)}</div>
+      <button onclick="catStartEdit('${key}',${i})" style="width:28px;height:28px;border-radius:8px;border:0;background:#EFF6FF;color:#2563EB;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
       <button onclick="catRemove('${key}',${i})" style="width:28px;height:28px;border-radius:8px;border:0;background:#FEF2F2;color:#EF4444;font-size:14px;cursor:pointer;flex-shrink:0">&#x2715;</button>
-    </div>`).join('') || '<div style="font-size:13px;color:#94A3B8;padding:8px 0">Nenhuma categoria ainda.</div>';
+    </div>`;
+  }).join('') || '<div style="font-size:13px;color:#94A3B8;padding:8px 0">Nenhuma categoria ainda.</div>';
 
   const addForm = isAdding ? `
     <div style="margin-top:10px;background:#fff;border:1.5px solid #22C55E;border-radius:14px;padding:12px">
       <input id="cat-new-name" type="text" placeholder="Nome da categoria"
         style="width:100%;height:42px;border:1px solid #E2E8F0;border-radius:10px;padding:0 12px;font-size:14px;margin-bottom:10px;box-sizing:border-box;outline:none">
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#94A3B8;margin-bottom:8px">Escolha um ícone</div>
-      <div id="cat-icon-picker" style="display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-bottom:12px">
-        ${CAT_SVG_ICONS.map(ic => `
-          <button onclick="catPickIcon('${ic.k}')" data-ic="${ic.k}"
-            style="width:44px;height:44px;border-radius:11px;border:1.5px solid ${catAddState.icon===ic.k?'#22C55E':'#E2E8F0'};background:${catAddState.icon===ic.k?'#F0FDF4':'#F8FAFC'};color:${catAddState.icon===ic.k?'#16A34A':'#64748B'};display:flex;align-items:center;justify-content:center;cursor:pointer">${ic.svg.replace('stroke="currentColor"','stroke="currentColor"')}</button>
-        `).join('')}
-      </div>
+      ${catIconPickerHtml(catAddState.icon, 'catPickIcon', 'cat-icon-picker')}
       <div style="display:flex;gap:8px">
         <button onclick="catCancelAdd()" style="flex:1;height:40px;border-radius:10px;border:1px solid #E2E8F0;background:#fff;color:#64748B;font-size:13px;font-weight:600;cursor:pointer">Cancelar</button>
         <button onclick="catConfirmAdd('${key}')" style="flex:1;height:40px;border-radius:10px;border:0;background:#22C55E;color:#fff;font-size:13px;font-weight:700;cursor:pointer">Adicionar</button>
@@ -4334,11 +4357,10 @@ function catGroupHtml(key) {
     </div>`;
 }
 
-function catStartAdd(key) { catAddState = { key, icon: 'plus' }; renderCatsModal(false); }
+function catStartAdd(key) { catAddState = { key, icon: 'plus' }; catEditState = { key: null, idx: null, icon: null }; renderCatsModal(false); }
 function catCancelAdd()   { catAddState = { key: null, icon: 'plus' }; renderCatsModal(false); }
 function catPickIcon(ic) {
   catAddState.icon = ic;
-  // Atualiza visual dos botões sem re-renderizar (preserva o texto digitado)
   document.querySelectorAll('#cat-icon-picker button').forEach(btn => {
     const isOn = btn.dataset.ic === ic;
     btn.style.borderColor    = isOn ? '#22C55E' : '#E2E8F0';
@@ -4356,6 +4378,37 @@ function catConfirmAdd(key) {
   DB.saveCats(key, cats);
   SYNC.pushCats(key);
   catAddState = { key: null, icon: 'plus' };
+  renderCatsModal();
+}
+
+function catStartEdit(key, idx) {
+  const cats = DB.cats(key) || DEFAULT_CATS[key] || [];
+  const c = cats[idx];
+  if (!c) return;
+  catEditState = { key, idx, icon: c.icon || 'plus' };
+  catAddState = { key: null, icon: 'plus' };
+  renderCatsModal(false);
+}
+function catCancelEdit() { catEditState = { key: null, idx: null, icon: null }; renderCatsModal(false); }
+function catPickIconEdit(ic) {
+  catEditState.icon = ic;
+  document.querySelectorAll('#cat-icon-picker-edit button').forEach(btn => {
+    const isOn = btn.dataset.ic === ic;
+    btn.style.borderColor    = isOn ? '#2563EB' : '#E2E8F0';
+    btn.style.background     = isOn ? '#EFF6FF' : '#F8FAFC';
+    btn.style.color          = isOn ? '#2563EB' : '#64748B';
+  });
+}
+function catConfirmEdit(key) {
+  const input = document.getElementById('cat-edit-name');
+  const name = input?.value?.trim();
+  if (!name) { showToast('Digite o nome da categoria', 'error'); return; }
+  const cats = DB.cats(key) || DEFAULT_CATS[key] || [];
+  const idx = catEditState.idx;
+  if (cats[idx]) { cats[idx].l = name; cats[idx].icon = catEditState.icon; }
+  DB.saveCats(key, cats);
+  SYNC.pushCats(key);
+  catEditState = { key: null, idx: null, icon: null };
   renderCatsModal();
 }
 
