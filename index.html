@@ -5661,14 +5661,42 @@ function _cleanGeoAddr(addr) {
   a = a.replace(/\bbairro\s+(d[aeo]s?\s+)/gi, '');
   return a.replace(/\s{2,}/g, ' ').trim();
 }
+// Cache persistente de geocodificação: os mesmos bairros/endereços repetem
+// muito no dia a dia — resolver 1x e reaproveitar corta o tempo da fila de
+// ~5s/corrida pra quase zero nas repetidas (e economiza chamadas ao Nominatim).
+const _geoCache = (() => {
+  try { return JSON.parse(localStorage.getItem('sm_geo_cache_v1') || '{}'); }
+  catch(e) { return {}; }
+})();
+function _saveGeoCache() {
+  try {
+    // limita a 400 entradas pra não inchar o localStorage
+    const keys = Object.keys(_geoCache);
+    if (keys.length > 400) keys.slice(0, keys.length - 400).forEach(k => delete _geoCache[k]);
+    localStorage.setItem('sm_geo_cache_v1', JSON.stringify(_geoCache));
+  } catch(e) {}
+}
+// Throttle global do Nominatim (1 req/s) — embutido aqui pra que cache hits
+// não paguem espera nenhuma.
+let _lastNominatimMs = 0;
+async function _nominatimThrottle() {
+  const wait = 1100 - (Date.now() - _lastNominatimMs);
+  if (wait > 0) await new Promise(r => setTimeout(r, wait));
+  _lastNominatimMs = Date.now();
+}
 async function _geocodeAddress(query) {
   if (!query) return null;
+  const key = query.toLowerCase().trim();
+  if (_geoCache[key]) return _geoCache[key];
   try {
+    await _nominatimThrottle();
     const url = "https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&q=" + encodeURIComponent(query);
     const r = await fetch(url, { headers: { "Accept-Language": "pt-BR" } });
     const data = await r.json();
     if (!data || !data.length) return null;
-    return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+    const pt = { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+    _geoCache[key] = pt; _saveGeoCache();
+    return pt;
   } catch(e) { console.warn("[_geocodeAddress]", e); return null; }
 }
 async function _routeDistanceOSRM(p1, p2) {
@@ -5701,7 +5729,6 @@ async function _geocodeWithFallback(addr) {
   if (p) return p;
   const parts = clean.split(',').map(s=>s.trim()).filter(Boolean);
   if (parts.length >= 2) {
-    await new Promise(r => setTimeout(r, 1100));
     p = await _geocodeAddress(parts.slice(1).join(', '));
   }
   return p;
@@ -5712,7 +5739,6 @@ async function _estimateTripKm(origin, dest) {
     return null;
   }
   const p1 = await _geocodeWithFallback(origin);
-  await new Promise(r => setTimeout(r, 1100)); // respeita 1 req/s do Nominatim
   const p2 = await _geocodeWithFallback(dest);
   if (!p1 || !p2) return null;
   // Sanidade: se os pontos geocodificados ficam absurdamente longe um do
@@ -5723,7 +5749,6 @@ async function _estimateTripKm(origin, dest) {
     console.warn('[_estimateTripKm] Descartado — distância implausível:', straightKm.toFixed(1), 'km entre', origin, 'e', dest);
     return null;
   }
-  await new Promise(r => setTimeout(r, 1100));
   const km = await _routeDistanceOSRM(p1, p2);
   if (km === null) return null;
   // Segunda checagem: a rota real também não deveria passar de ~120km
