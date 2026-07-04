@@ -1245,9 +1245,9 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <button class="type-btn" id="lf-dep" onclick="setLancFilter('dep')">Despesas</button>
     </div>
     <div class="lanc-status-row">
-      <button class="pchip active" id="lst-all" onclick="setLancStatus('all')">Todos</button>
-      <button class="pchip" id="lst-apagar" onclick="setLancStatus('a_pagar')">A pagar</button>
-      <button class="pchip" id="lst-pago" onclick="setLancStatus('pago')">Pago</button>
+      <button class="pchip active" id="lst-all" onclick="setLancListStatus('all')">Todos</button>
+      <button class="pchip" id="lst-apagar" onclick="setLancListStatus('a_pagar')">A pagar</button>
+      <button class="pchip" id="lst-pago" onclick="setLancListStatus('pago')">Pago</button>
     </div>
     <div class="lanc-period-row" style="position:relative">
       <button class="pchip active" id="lpp-7d" onclick="setLancPeriod('7d')">7 dias</button>
@@ -1787,8 +1787,8 @@ h1.hd-title{font-family:var(--font-brand)!important}
     <div class="field" id="l-status-wrap" style="margin-bottom:12px">
       <label class="lbl">Status</label>
       <div class="lanc-tabs" style="margin-bottom:0">
-        <button class="lanc-tab on" id="l-st-pago" onclick="setLancStatus('pago')">✓ Pago / Recebido</button>
-        <button class="lanc-tab" id="l-st-apagar" onclick="setLancStatus('a_pagar')">◷ A pagar</button>
+        <button class="lanc-tab on" id="l-st-pago" onclick="setLancFormStatus('pago')">✓ Pago / Recebido</button>
+        <button class="lanc-tab" id="l-st-apagar" onclick="setLancFormStatus('a_pagar')">◷ A pagar</button>
       </div>
     </div>
     <button class="save receita" id="l-save" onclick="saveLanc()" style="margin-top:14px">Salvar receita</button>
@@ -4131,7 +4131,7 @@ function setLancFilter(f) {
   });
   renderLancamentos();
 }
-function setLancStatus(s) {
+function setLancListStatus(s) {
   S.lancStatus = s;
   const ids = {all:'lst-all', a_pagar:'lst-apagar', pago:'lst-pago'};
   Object.keys(ids).forEach(x => {
@@ -4202,9 +4202,21 @@ function renderLancamentos() {
 let lancCatSel = 0;
 let lancFreqSel = 'Semanal';
 let lancRecOn = false;
+let _lancStatusSel = 'pago';
+function setLancFormStatus(s) {
+  _lancStatusSel = s;
+  const pagoBtn = document.getElementById('l-st-pago'), apagarBtn = document.getElementById('l-st-apagar');
+  if (pagoBtn) pagoBtn.classList.toggle('on', s === 'pago');
+  if (apagarBtn) apagarBtn.classList.toggle('on', s === 'a_pagar');
+}
 
 function openLanc(tipo) {
   setType(tipo || 'receita');
+  // Pré-preenche com a data da jornada que estava aberta (S.curDate),
+  // não a data de hoje — evita lançar no dia errado sem perceber.
+  const dataInp = document.getElementById('l-data');
+  if (dataInp) dataInp.value = S.curDate || DB.today();
+  setLancFormStatus(tipo === 'despesa' ? 'a_pagar' : 'pago');
   openMo('mo-lancamento');
 }
 function setType(t) {
@@ -4241,7 +4253,16 @@ const CAT_ICONS = {
   home:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11 12 3l9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>',
   user:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>',
   briefcase:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"/></svg>',
-  plus:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>'
+  plus:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>',
+  // Adicionados pra bater com CAT_SVG_ICONS (seletor de ícone ao criar
+  // categoria) — antes essas chaves não existiam aqui e caíam no 'plus'.
+  shield:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+  doc:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+  dollar:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>',
+  phone:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>',
+  park:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M16 7V5a2 2 0 0 0-4 0v2"/><path d="M12 7v10"/><path d="M12 12h3a2 2 0 0 0 0-4h-3"/></svg>',
+  health:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>',
+  other:'<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
 };
 
 // ── GESTÃO DE CATEGORIAS ────────────────────────────────────────────────
