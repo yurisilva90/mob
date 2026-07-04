@@ -4816,6 +4816,7 @@ async function extractTripsFromBase64(b64, mt, plat) {
     'Extraia SOMENTE corridas COMPLETAS que mostrem data+hora, linha com "Pop" e valor, e pelo menos um endereço. ' +
     'Se uma corrida estiver cortada no topo ou base da tela (sem data/hora ou sem status final), IGNORE. ' +
     'CADA HORÁRIO (HH:MM) IDENTIFICA UMA ÚNICA CORRIDA: nunca retorne dois itens com o mesmo "time" — se o mesmo horário aparecer repetido, é o mesmo cartão visto duas vezes, retorne só um. ' +
+    'LINHAS DIVISÓRIAS: cada corrida fica delimitada por LINHAS HORIZONTAIS FINAS na tela. O bloco de uma corrida é: data/hora → forma de pagamento → Pop + valor → tag de taxa → endereços → linha fina → status verde ("Pago" ou "Pedido finalizado"). Use essas linhas finas como fronteira: TODOS os campos de uma corrida (hora, valor, taxa, endereços, status) ficam juntos dentro do mesmo bloco, entre duas linhas finas. NUNCA combine um campo de um bloco com um campo de outro bloco — se uma linha fina separa a data/hora de um valor ou endereço, eles pertencem a corridas DIFERENTES. ' +
     'O valor R$X,XX de cada corrida está DENTRO do mesmo cartão que a data/hora dela (mesma caixa, entre a linha da data e o status final) — NUNCA use o valor de um cartão vizinho de cima ou de baixo. Se o valor do cartão não estiver visível por inteiro dentro dele, IGNORE a corrida em vez de pegar o valor de outro cartão. ' +
     '"km" e "duration" sempre 0 pois não aparecem no histórico. ' +
     '"dinamico" e "gorjeta" sempre 0.00 pois não aparecem no histórico da 99. ' +
