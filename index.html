@@ -6006,6 +6006,14 @@ async function gpsStart() {
           g2.wid = navigator.geolocation.watchPosition(gpsOnPosition, null, {enableHighAccuracy:true, maximumAge:3000, timeout:10000});
         }
         requestWakeLock();
+        // Religa o widget/serviço nativo semeado com o estado da jornada
+        // retomada — sem isso o rastreamento em background ficava morto
+        if (window.SmartMobiNative && DB.cfg().overlayEnabled !== false) {
+          try {
+            SmartMobiNative.startFloating?.(g2.start, g2.km || 0);
+            SmartMobiNative.updateFloatingStatus?.('running');
+          } catch(e) {}
+        }
         showToast('Uma jornada em aberto foi encontrada e retomada (não iniciamos outra do zero).', 'info');
         setTimeout(() => { try{renderJornada();}catch(e){} try{renderHome();}catch(e){} }, 80);
         return; // NÃO cria sessão nova — já retomou a existente
@@ -6440,8 +6448,17 @@ function restoreGpsSession() {
   // (ex: gpsStop rodou parcialmente numa tentativa anterior — fechou lá
   // mas não apagou o marcador local), NÃO resume. Confia no servidor.
   if (_supaUser && saved.sessionId && navigator.onLine) {
-    _SUPA.from('sessions').select('end_ms').eq('id', saved.sessionId).maybeSingle()
+    _SUPA.from('sessions').select('end_ms,km,start_ms').eq('id', saved.sessionId).maybeSingle()
       .then(({data}) => {
+        // Recupera km/start do checkpoint na nuvem se forem melhores que o
+        // snapshot local (marcador local pode estar defasado se o app ficou
+        // muito tempo em background sem JS rodando).
+        if (data && !data.end_ms && S.gps.st !== 'idle' && S.gps.sessionId === saved.sessionId) {
+          const cloudKm = parseFloat(data.km) || 0;
+          if (cloudKm > (S.gps.km || 0)) { S.gps.km = cloudKm; S.gps.pts = []; S.gps.lastFixTime = null; }
+          if (data.start_ms && Number(data.start_ms) < (S.gps.start || Infinity)) S.gps.start = Number(data.start_ms);
+          try { if (S.sec==='jornada') renderJornada(); } catch(e) {}
+        }
         if (data && data.end_ms) {
           console.warn('[restoreGpsSession] Sessão já encerrada no Supabase — descartando marcador local stale');
           DB.del('sm_gps_session');
@@ -6497,7 +6514,17 @@ function restoreGpsSession() {
             g.pts = [];
             g.lastFixTime = null;
           }
-          if (nativeStart) g.start = nativeStart;
+          // GUARD: só adota o start nativo se for ANTERIOR ao que já temos.
+          // Se o Android matou e reiniciou o GpsService (START_STICKY), o
+          // start nativo vira a hora do RESTART — adotar ele fazia a jornada
+          // "recomeçar" e o upsert (mesmo sessionId) sobrescrevia o start_ms
+          // da sessão no Supabase, perdendo todo o histórico do dia.
+          if (nativeStart && nativeStart < g.start) g.start = nativeStart;
+          else if (nativeStart && nativeStart > g.start + 60000) {
+            // Serviço nativo reiniciou do zero — re-semeia com o estado correto
+            console.warn('[restoreGpsSession] Serviço nativo reiniciado (start nativo mais novo) — re-semeando com start/km da sessão real');
+            try { SmartMobiNative.startFloating?.(g.start, g.km || 0); } catch(e) {}
+          }
           // Guard: não diminui pausedMs com valor menor do nativo
           if (typeof nativePaused === 'number' && nativePaused >= (g.pausedMs || 0)) {
             g.pausedMs = nativePaused;
@@ -6512,6 +6539,19 @@ function restoreGpsSession() {
     g.wid = navigator.geolocation.watchPosition(gpsOnPosition, null, {enableHighAccuracy:true, maximumAge:3000, timeout:10000});
   }
   if (g.st === 'running') requestWakeLock();
+  // Se há jornada em aberto mas o serviço nativo está MORTO (Android matou
+  // o processo e o START_STICKY ainda não religou, ou foi removido de vez),
+  // religa ele semeado com o start/km corretos — a jornada continua de onde
+  // parou em vez de ficar sem rastreamento em background.
+  if (g.st === 'running' && window.SmartMobiNative && DB.cfg().overlayEnabled !== false) {
+    try {
+      const nativeUp = typeof SmartMobiNative.isGpsRunning === 'function' && SmartMobiNative.isGpsRunning();
+      if (!nativeUp && typeof SmartMobiNative.startFloating === 'function') {
+        console.warn('[restoreGpsSession] Serviço nativo morto com jornada em aberto — religando com start/km da sessão');
+        SmartMobiNative.startFloating(g.start, g.km || 0);
+      }
+    } catch(e) {}
+  }
   if (window.SmartMobiNative && typeof SmartMobiNative.updateFloatingStatus === 'function') {
     try { SmartMobiNative.updateFloatingStatus(g.st); } catch(e) {}
   }
