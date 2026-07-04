@@ -2267,6 +2267,7 @@ function navTo(sec) {
   const bn = document.getElementById('bn-'+navId);
   if (bn) bn.classList.add('active');
   S.sec = sec;
+  try { localStorage.setItem('sm_last_screen', JSON.stringify({sec, ts: Date.now()})); } catch(e) {}
   const ms = document.getElementById('main-scroll');
   if (ms) ms.scrollTop = 0;
   if (sec === 'home')       renderHome();
@@ -7560,7 +7561,7 @@ const SYNC = {
     const uid = _supaUser.id;
     try {
       const [trips, expenses, revenues, sessions, planJ, cats, dayMeta, eventsRes, settingsRes, favsRes] = await Promise.all([
-        await (async () => { let all=[],from=0; while(true) { const {data:chunk,error} = await _SUPA.from('trips').select('*').eq('user_id',uid).range(from,from+999);if(error||!chunk||!chunk.length) break; all.push(...chunk); if(chunk.length<1000) break; from+=1000; } return {data:all}; })(),
+        (async () => { let all=[],from=0; while(true) { const {data:chunk,error} = await _SUPA.from('trips').select('*').eq('user_id',uid).range(from,from+999);if(error||!chunk||!chunk.length) break; all.push(...chunk); if(chunk.length<1000) break; from+=1000; } return {data:all}; })(),
         _SUPA.from('expenses').select('*').eq('user_id', uid),
         _SUPA.from('revenues').select('*').eq('user_id', uid),
         _SUPA.from('sessions').select('*').eq('user_id', uid),
@@ -7572,11 +7573,12 @@ const SYNC = {
         _SUPA.from('user_favorites').select('*').eq('user_id', uid)
       ]);
       const byDate = {};
+      const _dirty = new Set();
       const ensure = d => byDate[d] || (byDate[d] = DB.day(d));
 
       (trips.data || []).forEach(t => {
         const day = ensure(t.date);
-        if (!day.trips.find(x => x.id === t.id)) day.trips.push({
+        if (!day.trips.find(x => x.id === t.id)) { _dirty.add(t.date); day.trips.push({
           id: t.id, platform: t.platform || 'uber', time: (t.time || '').slice(0, 5),
           duration: t.duration || 0, origin: t.origin || '', dest: t.dest || '',
           value: parseFloat(t.value) || 0, km: parseFloat(t.km) || 0,
@@ -7586,25 +7588,25 @@ const SYNC = {
           originFull: t.origin_full || t.origin || '', destFull: t.dest_full || t.dest || '',
           serviceFee: t.service_fee ?? null, taxaZero: t.taxa_zero || false,
           kmEstimado: t.km_estimado || false
-        });
+        }); }
       });
       (expenses.data || []).forEach(e => {
         const day = ensure(e.date);
-        if (!day.expenses.find(x => x.id === e.id)) day.expenses.push({
+        if (!day.expenses.find(x => x.id === e.id)) { _dirty.add(e.date); day.expenses.push({
           id: e.id, category: e.category || '', categoryLabel: e.category_label || '',
           desc: e.description || '', amount: parseFloat(e.amount) || 0, date: e.date,
           scope: e.scope || 'operacional', recorrente: e.recorrente || false, freq: e.freq || null,
           status: e.status || 'a_pagar', dueDate: e.due_date || e.date
-        });
+        }); }
       });
       (revenues.data || []).forEach(r => {
         const day = ensure(r.date);
-        if (!day.revenues.find(x => x.id === r.id)) day.revenues.push({
+        if (!day.revenues.find(x => x.id === r.id)) { _dirty.add(r.date); day.revenues.push({
           id: r.id, category: r.category || '', categoryLabel: r.category_label || '',
           desc: r.description || '', amount: parseFloat(r.amount) || 0, date: r.date,
           scope: r.scope || 'operacional', recorrente: r.recorrente || false, freq: r.freq || null,
           status: r.status || 'pago', dueDate: r.due_date || r.date
-        });
+        }); }
       });
       (sessions.data || []).forEach(s => {
         const day = ensure(s.date);
@@ -7615,6 +7617,7 @@ const SYNC = {
         const isDeleted = sEnd === -1;
         const isBogus = sElapsed > 72000; // > 20h = dado corrompido
         if (!isDeleted && !isBogus && !day.sessions.find(x => x.id === s.id)) {
+          _dirty.add(s.date);
           day.sessions.push({
             id: s.id, start: Number(s.start_ms), end: sEnd,
             km: parseFloat(s.km) || 0, elapsed: sElapsed
@@ -7668,11 +7671,17 @@ const SYNC = {
       }
       (dayMeta.data || []).forEach(m => {
         const day = ensure(m.date);
-        day.kmAdjust = parseFloat(m.km_adjust) || 0;
-        day.tempoAdjust = parseInt(m.tempo_adjust_secs) || 0;
-        if (m.km_total_legacy != null) day.kmTotal = parseFloat(m.km_total_legacy);
+        const nKm = parseFloat(m.km_adjust) || 0;
+        const nTempo = parseInt(m.tempo_adjust_secs) || 0;
+        if ((day.kmAdjust||0) !== nKm || (day.tempoAdjust||0) !== nTempo) _dirty.add(m.date);
+        day.kmAdjust = nKm;
+        day.tempoAdjust = nTempo;
+        if (m.km_total_legacy != null && day.kmTotal !== parseFloat(m.km_total_legacy)) {
+          day.kmTotal = parseFloat(m.km_total_legacy); _dirty.add(m.date);
+        }
       });
-      Object.values(byDate).forEach(day => DB.saveDay(day));
+      // Só reescreve no localStorage os dias que realmente mudaram
+      Object.entries(byDate).forEach(([d, day]) => { if (_dirty.has(d)) DB.saveDay(day); });
 
       // ── Events ─────────────────────────────────────────────────────────
       if (eventsRes.data && eventsRes.data.length) {
@@ -7867,8 +7876,6 @@ async function showApp() {
   }
   if (!_appBooted) {
     setTimeout(updateNetStatus, 500);
-    try { await SYNC.pullAll(); } catch(e) { console.error('pullAll boot:', e); }
-    try { await SYNC.flushQueue(); } catch(e) { console.error('flushQueue boot:', e); }
   }
   try{renderHome();}    catch(e){console.error('renderHome:',e);}
   try{restoreGpsSession();} catch(e){console.error('restoreGpsSession:',e);}
@@ -7885,7 +7892,34 @@ async function showApp() {
   // Só navega pra Home no primeiro boot. O Supabase reemite SIGNED_IN sempre que
   // o app volta de segundo plano, o que chamava showApp() de novo e forçava a
   // tela de volta pra Home mesmo a pessoa estando em outra tela (ex: Jornada).
-  if (!_appBooted) { _appBooted = true; navTo('home'); }
+  if (!_appBooted) {
+    _appBooted = true;
+    // FIX: restaura a última tela em vez de forçar Home quando a WebView
+    // recarrega (Android mata a página em background)
+    let lastSec = 'home';
+    try {
+      const saved = JSON.parse(localStorage.getItem('sm_last_screen') || 'null');
+      // Só restaura se foi salvo há menos de 30 min (senão, home mesmo)
+      if (saved && saved.sec && (Date.now() - saved.ts) < 30*60*1000) lastSec = saved.sec;
+    } catch(e) {}
+    navTo(lastSec);
+    _bootPullBg();
+  }
+}
+
+// Pull do cloud em BACKGROUND — a UI já está visível com dados locais.
+// Quando terminar, re-renderiza tudo e restaura sessão GPS do cloud se houver.
+async function _bootPullBg() {
+  try { await SYNC.pullAll(); } catch(e) { console.error('pullAll boot:', e); }
+  try { await SYNC.flushQueue(); } catch(e) { console.error('flushQueue boot:', e); }
+  try{restoreGpsSession();} catch(e){}
+  try{syncNavButton();}  catch(e){}
+  try{renderHome();}     catch(e){}
+  try{renderJornada();}  catch(e){}
+  try{renderFin();}      catch(e){}
+  try{renderAgResumo();} catch(e){}
+  try{ if (S.sec==='corridas') renderCorridas(); } catch(e){}
+  try{ if (S.sec==='lancamentos') renderLancamentos(); } catch(e){}
 }
 
 function lsErr(id, msg) { const el=document.getElementById(id);if(el){el.textContent=msg;el.style.display=msg?'block':'none';} }
