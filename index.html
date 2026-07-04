@@ -5960,6 +5960,14 @@ async function gpsStart() {
   // Guard: impede reentrada — clique duplo/rápido não pode criar uma
   // segunda jornada sobrepondo a que acabou de iniciar
   if (S.gps.st === 'running' || S.gps.st === 'paused') return;
+  // Feedback visual IMEDIATO: o card e o botão do menu ficam verdes no
+  // instante do clique, sem esperar a checagem de continuidade no Supabase
+  // (que tem um await de rede e antes atrasava a virada do card pra verde —
+  // só mudava depois de tocar no menu). Se a checagem abaixo encontrar uma
+  // sessão em aberto, ela apenas reaproveita o mesmo estado 'running'.
+  S.gps.st = 'running';
+  try { syncNavButton(); } catch(e) {}
+  try { if (S.sec === 'jornada') renderJornada(); } catch(e) {}
   // ═══ CONTINUIDADE: antes de criar uma jornada nova do zero, verifica
   // se já existe uma sessão em aberto (sem end_ms) nas últimas 12h. Se
   // existir, RETOMA ela em vez de começar outra — protege contra perda
