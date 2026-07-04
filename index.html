@@ -5065,7 +5065,7 @@ function confirmImport() {
     if (isGhost) { skipped++; return; }
     if (isTripDuplicate(t, day.trips)) { skipped++; return; }
     const trip = {id:DB.uid(), platform:t.platform||'uber', time:t.time||'',
-      duration:t.duration||0, origin:t.origin||'', dest:t.dest||'',
+      duration:t.duration||0, origin:_cleanBairro(t.origin||''), dest:_cleanBairro(t.dest||''),
       originFull:t.originFull||t.origin||'', destFull:t.destFull||t.dest||'',
       value:parseFloat(t.value)||0, km:parseFloat(t.km)||0,
       category:'', surge:t.surge||false, airport:t.airport||false,
@@ -5503,7 +5503,13 @@ async function _pullTripsCorrections() {
       // no banco (km, plataforma, taxa, pedágio) — não mexe em nada que o
       // usuário possa ter editado localmente enquanto offline.
       const rKm = parseFloat(r.km)||0;
-      if (Math.abs((local.km||0) - rKm) > 0.05 || !!local.kmEstimado !== !!r.km_estimado) {
+      const localHasEstimate = local.kmEstimado && (parseFloat(local.km)||0) > 0;
+      if (localHasEstimate && rKm === 0 && !r.km_estimado) {
+        // Estimativa local ainda não chegou no banco (upsert falhou/pendente)
+        // — reenviar em vez de apagar a estimativa
+        _SUPA.from('trips').upsert({ id: local.id, user_id: _supaUser.id,
+          km: parseFloat(local.km), km_estimado: true }, { onConflict: 'id' }).catch(()=>{});
+      } else if (Math.abs((local.km||0) - rKm) > 0.05 || !!local.kmEstimado !== !!r.km_estimado) {
         local.km = rKm; local.kmEstimado = !!r.km_estimado; changed = true;
       }
       if (r.platform && local.platform !== r.platform) {
@@ -5536,7 +5542,24 @@ async function _syncTick() {
   // direto no banco — criando um ciclo onde a correção nunca 'gruda'.
   await _pullTripsCorrections();
   await _autoSyncLocalData();
+  _backfillKmEstimates();
 }
+// Migração única: limpa prefixo "Bairro da/do" de corridas já salvas localmente
+(function _migrateBairroNames(){
+  try {
+    if (localStorage.getItem('sm_bairro_clean_v1')) return;
+    DB.allDates().forEach(dateStr => {
+      const day = DB.day(dateStr); let ch = false;
+      (day.trips||[]).forEach(t => {
+        const o = _cleanBairro(t.origin||''), d = _cleanBairro(t.dest||'');
+        if (o !== (t.origin||'')) { t.origin = o; ch = true; }
+        if (d !== (t.dest||''))   { t.dest = d;  ch = true; }
+      });
+      if (ch) DB.saveDay(day);
+    });
+    localStorage.setItem('sm_bairro_clean_v1','1');
+  } catch(e) { console.warn('[_migrateBairroNames]', e); }
+})();
 setTimeout(()=>{ _syncTick(); setInterval(_syncTick, 60*1000); }, 3000); // primeira vez em 3s, depois a cada 1 minuto
 
 // ── Status de rede: indicador visual + reconciliação ao voltar online ──
@@ -5620,10 +5643,28 @@ async function reconcileJornadaHoje() {
 // mas com throttle de 1 req/s no Nominatim — processar em fila sequencial.
 let _geoQueueBusy = false;
 const _geoQueue = [];
+// Remove prefixo "Bairro da/do/de/das/dos" do nome de bairro (a 99 escreve
+// "Bairro da São Pedro" — queremos exibir/geocodificar só "São Pedro")
+function _cleanBairro(name) {
+  if (!name) return name;
+  return name.replace(/^\s*bairro\s+(d[aeo]s?\s+)?/i, '').trim();
+}
+// Limpa lixo comum do OCR no endereço antes de geocodificar: vírgulas soltas,
+// país truncado ("Bra"/"Bras"), número de prédio grudado ("1211- Rua X"),
+// e o prefixo "Bairro da" que confunde o Nominatim.
+function _cleanGeoAddr(addr) {
+  if (!addr) return addr;
+  let a = addr.trim();
+  a = a.replace(/,\s*(BR|Brasil|Bras?i?l?|Bra)\.?\s*$/i, '');
+  a = a.replace(/[,\s]+$/, '');
+  a = a.replace(/^\d+\s*-\s*/, '');
+  a = a.replace(/\bbairro\s+(d[aeo]s?\s+)/gi, '');
+  return a.replace(/\s{2,}/g, ' ').trim();
+}
 async function _geocodeAddress(query) {
   if (!query) return null;
   try {
-    const url = "https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" + encodeURIComponent(query);
+    const url = "https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&q=" + encodeURIComponent(query);
     const r = await fetch(url, { headers: { "Accept-Language": "pt-BR" } });
     const data = await r.json();
     if (!data || !data.length) return null;
@@ -5651,14 +5692,28 @@ function _hasReliableAddress(addr) {
   if (firstPart.replace(/[^a-zA-ZÀ-ÿ]/g,'').length < 4) return false;
   return true;
 }
+// Geocodifica com fallback: tenta o endereço completo; se falhar, tenta só
+// da parte do bairro em diante (ex: "Rua X, Ermitage, Teresópolis - RJ" →
+// "Ermitage, Teresópolis - RJ") — menos preciso, mas suficiente pra estimar km.
+async function _geocodeWithFallback(addr) {
+  const clean = _cleanGeoAddr(addr);
+  let p = await _geocodeAddress(clean);
+  if (p) return p;
+  const parts = clean.split(',').map(s=>s.trim()).filter(Boolean);
+  if (parts.length >= 2) {
+    await new Promise(r => setTimeout(r, 1100));
+    p = await _geocodeAddress(parts.slice(1).join(', '));
+  }
+  return p;
+}
 async function _estimateTripKm(origin, dest) {
   if (!_hasReliableAddress(origin) || !_hasReliableAddress(dest)) {
     console.warn('[_estimateTripKm] Endereço sem rua identificável — pulando estimativa:', origin, '/', dest);
     return null;
   }
-  const p1 = await _geocodeAddress(origin);
+  const p1 = await _geocodeWithFallback(origin);
   await new Promise(r => setTimeout(r, 1100)); // respeita 1 req/s do Nominatim
-  const p2 = await _geocodeAddress(dest);
+  const p2 = await _geocodeWithFallback(dest);
   if (!p1 || !p2) return null;
   // Sanidade: se os pontos geocodificados ficam absurdamente longe um do
   // outro (linha reta > 80km), a geocodificação quase certamente resolveu
@@ -5688,9 +5743,28 @@ function _haversineKm(lat1, lon1, lat2, lon2) {
 }
 // Fila: processa uma corrida por vez (respeitando o throttle acima),
 // atualiza o trip local + Supabase quando o km chegar, e re-renderiza.
+const _geoTried = new Set(); // trips já tentadas nesta sessão (evita loop)
 function _queueKmEstimate(dateStr, tripId, origin, dest) {
+  if (_geoTried.has(tripId)) return;
+  _geoTried.add(tripId);
   _geoQueue.push({ dateStr, tripId, origin, dest });
   if (!_geoQueueBusy) _processGeoQueue();
+}
+// Backfill: corridas que ficaram com km=0 (fila interrompida ao fechar o
+// app, rede fora etc.) entram de novo na fila — 1 tentativa por sessão por
+// corrida. Roda a cada _syncTick; a guarda _geoTried evita repetição.
+function _backfillKmEstimates() {
+  try {
+    const cutoff = new Date(Date.now()-7*24*3600*1000).toISOString().slice(0,10);
+    DB.allDates().filter(d => d >= cutoff).forEach(dateStr => {
+      const day = DB.day(dateStr);
+      (day.trips||[]).forEach(t => {
+        if ((parseFloat(t.km)||0) > 0 || t.kmEstimado || _geoTried.has(t.id)) return;
+        const o = t.originFull || t.origin, d = t.destFull || t.dest;
+        if (o && d) _queueKmEstimate(dateStr, t.id, o, d);
+      });
+    });
+  } catch(e) { console.warn('[_backfillKmEstimates]', e); }
 }
 async function _processGeoQueue() {
   _geoQueueBusy = true;
