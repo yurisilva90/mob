@@ -4790,6 +4790,7 @@ async function processImportBatch(images, videos, plat) {
   const day = DB.day(S.curDate);
   const seen = new Set();
   const unique = allTrips.filter(t => {
+    if (!(t.value > 0)) return false; // fusão/cartão cortado gera R$0,00 — nunca é corrida real
     t.time = normTime(t.time);
     const key = t.time+'_'+(t.value||0).toFixed(2);
     if (seen.has(key)) return false;
@@ -4878,6 +4879,7 @@ async function processMultipleImports(files, plat) {
   const day = DB.day(S.curDate);
   const seen = new Set();
   const unique = allTrips.filter(t => {
+    if (!(t.value > 0)) return false; // fusão/cartão cortado gera R$0,00 — nunca é corrida real
     t.time = normTime(t.time);
     const key = t.time+'_'+(t.value||0).toFixed(2);
     if (seen.has(key)) return false;
@@ -5072,6 +5074,9 @@ async function extractTripsFromBase64(b64, mt, plat) {
     'CADA HORÁRIO (HH:MM) IDENTIFICA UMA ÚNICA CORRIDA: nunca retorne dois itens com o mesmo "time" — se o mesmo horário aparecer repetido, é o mesmo cartão visto duas vezes, retorne só um. ' +
     'LINHAS DIVISÓRIAS: cada corrida fica delimitada por LINHAS HORIZONTAIS FINAS na tela. O bloco de uma corrida é: data/hora → forma de pagamento → Pop + valor → tag de taxa → endereços → linha fina → status verde ("Pago" ou "Pedido finalizado"). Use essas linhas finas como fronteira: TODOS os campos de uma corrida (hora, valor, taxa, endereços, status) ficam juntos dentro do mesmo bloco, entre duas linhas finas. NUNCA combine um campo de um bloco com um campo de outro bloco — se uma linha fina separa a data/hora de um valor ou endereço, eles pertencem a corridas DIFERENTES. ' +
     'O valor R$X,XX de cada corrida está DENTRO do mesmo cartão que a data/hora dela (mesma caixa, entre a linha da data e o status final) — NUNCA use o valor de um cartão vizinho de cima ou de baixo. Se o valor do cartão não estiver visível por inteiro dentro dele, IGNORE a corrida em vez de pegar o valor de outro cartão. ' +
+    'BAIRRO NUNCA É A CIDADE: a linha de endereço da 99 termina com a CIDADE e UF (ex: "..., Teresópolis - RJ"). O nome da cidade NUNCA deve ir em "origin"/"dest" — o bairro é o termo que vem ANTES da cidade. Se a linha não tiver bairro identificável, use o nome da rua em "origin"/"dest"; se nem rua houver legível, use "" (string vazia). Devolver a cidade como bairro é ERRO. ' +
+    'IGNORE corridas com valor R$0,00 ou cujo valor não esteja claramente legível — corrida real da 99 sempre tem valor maior que zero. ' +
+    'AUTOCONFERÊNCIA FINAL: antes de devolver o JSON, revise item por item e confirme que time, value e endereços de cada item vieram TODOS do MESMO cartão — se algum item combinar hora de um cartão com endereço ou valor de outro, corrija ou remova esse item. ' +
     '"km" e "duration" sempre 0 pois não aparecem no histórico. ' +
     '"dinamico" e "gorjeta" sempre 0.00 pois não aparecem no histórico da 99. ' +
     'Formato de cada item: {"platform":"99","time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"99Pop","origin":"bairro","originFull":"endereço completo","dest":"bairro","destFull":"endereço completo","dinamico":0.00,"gorjeta":0.00,"pedagio":0.00,"serviceFee":0.00,"dinheiro":false}. "serviceFee" é sempre o número da tag "Taxa Fixa de X%" convertido pra decimal (15% → 0.15). "dinheiro":true quando aparecer "Ganhos pagos em dinheiro".\n\n' +
@@ -5137,12 +5142,30 @@ function mergeTrips(existing, newTrips) {
 
 
 
+function importSummaryHtml() {
+  const sel = (window._pendingTrips||[]).filter(t => t._sel);
+  const total = sel.reduce((s,t)=>s+(t.value||0),0);
+  const uber = sel.filter(t=>t.platform!=='99');
+  const p99  = sel.filter(t=>t.platform==='99');
+  const parts = [];
+  if (uber.length) parts.push(`<span style="color:#0EA5E9;font-weight:800">Uber ${uber.length} · ${DB.fRI(uber.reduce((s,t)=>s+(t.value||0),0))}</span>`);
+  if (p99.length)  parts.push(`<span style="color:#F59E0B;font-weight:800">99 ${p99.length} · ${DB.fRI(p99.reduce((s,t)=>s+(t.value||0),0))}</span>`);
+  return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;background:#F0FDF4;border:1.5px solid #BBF7D0;border-radius:12px;padding:10px 12px;margin-bottom:10px">
+    <div style="font-size:12px;font-weight:800;color:#0F172A">${sel.length} selecionada${sel.length===1?'':'s'} · <span style="color:#16A34A">${DB.fRI(total)}</span></div>
+    <div style="display:flex;gap:10px;font-size:10.5px">${parts.join('')}</div>
+  </div>`;
+}
+function updateImportSummary() {
+  const el = document.getElementById('ic-summary');
+  if (el) el.outerHTML = '<div id="ic-summary">' + importSummaryHtml() + '</div>';
+}
 function showImportConfirm() {
   const trips = window._pendingTrips || [];
   if (!trips.length) { closeMo('mo-import-confirm'); showToast('Nenhuma corrida detectada.', 'info'); return; }
   document.getElementById('ic-title').textContent = 'Corridas detectadas ('+trips.length+')';
-  document.getElementById('ic-btn').style.display = ''; document.getElementById('ic-btn').textContent = 'Importar ('+trips.length+')';
-  document.getElementById('ic-body').innerHTML = '<div style="background:#fff;border-radius:16px;overflow:hidden;border:1px solid #E2E8F0">' + trips.map((t,i) => {
+  document.getElementById('ic-btn').style.display = ''; document.getElementById('ic-btn').textContent = 'Importar ('+trips.filter(t=>t._sel).length+')';
+  document.getElementById('ic-body').innerHTML = '<div id="ic-summary">' + importSummaryHtml() + '</div>' +
+    '<div style="background:#fff;border-radius:16px;overflow:hidden;border:1px solid #E2E8F0">' + trips.map((t,i) => {
     const ex = [];
     if (t.dinamico > 0) ex.push(`<span class="chip chip-d"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg> ${DB.fR(t.dinamico)}</span>`);
     if (t.tip > 0) ex.push(`<span class="chip chip-g"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.5 4.05 3 5.5l7 7Z"/></svg> ${DB.fR(t.tip)}</span>`);
@@ -5164,6 +5187,7 @@ function toggleImportTrip(i) {
   if (el) { el.style.background=t._sel?'#22C55E':'transparent'; el.style.borderColor=t._sel?'#22C55E':'#E2E8F0'; el.textContent=t._sel?'✓':''; }
   const sel = (window._pendingTrips||[]).filter(x=>x._sel).length;
   document.getElementById('ic-btn').textContent = 'Importar ('+sel+')';
+  updateImportSummary();
 }
 
 // Detecta corrida duplicada (hora+valor, hora+km, valor+rota)
