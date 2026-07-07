@@ -4814,19 +4814,25 @@ function showImportMatch(unique) {
   const p99FoundCount  = p99Found.length,  p99FoundVal  = p99Found.reduce((s,t)=>s+(t.value||0),0);
 
   const checks = [];
-  let allOk = true;
-  if (importPrecheck.uberCount != null) {
-    const ok = uberFoundCount >= importPrecheck.uberCount;
-    if (!ok) allOk = false;
-    checks.push({label:'Uber', ok, txt: `${uberFoundCount}/${importPrecheck.uberCount} · ${DB.fRI(uberFoundVal)}`});
-  }
-  if (importPrecheck.p99Count != null) {
-    const ok = p99FoundCount >= importPrecheck.p99Count;
-    if (!ok) allOk = false;
-    checks.push({label:'99', ok, txt: `${p99FoundCount}/${importPrecheck.p99Count} · ${DB.fRI(p99FoundVal)}`});
-  }
+  let anyMissing = false, anyExtra = false;
+  // Checagem EXATA: encontrar MAIS do que o declarado é tão errado quanto
+  // encontrar menos (significa corrida lida em dobro/fundida). 18/17 não
+  // pode aparecer como 'bateu certinho'. Valor com tolerância de 1 centavo.
+  const evalPlat = (label, foundCount, foundVal, decCount, decVal) => {
+    let ok = foundCount === decCount;
+    if (ok && decVal != null) ok = Math.abs(foundVal - decVal) < 0.01;
+    if (!ok) { if (foundCount > decCount || (decVal != null && foundVal > decVal + 0.009)) anyExtra = true; else anyMissing = true; }
+    checks.push({label, ok, txt: `${foundCount}/${decCount} · ${DB.fRI(foundVal)}${decVal != null ? ' de ' + DB.fRI(decVal) : ''}`});
+  };
+  if (importPrecheck.uberCount != null) evalPlat('Uber', uberFoundCount, uberFoundVal, importPrecheck.uberCount, importPrecheck.uberValue);
+  if (importPrecheck.p99Count != null) evalPlat('99', p99FoundCount, p99FoundVal, importPrecheck.p99Count, importPrecheck.p99Value);
+  const allOk = !anyMissing && !anyExtra;
   const pillsHtml = checks.map(c => `<span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:${c.ok?'#DCFCE7':'#FEE2E2'};color:${c.ok?'#16A34A':'#DC2626'}">${c.label} ${c.txt} ${c.ok?'✓':'✗'}</span>`).join('');
 
+  const warnTitle = anyExtra ? 'Achei corridas a mais' : 'Faltou alguma coisa';
+  const warnMsg = anyExtra
+    ? 'Alguma corrida foi lida em dobro ou misturada. Na lista, desmarque as que estiverem repetidas ou com dados estranhos antes de importar.'
+    : 'Confira se subiu todos os prints/vídeos desse app';
   const cardHtml = allOk
     ? `<div style="border-radius:16px;padding:16px;text-align:center;margin-bottom:14px;background:#ECFDF3;border:1.5px solid #BBF7D0">
         <div style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;background:#DCFCE7;color:#16A34A"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
@@ -4836,8 +4842,8 @@ function showImportMatch(unique) {
       </div>`
     : `<div style="border-radius:16px;padding:16px;text-align:center;margin-bottom:14px;background:#FFFBEB;border:1.5px solid #FDE68A">
         <div style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;background:#FEF3C7;color:#D97706"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg></div>
-        <b style="display:block;font-size:14px;color:#0F172A;margin-bottom:4px">Faltou alguma coisa</b>
-        <span style="font-size:12px;color:#64748B;line-height:1.5">Confira se subiu todos os prints/vídeos desse app</span>
+        <b style="display:block;font-size:14px;color:#0F172A;margin-bottom:4px">${warnTitle}</b>
+        <span style="font-size:12px;color:#64748B;line-height:1.5">${warnMsg}</span>
         <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap">${pillsHtml}</div>
       </div>`;
 
@@ -5070,13 +5076,13 @@ async function extractTripsFromBase64(b64, mt, plat) {
     '(6) Status verde "Pago" ou "Pedido finalizado" — marca o FIM desta corrida. ' +
     'REGRAS: ' +
     'Extraia SOMENTE corridas COMPLETAS que mostrem data+hora, linha com "Pop" e valor, e pelo menos um endereço. ' +
-    'Se uma corrida estiver cortada no topo ou base da tela (sem data/hora ou sem status final), IGNORE. ' +
+    'VALIDAÇÃO LINHA A LINHA — REGRA MAIS IMPORTANTE DE TODAS: só extraia uma corrida se o bloco dela estiver 100% delimitado e visível na imagem, do início ao fim: (a) a linha de data/hora "DD/MM/AAAA HH:MM" visível no TOPO do bloco, (b) o status verde ("Pago" ou "Pedido finalizado") visível na BASE do bloco, e (c) a LINHA FINA divisória visível separando este bloco do vizinho. Se QUALQUER uma dessas três fronteiras não estiver visível — cartão cortado no topo da imagem, cortado na base, ou sem linha fina clara entre as informações — NÃO EXTRAIA essa corrida. É melhor deixar de fora do que adivinhar: esta imagem é um frame de vídeo com sobreposição, e o cartão cortado aqui aparece COMPLETO em outro frame. Nunca complete um cartão cortado com dados do vizinho. ' +
     'CADA HORÁRIO (HH:MM) IDENTIFICA UMA ÚNICA CORRIDA: nunca retorne dois itens com o mesmo "time" — se o mesmo horário aparecer repetido, é o mesmo cartão visto duas vezes, retorne só um. ' +
     'LINHAS DIVISÓRIAS: cada corrida fica delimitada por LINHAS HORIZONTAIS FINAS na tela. O bloco de uma corrida é: data/hora → forma de pagamento → Pop + valor → tag de taxa → endereços → linha fina → status verde ("Pago" ou "Pedido finalizado"). Use essas linhas finas como fronteira: TODOS os campos de uma corrida (hora, valor, taxa, endereços, status) ficam juntos dentro do mesmo bloco, entre duas linhas finas. NUNCA combine um campo de um bloco com um campo de outro bloco — se uma linha fina separa a data/hora de um valor ou endereço, eles pertencem a corridas DIFERENTES. ' +
     'O valor R$X,XX de cada corrida está DENTRO do mesmo cartão que a data/hora dela (mesma caixa, entre a linha da data e o status final) — NUNCA use o valor de um cartão vizinho de cima ou de baixo. Se o valor do cartão não estiver visível por inteiro dentro dele, IGNORE a corrida em vez de pegar o valor de outro cartão. ' +
-    'BAIRRO NUNCA É A CIDADE: a linha de endereço da 99 termina com a CIDADE e UF (ex: "..., Teresópolis - RJ"). O nome da cidade NUNCA deve ir em "origin"/"dest" — o bairro é o termo que vem ANTES da cidade. Se a linha não tiver bairro identificável, use o nome da rua em "origin"/"dest"; se nem rua houver legível, use "" (string vazia). Devolver a cidade como bairro é ERRO. ' +
+    'BAIRRO NUNCA É A CIDADE: a linha de endereço da 99 termina com a CIDADE e UF (ex: "..., Teresópolis - RJ") e muitas vezes NEM TEM bairro — só rua/estrada, número, CEP e cidade (ex: "Estr. Teresópolis x Friburgo, nº 8500, 25976-655, Teresópolis - RJ"). Nesse caso use o nome da rua/estrada em "origin"/"dest" (no exemplo: "Estr. Teresópolis x Friburgo"). O nome da cidade sozinho NUNCA vai em "origin"/"dest" — cuidado: a palavra "Teresópolis" pode fazer parte do nome de uma estrada (aí pode) mas nunca deve ser usada sozinha por ser a cidade do fim da linha. Sem rua legível, use "" (string vazia). ' +
     'IGNORE corridas com valor R$0,00 ou cujo valor não esteja claramente legível — corrida real da 99 sempre tem valor maior que zero. ' +
-    'AUTOCONFERÊNCIA FINAL: antes de devolver o JSON, revise item por item e confirme que time, value e endereços de cada item vieram TODOS do MESMO cartão — se algum item combinar hora de um cartão com endereço ou valor de outro, corrija ou remova esse item. ' +
+    'AUTOCONFERÊNCIA FINAL: antes de devolver o JSON, revise item por item e confirme: (1) o bloco da corrida estava 100% delimitado (data/hora no topo + status na base + linhas finas); (2) time, value e endereços vieram TODOS do MESMO cartão. Remova qualquer item que não passe nas duas checagens. ' +
     '"km" e "duration" sempre 0 pois não aparecem no histórico. ' +
     '"dinamico" e "gorjeta" sempre 0.00 pois não aparecem no histórico da 99. ' +
     'Formato de cada item: {"platform":"99","time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"99Pop","origin":"bairro","originFull":"endereço completo","dest":"bairro","destFull":"endereço completo","dinamico":0.00,"gorjeta":0.00,"pedagio":0.00,"serviceFee":0.00,"dinheiro":false}. "serviceFee" é sempre o número da tag "Taxa Fixa de X%" convertido pra decimal (15% → 0.15). "dinheiro":true quando aparecer "Ganhos pagos em dinheiro".\n\n' +
