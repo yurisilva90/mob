@@ -4748,7 +4748,8 @@ async function processImportBatch(images, videos, plat) {
   openMo('mo-import-confirm');
 
   const unique = [];
-  const seen = new Set();
+  const details = [];
+  const seen = new Set(), seenDetails = new Set();
   let foundCount = 0, foundVal = 0;
   // Valida e deduplica NA HORA, frame a frame — o contador do anel só sobe
   // com corrida nova validada. Antes somava a extração bruta de cada frame,
@@ -4757,6 +4758,16 @@ async function processImportBatch(images, videos, plat) {
   const absorb = (trips) => {
     (trips||[]).forEach(t => {
       if (!(t.value > 0)) return; // fusão/cartão cortado gera R$0,00 — nunca é corrida real
+      if (t.screen === 'detail') {
+        // Tela de detalhe da 99: não é corrida nova, é enriquecimento
+        // (km/duração/dinâmico reais) de uma corrida que também aparece na
+        // lista. Não conta no anel; funde depois, casando pelo valor.
+        const dkey = 'D_'+(t.value||0).toFixed(2)+'_'+(t.km||0)+'_'+(t.duration||0);
+        if (seenDetails.has(dkey)) return;
+        seenDetails.add(dkey);
+        details.push(t);
+        return;
+      }
       t.time = normTime(t.time);
       const key = t.time+'_'+(t.value||0).toFixed(2);
       if (seen.has(key)) return;
@@ -4798,6 +4809,21 @@ async function processImportBatch(images, videos, plat) {
       }
     } catch(e) { console.warn('Erro vídeo '+(v+1)+':', e); }
   }
+
+  // Funde os detalhes nas corridas da lista: casa pelo valor exato (a tela
+  // de detalhe não tem horário/endereço). Se houver 2+ corridas com o mesmo
+  // valor, cada detalhe enriquece a próxima ainda não enriquecida, na ordem
+  // — no pior caso, km/duração trocam entre duas corridas de valor igual.
+  details.forEach(d => {
+    const cand = unique.find(u => Math.abs((u.value||0)-(d.value||0)) < 0.005 && !u._enriched);
+    if (!cand) return;
+    cand._enriched = true;
+    if (d.km > 0)       { cand.km = d.km; cand.kmEstimado = false; }
+    if (d.duration > 0) cand.duration = d.duration;
+    if (d.dinamico > 0) { cand.dinamico = d.dinamico; cand.surge = true; }
+    if (d.dinheiro)     cand.dinheiro = true;
+    if (d.serviceFee != null && cand.serviceFee == null) cand.serviceFee = d.serviceFee;
+  });
 
   const day = DB.day(S.curDate);
   window._pendingTrips = unique.map((t,i) => ({...t, _sel:true, _idx:i,
@@ -5066,7 +5092,7 @@ async function extractTripsFromBase64(b64, mt, plat) {
   // Prompt único — a IA identifica sozinha se é Uber ou 99 pelo layout da
   // imagem (em vez de confiar em qual botão o usuário tocou, que pode estar
   // errado). Cada corrida retornada inclui "platform":"uber"|"99".
-  const prompt = 'Esta imagem mostra uma tela de histórico de corridas de motorista de app — pode ser do UBER (tela "Histórico de ganhos" do app Motorista Uber) ou do 99 (tela "Histórico de corridas" do app 99 Motorista). PRIMEIRO identifique qual dos dois apps é, pelo layout: o Uber tem uma linha divisória entre cada corrida e pode mostrar "Preço dinâmico" (ícone de raio) e "Valor extra" (ícone de mão/coração = gorjeta); o 99 mostra ícone de carro + texto "Pop", uma tag laranja "Taxa Fixa de X%", e forma de pagamento "Ganhos pagos no app" ou "Ganhos pagos em dinheiro". Depois siga SOMENTE as regras da plataforma identificada, abaixo, e inclua "platform":"uber" ou "platform":"99" em CADA corrida do JSON de saída, de acordo com o que você identificou (uma imagem só tem corridas de UMA plataforma, nunca misture).\n\n' +
+  const prompt = 'Esta imagem mostra uma tela do app de motorista — pode ser: (1) UBER, tela "Histórico de ganhos" (lista de corridas com linha divisória entre elas, "Preço dinâmico" com ícone de raio, "Valor extra" com ícone de mão/coração = gorjeta); (2) 99 LISTA, tela "Histórico de corridas" do app 99 Motorista (ícone de carro + texto "Pop", tag laranja "Taxa Fixa de X%", "Ganhos pagos no app" ou "Ganhos pagos em dinheiro"); ou (3) 99 DETALHE, tela "Detalhes da corrida" do 99 (título "Detalhes da corrida" no topo, "Você ganhou R$X" em destaque, campos "Duração" e "Distância"). PRIMEIRO identifique qual das três telas é, pelo layout, e siga SOMENTE as regras dessa tela, abaixo. Inclua "platform":"uber" ou "platform":"99" em cada item do JSON (uma imagem só tem UMA plataforma e UM tipo de tela, nunca misture).\n\n' +
     '=== SE FOR UBER ===\n' +
     'Extraia CADA corrida, mas SÓ quando ela aparecer COMPLETA na imagem (com a linha divisória acima e abaixo) — se uma corrida estiver cortada no topo ou na base da imagem (incompleta), IGNORE essa corrida, não tente adivinhar ou completar com dados de outra. Ignore Missão (R$ 0,00). ' + cashWarning + ' Abaixo do valor principal de cada corrida também pode aparecer "Valor extra" (ícone de mão/coração — é a gorjeta do passageiro) — extraia esse valor em gorjeta quando existir. Também pode aparecer "Pedágio R$X,XX" — extraia esse valor em pedagio quando existir (0.00 quando não aparecer). Cada corrida mostra dois endereços (origem e destino): copie a linha de texto INTEIRA, palavra por palavra, exatamente como está escrita na tela, sem resumir ou cortar nenhuma parte, em "originFull"/"destFull". E TAMBÉM extraia só o nome do bairro (sem rua, número, cidade, UF ou CEP) em "origin"/"dest" — ex: se o texto na tela é "Rua Corcovado, 213, Jardim Botânico - Rio de Janeiro - RJ, 22460-050, BR", então origin="Jardim Botânico" e originFull="Rua Corcovado, 213, Jardim Botânico - Rio de Janeiro - RJ, 22460-050, BR" (a linha inteira, não abreviada). Formato de cada item: {"platform":"uber","time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"Black","origin":"bairro","originFull":"endereço completo","dest":"bairro","destFull":"endereço completo","dinamico":0.00,"gorjeta":0.00,"pedagio":0.00,"taxaZero":false,"dinheiro":false}. duration=minutos inteiros. dinamico, gorjeta e pedagio ficam 0.00 quando não aparecerem. "taxaZero":true se houver indicação de 0% de taxa. "dinheiro":true se pagamento em dinheiro.\n\n' +
     '=== SE FOR 99 ===\n' +
@@ -5090,7 +5116,12 @@ async function extractTripsFromBase64(b64, mt, plat) {
     '"km" e "duration" sempre 0 pois não aparecem no histórico. ' +
     '"dinamico" e "gorjeta" sempre 0.00 pois não aparecem no histórico da 99. ' +
     'Formato de cada item: {"platform":"99","time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"99Pop","origin":"bairro","originFull":"endereço completo","dest":"bairro","destFull":"endereço completo","dinamico":0.00,"gorjeta":0.00,"pedagio":0.00,"serviceFee":0.00,"dinheiro":false}. "serviceFee" é sempre o número da tag "Taxa Fixa de X%" convertido pra decimal (15% → 0.15). "dinheiro":true quando aparecer "Ganhos pagos em dinheiro".\n\n' +
-    'Retorne SOMENTE um único JSON array (todas as corridas da imagem, cada uma com seu "platform"), sem texto extra. Se não houver corridas completas retorne [].';
+    '=== SE FOR 99 DETALHE ===\n' +
+    'Esta tela mostra UMA única corrida com dados completos. Extraia SOMENTE se estes três campos estiverem visíveis e legíveis JUNTOS na imagem: o valor de "Você ganhou R$X", o valor de "Duração" (ex: 12m50s) e o valor de "Distância" (ex: 6,2 km). Se qualquer um dos três estiver cortado, fora da tela ou ilegível (ex: frame no meio de um scroll), retorne [] — este mesmo detalhe aparece completo em outro frame. ' +
+    'Campos: "value" = número de "Você ganhou R$X" (ex: R$18,80 → 18.80). "duration" = Duração convertida pra MINUTOS INTEIROS arredondados (12m50s → 13; 5m42s → 6). "km" = número de Distância (6,2 km → 6.2). "dinamico" = valor de "Preço dinâmico" se aparecer na lista de ganhos (0.00 se não aparecer). "dinheiro" = true se "Método de pagamento" for Dinheiro. "serviceFee" = número da tag "Taxa Fixa de X%" em decimal (0% → 0). ' +
+    'A tela de detalhe NÃO mostra horário nem endereços — deixe "time":"", "origin":"", "dest":"", "originFull":"", "destFull":"". ' +
+    'Formato do item (retorne um array com este único item): {"platform":"99","screen":"detail","time":"","value":0.00,"km":0.0,"duration":0,"category":"99Pop","origin":"","originFull":"","dest":"","destFull":"","dinamico":0.00,"gorjeta":0.00,"pedagio":0.00,"serviceFee":0.00,"dinheiro":false}.\n\n' +
+    'Retorne SOMENTE um único JSON array, sem texto extra. Se não houver corridas completas retorne [].';
   const resp = await fetch('https://smartmobi-proxy.yurisilva1990.workers.dev', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({model:'claude-haiku-4-5-20251001', max_tokens:1500,
