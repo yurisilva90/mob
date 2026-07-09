@@ -3667,6 +3667,7 @@ function custoFinish() {
   cfg.custoVeiculo = Object.assign({}, d, { custoPorKm: calc.total, configurado: true, atualizadoEm: DB.today() });
   DB.saveCfg(cfg);
   SYNC.pushSettings();
+  syncFlashConfigToNative();
   closeMo('mo-custo');
   showToast('Custo do veículo configurado! Suas corridas já mostram o líquido.');
   try { renderJornada(); } catch(e){}
@@ -7737,6 +7738,22 @@ function showNativeBanner(msg) {
 function onNativeReady() {
   // App rodando como APK nativo
   console.log('SmartMobi Native v' + (SmartMobiNative?.getVersion?.() || '?'));
+  syncFlashConfigToNative();
+}
+
+// Manda pro nativo (TripReaderService) o custo/km configurado em Financeiro
+// e as preferências do MōB Flash, pra ele calcular a nota real da oferta.
+// Padrões (enabled=true, meta boa=40%, meta aceitável=15%) até a tela de
+// configuração dedicada existir.
+function syncFlashConfigToNative() {
+  if (!window.SmartMobiNative || typeof SmartMobiNative.saveFlashConfig !== 'function') return;
+  const cfg = DB.cfg();
+  const fr = cfg.flashReader || {};
+  const enabled = fr.enabled !== false; // default true
+  const custoPorKm = (cfg.custoVeiculo && cfg.custoVeiculo.configurado) ? (cfg.custoVeiculo.custoPorKm || 0) : 0;
+  const metaBoa = fr.metaBoa != null ? fr.metaBoa : 40;
+  const metaAceitavel = fr.metaAceitavel != null ? fr.metaAceitavel : 15;
+  try { SmartMobiNative.saveFlashConfig(enabled, custoPorKm, metaBoa, metaAceitavel); } catch(e) {}
 }
 
 
