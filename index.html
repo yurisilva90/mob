@@ -2063,6 +2063,10 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <div style="flex:1"><label class="lbl" style="margin-bottom:2px;display:block">Sincronização</label><div style="font-size:11px;color:#94A3B8;line-height:1.4" id="cfg-sync-sub">Tudo sincronizado</div></div>
       <div class="sync-dot" id="cfg-sync-dot"></div>
     </div>
+    <div class="field" style="display:flex;align-items:center;justify-content:space-between;gap:12px" onclick="openFlashConfig()" id="cfg-flash-row">
+      <div style="flex:1"><label class="lbl" style="margin-bottom:2px;display:block">MōB Flash</label><div style="font-size:11px;color:#94A3B8;line-height:1.4">Nota da oferta em tempo real sobre a 99/Uber</div></div>
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+    </div>
     <div style="font-size:11px;color:#94A3B8;text-align:center;margin-top:14px" id="cfg-version"></div>
   </div>
 </div>
@@ -2098,6 +2102,28 @@ h1.hd-title{font-family:var(--font-brand)!important}
     <a href="mailto:suporte@mob.app?subject=Suporte+M%C5%8DB" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:46px;border-radius:14px;background:#0A2F6B;color:#fff;font-size:14px;font-weight:800;text-decoration:none;margin:12px 0 4px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Enviar e-mail</a>
     <div id="suporte-version" style="font-size:11.5px;color:#94A3B8;text-align:center;margin-bottom:14px;font-family:'Inter',system-ui,sans-serif"></div>
     <button class="btn-p" onclick="closeMo('mo-suporte')">Fechar</button>
+  </div>
+</div>
+
+<!-- MōB Flash — nota da oferta em tempo real (leitura de tela 99/Uber) -->
+<div class="mo" id="mo-flash">
+  <div class="sheet" style="max-width:420px">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head"><h2>MōB Flash</h2><button class="xbtn" onclick="closeMo('mo-flash')">&#x2715;</button></div>
+
+    <div class="field" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div style="flex:1"><label class="lbl" style="margin-bottom:2px;display:block">Ativar MōB Flash</label><div style="font-size:11px;color:#94A3B8;line-height:1.4">Mostra o card sobre o app da 99/Uber quando uma oferta aparece</div></div>
+      <label class="sw"><input type="checkbox" id="flash-enabled" onchange="flashToggleMaster(this)"><span class="trk"></span></label>
+    </div>
+
+    <div style="font-size:11px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.03em;margin:16px 0 8px">Pré-visualização</div>
+    <div id="flash-preview-wrap" style="background:#111318;border-radius:14px;padding:16px 10px;display:flex;justify-content:center"></div>
+
+    <div style="font-size:11px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.03em;margin:18px 0 8px">Métricas exibidas</div>
+    <div id="flash-kpi-list"></div>
+
+    <button class="btn-p" onclick="flashConfigSave()" style="margin-top:14px">Salvar configurações</button>
+    <div style="font-size:11px;color:#94A3B8;text-align:center;margin-top:10px;line-height:1.5">Nota do passageiro é experimental. Os outros KPIs usam o valor/km/min já lidos hoje + seu custo/km cadastrado em Financeiro.</div>
   </div>
 </div>
 
@@ -7741,19 +7767,158 @@ function onNativeReady() {
   syncFlashConfigToNative();
 }
 
+// ── MōB Flash: definição dos KPIs disponíveis pra escolher no card ──
+const FLASH_KPI_DEFS = [
+  { key:'rkm',    label:'R$ por km',          short:'R$/KM',   icon:'$',  defRed:1.2, defGreen:2.0 },
+  { key:'rhora',  label:'R$ por hora',        short:'R$/HORA', icon:'\u23F1', defRed:25,  defGreen:45 },
+  { key:'rmin',   label:'R$ por minuto',      short:'R$/MIN',  icon:'\u23F2', defRed:0.6, defGreen:1.0 },
+  { key:'nota',   label:'Nota do passageiro', short:'NOTA',    icon:'\u2605', defRed:4.5, defGreen:4.8, experimental:true },
+  { key:'margem', label:'% Lucro',            short:'% LUCRO', icon:'%',  defRed:15,  defGreen:40 },
+  { key:'lucro',  label:'Lucro em R$',        short:'R$ LUCRO',icon:'R$', defRed:5,   defGreen:15 },
+];
+const FLASH_DEFAULT_ON = { rkm:true, rhora:true, rmin:false, nota:false, margem:true, lucro:true };
+const FLASH_PREVIEW_SAMPLE = { rkm:2.37, rhora:49, rmin:0.58, nota:4.92, margem:12, lucro:4 };
+
+let flashDraft = null;
+
+function getFlashDefaults() {
+  const kpis = {};
+  FLASH_KPI_DEFS.forEach(d => { kpis[d.key] = { enabled: FLASH_DEFAULT_ON[d.key], red: d.defRed, green: d.defGreen }; });
+  return { enabled: true, kpis };
+}
+
+function openFlashConfig() {
+  const cfg = DB.cfg();
+  const saved = cfg.flashReader;
+  const defaults = getFlashDefaults();
+  flashDraft = { enabled: saved && saved.enabled !== undefined ? saved.enabled : defaults.enabled, kpis: {} };
+  FLASH_KPI_DEFS.forEach(d => {
+    const s = (saved && saved.kpis && saved.kpis[d.key]) || {};
+    flashDraft.kpis[d.key] = {
+      enabled: s.enabled !== undefined ? s.enabled : defaults.kpis[d.key].enabled,
+      red: s.red !== undefined ? s.red : defaults.kpis[d.key].red,
+      green: s.green !== undefined ? s.green : defaults.kpis[d.key].green
+    };
+  });
+  document.getElementById('flash-enabled').checked = flashDraft.enabled;
+  renderFlashKpiList();
+  renderFlashPreview();
+  openMo('mo-flash');
+}
+
+function flashToggleMaster(el) { flashDraft.enabled = el.checked; renderFlashPreview(); }
+
+function flashToggleKpi(key, el) {
+  flashDraft.kpis[key].enabled = el.checked;
+  renderFlashKpiList();
+  renderFlashPreview();
+}
+
+function flashSetThreshold(key, field, val) {
+  const n = parseFloat(String(val).replace(',', '.'));
+  if (!isNaN(n)) flashDraft.kpis[key][field] = n;
+  renderFlashPreview();
+}
+
+function renderFlashKpiList() {
+  const el = document.getElementById('flash-kpi-list');
+  el.innerHTML = FLASH_KPI_DEFS.map(d => {
+    const k = flashDraft.kpis[d.key];
+    const on = k.enabled;
+    return `
+    <div style="border:1px solid #E2E8F0;border-radius:14px;padding:12px 14px;margin-bottom:10px;${on ? '' : 'opacity:.55'}">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:700;color:#0F172A">
+          <span style="width:26px;height:26px;border-radius:8px;background:#F1F5F9;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#0A2F6B">${d.icon}</span>
+          ${d.label}${d.experimental ? ' <span style="font-size:9.5px;font-weight:800;color:#B45309;background:#FEF3C7;padding:2px 6px;border-radius:99px;margin-left:4px">BETA</span>' : ''}
+        </div>
+        <label class="sw"><input type="checkbox" ${on ? 'checked' : ''} onchange="flashToggleKpi('${d.key}',this)"><span class="trk"></span></label>
+      </div>
+      ${on ? `
+      <div style="display:flex;gap:10px;margin-top:10px">
+        <div style="flex:1">
+          <label style="display:block;font-size:10px;font-weight:800;color:#94A3B8;text-transform:uppercase;margin-bottom:4px">Vermelho abaixo de</label>
+          <input value="${k.red}" oninput="flashSetThreshold('${d.key}','red',this.value)" inputmode="decimal" style="width:100%;border:1px solid #E2E8F0;border-radius:9px;padding:8px 9px;font-size:13.5px;font-weight:700;color:#0F172A;box-sizing:border-box">
+        </div>
+        <div style="flex:1">
+          <label style="display:block;font-size:10px;font-weight:800;color:#94A3B8;text-transform:uppercase;margin-bottom:4px">Verde acima de</label>
+          <input value="${k.green}" oninput="flashSetThreshold('${d.key}','green',this.value)" inputmode="decimal" style="width:100%;border:1px solid #E2E8F0;border-radius:9px;padding:8px 9px;font-size:13.5px;font-weight:700;color:#0F172A;box-sizing:border-box">
+        </div>
+      </div>
+      <div style="height:7px;border-radius:99px;margin-top:9px;background:linear-gradient(90deg,#EF4444 0%,#EF4444 30%,#F59E0B 30%,#F59E0B 70%,#10B981 70%,#10B981 100%)"></div>
+      ` : ''}
+    </div>`;
+  }).join('');
+}
+
+function flashGradeFor(key, v) {
+  const k = flashDraft.kpis[key];
+  if (v < k.red) return '#EF4444';
+  if (v >= k.green) return '#10B981';
+  return '#F59E0B';
+}
+
+function flashFmtVal(key, v) {
+  if (key === 'margem') return Math.round(v) + '%';
+  if (key === 'lucro') return 'R$' + Math.round(v);
+  if (key === 'rhora') return Math.round(v).toString();
+  return v.toFixed(2).replace('.', ',');
+}
+
+function renderFlashPreview() {
+  const wrap = document.getElementById('flash-preview-wrap');
+  if (!flashDraft.enabled) {
+    wrap.innerHTML = '<div style="color:#8A8A99;font-size:12px;padding:20px 0">MōB Flash desativado</div>';
+    return;
+  }
+  const active = FLASH_KPI_DEFS.filter(d => flashDraft.kpis[d.key].enabled);
+  if (!active.length) {
+    wrap.innerHTML = '<div style="color:#8A8A99;font-size:12px;padding:20px 0">Selecione ao menos 1 KPI</div>';
+    return;
+  }
+  const colors = active.map(d => flashGradeFor(d.key, FLASH_PREVIEW_SAMPLE[d.key]));
+  const overall = colors.includes('#EF4444') ? '#EF4444' : (colors.includes('#F59E0B') ? '#F59E0B' : '#10B981');
+  const rows = [];
+  for (let i = 0; i < active.length; i += 3) rows.push(active.slice(i, i + 3));
+  const rowsHtml = rows.map(r => `
+    <div style="display:flex;gap:2px">
+      ${r.map(d => `<div style="flex:1;text-align:center;min-width:0">
+        <b style="display:block;font-size:19px;font-weight:800;color:${flashGradeFor(d.key, FLASH_PREVIEW_SAMPLE[d.key])};line-height:1.05">${flashFmtVal(d.key, FLASH_PREVIEW_SAMPLE[d.key])}</b>
+        <span style="font-size:8px;color:#8A8A99;font-weight:800">${d.short}</span>
+      </div>`).join('')}
+    </div>`).join('<div style="height:6px"></div>');
+
+  wrap.innerHTML = `
+    <div style="width:230px;background:#0E0E17E6;border-radius:16px;display:flex;overflow:hidden">
+      <div style="width:5px;background:${overall}"></div>
+      <div style="flex:1;padding:11px 13px;display:flex;flex-direction:column;gap:7px;min-width:0">
+        <div style="font-size:9px;font-weight:900;color:#8A8A99;letter-spacing:.04em">99</div>
+        ${rowsHtml}
+        <div style="height:1px;background:rgba(255,255,255,.12)"></div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#8A8A99;font-weight:700"><span>Total: 18 min</span><span style="color:#fff">7.8 km</span></div>
+      </div>
+    </div>`;
+}
+
+function flashConfigSave() {
+  const cfg = DB.cfg();
+  cfg.flashReader = { enabled: flashDraft.enabled, kpis: JSON.parse(JSON.stringify(flashDraft.kpis)) };
+  DB.saveCfg(cfg);
+  SYNC.pushSettings();
+  syncFlashConfigToNative();
+  closeMo('mo-flash');
+  showToast('Configurações do MōB Flash salvas!');
+}
+
 // Manda pro nativo (TripReaderService) o custo/km configurado em Financeiro
-// e as preferências do MōB Flash, pra ele calcular a nota real da oferta.
-// Padrões (enabled=true, meta boa=40%, meta aceitável=15%) até a tela de
-// configuração dedicada existir.
+// + as métricas escolhidas na tela MōB Flash, pra ele montar o card real.
 function syncFlashConfigToNative() {
   if (!window.SmartMobiNative || typeof SmartMobiNative.saveFlashConfig !== 'function') return;
   const cfg = DB.cfg();
-  const fr = cfg.flashReader || {};
-  const enabled = fr.enabled !== false; // default true
+  const fr = cfg.flashReader || getFlashDefaults();
   const custoPorKm = (cfg.custoVeiculo && cfg.custoVeiculo.configurado) ? (cfg.custoVeiculo.custoPorKm || 0) : 0;
-  const metaBoa = fr.metaBoa != null ? fr.metaBoa : 40;
-  const metaAceitavel = fr.metaAceitavel != null ? fr.metaAceitavel : 15;
-  try { SmartMobiNative.saveFlashConfig(enabled, custoPorKm, metaBoa, metaAceitavel); } catch(e) {}
+  const payload = { enabled: fr.enabled !== false, custoPorKm: custoPorKm, kpis: fr.kpis || getFlashDefaults().kpis };
+  try { SmartMobiNative.saveFlashConfig(JSON.stringify(payload)); } catch (e) {}
 }
 
 
