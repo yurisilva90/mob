@@ -2116,7 +2116,25 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <label class="sw"><input type="checkbox" id="flash-enabled" onchange="flashToggleMaster(this)"><span class="trk"></span></label>
     </div>
 
-    <div style="font-size:11px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.03em;margin:16px 0 8px">Pré-visualização</div>
+    <div style="font-size:11px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.03em;margin:16px 0 8px">Permissões</div>
+    <div style="border:1px solid #E2E8F0;border-radius:14px;padding:4px 14px" id="flash-perms">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #F1F5F9">
+        <div style="flex:1">
+          <div style="font-size:13.5px;font-weight:600;color:#0F172A">Acessibilidade</div>
+          <div style="font-size:11px;color:#94A3B8;margin-top:1px">Lê a tela da 99/Uber quando a oferta chega</div>
+        </div>
+        <div id="flash-perm-a11y" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0">
+        <div style="flex:1">
+          <div style="font-size:13.5px;font-weight:600;color:#0F172A">Sobrepor outros apps</div>
+          <div style="font-size:11px;color:#94A3B8;margin-top:1px">Permite o card aparecer por cima da 99/Uber</div>
+        </div>
+        <div id="flash-perm-overlay" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"></div>
+      </div>
+    </div>
+
+    <div style="font-size:11px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.03em;margin:18px 0 8px">Pré-visualização</div>
     <div id="flash-preview-wrap" style="background:#111318;border-radius:14px;padding:16px 10px;display:flex;justify-content:center"></div>
 
     <div style="font-size:11px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.03em;margin:18px 0 8px">Métricas exibidas</div>
@@ -7803,8 +7821,34 @@ function openFlashConfig() {
   document.getElementById('flash-enabled').checked = flashDraft.enabled;
   renderFlashKpiList();
   renderFlashPreview();
+  renderFlashPerms();
   openMo('mo-flash');
 }
+
+function renderFlashPerms() {
+  const a11yWrap = document.getElementById('flash-perm-a11y');
+  const ovWrap = document.getElementById('flash-perm-overlay');
+  if (!a11yWrap || !ovWrap) return;
+  const hasA11y = (window.SmartMobiNative && typeof SmartMobiNative.isA11yEnabled === 'function') ? !!SmartMobiNative.isA11yEnabled() : null;
+  const hasOverlay = (window.SmartMobiNative && typeof SmartMobiNative.hasOverlay === 'function') ? !!SmartMobiNative.hasOverlay() : null;
+
+  function pillHtml(ok, fixCall) {
+    if (ok === null) return '<span style="font-size:11px;color:#94A3B8">— (só no app instalado)</span>';
+    if (ok) return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;padding:4px 9px;border-radius:99px;background:#F0FDF4;color:#15803D">&#10003; Ativo</span>';
+    return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;padding:4px 9px;border-radius:99px;background:#FEF3C7;color:#B45309">&bull; Pendente</span>'
+      + '<button onclick="' + fixCall + '" style="font-size:11px;font-weight:800;color:#fff;background:#0A2F6B;border:0;border-radius:9px;padding:6px 11px">Ativar</button>';
+  }
+  a11yWrap.innerHTML = pillHtml(hasA11y, "SmartMobiNative.openA11ySettings()");
+  ovWrap.innerHTML = pillHtml(hasOverlay, "SmartMobiNative.openOverlaySettings()");
+}
+
+// Ao voltar do Android Settings (permissão concedida/negada), atualiza os pills
+document.addEventListener('visibilitychange', function () {
+  if (document.visibilityState === 'visible') {
+    const mo = document.getElementById('mo-flash');
+    if (mo && mo.classList.contains('on')) renderFlashPerms();
+  }
+});
 
 function flashToggleMaster(el) { flashDraft.enabled = el.checked; renderFlashPreview(); }
 
