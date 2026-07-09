@@ -2125,12 +2125,19 @@ h1.hd-title{font-family:var(--font-brand)!important}
         </div>
         <div id="flash-perm-a11y" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"></div>
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #F1F5F9">
         <div style="flex:1">
           <div style="font-size:13.5px;font-weight:600;color:#0F172A">Sobrepor outros apps</div>
           <div style="font-size:11px;color:#94A3B8;margin-top:1px">Permite o card aparecer por cima da 99/Uber</div>
         </div>
         <div id="flash-perm-overlay" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0">
+        <div style="flex:1">
+          <div style="font-size:13.5px;font-weight:600;color:#0F172A">Leitura da tela</div>
+          <div style="font-size:11px;color:#94A3B8;margin-top:1px">A 99 mostra a oferta como imagem — o MōB precisa capturar a tela pra ler os valores. Nada sai do seu celular. Precisa reativar a cada vez que abrir o app.</div>
+        </div>
+        <div id="flash-perm-capture" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"></div>
       </div>
     </div>
 
@@ -7840,6 +7847,11 @@ function renderFlashPerms() {
   }
   a11yWrap.innerHTML = pillHtml(hasA11y, "SmartMobiNative.openA11ySettings()");
   ovWrap.innerHTML = pillHtml(hasOverlay, "SmartMobiNative.openOverlaySettings()");
+  const capWrap = document.getElementById('flash-perm-capture');
+  if (capWrap) {
+    const hasCap = (window.SmartMobiNative && typeof SmartMobiNative.isScreenCaptureActive === 'function') ? !!SmartMobiNative.isScreenCaptureActive() : null;
+    capWrap.innerHTML = pillHtml(hasCap, "SmartMobiNative.requestScreenCapture()");
+  }
 }
 
 // Ao voltar do Android Settings (permissão concedida/negada), atualiza os pills
