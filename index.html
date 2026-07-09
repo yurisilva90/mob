@@ -1654,6 +1654,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
   <div style="padding:0 16px;display:flex;flex-direction:column;gap:8px">
     <div class="mais-item" onclick="navTo('corridas')"><div class="mais-ico" style="background:#EFF6FF"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2563EB" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div><div><div class="mais-t">Corridas</div><div class="mais-s">Histórico e filtros de corridas</div></div><div class="mais-arr">›</div></div>
     <div class="mais-item" onclick="navTo('agenda')"><div class="mais-ico blue"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><div><div class="mais-t">Agenda</div><div class="mais-s">Planejamento e horários de trabalho</div></div><div class="mais-arr">›</div></div>
+    <div class="mais-item" onclick="openFlashConfig()"><div class="mais-ico" style="background:#F0FDF4"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#16A34A" stroke-width="2"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg></div><div><div class="mais-t">MōB Flash</div><div class="mais-s">Nota da oferta em tempo real</div></div><div class="mais-arr">›</div></div>
   </div>
   <div style="padding:16px 16px 8px"><div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Configurações</div></div>
   <div style="padding:0 16px;display:flex;flex-direction:column;gap:8px">
@@ -2062,10 +2063,6 @@ h1.hd-title{font-family:var(--font-brand)!important}
     <div class="field" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
       <div style="flex:1"><label class="lbl" style="margin-bottom:2px;display:block">Sincronização</label><div style="font-size:11px;color:#94A3B8;line-height:1.4" id="cfg-sync-sub">Tudo sincronizado</div></div>
       <div class="sync-dot" id="cfg-sync-dot"></div>
-    </div>
-    <div class="field" style="display:flex;align-items:center;justify-content:space-between;gap:12px" onclick="openFlashConfig()" id="cfg-flash-row">
-      <div style="flex:1"><label class="lbl" style="margin-bottom:2px;display:block">MōB Flash</label><div style="font-size:11px;color:#94A3B8;line-height:1.4">Nota da oferta em tempo real sobre a 99/Uber</div></div>
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
     </div>
     <div style="font-size:11px;color:#94A3B8;text-align:center;margin-top:14px" id="cfg-version"></div>
   </div>
