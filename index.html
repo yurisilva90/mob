@@ -3676,7 +3676,8 @@ function calcCustoPorKm(d) {
   else if (d.combustivel === 'eletrico' && d.autonomiaKm) combKm = (d.valorRecarga||0) / d.autonomiaKm;
   const manutKm = d.custoManut10k ? d.custoManut10k / 10000 : 0;
   const depKm = (d.depreciacaoPct && d.valorVeiculo && d.kmMes) ? (d.valorVeiculo * d.depreciacaoPct/100) / (d.kmMes * 12) : 0;
-  const fixoMensal = ((d.situacao !== 'quitado') ? (d.parcelaMensal||0) : 0) + (d.extrasMensal||0);
+  const extrasNovo = (d.seguroMensal||0) + ((d.ipvaAnual||0)/12) + (d.outrosExtras||0);
+  const fixoMensal = ((d.situacao !== 'quitado') ? (d.parcelaMensal||0) : 0) + (extrasNovo > 0 ? extrasNovo : (d.extrasMensal||0));
   const fixoKm = (fixoMensal && d.kmMes) ? fixoMensal / d.kmMes : 0;
   return { combKm, manutKm, depKm, fixoKm, total: combKm+manutKm+depKm+fixoKm };
 }
@@ -3694,7 +3695,7 @@ async function openCustoVeiculo() {
     autonomiaKm: null, valorRecarga: null,
     depreciacaoPct: 0, valorVeiculo: null,
     kmMes: null, custoManut10k: null,
-    extrasMensal: null
+    extrasMensal: null, seguroMensal: null, ipvaAnual: null, outrosExtras: null
   }, cfg.custoVeiculo || {}) };
   openMo('mo-custo');
   renderCustoStep();
@@ -3799,14 +3800,18 @@ function renderCustoStep() {
       <button class="cv-btn" onclick="custoGoNext()">Continuar</button>`;
   }
   else if (stepId === 'extras') {
-    body = head + `<div class="cv-h2">Outros custos mensais</div><div class="cv-sub">Seguro, IPVA (dividido por 12), lavagem, estacionamento fixo, etc.</div>
-      <div class="field"><label class="cv-lbl">Total de extras por mês</label><div class="cv-inp-wrap"><span>R$</span><input type="number" value="${d.extrasMensal??''}" oninput="custoSetField('extrasMensal',this.value)"></div>
-      <div class="cv-hint">Divide automaticamente pelos dias trabalhados no mês</div></div>
+    body = head + `<div class="cv-h2">Outros custos mensais</div><div class="cv-sub">Preencha o que se aplicar — pode deixar em branco o que não tiver.</div>
+      <div class="field"><label class="cv-lbl">Seguro do veículo (mensal)</label><div class="cv-inp-wrap"><span>R$</span><input type="number" value="${d.seguroMensal??''}" oninput="custoSetField('seguroMensal',this.value)"></div></div>
+      <div class="field"><label class="cv-lbl">IPVA (valor anual)</label><div class="cv-inp-wrap"><span>R$</span><input type="number" value="${d.ipvaAnual??''}" oninput="custoSetField('ipvaAnual',this.value)"></div>
+      <div class="cv-hint">Divide automaticamente por 12 meses</div></div>
+      <div class="field"><label class="cv-lbl">Outros (lavagem, estacionamento fixo, etc.)</label><div class="cv-inp-wrap"><span>R$</span><input type="number" value="${d.outrosExtras??''}" oninput="custoSetField('outrosExtras',this.value)"></div></div>
+      <div class="cv-hint" style="margin:-6px 0 12px">O total desses três é dividido pelos dias trabalhados no mês</div>
       <button class="cv-btn" onclick="custoGoNext()">Ver resultado</button>`;
   }
   else if (stepId === 'resultado') {
     const calc = calcCustoPorKm(d);
-    const fixoMensal = ((d.situacao !== 'quitado') ? (d.parcelaMensal||0) : 0) + (d.extrasMensal||0);
+    const extrasNovo = (d.seguroMensal||0) + ((d.ipvaAnual||0)/12) + (d.outrosExtras||0);
+    const fixoMensal = ((d.situacao !== 'quitado') ? (d.parcelaMensal||0) : 0) + (extrasNovo > 0 ? extrasNovo : (d.extrasMensal||0));
     const custoDia = d.diasTrabalhados ? (fixoMensal / d.diasTrabalhados) : 0;
     const fuelLabel = d.combustivel === 'eletrico' ? 'Recarga' : 'Consumo';
     body = head + `<div class="cv-h2">Seu custo real por km</div><div class="cv-sub">Isso passa a descontar automaticamente de cada corrida.</div>
