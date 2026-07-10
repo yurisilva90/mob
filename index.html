@@ -8240,10 +8240,25 @@ const SYNC = {
       if (settingsRes.data && settingsRes.data.length && settingsRes.data[0].data) {
         const cloudCfg = settingsRes.data[0].data;
         const localCfg = DB.cfg() || {};
-        // Só sobrescreve se tiver dados reais no cloud e local estiver vazio/default
+        let merged = null;
+        // Cadastro geral (nome/placa/veículo/meta): só sobrescreve se o local
+        // ainda estiver vazio — evita apagar o que já foi preenchido nesse aparelho.
         if (cloudCfg && Object.keys(cloudCfg).length > 0 && (!localCfg.name || localCfg.name === '')) {
-          DB.saveCfg(Object.assign({}, localCfg, cloudCfg));
+          merged = Object.assign({}, localCfg, cloudCfg);
         }
+        // Custo do veículo e config do MōB Flash NÃO ficam presos nesse gate —
+        // são formulários trabalhosos de preencher de novo, e restaurar eles
+        // não tem por que depender do campo nome estar vazio ou não.
+        if (cloudCfg && cloudCfg.custoVeiculo && cloudCfg.custoVeiculo.configurado &&
+            (!localCfg.custoVeiculo || !localCfg.custoVeiculo.configurado)) {
+          merged = merged || Object.assign({}, localCfg);
+          merged.custoVeiculo = cloudCfg.custoVeiculo;
+        }
+        if (cloudCfg && cloudCfg.flashReader && !localCfg.flashReader) {
+          merged = merged || Object.assign({}, localCfg);
+          merged.flashReader = cloudCfg.flashReader;
+        }
+        if (merged) DB.saveCfg(merged);
       }
 
       // ── Favoritos ──────────────────────────────────────────────────────
@@ -8274,6 +8289,10 @@ const SYNC = {
         if (!DB.get('sm_cats_' + c.cat_key)) DB.saveCats(c.cat_key, c.items || []);
         if (!DB.get('sm_obj_' + c.cat_key) && c.goals) DB.saveObjGoals(c.cat_key, c.goals);
       });
+      // Depois de restaurar (inclusive custo/km e config do MōB Flash),
+      // manda pro nativo — senão o leitor de tela só pega isso quando o
+      // usuário abrir a tela de config manualmente.
+      syncFlashConfigToNative();
     } catch (e) { console.error('SYNC.pullAll', e); }
   }
 };
