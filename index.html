@@ -3207,8 +3207,14 @@ function renderJornada() {
   const sessToggleBtn = document.getElementById('sessions-toggle');
   if (sessEl) {
     const total = (day.sessions||[]).length;
-    const finishedAll = (day.sessions||[]).slice().reverse()
-      .map((s,ri)=>sessionItem('Jornada '+(total-ri), s, total-1-ri, S.curDate, day, false));
+    // Numera pela ORDEM DE HORÁRIO real (start), não pela ordem em que foi
+    // salva/sincronizada no aparelho — evita "Jornada 2" mostrar um horário
+    // mais tarde que "Jornada 3". origIdx continua apontando pro índice
+    // verdadeiro em day.sessions, então editar/apagar continua certo.
+    const byTime = (day.sessions||[]).map((s,i)=>i)
+      .sort((a,b) => (day.sessions[a].start||0) - (day.sessions[b].start||0));
+    const finishedAll = byTime.slice().reverse()
+      .map((origIdx,ri)=>sessionItem('Jornada '+(total-ri), day.sessions[origIdx], origIdx, S.curDate, day, false));
     const finishedShown = S.sessionsExpanded ? finishedAll : finishedAll.slice(0,3);
     const liveRow = (isToday && S.gps.st==='running') ? [sessionItem('Jornada atual', {start:S.gps.start,end:null,km:S.gps.km,elapsed:getElapsed()}, -1, S.curDate, day, true)] : [];
     const rows = [...liveRow, ...finishedShown];
