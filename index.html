@@ -7862,6 +7862,14 @@ document.addEventListener('visibilitychange', function () {
 function flashToggleMaster(el) { flashDraft.enabled = el.checked; renderFlashPreview(); }
 
 function flashToggleKpi(key, el) {
+  if (el.checked) {
+    const enabledCount = Object.values(flashDraft.kpis).filter(k => k.enabled).length;
+    if (enabledCount >= 4) {
+      el.checked = false;
+      showToast('Máximo de 4 KPIs no card — desative um pra ativar outro.');
+      return;
+    }
+  }
   flashDraft.kpis[key].enabled = el.checked;
   renderFlashKpiList();
   renderFlashPreview();
@@ -7913,8 +7921,7 @@ function flashGradeFor(key, v) {
 
 function flashFmtVal(key, v) {
   if (key === 'margem') return Math.round(v) + '%';
-  if (key === 'lucro') return 'R$' + Math.round(v);
-  if (key === 'rhora') return Math.round(v).toString();
+  if (key === 'lucro') return 'R$' + v.toFixed(2).replace('.', ',');
   return v.toFixed(2).replace('.', ',');
 }
 
@@ -7924,32 +7931,36 @@ function renderFlashPreview() {
     wrap.innerHTML = '<div style="color:#8A8A99;font-size:12px;padding:20px 0">MōB Flash desativado</div>';
     return;
   }
-  const active = FLASH_KPI_DEFS.filter(d => flashDraft.kpis[d.key].enabled);
+  const active = FLASH_KPI_DEFS.filter(d => flashDraft.kpis[d.key].enabled).slice(0, 4);
   if (!active.length) {
     wrap.innerHTML = '<div style="color:#8A8A99;font-size:12px;padding:20px 0">Selecione ao menos 1 KPI</div>';
     return;
   }
   const colors = active.map(d => flashGradeFor(d.key, FLASH_PREVIEW_SAMPLE[d.key]));
   const overall = colors.includes('#EF4444') ? '#EF4444' : (colors.includes('#F59E0B') ? '#F59E0B' : '#10B981');
-  const rows = [];
-  for (let i = 0; i < active.length; i += 3) rows.push(active.slice(i, i + 3));
-  const rowsHtml = rows.map(r => `
-    <div style="display:flex;gap:2px">
-      ${r.map(d => `<div style="flex:1;text-align:center;min-width:0">
-        <b style="display:block;font-size:19px;font-weight:800;color:${flashGradeFor(d.key, FLASH_PREVIEW_SAMPLE[d.key])};line-height:1.05">${flashFmtVal(d.key, FLASH_PREVIEW_SAMPLE[d.key])}</b>
+  const cardWidth = 46 + 66 * active.length; // espelha a largura dinâmica do card nativo
+
+  const metricsHtml = `
+    <div style="display:flex">
+      ${active.map(d => `<div style="flex:1;text-align:center;min-width:0">
+        <b style="display:block;font-size:22px;font-weight:800;color:${flashGradeFor(d.key, FLASH_PREVIEW_SAMPLE[d.key])};line-height:1.05">${flashFmtVal(d.key, FLASH_PREVIEW_SAMPLE[d.key])}</b>
         <span style="font-size:8px;color:#8A8A99;font-weight:800">${d.short}</span>
       </div>`).join('')}
-    </div>`).join('<div style="height:6px"></div>');
+    </div>`;
 
   wrap.innerHTML = `
-    <div style="width:230px;background:#0E0E17E6;border-radius:16px;display:flex;overflow:hidden">
-      <div style="width:5px;background:${overall}"></div>
-      <div style="flex:1;padding:11px 13px;display:flex;flex-direction:column;gap:7px;min-width:0">
-        <div style="font-size:9px;font-weight:900;color:#8A8A99;letter-spacing:.04em">99</div>
-        ${rowsHtml}
-        <div style="height:1px;background:rgba(255,255,255,.12)"></div>
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:#8A8A99;font-weight:700"><span>Total: 18 min</span><span style="color:#fff">7.8 km</span></div>
+    <div style="width:${cardWidth}px;background:#0E0E17E6;border-radius:16px;display:flex;overflow:hidden">
+      <div style="width:8px;background:${overall}"></div>
+      <div style="flex:1;padding:10px 11px 9px;display:flex;flex-direction:column;min-width:0">
+        ${metricsHtml}
+        <div style="height:1px;background:rgba(255,255,255,.12);margin:9px 0 7px"></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="font-size:9px;font-weight:900;color:#8A8A99">99</div>
+          <span style="flex:1;color:#fff;font-size:15.5px;font-weight:800">18m</span>
+          <span style="color:#fff;font-size:15.5px;font-weight:800">7.8 km</span>
+        </div>
       </div>
+      <div style="width:8px;background:${overall}"></div>
     </div>`;
 }
 
