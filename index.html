@@ -3680,7 +3680,11 @@ function calcCustoPorKm(d) {
   const fixoKm = (fixoMensal && d.kmMes) ? fixoMensal / d.kmMes : 0;
   return { combKm, manutKm, depKm, fixoKm, total: combKm+manutKm+depKm+fixoKm };
 }
-function openCustoVeiculo() {
+async function openCustoVeiculo() {
+  // Evita mostrar formulário vazio (fazendo o usuário preencher de novo)
+  // por causa de a restauração da nuvem ainda não ter chegado — só espera
+  // se realmente ainda estiver em andamento (senão não atrasa nada).
+  if (!_bootPullDone) { showToast('Sincronizando seus dados...'); await _waitBootPull(); }
   const cfg = DB.cfg();
   custoW = { step: 0, data: Object.assign({
     situacao: null, parcelaMensal: null, diasTrabalhados: 24,
@@ -7809,7 +7813,10 @@ function getFlashDefaults() {
   return { enabled: true, kpis };
 }
 
-function openFlashConfig() {
+async function openFlashConfig() {
+  // Mesmo motivo do openCustoVeiculo: não deixar a tela mostrar os padrões
+  // de fábrica antes da restauração da nuvem terminar de chegar.
+  if (!_bootPullDone) { showToast('Sincronizando seus dados...'); await _waitBootPull(); }
   const cfg = DB.cfg();
   const saved = cfg.flashReader;
   const defaults = getFlashDefaults();
@@ -8474,6 +8481,20 @@ async function showApp() {
   }
 }
 
+// Promessa que resolve quando a restauração da nuvem (pullAll) termina no
+// boot. Telas como Custo do Veículo e MōB Flash usam isso pra não mostrar
+// formulário vazio e deixar o usuário preencher de novo por cima de dados
+// que já estavam guardados, só porque a restauração ainda não tinha chegado.
+let _bootPullResolve;
+let _bootPullDone = false;
+const _bootPullPromise = new Promise(r => { _bootPullResolve = r; });
+
+// Depois de _bootPullPromise pronta: espera ela terminar (com timeout, pra
+// não travar pra sempre se estiver offline) antes de liberar uma tela.
+async function _waitBootPull(maxMs = 4000) {
+  try { await Promise.race([_bootPullPromise, new Promise(r => setTimeout(r, maxMs))]); } catch (e) {}
+}
+
 // Pull do cloud em BACKGROUND — a UI já está visível com dados locais.
 // Quando terminar, re-renderiza tudo e restaura sessão GPS do cloud se houver.
 async function _bootPullBg() {
@@ -8487,6 +8508,8 @@ async function _bootPullBg() {
   try{renderAgResumo();} catch(e){}
   try{ if (S.sec==='corridas') renderCorridas(); } catch(e){}
   try{ if (S.sec==='lancamentos') renderLancamentos(); } catch(e){}
+  _bootPullDone = true;
+  _bootPullResolve();
 }
 
 function lsErr(id, msg) { const el=document.getElementById(id);if(el){el.textContent=msg;el.style.display=msg?'block':'none';} }
