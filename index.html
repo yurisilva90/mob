@@ -4818,20 +4818,26 @@ async function processImportBatch(images, videos, plat) {
   let curDetail = null; // acumulador do fragmento de detalhe em aberto
   const flushDetail = () => { if (curDetail) { details.push(curDetail); curDetail = null; } };
   const mergeDetailFrag = (t) => {
-    if (curDetail && Math.abs((curDetail.value||0) - (t.value||0)) < 0.005) {
-      // mesmo cartão de detalhe (valor bate) — outro pedaço do mesmo scroll,
-      // preenche só o que esse fragmento ainda não tinha
+    // Decide se é o MESMO cartão de detalhe (outro pedaço do mesmo scroll)
+    // usando horário e endereço — nunca valor. Valor podia vir ligeiramente
+    // diferente entre frames ("Você ganhou" vs "Total") e isso fazia o
+    // mesmo cartão virar DOIS fragmentos, que depois viravam duas corridas
+    // (uma real + uma fantasma) no import.
+    const conflicts = (a, b) => a != null && b != null && a !== b;
+    const sameRide = curDetail && (
+      (t.time && curDetail.time) ? t.time === curDetail.time
+        : (!conflicts(curDetail.originFull, t.originFull) && !conflicts(curDetail.destFull, t.destFull))
+    );
+    if (sameRide) {
+      // mesmo cartão — preenche só o que esse fragmento ainda não tinha
       if (curDetail.km == null && t.km != null) curDetail.km = t.km;
       if (curDetail.duration == null && t.duration != null) curDetail.duration = t.duration;
-      if (curDetail.dinamico == null && t.dinamico != null) curDetail.dinamico = t.dinamico;
-      if (curDetail.dinheiro == null && t.dinheiro != null) curDetail.dinheiro = t.dinheiro;
-      if (curDetail.serviceFee == null && t.serviceFee != null) curDetail.serviceFee = t.serviceFee;
       if (!curDetail.time && t.time) curDetail.time = t.time;
       if (!curDetail.originFull && t.originFull) { curDetail.originFull = t.originFull; curDetail.origin = t.origin; }
       if (!curDetail.destFull && t.destFull) { curDetail.destFull = t.destFull; curDetail.dest = t.dest; }
     } else {
-      // valor diferente do acumulador (ou primeiro fragmento) — fecha o
-      // anterior (é de outra corrida) e abre um novo
+      // horário ou endereço batendo diferente do acumulador — é outra
+      // corrida: fecha o anterior e abre um novo
       flushDetail();
       curDetail = t;
     }
@@ -4843,8 +4849,13 @@ async function processImportBatch(images, videos, plat) {
   const absorb = (trips) => {
     let sawList = false;
     (trips||[]).forEach(t => {
+      if (t.screen === 'detail') {
+        // Tela de detalhe: só km/tempo/endereço interessam — sem valor.
+        // Se o fragmento não trouxe NENHUM desses três, não vale a pena.
+        if (t.km == null && t.duration == null && !t.originFull && !t.destFull) return;
+        mergeDetailFrag(t); return;
+      }
       if (!(t.value > 0)) return; // fusão/cartão cortado gera R$0,00 — nunca é corrida real
-      if (t.screen === 'detail') { mergeDetailFrag(t); return; }
       sawList = true;
       t.time = normTime(t.time);
       const key = t.time+'_'+(t.value||0).toFixed(2);
@@ -4890,34 +4901,25 @@ async function processImportBatch(images, videos, plat) {
   }
   flushDetail(); // fragmento de detalhe que ficou aberto no fim do vídeo
 
-  // Funde os detalhes nas corridas da lista: casa por horário+valor (mais
-  // confiável, agora que o detalhe também pode ter horário) e, na falta
-  // disso, só pelo valor (caso do detalhe não ter mostrado a data/hora).
+  // Funde os detalhes nas corridas da lista — SÓ completa km/tempo/endereço
+  // de uma corrida que a LISTA já confirmou (com valor de verdade). Nunca
+  // cria corrida nova a partir de detalhe sozinho: sem valor, não tem como
+  // confirmar que é real, e foi exatamente isso que gerava corrida fantasma
+  // no import (fragmento de detalhe virando corrida "avulsa" por engano).
   details.forEach(d => {
     let cand = null;
-    if (d.time) cand = unique.find(u => u.time === d.time && Math.abs((u.value||0)-(d.value||0)) < 0.005 && !u._enriched);
-    if (!cand) cand = unique.find(u => Math.abs((u.value||0)-(d.value||0)) < 0.005 && !u._enriched);
+    if (d.time) cand = unique.find(u => u.time === d.time && !u._enriched);
+    if (!cand && (d.originFull || d.destFull)) {
+      cand = unique.find(u => !u._enriched &&
+        ((d.originFull && u.originFull === d.originFull) || (d.destFull && u.destFull === d.destFull)));
+    }
     if (cand) {
       cand._enriched = true;
       if (d.km != null && d.km > 0)       { cand.km = d.km; cand.kmEstimado = false; }
       if (d.duration != null && d.duration > 0) cand.duration = d.duration;
-      if (d.dinamico != null && d.dinamico > 0) { cand.dinamico = d.dinamico; cand.surge = true; }
-      if (d.dinheiro)     cand.dinheiro = true;
-      if (d.serviceFee != null && cand.serviceFee == null) cand.serviceFee = d.serviceFee;
       // Endereço do detalhe é a linha inteira, sem truncar — prefere ele.
       if (d.originFull) { cand.originFull = d.originFull; cand.origin = d.origin; }
       if (d.destFull)   { cand.destFull = d.destFull; cand.dest = d.dest; }
-    } else if (d.time && d.originFull) {
-      // Detalhe completo (tem hora+valor+endereço) sem corrida correspondente
-      // na lista — ainda assim é uma corrida válida, entra como avulsa.
-      const key = d.time+'_'+(d.value||0).toFixed(2);
-      if (!seen.has(key)) {
-        seen.add(key);
-        unique.push({...d, kmEstimado: !(d.km>0), km: d.km||0, duration: d.duration||0,
-          dinamico: d.dinamico||0, surge: (d.dinamico||0)>0, dinheiro: !!d.dinheiro,
-          serviceFee: d.serviceFee, category:'99Pop'});
-        foundCount++; foundVal += (d.value||0);
-      }
     }
   });
 
@@ -5215,10 +5217,9 @@ async function extractTripsFromBase64(b64, mt, plat) {
     '"dinamico" e "gorjeta" sempre 0.00 pois não aparecem no histórico da 99. ' +
     'Formato de cada item: {"platform":"99","time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"99Pop","origin":"bairro","originFull":"endereço completo","dest":"bairro","destFull":"endereço completo","dinamico":0.00,"gorjeta":0.00,"pedagio":0.00,"serviceFee":0.00,"dinheiro":false}. "serviceFee" é sempre o número da tag "Taxa Fixa de X%" convertido pra decimal (15% → 0.15). "dinheiro":true quando aparecer "Ganhos pagos em dinheiro".\n\n' +
     '=== SE FOR 99 DETALHE ===\n' +
-    'Esta tela mostra UMA única corrida, mas é ROLÁVEL: um frame de vídeo captura só uma PARTE dela por vez (topo com valor/duração/distância, meio com breakdown de ganhos, base com nome do passageiro/data/endereços/mapa). Por isso, extraia como FRAGMENTO: pegue TODOS os campos abaixo que estiverem legíveis NESTE frame, e deixe os que não aparecerem como null (nunca invente ou copie de memória). ' +
-    'O campo "value" (de "Você ganhou R$X", ou do "Total"/"Pago por esta corrida" quando "Você ganhou" já rolou pra fora — são o mesmo valor) é OBRIGATÓRIO: se não conseguir ler nenhum valor em R$ nesta tela, retorne []. ' +
-    'Campos: "value" = valor em R$ (qualquer um dos citados acima, são iguais). "duration" = Duração convertida pra MINUTOS INTEIROS arredondados (12m50s → 13; 5m42s → 6), null se não aparecer neste frame. "km" = número de Distância (6,2 km → 6.2), null se não aparecer. "dinamico" = valor de "Preço dinâmico" se aparecer, null se não aparecer. "dinheiro" = true se "Método de pagamento: Dinheiro" aparecer, null se não aparecer. "serviceFee" = número da tag "Taxa Fixa de X%" em decimal (0% → 0), null se não aparecer. "time" = horário HH:MM da data completa (ex "06/07/2026 15:51:42" → "15:51"), null se não aparecer neste frame. "originFull"/"destFull" = endereço completo dos pontos verde(origem)/laranja(destino) quando visíveis, null se não aparecerem; "origin"/"dest" = bairro extraído desses endereços (nunca a cidade sozinha — mesma regra da lista). ' +
-    'Formato (retorne um array com este único item; campos não vistos = null, NUNCA zero/vazio disfarçado de "não vi"): {"platform":"99","screen":"detail","time":null,"value":0.00,"km":null,"duration":null,"category":"99Pop","origin":null,"originFull":null,"dest":null,"destFull":null,"dinamico":null,"gorjeta":0.00,"pedagio":0.00,"serviceFee":null,"dinheiro":null}.\n\n' +
+    'Esta tela mostra UMA única corrida, mas é ROLÁVEL: um frame de vídeo captura só uma PARTE dela por vez. Essa tela serve SÓ pra completar km, duração e endereço completo de uma corrida que a lista já identificou — NÃO extraia valor, dinheiro, taxa, dinâmico, gorjeta nem pedágio aqui (a lista já tem isso, e misturar valor lido nesta tela causava corrida duplicada/fantasma no import). Extraia como FRAGMENTO: pegue os campos abaixo que estiverem legíveis NESTE frame, deixe os que não aparecerem como null. ' +
+    'Campos: "duration" = Duração convertida pra MINUTOS INTEIROS arredondados (12m50s → 13; 5m42s → 6), null se não aparecer neste frame. "km" = número de Distância (6,2 km → 6.2), null se não aparecer. "time" = horário HH:MM da data completa (ex "06/07/2026 15:51:42" → "15:51"), null se não aparecer neste frame. "originFull"/"destFull" = endereço completo dos pontos verde(origem)/laranja(destino) quando visíveis, null se não aparecerem; "origin"/"dest" = bairro extraído desses endereços (nunca a cidade sozinha — mesma regra da lista). ' +
+    'Formato (retorne um array com este único item; campos não vistos = null): {"platform":"99","screen":"detail","time":null,"km":null,"duration":null,"origin":null,"originFull":null,"dest":null,"destFull":null}.\n\n' +
     'Retorne SOMENTE um único JSON array, sem texto extra. Se não houver corridas completas retorne [].';
   const resp = await fetch('https://smartmobi-proxy.yurisilva1990.workers.dev', {
     method:'POST', headers:{'Content-Type':'application/json'},
