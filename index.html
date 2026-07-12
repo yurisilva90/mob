@@ -1711,6 +1711,11 @@ h1.hd-title{font-family:var(--font-brand)!important}
   </div>
 </div>
 
+<!-- Jornada cruzou a meia-noite — conteúdo preenchido dinamicamente por openMidnightModal() -->
+<div class="mo" id="mo-midnight">
+  <div class="sheet" id="mn-sheet"></div>
+</div>
+
 <!-- Wizard Custo do Veículo -->
 <div class="mo" id="mo-custo">
   <div class="sheet" style="position:relative">
@@ -2328,7 +2333,8 @@ let S = {
   gps: {
     st: 'idle',  // idle | running
     start: null, pausedMs: 0, pauseAt: null,
-    km: 0, pts: [], wid: null, ti: null
+    km: 0, pts: [], wid: null, ti: null,
+    forceDate: null // override manual (opção 'deixar em ontem' na virada de meia-noite)
   }
 };
 
@@ -6392,7 +6398,7 @@ async function gpsStart() {
   // que não tenha sido corretamente encerrada (evita contagem duplicada de km)
   if (S.gps.ti) { try{ clearInterval(S.gps.ti); }catch(e){} }
   if (S.gps.wid) { try{ navigator.geolocation.clearWatch(S.gps.wid); }catch(e){} }
-  const g = S.gps; g.st='running'; g.start=Date.now(); g.km=0; g.pts=[]; g.pausedMs=0; g.pa=null;
+  const g = S.gps; g.st='running'; g.start=Date.now(); g.km=0; g.pts=[]; g.pausedMs=0; g.pa=null; g.forceDate=null;
   // Fecha em segundo plano qualquer jornada órfã de verdade (mais de 12h,
   // já não é candidata a retomada acima) — não bloqueia o início desta
   _closeOrphanSessions().then(n => { if (n) showToast(n+' jornada(s) antiga(s) que ficaram aberta(s) foram encerrada(s) automaticamente.', 'info'); }).catch(()=>{});
@@ -6662,6 +6668,10 @@ function gpsStop() {
   // Supabase, mesmo se algo mais adiante falhar. ═══
   const cloudId = g.sessionId || DB.uid();
   const startMs = g.start, kmSnap = g.km || 0, endMs = Date.now();
+  // Se o motorista escolheu "deixar tudo em ontem" no alerta de virada de
+  // meia-noite, g.forceDate trava a data em vez de usar DB.today() (que
+  // seria o dia do ENCERRAMENTO, não o do início) — ver resolveMidnightSplit().
+  const closeDate = g.forceDate || DB.today();
   let elapsedSnap = 0;
   try { elapsedSnap = getElapsed(); } catch(e) { console.error('[gpsStop] getElapsed:', e); }
 
@@ -6683,7 +6693,7 @@ function gpsStop() {
     // fechamento não pode se perder. A intenção já está salva no localStorage
     // ANTES de qualquer requisição de rede começar; só é removida da fila
     // se a tentativa imediata realmente confirmar sucesso.
-    const closeRow = { id: cloudId, date: DB.today(), start_ms: startMs, end_ms: endMs,
+    const closeRow = { id: cloudId, date: closeDate, start_ms: startMs, end_ms: endMs,
       km: parseFloat(kmSnap.toFixed(3)), elapsed_secs: elapsedSnap, paused_ms: 0, is_paused: false };
     const queueId = SYNC.enqueue({ type: 'push', table: 'sessions', row: closeRow });
     _SUPA.from('sessions').upsert(Object.assign({}, closeRow, { user_id: _supaUser.id }),
@@ -6692,7 +6702,7 @@ function gpsStop() {
      .catch(()=>{}); // falhou — fica na fila, flushQueue() tenta de novo depois
   }
   g.start=null; g.pausedMs=0; g.km=0; g.pts=[]; g.baseKm=0; g.baseElapsed=0; g.pa=null;
-  g.sessionId = null;
+  g.sessionId = null; g.forceDate = null;
   try { syncNavButton(); } catch(e) { console.error('[gpsStop] syncNavButton:', e); }
   try { releaseWakeLock(); } catch(e) { console.error('[gpsStop] releaseWakeLock:', e); }
 
@@ -6702,7 +6712,7 @@ function gpsStop() {
   // até a próxima reconciliação com o Supabase, nunca ficar 'presa'. ═══
   let sess = { id: cloudId, start: startMs, end: endMs, km: kmSnap, elapsed: elapsedSnap };
   try {
-    const day = DB.day(DB.today());
+    const day = DB.day(closeDate);
     if (!day.sessions) day.sessions = [];
     const _sIdx = day.sessions.findIndex(s => s.id === cloudId);
     if (_sIdx >= 0) day.sessions[_sIdx] = sess; else day.sessions.push(sess);
@@ -6728,6 +6738,10 @@ let _gpsCloudTick = 0;
 function gpsUpdate() {
   _gpsCloudTick++;
   if (_gpsCloudTick % 300 === 0) _persistGpsCloud().catch(()=>{}); // a cada 5 min
+  // Roda independente de qual dia o usuário está vendo na tela — a virada
+  // de meia-noite tem que ser detectada mesmo se ele estiver olhando outro
+  // dia no momento.
+  checkMidnightCrossing();
   // Só atualiza os elementos visuais se o usuário estiver vendo hoje.
   // Se navegar para outro dia, o timer continua rodando internamente mas
   // não sobrescreve o card que está mostrando dados daquele dia.
@@ -6750,7 +6764,7 @@ function persistGps() {
   DB.set('sm_gps_session', {
     st: g.st, start: g.start, pausedMs: g.pausedMs, pa: g.pa,
     km: g.km, lastPt, baseKm: g.baseKm, baseElapsed: g.baseElapsed,
-    sessionId: g.sessionId
+    sessionId: g.sessionId, forceDate: g.forceDate || null
   });
   // Checkpoint no Supabase (não bloqueia)
   _persistGpsCloud().catch(()=>{});
@@ -6777,7 +6791,7 @@ async function _persistGpsCloud() {
   await _SUPA.from('sessions').upsert({
     id:         snapId,
     user_id:    _supaUser.id,
-    date:       DB.today(),
+    date:       g.forceDate || DB.today(),
     start_ms:   g.start,
     end_ms:     null,
     km:         parseFloat((g.km||0).toFixed(3)),
@@ -6800,6 +6814,174 @@ async function _persistGpsCloud() {
     } catch(e) {}
   }
 }
+
+// ══════════════════════════════════════════════════════════════════════
+// JORNADA CRUZOU A MEIA-NOITE — detecta, pergunta pro motorista, aplica.
+// ══════════════════════════════════════════════════════════════════════
+function _ymd(ms) { const d = new Date(ms); return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate()); }
+
+// Chamado a cada tick do gpsUpdate() (1x/s) e ao restaurar a sessão no boot.
+// Barato o bastante pra rodar toda hora: só comparação de strings até achar
+// uma virada real; o trabalho pesado (abrir modal) só acontece uma vez por
+// virada, travado pelo localStorage (sm_midnight_resolved_*).
+function checkMidnightCrossing() {
+  const g = S.gps;
+  if (g.st !== 'running' || !g.start) return;
+  if (S._midnightModalOpen) return; // já perguntando, não reprocessa
+  const startDate = _ymd(g.start);
+  const today = DB.today();
+  if (startDate === today) return; // ainda no mesmo dia — nada a fazer
+  if (g.forceDate) return; // motorista já resolveu essa jornada (opção 'ontem')
+  const resolvedKey = 'sm_midnight_resolved_' + (g.sessionId||'x') + '_' + today;
+  if (localStorage.getItem(resolvedKey)) return; // já perguntado/resolvido pra essa virada
+  openMidnightModal(startDate, today);
+}
+
+function openMidnightModal(startDate, todayStr) {
+  S._midnightModalOpen = true;
+  const g = S.gps;
+  const sD = new Date(g.start), nD = new Date();
+  const startLabel = p2(sD.getDate())+'/'+p2(sD.getMonth()+1)+' · '+p2(sD.getHours())+':'+p2(sD.getMinutes());
+  const nowLabel = p2(nD.getDate())+'/'+p2(nD.getMonth()+1)+' · '+p2(nD.getHours())+':'+p2(nD.getMinutes());
+  const startDD = startDate.split('-')[2]+'/'+startDate.split('-')[1];
+  const todayDD = todayStr.split('-')[2]+'/'+todayStr.split('-')[1];
+  document.getElementById('mn-sheet').innerHTML = `
+    <div class="sheet-handle"></div>
+    <div style="width:52px;height:52px;border-radius:16px;background:#FFFBEB;border:1.5px solid #FDE68A;display:flex;align-items:center;justify-content:center;margin-bottom:14px">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#D97706" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+    </div>
+    <h2 style="font-family:'Poppins',sans-serif;font-weight:800;font-size:17px;color:#0F172A;margin-bottom:6px;line-height:1.3">Sua jornada passou da meia-noite</h2>
+    <p style="font-size:13px;color:#64748B;line-height:1.55;margin-bottom:6px">Você iniciou <b style="color:#0F172A">ontem</b> e continua rodando. Como quer contar essa jornada?</p>
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 18px;background:#F7F9FC;border:1px solid #E2E8F0;border-radius:14px;padding:12px 14px">
+      <div style="flex:1;text-align:center">
+        <div style="font-size:10px;color:#94A3B8;font-weight:700;text-transform:uppercase;letter-spacing:.04em">Início</div>
+        <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:15px;color:#0F172A;margin-top:2px">${startDD} · ${startLabel.split(' · ')[1]}</div>
+      </div>
+      <div style="color:#CBD5E1;font-size:16px">→</div>
+      <div style="flex:1;text-align:center">
+        <div style="font-size:10px;color:#94A3B8;font-weight:700;text-transform:uppercase;letter-spacing:.04em">Agora</div>
+        <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:15px;color:#0F172A;margin-top:2px">${todayDD} · ${nowLabel.split(' · ')[1]}</div>
+      </div>
+    </div>
+    <button class="mn-opt" onclick="resolveMidnightSplit('split')" style="display:flex;align-items:center;gap:12px;width:100%;background:#F0FDF4;border:1.5px solid #BBF7D0;border-radius:16px;padding:13px 14px;margin-bottom:10px;text-align:left;cursor:pointer">
+      <div style="width:38px;height:38px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#DCFCE7;color:#16A34A"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v18M5 12h14"/></svg></div>
+      <div style="flex:1"><div style="font-size:13.5px;font-weight:700;color:#0F172A">Dividir até meia-noite <span style="font-size:9px;font-weight:800;color:#16A34A;background:#DCFCE7;padding:2px 7px;border-radius:99px;margin-left:6px">RECOMENDADO</span></div>
+      <div style="font-size:11px;color:#94A3B8;margin-top:1px;line-height:1.4">Fecha a jornada de ontem às 23:59:59 e abre uma nova hoje às 00:00. Corridas ficam no dia de cada uma.</div></div>
+    </button>
+    <button class="mn-opt" onclick="resolveMidnightSplit('yesterday')" style="display:flex;align-items:center;gap:12px;width:100%;background:#fff;border:1.5px solid #E2E8F0;border-radius:16px;padding:13px 14px;margin-bottom:10px;text-align:left;cursor:pointer">
+      <div style="width:38px;height:38px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#F1F5F9;color:#64748B"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 19l-7-7 7-7M4 12h16"/></svg></div>
+      <div style="flex:1"><div style="font-size:13.5px;font-weight:700;color:#0F172A">Deixar tudo em ontem (${startDD})</div>
+      <div style="font-size:11px;color:#94A3B8;margin-top:1px;line-height:1.4">A jornada inteira, incluindo o tempo de hoje, conta no dia que começou.</div></div>
+    </button>
+    <button class="mn-opt" onclick="resolveMidnightSplit('today')" style="display:flex;align-items:center;gap:12px;width:100%;background:#fff;border:1.5px solid #E2E8F0;border-radius:16px;padding:13px 14px;margin-bottom:10px;text-align:left;cursor:pointer">
+      <div style="width:38px;height:38px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#F1F5F9;color:#64748B"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 5l7 7-7 7M20 12H4"/></svg></div>
+      <div style="flex:1"><div style="font-size:13.5px;font-weight:700;color:#0F172A">Jogar tudo pra hoje (${todayDD})</div>
+      <div style="font-size:11px;color:#94A3B8;margin-top:1px;line-height:1.4">A jornada inteira, desde ontem à noite, conta no dia de hoje.</div></div>
+    </button>
+    <div style="font-size:10.5px;color:#94A3B8;text-align:center;margin-top:4px;line-height:1.5">A jornada continua rodando normalmente enquanto você decide.</div>`;
+  openMo('mo-midnight');
+}
+
+// mode: 'split' | 'yesterday' | 'today'
+async function resolveMidnightSplit(mode) {
+  const g = S.gps;
+  if (!g.start) { S._midnightModalOpen = false; closeMo('mo-midnight'); return; } // jornada foi encerrada enquanto o modal estava aberto
+  const startDate = _ymd(g.start);
+  const todayStr = DB.today();
+  const resolvedKey = 'sm_midnight_resolved_' + (g.sessionId||'x') + '_' + todayStr;
+
+  if (mode === 'yesterday') {
+    g.forceDate = startDate; // trava a data — ver uso em gpsStop/_persistGpsCloud
+  } else if (mode === 'today') {
+    g.forceDate = null; // já é o comportamento padrão (date=DB.today() no encerramento)
+  } else if (mode === 'split') {
+    try { await splitJourneyAtMidnight(startDate, todayStr); }
+    catch(e) { console.error('[resolveMidnightSplit] split falhou:', e); showToast('Não consegui dividir agora, tento de novo mais tarde.', 'error'); S._midnightModalOpen = false; closeMo('mo-midnight'); return; }
+  }
+  localStorage.setItem(resolvedKey, '1');
+  S._midnightModalOpen = false;
+  closeMo('mo-midnight');
+  persistGps();
+}
+
+async function splitJourneyAtMidnight(startDate, todayStr) {
+  const g = S.gps;
+  const midnightMs = new Date(todayStr + 'T00:00:00').getTime();
+
+  // Km exato no instante da virada: prioriza o snapshot capturado pelo
+  // GpsService nativo (Kotlin) — ele marca um alarme pro segundo exato da
+  // meia-noite e salva o km ali, mesmo com o app em segundo plano. Só cai
+  // pra estimativa por tempo (proporcional) se o snapshot não existir —
+  // ex: APK antigo sem essa versão, ou app rodou sem o serviço nativo.
+  let kmAtMidnight = null, estimated = false;
+  if (window.SmartMobiNative && typeof SmartMobiNative.getMidnightSnapshotDate === 'function') {
+    try {
+      const snapDate = SmartMobiNative.getMidnightSnapshotDate();
+      if (snapDate === todayStr) {
+        const v = SmartMobiNative.getKmAtMidnight();
+        if (typeof v === 'number' && v >= 0) kmAtMidnight = v;
+      }
+    } catch(e) {}
+  }
+  if (kmAtMidnight == null) {
+    const totalMs = Math.max(1, Date.now() - g.start);
+    const beforeMs = Math.min(totalMs, Math.max(0, midnightMs - g.start));
+    kmAtMidnight = (g.km || 0) * (beforeMs / totalMs);
+    estimated = true;
+  }
+  kmAtMidnight = Math.min(kmAtMidnight, g.km || 0); // nunca passa do total acumulado
+
+  // Duração de ontem estimada a partir do pausedMs acumulado até agora —
+  // aproximação: assume que a pausa (se houve) ficou toda de um lado ou
+  // outro da virada, o que cobre o caso comum (raro pausar bem em cima da
+  // meia-noite).
+  const elapsedYesterday = Math.max(0, Math.round((midnightMs - g.start - (g.pausedMs||0))/1000));
+
+  // ── Fecha a sessão de ontem ──
+  const sessYesterday = { id: g.sessionId, start: g.start, end: midnightMs,
+    km: parseFloat(kmAtMidnight.toFixed(3)), elapsed: elapsedYesterday };
+  const dayY = DB.day(startDate);
+  if (!dayY.sessions) dayY.sessions = [];
+  const idxY = dayY.sessions.findIndex(s => s.id === sessYesterday.id);
+  if (idxY >= 0) dayY.sessions[idxY] = sessYesterday; else dayY.sessions.push(sessYesterday);
+  DB.saveDay(dayY);
+  SYNC.push('sessions', { id: sessYesterday.id, date: startDate, start_ms: sessYesterday.start,
+    end_ms: sessYesterday.end, km: sessYesterday.km, elapsed_secs: sessYesterday.elapsed,
+    paused_ms: 0, is_paused: false });
+  try { reconcileSessionsForDay(startDate); } catch(e) {}
+
+  // ── Abre a sessão de hoje, continuando a rodar sem interromper o GPS ──
+  const newId = DB.uid();
+  const remainingKm = Math.max(0, (g.km || 0) - kmAtMidnight);
+  g.sessionId = newId;
+  g.start = midnightMs;
+  g.km = remainingKm;
+  g.pausedMs = 0; g.pa = null;
+  g.pts = []; g.lastFixTime = null;
+  g.forceDate = null; // sessão nova já nasce em 'hoje' — sem override
+  const dayT = DB.day(todayStr);
+  g.baseKm = (dayT.sessions||[]).reduce((s,x)=>s+(x.km||0),0);
+  g.baseElapsed = (dayT.sessions||[]).reduce((s,x)=>s+(x.elapsed||0),0);
+
+  if (_supaUser) {
+    _SUPA.from('sessions').upsert({
+      id: newId, user_id: _supaUser.id, date: todayStr,
+      start_ms: midnightMs, end_ms: null, km: parseFloat(remainingKm.toFixed(3)),
+      elapsed_secs: 0, paused_ms: 0, is_paused: false
+    }, { onConflict: 'id' }).catch(()=>{});
+  }
+  // Religa o widget/serviço nativo com o novo sessionId/km — sem isso ele
+  // continuaria reportando pro id antigo (que já fechamos acima).
+  if (window.SmartMobiNative) {
+    try { SmartMobiNative.startFloating?.(g.start, g.km || 0); } catch(e) {}
+    try { SmartMobiNative.clearMidnightSnapshot?.(); } catch(e) {} // consumido — não reaplicar
+  }
+
+  showToast('Jornada dividida na meia-noite' + (estimated ? ' (km estimado por tempo — sem GPS exato disponível)' : ' (km exato do GPS)') + '.', 'info', 4500);
+  try { if (S.sec==='jornada') renderJornada(); } catch(e) {}
+  try { renderHome(); } catch(e) {}
+}
+
 function restoreGpsSession() {
   const g = S.gps;
   // Já está rodando nesta instância do app (ex: showApp() foi chamado de novo
@@ -6846,6 +7028,7 @@ function restoreGpsSession() {
   g.km = saved.km || 0; g.pts = saved.lastPt ? [saved.lastPt] : [];
   g.baseKm = saved.baseKm || 0; g.baseElapsed = saved.baseElapsed || 0;
   g.sessionId = saved.sessionId || null; // restaura ID para continuar o upsert correto
+  g.forceDate = saved.forceDate || null;
   // O snapshot acima é só o último valor salvo antes do app ir pra segundo plano (o
   // watchPosition do JS para quando o app não está em foreground). Se o app nativo
   // tiver um GpsService rodando, ele é a fonte mais atual — corrige aqui, antes do
@@ -6923,6 +7106,10 @@ function restoreGpsSession() {
   if (window.SmartMobiNative && typeof SmartMobiNative.updateFloatingStatus === 'function') {
     try { SmartMobiNative.updateFloatingStatus(g.st); } catch(e) {}
   }
+  // Se o app ficou fechado/em segundo plano e a jornada cruzou a meia-noite
+  // nesse meio tempo, avisa agora que reabriu (dá um tempo pro render inicial
+  // da tela terminar antes de empilhar o modal por cima).
+  setTimeout(checkMidnightCrossing, 600);
 }
 const _CAR_IMGS = {
   idle:    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAAoCAYAAADzL6qcAAACMElEQVR4nO2TO2tUYRCGn/n27C17kijReEsUohLYuEmRQhC8kB9gI0FrQUGwCjZWi6kE/QVWgqBIChurWCWNCBHR6KYxUcjG4C1m49nNnj3nfGOxJhBcZU0hFvsUUwzDzMs7M9CiRYt/gfxlfgNtonfebKem8eT+s+0p58gO8QNVDQVAxFFNhlJdWfzK8uPK7xtl8wkKhG5u9ZyY1LhG4TKogGJVBEENomJi+6LAH6vMfZhkeKfh+Z2goSJ38No8Gt30Zqfv0tPnsGchBOBjn0NxIczkzlwFuVSevZ39VdHw5XimljhNFNstJn7de3178E8OucfGZpFoXMNgpTz3ZgqmQgeg84ufsR3uLZJtObXBS3dw7AoRIGrBAgawoNRNNk4oJnUfrbwg2z1CAU/qG7hh0/0X9sdSB18hsZSoZsRJb1GhCiKKBhVUTEU0WrPe26HywqNPkDeG0YIAmHj3AKqutzzT56+967dBec2G1XUbrldsUKlo5FdtUF78/n66K1idG0DtLtJ7BwAYLYizOdLWInHScbc7N4nQJU6qY8NEpR4E0+seOjGDWg9jYtRqm4fpMPFTug1LaCgSbxtSv/TE1j4/wIiA2Ho/EVAViQ1Lon2EaN2q0RIAE+BAVgHE94rWSa0YlQ6prua9+XtPG27s6MVTxJInbeSXxP+2VM9mdcsdpQ6f71Uh4VMqcuB41HD3S89iSTp7RKlV5x8Wae7vtk3eNP+0zdS1aNHiv+UHbE7u+HuU0XwAAAAASUVORK5CYII=",
