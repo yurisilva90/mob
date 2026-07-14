@@ -6590,8 +6590,8 @@ function showJourneySummary(sess) {
       <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:32px;line-height:1;letter-spacing:-.01em">${th}h ${p2(tm)}min</div>
       <div style="font-size:11px;color:rgba(255,255,255,.55);font-weight:600;margin-top:4px">tempo online hoje</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">
-        ${kpiCard(totalKm.toFixed(1), 'Km percorrido')}
-        ${kpiCard(kmh.toFixed(1), 'Km/h médio')}
+        ${totalKm > 0.1 ? kpiCard(totalKm.toFixed(1), 'Km percorrido') : kpiCard('—', 'Km percorrido')}
+        ${totalKm > 0.1 ? kpiCard(kmh.toFixed(1), 'Km/h médio') : kpiCard('—', 'Km/h médio')}
       </div>`;
     extraSection = `
       <div class="cv-daily" style="display:flex;gap:10px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:12px;padding:11px 12px;margin:12px 0;align-items:flex-start">
@@ -6785,7 +6785,7 @@ function gpsStop() {
     try { renderJornada(); } catch(e) {}
     try { renderHome(); } catch(e) {}
   }, 80);
-  if (kmSnap > 0.1) setTimeout(() => showJourneySummary(sess), 500);
+  if (elapsedSnap > 60) setTimeout(() => showJourneySummary(sess), 500);
 }
 function getElapsed() {
   const g = S.gps; if (!g.start) return 0;
