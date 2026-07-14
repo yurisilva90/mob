@@ -8728,6 +8728,21 @@ async function migrateLocalToCloud() {
   if (!_supaUser) return;
   if (localStorage.getItem('sm_cloud_migration_v2')) return; // já feito
 
+  // BUG CONFIRMADO (13/07/2026): essa função disparava 3s depois de
+  // showApp(), sem esperar o pullAll() da nuvem terminar. pullAll faz ~10
+  // consultas em paralelo (inclusive trips paginado inteiro) — em conexão
+  // mais lenta facilmente passa de 3s. Se a migração rodasse ANTES do pull
+  // terminar, empurrava o local (ainda sem o que tinha vindo de uma
+  // instalação anterior, ex: custo por km configurado antes) por cima do
+  // que já estava salvo na nuvem — apagando dado bom. A trava acima
+  // (sm_cloud_migration_v2) só evita rodar de novo NA MESMA instalação —
+  // um reinstall zera o localStorage e essa trava junto, então a função
+  // roda de novo correndo contra o pull toda vez que reinstala. Correção:
+  // espera _bootPullDone antes de migrar qualquer coisa, mesmo mecanismo
+  // que a tela de Custo do Veículo já usa pra não mostrar formulário vazio
+  // por cima de dado que só ainda não chegou.
+  await _waitBootPull();
+
   console.log('[MōB] Iniciando migração local → Supabase...');
   let pushed = 0;
 
