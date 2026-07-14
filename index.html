@@ -2378,6 +2378,10 @@ let S = {
   tripsExpanded: false,
   sessionsExpanded: false,
   lancExpanded: false,
+  _midnightIsPostStop: false,
+  _postStopMidnightSess: null,
+  _postMidnightCallback: null,
+  _midnightModalOpen: false,
   gps: {
     st: 'idle',  // idle | running
     start: null, pausedMs: 0, pauseAt: null,
@@ -6562,6 +6566,12 @@ function showJourneySummary(sess) {
   const totalElapsed = sess.elapsed || 0;
   const totalKm = sess.km || 0;
   const startMs = sess.start || 0, endMs = sess.end || Date.now();
+  // Verifica se a jornada cruzou a meia-noite (iniciou ontem, encerrou hoje)
+  const crossedMidnight = startMs && endMs && _ymd(startMs) !== _ymd(endMs);
+  const midResolvedKey = 'sm_midnight_resolved_' + (sess.id||'x') + '_' + DB.today();
+  const needsMidnight = crossedMidnight && !localStorage.getItem(midResolvedKey);
+  // Expõe sess globalmente para os onclick do footer
+  window._jsSummarySess = sess;
   // Mesma lógica de sessionItem(): corrida pertence a esta sessão se o
   // horário dela cai dentro da janela [start, end] da sessão.
   const trips = (day.trips || []).filter(t => {
@@ -6599,12 +6609,12 @@ function showJourneySummary(sess) {
         <span style="font-size:12px;color:#92400E;font-weight:500;line-height:1.45">Km ativo, corridas, ganhos, R$/h, R$/km e meta aparecem aqui depois que você <b>importar as corridas de hoje</b>.</span>
       </div>`;
     footer = `
-      <button onclick="closeJourneySummary(); openImportPrecheck()" style="width:100%;height:48px;border:none;border-radius:14px;font-family:'Inter',system-ui,sans-serif;font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;background:#22C55E;color:#fff;box-shadow:0 6px 16px rgba(34,197,94,.35)">
+      <button onclick="closeJourneySummary(); ${needsMidnight} ? openPostStopMidnightModal(window._jsSummarySess, openImportPrecheck) : openImportPrecheck()" style="width:100%;height:48px;border:none;border-radius:14px;font-family:'Inter',system-ui,sans-serif;font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;background:#22C55E;color:#fff;box-shadow:0 6px 16px rgba(34,197,94,.35)">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
         Importar corridas de hoje
       </button>
       <div style="font-size:11px;color:var(--muted);text-align:center;line-height:1.5;margin-top:8px;padding:0 6px">Escolha as fotos/vídeos do histórico Uber ou 99 — pode selecionar vários de uma vez.</div>
-      <button onclick="closeJourneySummary()" style="width:100%;height:40px;border:none;background:transparent;color:var(--muted);font-weight:700;font-size:13px;margin-top:4px;cursor:pointer">Deixar para depois</button>`;
+      <button onclick="closeJourneySummary(); if(${needsMidnight}) openPostStopMidnightModal(window._jsSummarySess, null)" style="width:100%;height:40px;border:none;background:transparent;color:var(--muted);font-weight:700;font-size:13px;margin-top:4px;cursor:pointer">Deixar para depois</button>`;
   } else {
     const ganhos = trips.reduce((s,t)=>s+(t.value||0),0);
     const kmAtivo = trips.reduce((s,t)=>s+(t.km||0),0);
@@ -6942,6 +6952,8 @@ function openMidnightModal(startDate, todayStr) {
 
 // mode: 'split' | 'yesterday' | 'today'
 async function resolveMidnightSplit(mode) {
+  // Se o modal foi aberto pós-encerramento (pelo showJourneySummary), delega
+  if (S._midnightIsPostStop) { await resolvePostStopMidnight(mode); return; }
   const g = S.gps;
   if (!g.start) { S._midnightModalOpen = false; closeMo('mo-midnight'); return; } // jornada foi encerrada enquanto o modal estava aberto
   const startDate = _ymd(g.start);
@@ -7038,6 +7050,105 @@ async function splitJourneyAtMidnight(startDate, todayStr) {
   showToast('Jornada dividida na meia-noite' + (estimated ? ' (km estimado por tempo — sem GPS exato disponível)' : ' (km exato do GPS)') + '.', 'info', 4500);
   try { if (S.sec==='jornada') renderJornada(); } catch(e) {}
   try { renderHome(); } catch(e) {}
+}
+
+// ── Midnight pós-encerramento (acionado pelo showJourneySummary) ──────────
+// Reutiliza o mesmo modal mo-midnight, mas com flag _midnightIsPostStop para
+// resolveMidnightSplit() delegar ao resolvePostStopMidnight().
+function openPostStopMidnightModal(sess, onDone) {
+  if (!sess || !sess.start || !sess.end) { if (onDone) onDone(); return; }
+  S._midnightIsPostStop = true;
+  S._postStopMidnightSess = sess;
+  S._postMidnightCallback = onDone || null;
+  openMidnightModal(_ymd(sess.start), _ymd(sess.end));
+}
+
+async function resolvePostStopMidnight(mode) {
+  const sess = S._postStopMidnightSess;
+  const onDone = S._postMidnightCallback;
+  S._midnightIsPostStop = false;
+  S._postStopMidnightSess = null;
+  S._postMidnightCallback = null;
+  S._midnightModalOpen = false;
+  closeMo('mo-midnight');
+  if (!sess) { if (onDone) onDone(); return; }
+
+  const startDate = _ymd(sess.start);
+  const todayStr = _ymd(sess.end);
+  const resolvedKey = 'sm_midnight_resolved_' + (sess.id||'x') + '_' + todayStr;
+  localStorage.setItem(resolvedKey, '1');
+
+  if (mode === 'today') {
+    // Sessão já foi salva em hoje por gpsStop — nada a mover
+    showToast('Jornada mantida em hoje.', 'info');
+  } else if (mode === 'yesterday') {
+    // Move sessão de hoje para ontem
+    const dayToday = DB.day(todayStr);
+    dayToday.sessions = (dayToday.sessions||[]).filter(s => s.id !== sess.id);
+    const tk = dayToday.sessions.reduce((s,x)=>s+(x.km||0),0);
+    dayToday.session = { km:tk, elapsed: dayToday.sessions.reduce((s,x)=>s+(x.elapsed||0),0) };
+    DB.saveDay(dayToday);
+    const dayYest = DB.day(startDate);
+    if (!dayYest.sessions) dayYest.sessions = [];
+    if (!dayYest.sessions.find(s => s.id === sess.id)) dayYest.sessions.push(sess);
+    DB.saveDay(dayYest);
+    SYNC.push('sessions', { id: sess.id, date: startDate, start_ms: sess.start,
+      end_ms: sess.end, km: sess.km, elapsed_secs: sess.elapsed, paused_ms:0, is_paused:false });
+    showToast('Jornada mantida em ontem.', 'info');
+  } else if (mode === 'split') {
+    try { await splitPostStopMidnight(sess, startDate, todayStr); }
+    catch(e) { console.error('[resolvePostStopMidnight] split falhou:', e); showToast('Erro ao dividir. Tente novamente.','error'); }
+  }
+  try { renderJornada(); } catch(e) {}
+  try { renderHome(); } catch(e) {}
+  if (onDone) setTimeout(onDone, 300);
+}
+
+async function splitPostStopMidnight(sess, startDate, todayStr) {
+  const midnightMs = new Date(todayStr + 'T00:00:00').getTime();
+  // km na meia-noite: tenta snapshot nativo, senão estima por proporção de tempo
+  let kmAtMidnight = null, estimated = false;
+  if (window.SmartMobiNative && typeof SmartMobiNative.getMidnightSnapshotDate === 'function') {
+    try {
+      if (SmartMobiNative.getMidnightSnapshotDate() === todayStr) {
+        const v = SmartMobiNative.getKmAtMidnight();
+        if (typeof v === 'number' && v >= 0) kmAtMidnight = v;
+      }
+    } catch(e) {}
+  }
+  if (kmAtMidnight == null) {
+    const totalMs = Math.max(1, sess.end - sess.start);
+    const beforeMs = Math.min(totalMs, Math.max(0, midnightMs - sess.start));
+    kmAtMidnight = (sess.km||0) * (beforeMs / totalMs);
+    estimated = true;
+  }
+  kmAtMidnight = Math.min(kmAtMidnight, sess.km||0);
+  const elapsedYest = Math.max(0, Math.round((midnightMs - sess.start) / 1000));
+  const elapsedToday = Math.max(0, (sess.elapsed||0) - elapsedYest);
+  const kmToday = parseFloat(Math.max(0, (sess.km||0) - kmAtMidnight).toFixed(3));
+  // Sessão de ontem (mantém o ID original)
+  const sessYest = { id: sess.id, start: sess.start, end: midnightMs,
+    km: parseFloat(kmAtMidnight.toFixed(3)), elapsed: elapsedYest };
+  const dayYest = DB.day(startDate);
+  if (!dayYest.sessions) dayYest.sessions = [];
+  const iy = dayYest.sessions.findIndex(s => s.id === sess.id);
+  if (iy >= 0) dayYest.sessions[iy] = sessYest; else dayYest.sessions.push(sessYest);
+  DB.saveDay(dayYest);
+  SYNC.push('sessions', { id: sessYest.id, date: startDate, start_ms: sessYest.start,
+    end_ms: sessYest.end, km: sessYest.km, elapsed_secs: sessYest.elapsed, paused_ms:0, is_paused:false });
+  // Sessão de hoje (novo ID, parte após meia-noite)
+  const newId = DB.uid();
+  const sessToday = { id: newId, start: midnightMs, end: sess.end, km: kmToday, elapsed: elapsedToday };
+  const dayToday = DB.day(todayStr);
+  if (!dayToday.sessions) dayToday.sessions = [];
+  dayToday.sessions = dayToday.sessions.filter(s => s.id !== sess.id); // remove original
+  dayToday.sessions.push(sessToday);
+  DB.saveDay(dayToday);
+  SYNC.push('sessions', { id: sessToday.id, date: todayStr, start_ms: sessToday.start,
+    end_ms: sessToday.end, km: sessToday.km, elapsed_secs: sessToday.elapsed, paused_ms:0, is_paused:false });
+  try { reconcileSessionsForDay(startDate); } catch(e) {}
+  if (window.SmartMobiNative) { try { SmartMobiNative.clearMidnightSnapshot?.(); } catch(e) {} }
+  showToast('Jornada dividida na meia-noite' + (estimated?' (km estimado)':' (km do GPS)') + '.', 'info', 4500);
 }
 
 function restoreGpsSession() {
