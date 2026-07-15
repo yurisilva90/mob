@@ -238,7 +238,12 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .trip-title{font-size:12.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .li-val{text-align:right;font-size:11px;color:var(--muted);font-weight:600;flex:0 0 auto}.li-val strong{display:block;color:var(--text);font-size:13.5px;font-weight:760;font-family:'Inter',system-ui,sans-serif}.li-time{display:block;color:var(--muted2);font-size:10.5px;font-weight:600;margin-top:2px}
 .li-liq{display:block;color:#16A34A;font-size:11px;font-weight:800;margin-top:2px}
-.li-extra{display:flex;gap:6px;margin-top:5px}.chip{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px;font-family:'Inter',system-ui,sans-serif;letter-spacing:-.01em}.chip svg{flex-shrink:0}.chip-d{background:#FFF7ED;color:#F59E0B}.chip-g{background:#F5F3FF;color:#7C3AED}.chip-taxa{background:#FEF9C3;color:#854D0E;display:inline-flex;align-items:center;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px}.chip-toll{background:#F1F5F9;color:#475569;display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;border-radius:7px;flex-shrink:0}.chip-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;border-radius:7px;flex-shrink:0}.chip-cash{background:#DCFCE7;color:#15803D}.trip-item-wrap{margin-bottom:6px}.li-row.open{border-radius:14px 14px 0 0;border-bottom:0!important}.trip-detail-panel{background:var(--card);border:1.5px solid var(--line);border-top:0;border-radius:0 0 12px 12px;padding:8px 12px 10px}.det-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);padding:4px 0;font-weight:500}.det-row:not(:last-child){border-bottom:1px solid var(--line)}.det-row strong{color:var(--text);font-weight:700}.det-del-btn{display:flex;align-items:center;gap:6px;width:100%;margin-top:8px;padding:8px 0 2px;background:none;border:none;border-top:1px solid var(--line);font-size:12px;font-weight:700;color:#EF4444;cursor:pointer;font-family:inherit}
+.li-extra{display:flex;gap:6px;margin-top:5px}.chip{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px;font-family:'Inter',system-ui,sans-serif;letter-spacing:-.01em}.chip svg{flex-shrink:0}.chip-d{background:#FFF7ED;color:#F59E0B}.chip-g{background:#F5F3FF;color:#7C3AED}.chip-taxa{background:#FEF9C3;color:#854D0E;display:inline-flex;align-items:center;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px}.chip-toll{background:#F1F5F9;color:#475569;display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;border-radius:7px;flex-shrink:0}.chip-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;border-radius:7px;flex-shrink:0}.chip-cash{background:#DCFCE7;color:#15803D}.chip-auto{background:#EFF6FF;color:#0EA5E9}.auto-status{display:inline-block;font-size:9.5px;font-weight:800;padding:2.5px 7px;border-radius:99px;margin-top:4px;white-space:nowrap}.auto-status.pend{background:#FEF3C7;color:#92400E}.auto-status.conf{background:#DCFCE7;color:#15803D}.trip-item-wrap{margin-bottom:6px}
+/* ── Corridas: toggle Importadas / Automáticas (fonte dos dados) ── */
+.src-switch{display:flex;background:#EAF0F6;border:1px solid rgba(15,23,42,.06);padding:4px;border-radius:18px;margin:2px 16px 10px}
+.src-btn{flex:1;border:none;background:transparent;color:var(--muted);padding:10px 8px;border-radius:14px;font-size:13.5px;font-weight:900;cursor:pointer;font-family:var(--font-app)}
+.src-btn.active{background:#fff;color:var(--text);box-shadow:0 4px 12px rgba(15,23,42,.08)}
+.cor-subnote{padding:0 16px 10px;font-size:11.5px;color:var(--muted2);line-height:1.4}.li-row.open{border-radius:14px 14px 0 0;border-bottom:0!important}.trip-detail-panel{background:var(--card);border:1.5px solid var(--line);border-top:0;border-radius:0 0 12px 12px;padding:8px 12px 10px}.det-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);padding:4px 0;font-weight:500}.det-row:not(:last-child){border-bottom:1px solid var(--line)}.det-row strong{color:var(--text);font-weight:700}.det-del-btn{display:flex;align-items:center;gap:6px;width:100%;margin-top:8px;padding:8px 0 2px;background:none;border:none;border-top:1px solid var(--line);font-size:12px;font-weight:700;color:#EF4444;cursor:pointer;font-family:inherit}
 .sw{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0}.sw input{opacity:0;width:0;height:0;position:absolute}.sw .trk{position:absolute;inset:0;background:#E2E8F0;border-radius:99px;transition:.2s;cursor:pointer}.sw .trk:before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}.sw input:checked + .trk{background:#22C55E}.sw input:checked + .trk:before{transform:translateX(20px)}
 .acc-card{background:#F8FAFC;border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:14px}
 .acc-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -1269,12 +1274,17 @@ h1.hd-title{font-family:var(--font-brand)!important}
     <h2 style="font-size:17px;letter-spacing:-.02em;flex:1">Corridas</h2>
     <span id="cor-cnt" style="display:none"></span>
   </div>
+  <div class="src-switch">
+    <button class="src-btn active" id="cor-src-imp" onclick="setCorridasSource('imp')">Importadas</button>
+    <button class="src-btn" id="cor-src-auto" onclick="setCorridasSource('auto')">Automáticas</button>
+  </div>
+  <div class="cor-subnote" id="cor-subnote">Corridas que você importou por foto, vídeo ou zip.</div>
   <div style="padding:10px 16px 4px">
     <div class="type-switch" id="cor-plat-switch" style="margin-bottom:8px">
       <button class="type-btn active" onclick="setCorridasPlat('all')">Todas</button>
       <button class="type-btn" onclick="setCorridasPlat('uber')">Uber</button>
       <button class="type-btn" onclick="setCorridasPlat('99')">99</button>
-      <button class="type-btn" onclick="setCorridasPlat('particular')">Particular</button>
+      <button class="type-btn" id="cor-plat-particular" onclick="setCorridasPlat('particular')">Particular</button>
     </div>
     <div style="display:flex;gap:5px;align-items:center;padding-bottom:6px;position:relative" id="cor-per-row">
       <button class="pchip active" id="cpb-hoje" style="flex:1" onclick="setCorridasPeriod('hoje')">Hoje</button>
@@ -1292,6 +1302,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
     <div style="flex:1;text-align:center;border-left:1px solid #F1F5F9"><span style="display:block;font-size:9px;color:#94A3B8;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Corridas</span><strong id="cor-sum-n" style="font-size:14px;font-weight:800;color:#0F172A">0</strong></div>
   </div>
   <div style="padding:12px 16px 30px" id="cor-list"></div>
+  <div style="padding:12px 16px 30px;display:none" id="cor-list-auto"></div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
@@ -2440,8 +2451,8 @@ function navTo(sec) {
   if (sec === 'financeiro') renderFin();
   if (sec === 'lancamentos') renderLancamentos();
   if (sec === 'corridas') {
-    setCorridasPlat('all'); // reseta sempre plataforma para 'Todas'
-    renderCorridas();
+    setCorridasSource('imp'); // reseta sempre pra aba Importadas
+    setCorridasPlat('all');   // reseta sempre plataforma para 'Todas'
   }
   if (sec === 'mais')       renderMais();
   if (sec === 'categorias') renderCatsModal();
@@ -3159,7 +3170,7 @@ function setCorridasPeriod(p) {
   ['hoje','7d','mes','tudo'].forEach(id=>{ const b=document.getElementById('cpb-'+id); if(b) b.classList.toggle('active',id===p); });
   const dp=document.getElementById('cor-date-picker'),db=document.getElementById('cor-date-btn');
   if(dp) dp.style.display='none'; if(db){db.style.background='#fff';db.style.borderColor='#E2E8F0';}
-  renderCorridas();
+  renderCorridasActive();
 }
 function toggleCorDate() {
   const inp=document.getElementById('cor-date-input');
@@ -3169,7 +3180,7 @@ function setCorridasDate(d) {
   if(!d) return; S.corridasDate=d; S.corridasPeriod='date';
   ['hoje','7d','mes','tudo'].forEach(id=>{ const b=document.getElementById('cpb-'+id); if(b) b.classList.remove('active'); });
   const db=document.getElementById('cor-date-btn'); if(db){db.style.background='#EFF6FF';db.style.borderColor='#2563EB';}
-  renderCorridas();
+  renderCorridasActive();
 }
 function setCorridasPlat(p) {
   S.corridasPlat = p;
@@ -3177,7 +3188,105 @@ function setCorridasPlat(p) {
   const idx = ['all','uber','99','particular'].indexOf(p);
   const btn = document.querySelectorAll('#cor-plat-switch .type-btn')[idx];
   if (btn) btn.classList.add('active');
-  renderCorridas();
+  renderCorridasActive();
+}
+// ── Corridas: alterna entre Importadas (trips locais) e Automáticas (auto_trips no Supabase) ──
+function renderCorridasActive() {
+  if ((S.corSource||'imp') === 'auto') loadAutoTrips(); else renderCorridas();
+}
+function setCorridasSource(src) {
+  S.corSource = src;
+  document.getElementById('cor-src-imp').classList.toggle('active', src==='imp');
+  document.getElementById('cor-src-auto').classList.toggle('active', src==='auto');
+  document.getElementById('cor-list').style.display = src==='imp' ? 'block' : 'none';
+  document.getElementById('cor-list-auto').style.display = src==='auto' ? 'block' : 'none';
+  const particularBtn = document.getElementById('cor-plat-particular');
+  if (particularBtn) particularBtn.style.display = src==='auto' ? 'none' : '';
+  if (src==='auto' && S.corridasPlat==='particular') setCorridasPlat('all');
+  setText('cor-subnote', src==='imp'
+    ? 'Corridas que você importou por foto, vídeo ou zip.'
+    : 'Corridas capturadas automaticamente pelo app enquanto você dirige. Não se mistura com as importadas.');
+  renderCorridasActive();
+}
+function autoCorridasDateRange() {
+  const dates = getCorridasDays().slice().sort();
+  if (!dates.length) return null;
+  return { from: dates[0]+'T00:00:00', to: dates[dates.length-1]+'T23:59:59' };
+}
+async function loadAutoTrips() {
+  const listEl = document.getElementById('cor-list-auto');
+  if (!listEl || !_supaUser) return;
+  const range = autoCorridasDateRange();
+  let q = _SUPA.from('auto_trips').select('*').eq('user_id', _supaUser.id).order('trip_started_at', {ascending:false});
+  if (range) q = q.gte('trip_started_at', range.from).lte('trip_started_at', range.to);
+  if (S.corridasPlat && S.corridasPlat!=='all' && S.corridasPlat!=='particular') q = q.eq('platform', S.corridasPlat);
+  const { data, error } = await q;
+  renderAutoTrips(error ? [] : (data||[]));
+}
+function renderAutoTrips(list) {
+  const listEl = document.getElementById('cor-list-auto');
+  if (!listEl) return;
+  let totalVal = 0, totalKm = 0;
+  list.forEach(t => { totalVal += (t.offer_value||0); totalKm += (t.real_km_trip||0); });
+  setText('cor-sum-val', DB.fR(totalVal));
+  setText('cor-sum-km', totalKm.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}));
+  setText('cor-sum-n', list.length);
+  if (!list.length) {
+    listEl.innerHTML = `<div class="empty" style="text-align:center;padding:50px 20px;color:#64748B">
+      <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.6" style="color:#94A3B8;margin-bottom:10px"><path d="M5 17h14M6 17l1-6 3-4h4l3 4 1 6"/><circle cx="9" cy="20" r="1.4" fill="currentColor"/><circle cx="17" cy="20" r="1.4" fill="currentColor"/></svg>
+      <div style="font-weight:700;font-size:14px;color:#0F172A;margin-bottom:4px">Nenhuma corrida automática ainda</div>
+      <div style="font-size:12.5px">Elas aparecem aqui conforme o app detecta suas corridas em tempo real</div>
+    </div>`;
+    return;
+  }
+  listEl.innerHTML = list.map(autoTripItem).join('');
+}
+function fmtKmComp(real, offer) {
+  if (real==null && offer==null) return '—';
+  let s = real!=null ? (+real).toFixed(1)+' km' : '—';
+  if (offer!=null) s += ' (previsto: '+(+offer).toFixed(1)+' km)';
+  return s;
+}
+function fmtDurComp(realMin, offerMin) {
+  if (realMin==null && offerMin==null) return '—';
+  let s = realMin!=null ? fmtDur(realMin) : '—';
+  if (offerMin!=null) s += ' (previsto: '+fmtDur(offerMin)+')';
+  return s;
+}
+function autoTripItem(t) {
+  const plat = {uber:'Uber','99':'99'}[t.platform] || t.platform;
+  const dest = t.dest_address ? ' → '+esc(t.dest_address) : '';
+  const tid = 'ta'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+  const cashSvg = `<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M2 10h20" stroke="white" stroke-width="1.2" fill="none"/><path d="M2 17h20" stroke="white" stroke-width="1.2" fill="none"/><circle cx="12" cy="13" r="2.5" fill="white"/></svg>`;
+  const extras = [`<span class="chip chip-auto">Captura automática</span>`];
+  if (t.dinheiro) extras.push(`<span class="chip-icon chip-cash">${cashSvg}</span>`);
+  const statusCls = t.status==='confirmada' ? 'conf' : 'pend';
+  const statusTxt = t.status==='confirmada' ? 'Confirmada' : 'Aguardando revisão';
+  const kmTrip = t.real_km_trip!=null ? (+t.real_km_trip).toFixed(1)+' km' : (t.offer_km_trip!=null ? '~'+(+t.offer_km_trip).toFixed(1)+' km (previsto)' : '');
+  const realDurTrip = (t.trip_started_at && t.trip_ended_at) ? (new Date(t.trip_ended_at)-new Date(t.trip_started_at))/60000 : null;
+  const realDurPickup = (t.pickup_started_at && t.trip_started_at) ? (new Date(t.trip_started_at)-new Date(t.pickup_started_at))/60000 : null;
+  const offerDurMin = t.offer_duration_sec!=null ? t.offer_duration_sec/60 : null;
+  const detRows = [
+    `<div class="det-row"><span>Plataforma</span><strong>${plat}</strong></div>`,
+    t.passenger_name?`<div class="det-row"><span>Passageiro</span><strong>${esc(t.passenger_name)}</strong></div>`:'',
+    t.origin_address?`<div class="det-row"><span>Origem</span><strong>${esc(t.origin_address)}</strong></div>`:'',
+    t.dest_address?`<div class="det-row"><span>Destino</span><strong>${esc(t.dest_address)}</strong></div>`:'',
+    `<div class="det-row"><span>Km até buscar</span><strong>${fmtKmComp(t.real_km_pickup, t.offer_km_pickup)}</strong></div>`,
+    `<div class="det-row"><span>Km da corrida</span><strong>${fmtKmComp(t.real_km_trip, t.offer_km_trip)}</strong></div>`,
+    `<div class="det-row"><span>Tempo até buscar</span><strong>${fmtDurComp(realDurPickup, null)}</strong></div>`,
+    `<div class="det-row"><span>Tempo de corrida</span><strong>${fmtDurComp(realDurTrip, offerDurMin)}</strong></div>`,
+    t.offer_dinamico>0?`<div class="det-row"><span>Preço dinâmico</span><strong style="color:#F59E0B">+ ${DB.fR(t.offer_dinamico)}</strong></div>`:'',
+    `<div class="det-row"><span>Pagamento</span><strong>${t.dinheiro?'Dinheiro':'App'}</strong></div>`,
+    `<div class="det-row"><span>Status</span><strong>${statusTxt}</strong></div>`,
+  ].filter(Boolean).join('');
+  return `<div class="trip-item-wrap" id="tw-${tid}">
+    <div class="li-row" id="tr-${tid}" onclick="toggleTripDetail('${tid}')">
+      ${platIcon(t.platform)}
+      <div class="li-info"><h3 class="trip-title">${t.origin_address?esc(t.origin_address):'—'}${dest}</h3><p>${plat}${kmTrip?' · '+kmTrip:''}</p><div class="li-extra">${extras.join('')}</div></div>
+      <div class="li-val"><strong>${DB.fR(t.offer_value)}</strong><span class="auto-status ${statusCls}">${statusTxt}</span></div>
+    </div>
+    <div class="trip-detail-panel" id="td-${tid}" style="display:none">${detRows}</div>
+  </div>`;
 }
 function renderCorridas() {
   const dates = getCorridasDays().slice().sort().reverse(); // mais recente primeiro
