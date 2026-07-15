@@ -3262,19 +3262,25 @@ function autoTripItem(t) {
   if (t.dinheiro) extras.push(`<span class="chip-icon chip-cash">${cashSvg}</span>`);
   const statusCls = t.status==='confirmada' ? 'conf' : 'pend';
   const statusTxt = t.status==='confirmada' ? 'Confirmada' : 'Aguardando revisão';
-  const kmTrip = t.real_km_trip!=null ? (+t.real_km_trip).toFixed(1)+' km' : (t.offer_km_trip!=null ? '~'+(+t.offer_km_trip).toFixed(1)+' km (previsto)' : '');
   const realDurTrip = (t.trip_started_at && t.trip_ended_at) ? (new Date(t.trip_ended_at)-new Date(t.trip_started_at))/60000 : null;
   const realDurPickup = (t.pickup_started_at && t.trip_started_at) ? (new Date(t.trip_started_at)-new Date(t.pickup_started_at))/60000 : null;
-  const offerDurMin = t.offer_duration_sec!=null ? t.offer_duration_sec/60 : null;
+  const offerDurPickupMin = t.offer_duration_pickup_sec!=null ? t.offer_duration_pickup_sec/60 : null;
+  const offerDurTripMin = t.offer_duration_trip_sec!=null ? t.offer_duration_trip_sec/60 : null;
+  // Linha de baixo do card: km + tempo até o destino (real se já tiver rodado, senão o previsto da oferta)
+  const kmDestVal = t.real_km_trip!=null ? t.real_km_trip : t.offer_km_trip;
+  const kmDestTxt = kmDestVal!=null ? (t.real_km_trip==null?'~':'')+(+kmDestVal).toFixed(1)+' km' : '';
+  const durDestVal = realDurTrip!=null ? realDurTrip : offerDurTripMin;
+  const durDestTxt = durDestVal!=null ? ' · '+fmtDur(durDestVal) : '';
+  const subLine = `${plat}${kmDestTxt?' · '+kmDestTxt:''}${durDestTxt}`;
   const detRows = [
     `<div class="det-row"><span>Plataforma</span><strong>${plat}</strong></div>`,
     t.passenger_name?`<div class="det-row"><span>Passageiro</span><strong>${esc(t.passenger_name)}</strong></div>`:'',
     t.origin_address?`<div class="det-row"><span>Origem</span><strong>${esc(t.origin_address)}</strong></div>`:'',
     t.dest_address?`<div class="det-row"><span>Destino</span><strong>${esc(t.dest_address)}</strong></div>`:'',
     `<div class="det-row"><span>Km até buscar</span><strong>${fmtKmComp(t.real_km_pickup, t.offer_km_pickup)}</strong></div>`,
+    `<div class="det-row"><span>Tempo até buscar</span><strong>${fmtDurComp(realDurPickup, offerDurPickupMin)}</strong></div>`,
     `<div class="det-row"><span>Km da corrida</span><strong>${fmtKmComp(t.real_km_trip, t.offer_km_trip)}</strong></div>`,
-    `<div class="det-row"><span>Tempo até buscar</span><strong>${fmtDurComp(realDurPickup, null)}</strong></div>`,
-    `<div class="det-row"><span>Tempo de corrida</span><strong>${fmtDurComp(realDurTrip, offerDurMin)}</strong></div>`,
+    `<div class="det-row"><span>Tempo de corrida</span><strong>${fmtDurComp(realDurTrip, offerDurTripMin)}</strong></div>`,
     t.offer_dinamico>0?`<div class="det-row"><span>Preço dinâmico</span><strong style="color:#F59E0B">+ ${DB.fR(t.offer_dinamico)}</strong></div>`:'',
     `<div class="det-row"><span>Pagamento</span><strong>${t.dinheiro?'Dinheiro':'App'}</strong></div>`,
     `<div class="det-row"><span>Status</span><strong>${statusTxt}</strong></div>`,
@@ -3282,7 +3288,7 @@ function autoTripItem(t) {
   return `<div class="trip-item-wrap" id="tw-${tid}">
     <div class="li-row" id="tr-${tid}" onclick="toggleTripDetail('${tid}')">
       ${platIcon(t.platform)}
-      <div class="li-info"><h3 class="trip-title">${t.origin_address?esc(t.origin_address):'—'}${dest}</h3><p>${plat}${kmTrip?' · '+kmTrip:''}</p><div class="li-extra">${extras.join('')}</div></div>
+      <div class="li-info"><h3 class="trip-title">${t.origin_address?esc(t.origin_address):'—'}${dest}</h3><p>${subLine}</p><div class="li-extra">${extras.join('')}</div></div>
       <div class="li-val"><strong>${DB.fR(t.offer_value)}</strong><span class="auto-status ${statusCls}">${statusTxt}</span></div>
     </div>
     <div class="trip-detail-panel" id="td-${tid}" style="display:none">${detRows}</div>
