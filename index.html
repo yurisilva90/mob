@@ -8810,6 +8810,24 @@ async function _flashEnderecoRun(q) {
     box.innerHTML = '<div style="padding:10px 12px;font-size:11.5px;color:#94A3B8">Sem conexão — aperte + pra adicionar do jeito que digitou.</div>';
   }
 }
+// BUG CONFIRMADO (17/07/2026): endereço só era salvo quando o assistente
+// inteiro era concluído (botão final "Salvar configurações" no passo 2).
+// O "Pronto" da tela de endereço só volta pra lista — não salva nada. Se a
+// pessoa adicionava um endereço e fechava o modal (X) sem passar pelo
+// passo final, o endereço sumia. Agora qualquer mexida na lista grava na
+// hora, sem depender do resto do assistente.
+function _flashPersistNow() {
+  const cfg = DB.cfg();
+  cfg.flashReader = {
+    enabled: flashDraft.enabled,
+    kpis: JSON.parse(JSON.stringify(flashDraft.kpis)),
+    recusas: JSON.parse(JSON.stringify(flashDraft.recusas))
+  };
+  DB.saveCfg(cfg);
+  SYNC.pushSettings();
+  syncFlashConfigToNative();
+}
+
 function flashEnderecoAddSuggestion(text) {
   const list = flashDraft.recusas.endereco.list;
   if (!list.some(a => a.toLowerCase() === text.toLowerCase())) list.push(text);
@@ -8817,6 +8835,7 @@ function flashEnderecoAddSuggestion(text) {
   inp.value = '';
   document.getElementById('flash-endereco-suggestions').style.display = 'none';
   renderFlashEnderecos();
+  _flashPersistNow();
 }
 
 function flashOpenEnderecos() {
@@ -8837,10 +8856,12 @@ function flashEnderecoAdd() {
   inp.value = '';
   document.getElementById('flash-endereco-suggestions').style.display = 'none';
   renderFlashEnderecos();
+  _flashPersistNow();
 }
 function flashEnderecoRemove(i) {
   flashDraft.recusas.endereco.list.splice(i, 1);
   renderFlashEnderecos();
+  _flashPersistNow();
 }
 function flashEnderecosClose() {
   _flashWizardShowStep(1);
