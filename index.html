@@ -8399,7 +8399,10 @@ async function _flashLoadDraft() {
     if (d.type === 'list') {
       flashDraft.recusas[d.key] = {
         enabled: s.enabled !== undefined ? s.enabled : def.enabled,
-        list: Array.isArray(s.list) ? s.list.slice() : def.list.slice()
+        // PEDIDO (17/07/2026): cada item agora é {label, type:'rua'|'bairro'}
+        // pra dar pra mostrar a tag na lista — normaliza entradas antigas
+        // (string solta, de antes dessa mudança) na hora de carregar.
+        list: Array.isArray(s.list) ? s.list.map(_flashNormEnderecoItem).filter(Boolean) : def.list.slice()
       };
     } else {
       flashDraft.recusas[d.key] = {
@@ -8741,6 +8744,17 @@ function flashRecusaNumClose() {
 }
 
 // ── Endereço recusado — embarque OU destino (pedido explícito) ──
+// Adivinha rua x bairro pra endereço digitado manualmente (sem dado
+// estruturado do Nominatim pra confiar) — olha o prefixo comum de rua.
+function _flashGuessType(label) {
+  return /^(rua|r\.|av|av\.|avenida|travessa|estrada|alameda|rodovia|rod\.|praça|praca|largo)\s/i.test((label || '').trim()) ? 'rua' : 'bairro';
+}
+function _flashNormEnderecoItem(x) {
+  if (typeof x === 'string') return x.trim() ? { label: x.trim(), type: _flashGuessType(x) } : null;
+  if (x && typeof x === 'object' && x.label) return { label: x.label, type: x.type === 'rua' ? 'rua' : (x.type === 'bairro' ? 'bairro' : _flashGuessType(x.label)) };
+  return null;
+}
+
 function renderFlashEnderecos() {
   const list = flashDraft.recusas.endereco.list;
   const wrap = document.getElementById('flash-enderecos-list');
@@ -8748,10 +8762,13 @@ function renderFlashEnderecos() {
     wrap.innerHTML = '<div style="color:#94A3B8;font-size:12px;padding:10px 0">Nenhum endereço bloqueado ainda.</div>';
     return;
   }
-  wrap.innerHTML = list.map((addr, i) => `
-    <div style="display:flex;align-items:center;justify-content:space-between;background:#FEF2F2;border-radius:12px;padding:9px 12px;margin-bottom:6px">
-      <span style="font-size:12.5px;color:#7F1D1D;font-weight:600">${addr}</span>
-      <button onclick="flashEnderecoRemove(${i})" style="background:none;border:0;color:#DC2626;font-size:16px;font-weight:800;padding:0 4px">&#215;</button>
+  wrap.innerHTML = list.map((item, i) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;background:#FEF2F2;border-radius:12px;padding:9px 12px;margin-bottom:6px;gap:8px">
+      <div style="display:flex;align-items:center;gap:7px;min-width:0">
+        <span style="flex-shrink:0;font-size:8.5px;font-weight:800;letter-spacing:.03em;color:#fff;background:${item.type === 'rua' ? '#0A2F6B' : '#B91C1C'};border-radius:5px;padding:2px 6px">${item.type === 'rua' ? 'RUA' : 'BAIRRO'}</span>
+        <span style="font-size:12.5px;color:#7F1D1D;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.label}</span>
+      </div>
+      <button onclick="flashEnderecoRemove(${i})" style="background:none;border:0;color:#DC2626;font-size:16px;font-weight:800;padding:0 4px;flex-shrink:0">&#215;</button>
     </div>`).join('');
 }
 
@@ -8782,6 +8799,35 @@ async function flashEnderecoSearch(query) {
   if (q.length < 3) { box.style.display = 'none'; box.innerHTML = ''; return; }
   _flashEnderecoDebounce = setTimeout(() => _flashEnderecoRun(q), 450);
 }
+// PEDIDO (17/07/2026): endereço limpo — sem CEP, sem "Brasil", sem
+// "Região X", estado abreviado (RJ, não "Rio de Janeiro"). A ordem importa:
+// quando o resultado é uma RUA, a rua vem primeiro; quando é um BAIRRO
+// (sem rua nenhuma no resultado), o bairro vem primeiro. O nativo compara
+// só esse primeiro pedaço (antes da primeira vírgula) com o endereço da
+// oferta — então rua compara com rua, bairro compara com bairro, os dois
+// tipos convivem na mesma lista sem se atrapalhar.
+const _BR_ESTADOS = {
+  'acre':'AC','alagoas':'AL','amapá':'AP','amapa':'AP','amazonas':'AM','bahia':'BA','ceará':'CE','ceara':'CE',
+  'distrito federal':'DF','espírito santo':'ES','espirito santo':'ES','goiás':'GO','goias':'GO','maranhão':'MA','maranhao':'MA',
+  'mato grosso':'MT','mato grosso do sul':'MS','minas gerais':'MG','pará':'PA','para':'PA','paraíba':'PB','paraiba':'PB',
+  'paraná':'PR','parana':'PR','pernambuco':'PE','piauí':'PI','piaui':'PI','rio de janeiro':'RJ',
+  'rio grande do norte':'RN','rio grande do sul':'RS','rondônia':'RO','rondonia':'RO','roraima':'RR',
+  'santa catarina':'SC','são paulo':'SP','sao paulo':'SP','sergipe':'SE','tocantins':'TO'
+};
+function _flashBuildLabel(d) {
+  const a = d.address || {};
+  const isRua = !!(a.road || a.pedestrian);
+  const primary = a.road || a.pedestrian || a.suburb || a.neighbourhood || a.village || a.town || (d.display_name || '').split(',')[0].trim();
+  const bairro = a.suburb || a.neighbourhood || '';
+  const cidade = a.city || a.town || a.municipality || '';
+  const estado = _BR_ESTADOS[(a.state || '').toLowerCase()] || '';
+  const parts = [primary];
+  if (bairro && bairro !== primary) parts.push(bairro);
+  if (cidade && cidade !== primary) parts.push(cidade);
+  if (estado) parts.push(estado);
+  return { label: parts.filter(Boolean).join(', '), type: isRua ? 'rua' : 'bairro' };
+}
+
 async function _flashEnderecoRun(q) {
   const box = document.getElementById('flash-endereco-suggestions');
   // Ainda é a busca mais recente? (evita resultado velho chegar atrasado
@@ -8791,7 +8837,7 @@ async function _flashEnderecoRun(q) {
   box.style.display = ''; box.innerHTML = '<div style="padding:10px 12px;font-size:11.5px;color:#94A3B8">Buscando…</div>';
   try {
     await _nominatimThrottle();
-    let url = "https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=br&q=" + encodeURIComponent(q);
+    let url = "https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&countrycodes=br&q=" + encodeURIComponent(q);
     if (_flashGeoPos) {
       const d = 0.35; // ~35km de raio de preferência
       url += `&viewbox=${_flashGeoPos.lon-d},${_flashGeoPos.lat+d},${_flashGeoPos.lon+d},${_flashGeoPos.lat-d}&bounded=0`;
@@ -8803,8 +8849,18 @@ async function _flashEnderecoRun(q) {
       box.innerHTML = '<div style="padding:10px 12px;font-size:11.5px;color:#94A3B8">Nada encontrado — aperte + pra adicionar do jeito que digitou.</div>';
       return;
     }
-    box.innerHTML = data.map(d => `
-      <div onclick="flashEnderecoAddSuggestion('${d.display_name.replace(/'/g, "\\'")}')" style="padding:10px 12px;border-bottom:1px solid #F8FAFC;font-size:12px;color:#0F172A;font-weight:600">${d.display_name}</div>
+    // Remove duplicata (bairro pesquisado em rua+cidade diferentes às vezes
+    // volta repetido do Nominatim com o mesmo rótulo limpo).
+    const seen = new Set();
+    const labeled = data.map(d => _flashBuildLabel(d)).filter(x => {
+      const k = x.label.toLowerCase();
+      if (seen.has(k)) return false;
+      seen.add(k); return true;
+    });
+    box.innerHTML = labeled.map(x => `
+      <div onclick="flashEnderecoAddSuggestion('${x.label.replace(/'/g, "\\'")}','${x.type}')" style="padding:10px 12px;border-bottom:1px solid #F8FAFC;font-size:12px;color:#0F172A;font-weight:600">
+        <span style="font-size:8px;font-weight:800;color:${x.type === 'rua' ? '#0A2F6B' : '#B91C1C'};margin-right:5px">${x.type === 'rua' ? 'RUA' : 'BAIRRO'}</span>${x.label}
+      </div>
     `).join('');
   } catch (e) {
     box.innerHTML = '<div style="padding:10px 12px;font-size:11.5px;color:#94A3B8">Sem conexão — aperte + pra adicionar do jeito que digitou.</div>';
@@ -8828,9 +8884,9 @@ function _flashPersistNow() {
   syncFlashConfigToNative();
 }
 
-function flashEnderecoAddSuggestion(text) {
+function flashEnderecoAddSuggestion(text, type) {
   const list = flashDraft.recusas.endereco.list;
-  if (!list.some(a => a.toLowerCase() === text.toLowerCase())) list.push(text);
+  if (!list.some(a => a.label.toLowerCase() === text.toLowerCase())) list.push({ label: text, type: type === 'rua' ? 'rua' : 'bairro' });
   const inp = document.getElementById('flash-endereco-input');
   inp.value = '';
   document.getElementById('flash-endereco-suggestions').style.display = 'none';
@@ -8852,7 +8908,9 @@ function flashEnderecoAdd() {
   const v = inp.value.trim();
   if (!v) return;
   const list = flashDraft.recusas.endereco.list;
-  if (!list.some(a => a.toLowerCase() === v.toLowerCase())) list.push(v);
+  // Sem dado estruturado (digitado na mão) — adivinha pelo prefixo comum
+  // de rua ("Rua ", "Av ", etc); sem prefixo reconhecido, assume bairro.
+  if (!list.some(a => a.label.toLowerCase() === v.toLowerCase())) list.push({ label: v, type: _flashGuessType(v) });
   inp.value = '';
   document.getElementById('flash-endereco-suggestions').style.display = 'none';
   renderFlashEnderecos();
