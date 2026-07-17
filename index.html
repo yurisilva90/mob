@@ -2240,7 +2240,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
     </div>
 
     <!-- Tela de endereço recusado — embarque OU destino -->
-    <div id="flash-enderecos" style="display:none">
+    <div id="flash-enderecos" style="display:none;flex-direction:column;min-height:72vh">
       <div class="sheet-head">
         <button style="font-size:12px;color:#94A3B8;font-weight:700;background:none;border:0;padding:0" onclick="flashEnderecosClose()">&#8249; Voltar</button>
         <button class="xbtn" onclick="closeMo('mo-flash')">&#x2715;</button>
@@ -2248,13 +2248,16 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <h3 style="font-family:var(--font-brand);font-size:15px;font-weight:800;color:#0F172A;margin:6px 0 4px">Endereço recusado</h3>
       <div style="font-size:12px;color:#64748B;line-height:1.5;margin-bottom:14px">Corridas com <b>embarque ou destino</b> nesses locais são recusadas automaticamente.</div>
 
-      <div id="flash-enderecos-list" style="margin-bottom:12px"></div>
-
       <div style="display:flex;gap:6px">
-        <input id="flash-endereco-input" placeholder="Bairro ou rua…" style="flex:1;border:1px solid #E2E8F0;border-radius:12px;padding:10px 12px;font-size:12.5px;font:inherit" onkeydown="if(event.key==='Enter'){flashEnderecoAdd();}">
+        <input id="flash-endereco-input" placeholder="Bairro ou rua…" autocomplete="off" style="flex:1;border:1.5px solid #0A2F6B;border-radius:12px;padding:10px 12px;font-size:12.5px;font:inherit" oninput="flashEnderecoSearch(this.value)" onkeydown="if(event.key==='Enter'){flashEnderecoAdd();}">
         <button onclick="flashEnderecoAdd()" style="background:#0A2F6B;color:#fff;border:0;border-radius:12px;padding:0 18px;font-weight:800;font-size:15px">+</button>
       </div>
+      <div id="flash-endereco-suggestions" style="display:none;background:#fff;border:1px solid #E2E8F0;border-radius:12px;margin-top:6px;overflow:hidden;box-shadow:0 6px 18px rgba(15,23,42,.08)"></div>
 
+      <div style="font-size:11px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.05em;margin:18px 0 8px">Bloqueados</div>
+      <div id="flash-enderecos-list" style="margin-bottom:12px"></div>
+
+      <div style="flex:1"></div>
       <button class="btn-p" style="margin-top:20px" onclick="flashEnderecosClose()">Pronto</button>
     </div>
 
@@ -8751,13 +8754,79 @@ function renderFlashEnderecos() {
       <button onclick="flashEnderecoRemove(${i})" style="background:none;border:0;color:#DC2626;font-size:16px;font-weight:800;padding:0 4px">&#215;</button>
     </div>`).join('');
 }
+
+// PEDIDO (17/07/2026): sugestão de endereço enquanto digita, priorizando a
+// localidade onde o motorista está agora (Nominatim — mesma fonte já usada
+// nos Informes; não existe um banco de endereços próprio dos Informes, só
+// uma lista fixa de bares/hotéis). Pega a posição 1x por sessão (não fica
+// pedindo GPS de novo a cada letra) e usa como viewbox de preferência —
+// "bounded=0" significa que prioriza perto, mas não exclui resultado longe
+// se não achar nada próximo.
+let _flashGeoPos = null;
+let _flashGeoTried = false;
+function _flashGeoFetch() {
+  if (_flashGeoTried || !navigator.geolocation) return;
+  _flashGeoTried = true;
+  navigator.geolocation.getCurrentPosition(
+    pos => { _flashGeoPos = { lat: pos.coords.latitude, lon: pos.coords.longitude }; },
+    () => {}, // sem permissão/sem sinal — segue sem bias, busca ainda funciona
+    { enableHighAccuracy: false, maximumAge: 600000, timeout: 8000 }
+  );
+}
+
+let _flashEnderecoDebounce = null;
+async function flashEnderecoSearch(query) {
+  const q = query.trim();
+  const box = document.getElementById('flash-endereco-suggestions');
+  if (_flashEnderecoDebounce) clearTimeout(_flashEnderecoDebounce);
+  if (q.length < 3) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  _flashEnderecoDebounce = setTimeout(() => _flashEnderecoRun(q), 450);
+}
+async function _flashEnderecoRun(q) {
+  const box = document.getElementById('flash-endereco-suggestions');
+  // Ainda é a busca mais recente? (evita resultado velho chegar atrasado
+  // e substituir o que já foi digitado depois)
+  const inp = document.getElementById('flash-endereco-input');
+  if (!inp || inp.value.trim() !== q) return;
+  box.style.display = ''; box.innerHTML = '<div style="padding:10px 12px;font-size:11.5px;color:#94A3B8">Buscando…</div>';
+  try {
+    await _nominatimThrottle();
+    let url = "https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=br&q=" + encodeURIComponent(q);
+    if (_flashGeoPos) {
+      const d = 0.35; // ~35km de raio de preferência
+      url += `&viewbox=${_flashGeoPos.lon-d},${_flashGeoPos.lat+d},${_flashGeoPos.lon+d},${_flashGeoPos.lat-d}&bounded=0`;
+    }
+    const r = await fetch(url, { headers: { "Accept-Language": "pt-BR" } });
+    const data = await r.json();
+    if (!inp || inp.value.trim() !== q) return; // digitou algo novo enquanto esperava
+    if (!data || !data.length) {
+      box.innerHTML = '<div style="padding:10px 12px;font-size:11.5px;color:#94A3B8">Nada encontrado — aperte + pra adicionar do jeito que digitou.</div>';
+      return;
+    }
+    box.innerHTML = data.map(d => `
+      <div onclick="flashEnderecoAddSuggestion('${d.display_name.replace(/'/g, "\\'")}')" style="padding:10px 12px;border-bottom:1px solid #F8FAFC;font-size:12px;color:#0F172A;font-weight:600">${d.display_name}</div>
+    `).join('');
+  } catch (e) {
+    box.innerHTML = '<div style="padding:10px 12px;font-size:11.5px;color:#94A3B8">Sem conexão — aperte + pra adicionar do jeito que digitou.</div>';
+  }
+}
+function flashEnderecoAddSuggestion(text) {
+  const list = flashDraft.recusas.endereco.list;
+  if (!list.some(a => a.toLowerCase() === text.toLowerCase())) list.push(text);
+  const inp = document.getElementById('flash-endereco-input');
+  inp.value = '';
+  document.getElementById('flash-endereco-suggestions').style.display = 'none';
+  renderFlashEnderecos();
+}
+
 function flashOpenEnderecos() {
   renderFlashEnderecos();
+  _flashGeoFetch();
   document.getElementById('flash-step1').style.display = 'none';
   document.getElementById('flash-step2').style.display = 'none';
   document.getElementById('flash-ruler').style.display = 'none';
   document.getElementById('flash-recusa-num').style.display = 'none';
-  document.getElementById('flash-enderecos').style.display = '';
+  document.getElementById('flash-enderecos').style.display = 'flex';
 }
 function flashEnderecoAdd() {
   const inp = document.getElementById('flash-endereco-input');
@@ -8766,6 +8835,7 @@ function flashEnderecoAdd() {
   const list = flashDraft.recusas.endereco.list;
   if (!list.some(a => a.toLowerCase() === v.toLowerCase())) list.push(v);
   inp.value = '';
+  document.getElementById('flash-endereco-suggestions').style.display = 'none';
   renderFlashEnderecos();
 }
 function flashEnderecoRemove(i) {
