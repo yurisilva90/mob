@@ -2123,20 +2123,25 @@ h1.hd-title{font-family:var(--font-brand)!important}
   <div class="sheet" style="max-width:420px">
     <div class="sheet-handle"></div>
 
-    <!-- PASSO 1 — Métricas -->
+    <!-- PASSO 1 — Indicadores e Recusas -->
     <div id="flash-step1">
       <div class="sheet-head">
         <div>
           <div id="flash-step1-tag" style="font-size:11px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.04em">Passo 1 de 2</div>
-          <h2>Escolha as métricas</h2>
+          <h2>MōB Flash</h2>
         </div>
         <button class="xbtn" onclick="closeMo('mo-flash')">&#x2715;</button>
       </div>
-      <div style="font-size:12px;color:#64748B;line-height:1.5;margin-bottom:14px">O card mostra até 4 métricas de uma vez. Escolha quais aparecem quando uma oferta chegar.</div>
+      <div style="font-size:12px;color:#64748B;line-height:1.5;margin-bottom:14px">O card mostra até 4 indicadores quando a oferta chega. As recusas funcionam sozinhas — mesmo que os indicadores estejam bons.</div>
 
       <div id="flash-preview-wrap" style="background:#111318;border-radius:14px;padding:16px 10px;display:flex;justify-content:center;margin-bottom:14px"></div>
 
+      <div style="font-size:11px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.06em;margin:4px 0 2px 2px">Indicadores</div>
       <div id="flash-kpi-list"></div>
+
+      <div style="font-size:11px;font-weight:800;color:#DC2626;text-transform:uppercase;letter-spacing:.06em;margin:18px 0 2px 2px">Recusas</div>
+      <div style="font-size:11px;color:#94A3B8;margin:0 0 6px 2px;line-height:1.4">Recusa a corrida sozinho e avisa o motivo no card e no áudio.</div>
+      <div id="flash-recusa-list"></div>
 
       <button class="btn-p" style="margin-top:14px" onclick="flashWizardNext()">Avançar &#8594;</button>
       <button id="flash-skip1" class="xbtn" style="display:none;width:100%;text-align:center;font-size:12.5px;color:#64748B;font-weight:700;margin-top:12px;background:none;border:0;padding:8px;text-decoration:underline;height:auto" onclick="flashWizardSkip()">Pular tudo, iniciar sem o Flash</button>
@@ -2209,7 +2214,51 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <button class="btn-p" onclick="flashRulerClose()">Pronto</button>
     </div>
 
-    <div style="font-size:11px;color:#94A3B8;text-align:center;margin-top:10px;line-height:1.5">Nota do passageiro é experimental. Os outros KPIs usam o valor/km/min já lidos hoje + seu custo/km cadastrado em Financeiro.</div>
+    <!-- Painel de valor único — recusas numéricas (nota/passageiro novo/distância) -->
+    <div id="flash-recusa-num" style="display:none">
+      <div class="sheet-head">
+        <button style="font-size:12px;color:#94A3B8;font-weight:700;background:none;border:0;padding:0" onclick="flashRecusaNumClose()">&#8249; Voltar</button>
+        <button class="xbtn" onclick="closeMo('mo-flash')">&#x2715;</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:9px;margin:6px 0 4px">
+        <span id="flash-recusa-num-ico" style="width:26px;height:26px;border-radius:8px;background:#FEF2F2;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#DC2626"></span>
+        <h3 id="flash-recusa-num-title" style="font-family:var(--font-brand);font-size:15px;font-weight:800;color:#0F172A"></h3>
+      </div>
+      <div id="flash-recusa-num-phrase" style="font-size:12.5px;color:#DC2626;font-weight:700;background:#FEF2F2;border-radius:12px;padding:10px 12px;margin:10px 0 24px;line-height:1.5"></div>
+
+      <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:18px">
+        <button onclick="flashRecusaNumStep(-1)" style="width:42px;height:42px;border-radius:50%;background:#F1F5F9;border:0;font-size:20px;font-weight:800;color:#0A2F6B">&#8722;</button>
+        <div style="min-width:96px;text-align:center">
+          <div id="flash-recusa-num-val" style="font-family:var(--font-brand);font-size:32px;font-weight:800;color:#0F172A"></div>
+          <div id="flash-recusa-num-unit" style="font-size:11px;color:#94A3B8;font-weight:700;text-transform:uppercase;margin-top:2px"></div>
+        </div>
+        <button onclick="flashRecusaNumStep(1)" style="width:42px;height:42px;border-radius:50%;background:#F1F5F9;border:0;font-size:20px;font-weight:800;color:#0A2F6B">+</button>
+      </div>
+      <input id="flash-recusa-num-slider" type="range" style="width:100%;margin-bottom:26px;accent-color:#0A2F6B" oninput="flashRecusaNumFromSlider(this.value)">
+
+      <button class="btn-p" onclick="flashRecusaNumClose()">Pronto</button>
+    </div>
+
+    <!-- Tela de endereço recusado — embarque OU destino -->
+    <div id="flash-enderecos" style="display:none">
+      <div class="sheet-head">
+        <button style="font-size:12px;color:#94A3B8;font-weight:700;background:none;border:0;padding:0" onclick="flashEnderecosClose()">&#8249; Voltar</button>
+        <button class="xbtn" onclick="closeMo('mo-flash')">&#x2715;</button>
+      </div>
+      <h3 style="font-family:var(--font-brand);font-size:15px;font-weight:800;color:#0F172A;margin:6px 0 4px">Endereço recusado</h3>
+      <div style="font-size:12px;color:#64748B;line-height:1.5;margin-bottom:14px">Corridas com <b>embarque ou destino</b> nesses locais são recusadas automaticamente.</div>
+
+      <div id="flash-enderecos-list" style="margin-bottom:12px"></div>
+
+      <div style="display:flex;gap:6px">
+        <input id="flash-endereco-input" placeholder="Bairro ou rua…" style="flex:1;border:1px solid #E2E8F0;border-radius:12px;padding:10px 12px;font-size:12.5px;font:inherit" onkeydown="if(event.key==='Enter'){flashEnderecoAdd();}">
+        <button onclick="flashEnderecoAdd()" style="background:#0A2F6B;color:#fff;border:0;border-radius:12px;padding:0 18px;font-weight:800;font-size:15px">+</button>
+      </div>
+
+      <button class="btn-p" style="margin-top:20px" onclick="flashEnderecosClose()">Pronto</button>
+    </div>
+
+    <div style="font-size:11px;color:#94A3B8;text-align:center;margin-top:10px;line-height:1.5">Os indicadores usam o valor/km/min já lidos hoje + seu custo/km cadastrado em Financeiro.</div>
   </div>
 </div>
 
@@ -8276,24 +8325,53 @@ function onNativeReady() {
   syncFlashConfigToNative();
 }
 
-// ── MōB Flash: definição dos KPIs disponíveis pra escolher no card ──
+// ── MōB Flash: "Indicadores" que aparecem no card (números coloridos) ──
 const FLASH_KPI_DEFS = [
   { key:'rkm',    label:'R$ por km',          short:'R$/KM',   icon:'$',  defRed:1.2, defGreen:2.0 },
   { key:'rhora',  label:'R$ por hora',        short:'R$/HORA', icon:'\u23F1', defRed:25,  defGreen:45 },
   { key:'rmin',   label:'R$ por minuto',      short:'R$/MIN',  icon:'\u23F2', defRed:0.6, defGreen:1.0 },
-  { key:'nota',   label:'Nota do passageiro', short:'NOTA',    icon:'\u2605', defRed:4.5, defGreen:4.8, experimental:true },
   { key:'margem', label:'% Lucro',            short:'% LUCRO', icon:'%',  defRed:15,  defGreen:40 },
   { key:'lucro',  label:'Lucro em R$',        short:'R$ LUCRO',icon:'R$', defRed:5,   defGreen:15 },
 ];
-const FLASH_DEFAULT_ON = { rkm:true, rhora:true, rmin:false, nota:false, margem:true, lucro:true };
-const FLASH_PREVIEW_SAMPLE = { rkm:2.37, rhora:49, rmin:0.58, nota:4.92, margem:12, lucro:4 };
+const FLASH_DEFAULT_ON = { rkm:true, rhora:true, rmin:false, margem:true, lucro:true };
+const FLASH_PREVIEW_SAMPLE = { rkm:2.37, rhora:49, rmin:0.58, margem:12, lucro:4 };
+
+// ── MōB Flash: "Recusas" — regras que recusam a corrida sozinhas, mesmo
+// com os Indicadores financeiros bons. PEDIDO (16-17/07/2026): saiu do
+// grupo de KPIs pra virar sua própria seção, com frase explicando o
+// efeito de cada uma ("Recusar ... " em vez de "Recusa se ...").
+// "parada" é bool puro (sem valor numérico); os outros 3 numéricos
+// ("num") usam o mesmo painel de edição; "endereco" é lista (embarque
+// OU destino) e abre uma tela própria.
+const FLASH_RECUSA_DEFS = [
+  { key:'parada', label:'Corrida com parada extra', type:'bool',
+    icon:'\u26A0', phrase: () => 'Recusar corrida com parada extra' },
+  { key:'nota', label:'Nota do passageiro', type:'num', unit:'', step:0.1, min:1, max:5,
+    icon:'\u2605', phrase: v => `Recusar nota do passageiro abaixo de ${flashFmtNum(v)}` },
+  { key:'passageiroNovo', label:'Passageiro novo', type:'num', unit:'corridas', step:1, min:0, max:200,
+    icon:'#', phrase: v => `Recusar passageiro com menos de ${Math.round(v)} corridas` },
+  { key:'distancia', label:'Distância deslocamento', type:'num', unit:'km', step:0.5, min:0.5, max:30,
+    icon:'KM', phrase: v => `Recusar buscar com mais de ${flashFmtNum(v)} km` },
+  { key:'endereco', label:'Endereço recusado', type:'list',
+    icon:'\u2298', phrase: () => 'Recusar embarque ou destino em locais bloqueados' },
+];
+const FLASH_RECUSA_DEFAULT = {
+  parada:  { enabled:true },
+  nota:    { enabled:false, value:4.5 },
+  passageiroNovo: { enabled:true, value:5 },
+  distancia: { enabled:false, value:3.0 },
+  endereco:  { enabled:true, list:[] },
+};
+function flashFmtNum(v) { return (Math.round(v*10)/10).toString().replace('.', ','); }
 
 let flashDraft = null;
 
 function getFlashDefaults() {
   const kpis = {};
   FLASH_KPI_DEFS.forEach(d => { kpis[d.key] = { enabled: FLASH_DEFAULT_ON[d.key], red: d.defRed, green: d.defGreen }; });
-  return { enabled: true, kpis };
+  const recusas = {};
+  FLASH_RECUSA_DEFS.forEach(d => { recusas[d.key] = JSON.parse(JSON.stringify(FLASH_RECUSA_DEFAULT[d.key])); });
+  return { enabled: true, kpis, recusas };
 }
 
 // Carrega o draft (config salva + defaults) — usado tanto pelo "Mais > MōB
@@ -8303,7 +8381,7 @@ async function _flashLoadDraft() {
   const cfg = DB.cfg();
   const saved = cfg.flashReader;
   const defaults = getFlashDefaults();
-  flashDraft = { enabled: saved && saved.enabled !== undefined ? saved.enabled : defaults.enabled, kpis: {} };
+  flashDraft = { enabled: saved && saved.enabled !== undefined ? saved.enabled : defaults.enabled, kpis: {}, recusas: {} };
   FLASH_KPI_DEFS.forEach(d => {
     const s = (saved && saved.kpis && saved.kpis[d.key]) || {};
     flashDraft.kpis[d.key] = {
@@ -8311,6 +8389,21 @@ async function _flashLoadDraft() {
       red: s.red !== undefined ? s.red : defaults.kpis[d.key].red,
       green: s.green !== undefined ? s.green : defaults.kpis[d.key].green
     };
+  });
+  FLASH_RECUSA_DEFS.forEach(d => {
+    const s = (saved && saved.recusas && saved.recusas[d.key]) || {};
+    const def = defaults.recusas[d.key];
+    if (d.type === 'list') {
+      flashDraft.recusas[d.key] = {
+        enabled: s.enabled !== undefined ? s.enabled : def.enabled,
+        list: Array.isArray(s.list) ? s.list.slice() : def.list.slice()
+      };
+    } else {
+      flashDraft.recusas[d.key] = {
+        enabled: s.enabled !== undefined ? s.enabled : def.enabled,
+        value: s.value !== undefined ? s.value : def.value
+      };
+    }
   });
 }
 
@@ -8325,6 +8418,7 @@ async function openFlashConfig() {
   flashWizardOnComplete = null;
   _flashWizardShowStep(1);
   renderFlashKpiList();
+  renderFlashRecusaList();
   renderFlashPreview();
   renderFlashPerms();
   openMo('mo-flash');
@@ -8339,6 +8433,7 @@ async function openFlashWizardForJourney(onComplete) {
   flashWizardOnComplete = onComplete;
   _flashWizardShowStep(1);
   renderFlashKpiList();
+  renderFlashRecusaList();
   renderFlashPreview();
   renderFlashPerms();
   openMo('mo-flash');
@@ -8348,6 +8443,8 @@ function _flashWizardShowStep(n) {
   document.getElementById('flash-step1').style.display = n === 1 ? '' : 'none';
   document.getElementById('flash-step2').style.display = n === 2 ? '' : 'none';
   document.getElementById('flash-ruler').style.display = 'none';
+  document.getElementById('flash-recusa-num').style.display = 'none';
+  document.getElementById('flash-enderecos').style.display = 'none';
   // Pular só faz sentido quando tem uma jornada esperando pra iniciar —
   // no modo settings (Mais > MōB Flash) esses links somem.
   const skip1 = document.getElementById('flash-skip1');
@@ -8378,8 +8475,11 @@ function flashWizardSkip() {
 // startFlash=false → veio de um link de pular ("Iniciar sem o Flash").
 function flashWizardFinish(startFlash) {
   if (startFlash) {
-    const anyOn = Object.values(flashDraft.kpis).some(k => k.enabled);
-    flashDraft.enabled = anyOn; // sem nenhum KPI ligado não tem o que mostrar
+    // Card pode mostrar só a recusa (17/07/2026), sem indicador nenhum —
+    // então "tem algo pra mostrar" agora conta os dois grupos.
+    const anyOn = Object.values(flashDraft.kpis).some(k => k.enabled) ||
+                  Object.values(flashDraft.recusas).some(r => r.enabled);
+    flashDraft.enabled = anyOn;
   } else {
     flashDraft.enabled = false;
   }
@@ -8387,7 +8487,7 @@ function flashWizardFinish(startFlash) {
 }
 
 // ── Régua de limite vermelho/verde (substitui os dois campos de texto) ──
-const FLASH_RULER_BOUNDS = { rkm:[0,5], rhora:[0,100], rmin:[0,3], nota:[0,5], margem:[0,100], lucro:[0,50] };
+const FLASH_RULER_BOUNDS = { rkm:[0,5], rhora:[0,100], rmin:[0,3], margem:[0,100], lucro:[0,50] };
 let flashRulerKey = null;
 let flashRulerDrag = null; // 'red' | 'green' | null
 
@@ -8406,6 +8506,7 @@ function flashRulerClose() {
   flashRulerKey = null;
   _flashWizardShowStep(1); // régua só é aberta a partir do passo 1 (lista de KPIs)
   renderFlashKpiList();
+  renderFlashRecusaList();
   renderFlashPreview();
 }
 
@@ -8515,6 +8616,7 @@ function flashToggleKpi(key, el) {
   }
   flashDraft.kpis[key].enabled = el.checked;
   renderFlashKpiList();
+  renderFlashRecusaList();
   renderFlashPreview();
 }
 
@@ -8533,7 +8635,7 @@ function renderFlashKpiList() {
     <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #F1F5F9;gap:10px">
       <div style="display:flex;align-items:center;gap:9px;min-width:0">
         <span style="width:26px;height:26px;border-radius:8px;background:#F1F5F9;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#0A2F6B;flex-shrink:0">${d.icon}</span>
-        <span style="font-size:13.5px;font-weight:700;color:#0F172A;${on ? '' : 'opacity:.55'}">${d.label}${d.experimental ? ' <span style="font-size:9.5px;font-weight:800;color:#B45309;background:#FEF3C7;padding:2px 6px;border-radius:99px;margin-left:2px">BETA</span>' : ''}</span>
+        <span style="font-size:13.5px;font-weight:700;color:#0F172A;${on ? '' : 'opacity:.55'}">${d.label}</span>
       </div>
       <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
         <button ${on ? `onclick="flashOpenRuler('${d.key}')"` : 'disabled'} style="width:28px;height:28px;border-radius:8px;background:#F1F5F9;border:0;display:flex;align-items:center;justify-content:center;${on ? '' : 'opacity:.3'}">
@@ -8543,6 +8645,136 @@ function renderFlashKpiList() {
       </div>
     </div>`;
   }).join('');
+}
+
+// ── Recusas: linha de cada regra — bool (só toggle), numérica (chip +
+// lápis, mesmo ícone já usado nos Indicadores) ou lista (chevron abre
+// a tela de endereços). PEDIDO (17/07/2026): "Recusa se..." virou frase
+// completa ("Recusar buscar com + de X km" etc.) — cada def tem sua
+// própria phrase(valor) pra montar isso.
+function renderFlashRecusaList() {
+  const el = document.getElementById('flash-recusa-list');
+  el.innerHTML = FLASH_RECUSA_DEFS.map(d => {
+    const r = flashDraft.recusas[d.key];
+    const on = r.enabled;
+    const sub = on ? `<div style="font-size:11px;color:#94A3B8;margin-top:1px;line-height:1.35">${d.phrase(r.value)}</div>` : '';
+    let rightExtra = '';
+    if (d.type === 'num') {
+      rightExtra = `
+        <button ${on ? `onclick="flashOpenRecusaNum('${d.key}')"` : 'disabled'} style="width:28px;height:28px;border-radius:8px;background:#F1F5F9;border:0;display:flex;align-items:center;justify-content:center;${on ? '' : 'opacity:.3'}">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0A2F6B" stroke-width="2.2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </button>`;
+    } else if (d.type === 'list') {
+      const n = r.list.length;
+      rightExtra = `
+        <button ${on ? `onclick="flashOpenEnderecos()"` : 'disabled'} style="font-size:11px;font-weight:800;color:#94A3B8;background:none;border:0;padding:0 2px;display:flex;align-items:center;gap:2px;${on ? '' : 'opacity:.3'}">
+          ${n} &#8250;
+        </button>`;
+    }
+    return `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #F1F5F9;gap:10px">
+      <div style="display:flex;align-items:center;gap:9px;min-width:0">
+        <span style="width:26px;height:26px;border-radius:8px;background:#FEF2F2;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:900;color:#DC2626;flex-shrink:0">${d.icon}</span>
+        <div style="min-width:0">
+          <span style="font-size:13.5px;font-weight:700;color:#0F172A;${on ? '' : 'opacity:.55'}">${d.label}</span>
+          ${sub}
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+        ${rightExtra}
+        <label class="sw"><input type="checkbox" ${on ? 'checked' : ''} onchange="flashToggleRecusa('${d.key}',this)"><span class="trk"></span></label>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function flashToggleRecusa(key, el) {
+  flashDraft.recusas[key].enabled = el.checked;
+  renderFlashRecusaList();
+}
+
+// ── Editor de valor único (nota / passageiro novo / distância) ──
+let flashRecusaNumKey = null;
+function flashOpenRecusaNum(key) {
+  flashRecusaNumKey = key;
+  const d = FLASH_RECUSA_DEFS.find(x => x.key === key);
+  const r = flashDraft.recusas[key];
+  document.getElementById('flash-recusa-num-ico').textContent = d.icon;
+  document.getElementById('flash-recusa-num-title').textContent = d.label;
+  document.getElementById('flash-recusa-num-phrase').textContent = d.phrase(r.value);
+  document.getElementById('flash-recusa-num-unit').textContent = d.unit || '';
+  const slider = document.getElementById('flash-recusa-num-slider');
+  slider.min = d.min; slider.max = d.max; slider.step = d.step; slider.value = r.value;
+  _flashRecusaNumRender();
+  document.getElementById('flash-step1').style.display = 'none';
+  document.getElementById('flash-step2').style.display = 'none';
+  document.getElementById('flash-ruler').style.display = 'none';
+  document.getElementById('flash-enderecos').style.display = 'none';
+  document.getElementById('flash-recusa-num').style.display = '';
+}
+function _flashRecusaNumRender() {
+  const d = FLASH_RECUSA_DEFS.find(x => x.key === flashRecusaNumKey);
+  const r = flashDraft.recusas[flashRecusaNumKey];
+  document.getElementById('flash-recusa-num-val').textContent = flashFmtNum(r.value);
+  document.getElementById('flash-recusa-num-phrase').textContent = d.phrase(r.value);
+  document.getElementById('flash-recusa-num-slider').value = r.value;
+}
+function flashRecusaNumStep(dir) {
+  const d = FLASH_RECUSA_DEFS.find(x => x.key === flashRecusaNumKey);
+  const r = flashDraft.recusas[flashRecusaNumKey];
+  let v = Math.round((r.value + dir * d.step) / d.step) * d.step;
+  r.value = Math.min(d.max, Math.max(d.min, Math.round(v * 100) / 100));
+  _flashRecusaNumRender();
+}
+function flashRecusaNumFromSlider(val) {
+  const r = flashDraft.recusas[flashRecusaNumKey];
+  r.value = parseFloat(val);
+  _flashRecusaNumRender();
+}
+function flashRecusaNumClose() {
+  flashRecusaNumKey = null;
+  _flashWizardShowStep(1);
+  renderFlashRecusaList();
+}
+
+// ── Endereço recusado — embarque OU destino (pedido explícito) ──
+function renderFlashEnderecos() {
+  const list = flashDraft.recusas.endereco.list;
+  const wrap = document.getElementById('flash-enderecos-list');
+  if (!list.length) {
+    wrap.innerHTML = '<div style="color:#94A3B8;font-size:12px;padding:10px 0">Nenhum endereço bloqueado ainda.</div>';
+    return;
+  }
+  wrap.innerHTML = list.map((addr, i) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;background:#FEF2F2;border-radius:12px;padding:9px 12px;margin-bottom:6px">
+      <span style="font-size:12.5px;color:#7F1D1D;font-weight:600">${addr}</span>
+      <button onclick="flashEnderecoRemove(${i})" style="background:none;border:0;color:#DC2626;font-size:16px;font-weight:800;padding:0 4px">&#215;</button>
+    </div>`).join('');
+}
+function flashOpenEnderecos() {
+  renderFlashEnderecos();
+  document.getElementById('flash-step1').style.display = 'none';
+  document.getElementById('flash-step2').style.display = 'none';
+  document.getElementById('flash-ruler').style.display = 'none';
+  document.getElementById('flash-recusa-num').style.display = 'none';
+  document.getElementById('flash-enderecos').style.display = '';
+}
+function flashEnderecoAdd() {
+  const inp = document.getElementById('flash-endereco-input');
+  const v = inp.value.trim();
+  if (!v) return;
+  const list = flashDraft.recusas.endereco.list;
+  if (!list.some(a => a.toLowerCase() === v.toLowerCase())) list.push(v);
+  inp.value = '';
+  renderFlashEnderecos();
+}
+function flashEnderecoRemove(i) {
+  flashDraft.recusas.endereco.list.splice(i, 1);
+  renderFlashEnderecos();
+}
+function flashEnderecosClose() {
+  _flashWizardShowStep(1);
+  renderFlashRecusaList();
 }
 
 function flashGradeFor(key, v) {
@@ -8599,7 +8831,11 @@ function renderFlashPreview() {
 
 function flashConfigSave(fromWizard) {
   const cfg = DB.cfg();
-  cfg.flashReader = { enabled: flashDraft.enabled, kpis: JSON.parse(JSON.stringify(flashDraft.kpis)) };
+  cfg.flashReader = {
+    enabled: flashDraft.enabled,
+    kpis: JSON.parse(JSON.stringify(flashDraft.kpis)),
+    recusas: JSON.parse(JSON.stringify(flashDraft.recusas))
+  };
   DB.saveCfg(cfg);
   SYNC.pushSettings();
   syncFlashConfigToNative();
@@ -8616,13 +8852,30 @@ function flashConfigSave(fromWizard) {
 }
 
 // Manda pro nativo (TripReaderService) o custo/km configurado em Financeiro
-// + as métricas escolhidas na tela MōB Flash, pra ele montar o card real.
+// + os Indicadores + as Recusas escolhidas na tela MōB Flash.
 function syncFlashConfigToNative() {
   if (!window.SmartMobiNative || typeof SmartMobiNative.saveFlashConfig !== 'function') return;
   const cfg = DB.cfg();
   const fr = cfg.flashReader || getFlashDefaults();
   const custoPorKm = (cfg.custoVeiculo && cfg.custoVeiculo.configurado) ? (cfg.custoVeiculo.custoPorKm || 0) : 0;
-  const payload = { enabled: fr.enabled !== false, custoPorKm: custoPorKm, kpis: fr.kpis || getFlashDefaults().kpis };
+  const recusas = fr.recusas || getFlashDefaults().recusas;
+  // "parada" fica solto no topo (recusarComParada) — é assim que o Kotlin
+  // já lê desde a v1.0.69, antes do agrupamento "Recusas" existir. Os
+  // outros 4 (nota/passageiroNovo/distancia/endereco) vão aninhados em
+  // "recusas", com os mesmos nomes de campo que o Kotlin já espera
+  // (enabled/value/list).
+  const payload = {
+    enabled: fr.enabled !== false,
+    custoPorKm: custoPorKm,
+    kpis: fr.kpis || getFlashDefaults().kpis,
+    recusarComParada: recusas.parada ? recusas.parada.enabled : true,
+    recusas: {
+      nota: recusas.nota,
+      passageiroNovo: recusas.passageiroNovo,
+      distancia: recusas.distancia,
+      endereco: recusas.endereco
+    }
+  };
   try { SmartMobiNative.saveFlashConfig(JSON.stringify(payload)); } catch (e) {}
 }
 
