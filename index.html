@@ -1292,6 +1292,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <button class="pchip" id="cpb-mes" style="flex:1" onclick="setCorridasPeriod('mes')">Mês</button>
       <button class="pchip" id="cpb-tudo" style="flex:1" onclick="setCorridasPeriod('tudo')">Tudo</button>
       <button id="cor-date-btn" onclick="toggleCorDate()" title="Buscar por data" style="width:34px;min-width:34px;height:34px;flex-shrink:0;border-radius:10px;border:1.5px solid #E2E8F0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#475569" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></button>
+      <button id="cor-resync-btn" onclick="resyncCorridasFromCloud()" title="Recarregar da nuvem" style="width:34px;min-width:34px;height:34px;flex-shrink:0;border-radius:10px;border:1.5px solid #E2E8F0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#475569" stroke-width="2"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v6h-6"/></svg></button>
     </div>
     <input type="date" id="cor-date-input" onchange="setCorridasDate(this.value)" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none">
   </div>
@@ -3347,6 +3348,49 @@ function autoTripItem(t) {
     </div>
     <div class="trip-detail-panel" id="td-${tid}" style="display:none">${detRows}</div>
   </div>`;
+}
+// Corrige o caso em que uma corrida foi apagada direto no Supabase (ex:
+// correção manual) mas continua aparecendo no app: o pullAll() normal só
+// ADICIONA corridas da nuvem que faltam localmente, nunca remove do
+// localStorage uma corrida local que não existe mais na nuvem. Esse botão
+// força uma reconciliação explícita: para as datas visíveis na tela, o
+// localStorage passa a refletir EXATAMENTE o que está no Supabase agora.
+async function resyncCorridasFromCloud() {
+  if (!_supaUser) { showToast('Sem conexão com a nuvem.'); return; }
+  const dates = getCorridasDays().slice();
+  if (!dates.length) { showToast('Nenhuma data pra sincronizar.'); return; }
+  showConfirm('Recarregar corridas dessas datas direto da nuvem?\nIsso substitui as corridas salvas neste aparelho, pras datas visíveis, pelo que estiver no servidor agora.', async () => {
+    try {
+      const { data, error } = await _SUPA.from('trips').select('*').eq('user_id', _supaUser.id).in('date', dates);
+      if (error) throw error;
+      const byDate = {};
+      (data || []).forEach(t => {
+        (byDate[t.date] || (byDate[t.date] = [])).push({
+          id: t.id, platform: t.platform || 'uber', time: (t.time || '').slice(0, 5),
+          duration: t.duration || 0, origin: t.origin || '', dest: t.dest || '',
+          value: parseFloat(t.value) || 0, km: parseFloat(t.km) || 0,
+          category: t.category || '', surge: t.surge || false, airport: t.airport || false,
+          dinamico: parseFloat(t.dinamico) || 0, tip: parseFloat(t.tip) || 0,
+          dinheiro: t.dinheiro || false, pedagio: t.pedagio || false, pedagioValor: t.pedagio_valor || 0,
+          originFull: t.origin_full || t.origin || '', destFull: t.dest_full || t.dest || '',
+          serviceFee: t.service_fee ?? null, taxaZero: t.taxa_zero || false,
+          kmEstimado: t.km_estimado || false
+        });
+      });
+      dates.forEach(d => {
+        const day = DB.day(d);
+        day.trips = byDate[d] || [];
+        DB.saveDay(day);
+      });
+      renderCorridasActive();
+      if (S.sec === 'jornada') renderJornada();
+      if (S.sec === 'home') renderHome();
+      showToast('Corridas recarregadas da nuvem.');
+    } catch (e) {
+      console.error('resyncCorridasFromCloud', e);
+      showToast('Erro ao recarregar da nuvem.');
+    }
+  }, { confirmLabel: 'Recarregar' });
 }
 function renderCorridas() {
   const dates = getCorridasDays().slice().sort().reverse(); // mais recente primeiro
