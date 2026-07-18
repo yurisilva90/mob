@@ -5150,6 +5150,47 @@ async function processImportBatch(images, videos, plat) {
   }
   flushDetail(); // fragmento de detalhe que ficou aberto no fim do vídeo
 
+  // Resolve conflitos de horário: a regra pedida pra IA é "cada horário =
+  // uma corrida só", mas o dedup acima só barra repetição idêntica
+  // (mesmo horário E mesmo valor) — se o mesmo horário veio com valores
+  // DIFERENTES em frames diferentes (mistura de cartão vizinho num frame
+  // só), os dois passavam pra lista como corridas separadas, inflando a
+  // contagem e o total. Aqui, pra cada (plataforma, horário), fica só a
+  // leitura de valor que mais se repetiu entre os frames — a leitura
+  // certa tende a se confirmar igual em vários frames seguidos (o vídeo
+  // se sobrepõe), enquanto uma leitura errada por mistura de cartão
+  // costuma aparecer uma vez só.
+  function resolveTimeConflicts(list) {
+    const groups = new Map();
+    list.forEach(t => {
+      const k = (t.platform || '') + '_' + t.time;
+      (groups.get(k) || groups.set(k, []).get(k)).push(t);
+    });
+    const resolved = [];
+    groups.forEach(items => {
+      if (items.length === 1) { resolved.push(items[0]); return; }
+      const byValue = new Map();
+      items.forEach(t => {
+        const vk = (t.value || 0).toFixed(2);
+        (byValue.get(vk) || byValue.set(vk, []).get(vk)).push(t);
+      });
+      let best = null;
+      byValue.forEach(arr => { if (!best || arr.length > best.length) best = arr; });
+      // dentro do grupo vencedor, prefere o item com endereço mais completo
+      let rep = best[0];
+      best.forEach(t => {
+        const len = (t.originFull || '').length + (t.destFull || '').length;
+        const repLen = (rep.originFull || '').length + (rep.destFull || '').length;
+        if (len > repLen) rep = t;
+      });
+      resolved.push(rep);
+    });
+    return resolved;
+  }
+  const resolvedUnique = resolveTimeConflicts(unique);
+  unique.length = 0;
+  unique.push(...resolvedUnique);
+
   // Funde os detalhes nas corridas da lista — SÓ completa km/tempo/endereço
   // de uma corrida que a LISTA já confirmou (com valor de verdade). Nunca
   // cria corrida nova a partir de detalhe sozinho: sem valor, não tem como
@@ -5348,9 +5389,10 @@ async function extractVideoFrames(file) {
         return;
       }
 
-      const INTERVAL = 1; // frame every 1 second — tela de detalhe da 99 tem
-      // scroll longo (valor→duração/distância→nome/endereço), precisa de
-      // mais densidade pra capturar as partes em frames diferentes
+      const INTERVAL = 0.6; // frame a cada 0.6s (era 1s) — menos distância de
+      // rolagem entre frames reduz a chance de misturar campos de cartões
+      // vizinhos, e dá mais leituras repetidas por corrida real pra
+      // resolveTimeConflicts() escolher a leitura certa por maioria
       const times = [];
       for (let t = 0.5; t < duration; t += INTERVAL) times.push(parseFloat(t.toFixed(2)));
       if (!times.length) times.push(0);
