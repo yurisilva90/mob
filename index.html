@@ -3350,42 +3350,20 @@ function autoTripItem(t) {
   </div>`;
 }
 // Corrige o caso em que uma corrida foi apagada direto no Supabase (ex:
-// correção manual) mas continua aparecendo no app: o pullAll() normal só
-// ADICIONA corridas da nuvem que faltam localmente, nunca remove do
-// localStorage uma corrida local que não existe mais na nuvem. Esse botão
-// força uma reconciliação explícita: para as datas visíveis na tela, o
-// localStorage passa a refletir EXATAMENTE o que está no Supabase agora.
+// correção manual) mas continua aparecendo no app. Desde que o pullAll()
+// passou a reconciliar automaticamente (removendo local o que já foi
+// confirmado sincronizado antes e sumiu da nuvem, sem tocar em nada
+// pendente na fila), esse botão só precisa rodar o mesmo pullAll() de
+// novo — sem duplicar a lógica de segurança em outro lugar.
 async function resyncCorridasFromCloud() {
   if (!_supaUser) { showToast('Sem conexão com a nuvem.'); return; }
-  const dates = getCorridasDays().slice();
-  if (!dates.length) { showToast('Nenhuma data pra sincronizar.'); return; }
-  showConfirm('Recarregar corridas dessas datas direto da nuvem?\nIsso substitui as corridas salvas neste aparelho, pras datas visíveis, pelo que estiver no servidor agora.', async () => {
+  showConfirm('Recarregar da nuvem agora?\nCorridas confirmadas sincronizadas antes que sumiram do servidor saem do celular. Nada que ainda esteja pendente de subir é tocado.', async () => {
     try {
-      const { data, error } = await _SUPA.from('trips').select('*').eq('user_id', _supaUser.id).in('date', dates);
-      if (error) throw error;
-      const byDate = {};
-      (data || []).forEach(t => {
-        (byDate[t.date] || (byDate[t.date] = [])).push({
-          id: t.id, platform: t.platform || 'uber', time: (t.time || '').slice(0, 5),
-          duration: t.duration || 0, origin: t.origin || '', dest: t.dest || '',
-          value: parseFloat(t.value) || 0, km: parseFloat(t.km) || 0,
-          category: t.category || '', surge: t.surge || false, airport: t.airport || false,
-          dinamico: parseFloat(t.dinamico) || 0, tip: parseFloat(t.tip) || 0,
-          dinheiro: t.dinheiro || false, pedagio: t.pedagio || false, pedagioValor: t.pedagio_valor || 0,
-          originFull: t.origin_full || t.origin || '', destFull: t.dest_full || t.dest || '',
-          serviceFee: t.service_fee ?? null, taxaZero: t.taxa_zero || false,
-          kmEstimado: t.km_estimado || false
-        });
-      });
-      dates.forEach(d => {
-        const day = DB.day(d);
-        day.trips = byDate[d] || [];
-        DB.saveDay(day);
-      });
+      await SYNC.pullAll();
       renderCorridasActive();
       if (S.sec === 'jornada') renderJornada();
       if (S.sec === 'home') renderHome();
-      showToast('Corridas recarregadas da nuvem.');
+      showToast('Sincronizado com a nuvem.');
     } catch (e) {
       console.error('resyncCorridasFromCloud', e);
       showToast('Erro ao recarregar da nuvem.');
@@ -9321,6 +9299,41 @@ const SYNC = {
       });
       // Só reescreve no localStorage os dias que realmente mudaram
       Object.entries(byDate).forEach(([d, day]) => { if (_dirty.has(d)) DB.saveDay(day); });
+
+      // ── Reconciliação automática ─────────────────────────────────────
+      // O merge acima só ADICIONA o que a nuvem tem e falta local — nunca
+      // remove local o que sumiu da nuvem (ex: registro apagado direto no
+      // banco). Sem isso, um item apagado assim "ressuscita" pra sempre no
+      // aparelho, mesmo depois de reabrir o app. Aqui completamos o ciclo:
+      // qualquer trip/despesa/receita/sessão que já foi confirmada
+      // sincronizada antes e não existe mais na nuvem agora, sai do
+      // localStorage também. A fila de pendências (DB.syncQueue()) é a
+      // trava de segurança: nada que ainda esteja esperando pra subir é
+      // tocado, mesmo que ainda não apareça na nuvem — só mexe no que já
+      // tinha certeza absoluta que foi sincronizado uma vez.
+      try {
+        const pendingIds = { trips: new Set(), expenses: new Set(), revenues: new Set(), sessions: new Set() };
+        (DB.syncQueue() || []).forEach(op => {
+          if (op.type === 'push' && op.row && op.row.id && pendingIds[op.table]) pendingIds[op.table].add(op.row.id);
+        });
+        const cloudIds = {
+          trips: new Set((trips.data || []).map(t => t.id)),
+          expenses: new Set((expenses.data || []).map(e => e.id)),
+          revenues: new Set((revenues.data || []).map(r => r.id)),
+          sessions: new Set((sessions.data || []).map(s => s.id)),
+        };
+        (DB.allDates() || []).forEach(d => {
+          const day = DB.day(d);
+          let changed = false;
+          ['trips', 'expenses', 'revenues', 'sessions'].forEach(key => {
+            if (!day[key] || !day[key].length) return;
+            // item sem id = registro antigo/legado, nunca mexe nele
+            const kept = day[key].filter(item => !item.id || cloudIds[key].has(item.id) || pendingIds[key].has(item.id));
+            if (kept.length !== day[key].length) { day[key] = kept; changed = true; }
+          });
+          if (changed) DB.saveDay(day);
+        });
+      } catch (e) { console.warn('[pullAll] reconciliação falhou:', e); }
 
       // ── Events ─────────────────────────────────────────────────────────
       if (eventsRes.data && eventsRes.data.length) {
