@@ -5598,6 +5598,34 @@ function mergeTrips(existing, newTrips) {
 
 
 
+// Mostra o que foi declarado no pré-check (antes de importar) lado a lado
+// com o que está selecionado agora na lista, com um ✓/✗ por plataforma —
+// pra dar pra comparar sem ter que guardar o número de cabeça. Só aparece
+// se algo foi de fato declarado (senão fica vazio, não polui a tela).
+function importDeclaredHtml() {
+  const pc = importPrecheck || {};
+  if (pc.uberCount == null && pc.p99Count == null) return '';
+  const sel = (window._pendingTrips || []).filter(t => t._sel);
+  const uber = sel.filter(t => t.platform !== '99');
+  const p99  = sel.filter(t => t.platform === '99');
+  const row = (label, color, decCount, decVal, foundArr) => {
+    if (decCount == null) return '';
+    const foundCount = foundArr.length;
+    const foundVal = foundArr.reduce((s, t) => s + (t.value || 0), 0);
+    let ok = foundCount === decCount;
+    if (ok && decVal != null) ok = Math.abs(foundVal - decVal) < 0.01;
+    const decTxt = decCount + ' corrida' + (decCount === 1 ? '' : 's') + (decVal != null ? ' · ' + DB.fRI(decVal) : '');
+    return `<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:3px 0">
+      <span style="font-weight:800;color:${color}">${label}</span>
+      <span style="font-weight:800;color:#334155">${decTxt}</span>
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;margin-left:6px;flex-shrink:0;background:${ok ? '#DCFCE7' : '#FEE2E2'};color:${ok ? '#16A34A' : '#DC2626'};font-size:10px">${ok ? '✓' : '✕'}</span>
+    </div>`;
+  };
+  const rows = row('Uber', '#0EA5E9', pc.uberCount, pc.uberValue, uber) + row('99', '#F59E0B', pc.p99Count, pc.p99Value, p99);
+  if (!rows) return '';
+  return `<div style="font-size:9px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Você declarou antes de importar</div>
+    <div style="background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:12px;padding:10px 12px;margin-bottom:8px">${rows}</div>`;
+}
 function importSummaryHtml() {
   const sel = (window._pendingTrips||[]).filter(t => t._sel);
   const total = sel.reduce((s,t)=>s+(t.value||0),0);
@@ -5612,6 +5640,8 @@ function importSummaryHtml() {
   </div>`;
 }
 function updateImportSummary() {
+  const elD = document.getElementById('ic-declared');
+  if (elD) elD.outerHTML = '<div id="ic-declared">' + importDeclaredHtml() + '</div>';
   const el = document.getElementById('ic-summary');
   if (el) el.outerHTML = '<div id="ic-summary">' + importSummaryHtml() + '</div>';
 }
@@ -5620,7 +5650,8 @@ function showImportConfirm() {
   if (!trips.length) { closeMo('mo-import-confirm'); showToast('Nenhuma corrida detectada.', 'info'); return; }
   document.getElementById('ic-title').textContent = 'Corridas detectadas ('+trips.length+')';
   document.getElementById('ic-btn').style.display = ''; document.getElementById('ic-btn').textContent = 'Importar ('+trips.filter(t=>t._sel).length+')';
-  document.getElementById('ic-body').innerHTML = '<div id="ic-summary">' + importSummaryHtml() + '</div>' +
+  document.getElementById('ic-body').innerHTML = '<div id="ic-declared">' + importDeclaredHtml() + '</div>' +
+    '<div id="ic-summary">' + importSummaryHtml() + '</div>' +
     '<div style="background:#fff;border-radius:16px;overflow:hidden;border:1px solid #E2E8F0">' + trips.map((t,i) => {
     const ex = [];
     if (t.dinamico > 0) ex.push(`<span class="chip chip-d"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg> ${DB.fR(t.dinamico)}</span>`);
