@@ -9503,7 +9503,13 @@ async function migrateLocalToCloud() {
   // espera _bootPullDone antes de migrar qualquer coisa, mesmo mecanismo
   // que a tela de Custo do Veículo já usa pra não mostrar formulário vazio
   // por cima de dado que só ainda não chegou.
-  await _waitBootPull();
+  // Espera bem mais que os 4s padrão do _waitBootPull(): essa migração roda
+  // em background sem travar nenhuma tela, então não tem custo de UX em
+  // esperar mais. O risco de esperar pouco é o contrário — subir pro
+  // Supabase uma corrida local que a reconciliação do pullAll() ainda não
+  // teve tempo de apagar (ex: já tinha sido excluída direto no banco),
+  // ressuscitando dado errado. Confirmado acontecendo em 18/07/2026.
+  await _waitBootPull(30000);
 
   console.log('[MōB] Iniciando migração local → Supabase...');
   let pushed = 0;
