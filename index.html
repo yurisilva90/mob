@@ -3306,9 +3306,28 @@ function fmtDurComp(realMin, offerMin) {
   if (offerMin!=null) s += ' (previsto: '+fmtDur(offerMin)+')';
   return s;
 }
+// Extrai só o bairro de um endereço completo, pra mostrar no card da lista
+// (endereço completo continua no detalhe). Formatos que a gente já viu:
+// "Rua X, 123, Bairro Y" / "Loja Z, Av. W, 123 - Bairro Y" / "Rua X, 123,
+// Bairro Y, Teresópoli" (com cidade grudada no fim).
+function extractBairro(addr) {
+  if (!addr) return '';
+  let s = String(addr).trim();
+  s = s.replace(/,?\s*\d{5}-?\d{3}.*$/i, '');           // CEP e o que vier depois
+  s = s.replace(/,?\s*Brasil\s*$/i, '');                 // país no fim
+  s = s.replace(/,?\s*-?\s*RJ\s*$/i, '');                // UF no fim
+  s = s.replace(/,\s*Teresópolis?\s*$/i, '');            // cidade grudada no fim
+  const dashIdx = s.lastIndexOf(' - ');
+  if (dashIdx !== -1) return s.slice(dashIdx + 3).trim() || s.trim();
+  const parts = s.split(',').map(p => p.trim()).filter(Boolean);
+  for (let i = parts.length - 1; i >= 0; i--) {
+    if (!/^\d+$/.test(parts[i])) return parts[i];
+  }
+  return parts[parts.length - 1] || s;
+}
 function autoTripItem(t) {
   const plat = {uber:'Uber','99':'99'}[t.platform] || t.platform;
-  const dest = t.dest_address ? ' → '+esc(t.dest_address) : '';
+  const dest = t.dest_address ? ' → '+esc(extractBairro(t.dest_address)) : '';
   const tid = 'ta'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
   const cashSvg = `<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M2 10h20" stroke="white" stroke-width="1.2" fill="none"/><path d="M2 17h20" stroke="white" stroke-width="1.2" fill="none"/><circle cx="12" cy="13" r="2.5" fill="white"/></svg>`;
   const extras = [`<span class="chip chip-auto">Captura automática</span>`];
@@ -3343,7 +3362,7 @@ function autoTripItem(t) {
   return `<div class="trip-item-wrap" id="tw-${tid}">
     <div class="li-row" id="tr-${tid}" onclick="toggleTripDetail('${tid}')">
       ${platIcon(t.platform)}
-      <div class="li-info"><h3 class="trip-title">${t.origin_address?esc(t.origin_address):'—'}${dest}</h3><p>${subLine}</p><div class="li-extra">${extras.join('')}</div></div>
+      <div class="li-info"><h3 class="trip-title">${t.origin_address?esc(extractBairro(t.origin_address)):'—'}${dest}</h3><p>${subLine}</p><div class="li-extra">${extras.join('')}</div></div>
       <div class="li-val"><strong>${DB.fR(t.offer_value)}</strong><span class="auto-status ${statusCls}">${statusTxt}</span></div>
     </div>
     <div class="trip-detail-panel" id="td-${tid}" style="display:none">${detRows}</div>
