@@ -7920,6 +7920,25 @@ function agGoToday() {
 }
 
 // ── RESUMO ──────────────────────────────────────────────────
+// Agrega jornadas realizadas do dia a partir de day.sessions (array).
+// O campo legado day.session so e gravado quando a jornada encerra NESTE aparelho;
+// dados vindos do Supabase (pullAll/reconciliacao) so preenchem day.sessions.
+function agDaySess(ds) {
+  const day = DB.day(ds);
+  const closed = (day.sessions || []).filter(s => s.start && s.end);
+  if (closed.length) {
+    return {
+      km: closed.reduce((a, s) => a + (s.km || 0), 0),
+      elapsed: closed.reduce((a, s) => a + (s.elapsed || 0), 0),
+      count: closed.length,
+      first: Math.min(...closed.map(s => s.start)),
+      last: Math.max(...closed.map(s => s.end))
+    };
+  }
+  if (day.session) return { km: day.session.km || 0, elapsed: day.session.elapsed || 0, count: 1, first: null, last: null };
+  return null;
+}
+
 function renderAgResumo() {
   const today = DB.today();
   const dt    = new Date(today + 'T12:00');
@@ -7932,14 +7951,14 @@ function renderAgResumo() {
 
   // Hoje
   const todayEvs  = getEventsForDate(today);
-  const todaySess = DB.day(today).session;
+  const todaySess = agDaySess(today);
   const hojeEl    = document.getElementById('ag-hoje');
-  if (hojeEl) hojeEl.innerHTML = renderEvList([...todaySess ? [{id:'_sess_'+today,type:'jornada',title:'Jornada',date:today,timeStart:'—',timeEnd:'—',notes:todaySess.km.toFixed(1)+'km · '+formatElapsed(todaySess.elapsed),color:'#22c55e'}] : [], ...todayEvs]);
+  if (hojeEl) hojeEl.innerHTML = renderEvList([...todaySess ? [{id:'_sess_'+today,type:'jornada',title:todaySess.count>1?'Jornadas ('+todaySess.count+')':'Jornada',date:today,timeStart:todaySess.first?fmtHM(todaySess.first):'—',timeEnd:todaySess.last?fmtHM(todaySess.last):'—',notes:todaySess.km.toFixed(1)+'km · '+formatElapsed(todaySess.elapsed),color:'#22c55e'}] : [], ...todayEvs]);
 
   // Amanhã
   const tmrw     = offsetDate(today, 1);
   const tmrwEvs  = getEventsForDate(tmrw);
-  const tmrwSess = DB.day(tmrw).session;
+  const tmrwSess = agDaySess(tmrw);
   const amanhaEl = document.getElementById('ag-amanha');
   if (amanhaEl) amanhaEl.innerHTML = renderEvList([...tmrwSess ? [{id:'_sess_'+tmrw,type:'jornada',title:'Jornada',date:tmrw,timeStart:'—',timeEnd:'—',notes:tmrwSess.km.toFixed(1)+'km',color:'#22c55e'}] : [], ...tmrwEvs]);
 
@@ -7949,7 +7968,7 @@ function renderAgResumo() {
     const d  = offsetDate(today, i);
     const dt2 = new Date(d+'T12:00');
     const dayEvs = getEventsForDate(d);
-    const daySess = DB.day(d).session;
+    const daySess = agDaySess(d);
     const all = [...daySess ? [{type:'jornada',title:'Jornada',date:d,color:'#22c55e',notes:daySess.km.toFixed(1)+'km'}] : [], ...dayEvs];
     if (all.length) {
       proxEvs.push(`<div style="font-size:11px;font-weight:700;color:#94A3B8;margin:12px 0 6px;text-transform:uppercase;letter-spacing:.08em">${p2(dt2.getDate())+'/'+p2(dt2.getMonth()+1)} · ${['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][dt2.getDay()]}</div>`);
@@ -8325,7 +8344,7 @@ function renderAgCal() {
     const isSel = ds === agCalSelDate;
     const cls   = 'agcal-day'+(isSel?' sel':isTod?' today-d':'');
     // Dots: GPS session + events (max 3)
-    const hasSess = !!DB.day(ds).session;
+    const hasSess = !!agDaySess(ds);
     const dayEvs  = allEvs.filter(e => e.date === ds);
     const dots    = [];
     if (hasSess) dots.push('green');
@@ -8360,8 +8379,8 @@ function agCalRenderDay() {
   const evList = document.getElementById('agcal-evlist');
   if (!evList) return;
   const allEvs  = DB.events().filter(e => e.date === agCalSelDate);
-  const daySess = DB.day(agCalSelDate).session;
-  const items   = [...(daySess ? [{id:'_s',title:'Jornada',type:'jornada',timeStart:'—',color:'#22c55e',notes:daySess.km.toFixed(1)+'km registrados'}] : []), ...allEvs];
+  const daySess = agDaySess(agCalSelDate);
+  const items   = [...(daySess ? [{id:'_s',title:daySess.count>1?'Jornadas ('+daySess.count+')':'Jornada',type:'jornada',timeStart:daySess.first?fmtHM(daySess.first):'—',timeEnd:daySess.last?fmtHM(daySess.last):'—',color:'#22c55e',notes:daySess.km.toFixed(1)+'km · '+formatElapsed(daySess.elapsed)}] : []), ...allEvs];
   if (!items.length) {
     evList.innerHTML = '<div class="agcal-empty">Nenhum evento neste dia</div>'; return;
   }
