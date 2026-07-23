@@ -317,11 +317,29 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .card{background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:0 2px 10px rgba(15,23,42,.05)}.cardPad{padding:16px}.cardHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.cardHead h2{font-size:16px;font-weight:700;letter-spacing:-.03em}.cardHead a,.cardHead button{font-size:12px;color:#0A2F6B;font-weight:700;background:none;border:none;cursor:pointer}
 .seg{display:flex;gap:4px}.seg button{padding:7px 12px;border-radius:12px;border:none;background:#F1F5F9;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation}.seg button.on{background:rgba(14,165,233,.1);color:#0A2F6B}
 .kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}.kpi{background:#F8FAFC;border-radius:16px;padding:14px}.kpi .row{display:flex;align-items:center;gap:8px;margin-bottom:6px}.ico{width:34px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}.ico.green{background:#ECFDF3;color:#16A34A}.ico.red{background:#FEF2F2;color:#EF4444}.ico.blue{background:#EFF6FF;color:#0EA5E9}.ico.orange{background:#FFF7ED;color:#F59E0B}.ico.purple{background:#F5F3FF;color:#7C3AED}.kpiVal{font-family:'Inter',system-ui,sans-serif;font-size:20px;font-weight:700;line-height:1}.kpiLbl{font-size:11px;color:var(--muted);font-weight:600;margin-top:2px}
-.fin-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.fin-metric{background:#F8FAFC;border:1px solid var(--line);border-radius:18px;padding:10px 7px;text-align:center}.fin-metric strong{display:block;font-size:15px;font-weight:760;font-family:'Inter',system-ui,sans-serif}.fin-metric span{display:block;font-size:9.5px;font-weight:720;text-transform:uppercase;letter-spacing:.055em;color:var(--muted);margin-top:4px}
+.fin-metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.fin-metric{background:#FAFBFD;border:1px solid #EEF2F7;border-radius:16px;padding:12px;text-align:left}.fin-metric strong{display:block;font-size:16px;font-weight:800;letter-spacing:-.03em;font-family:'Inter',system-ui,sans-serif}.fin-metric span{display:block;font-size:10px;font-weight:750;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:3px}.fin-metric small{display:block;font-size:10px;color:#94A3B8;margin-top:3px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fin-metric.g strong{color:#16A34A}.fin-metric.r strong{color:#EF4444}
+.fin-flow{display:flex;gap:10px;align-items:flex-end;height:96px;padding-top:6px}
+.fin-fcol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:5px}
+.fin-fbars{display:flex;gap:3px;align-items:flex-end;height:100%}
+.fin-fbars i{width:9px;border-radius:3px 3px 0 0;display:block;min-height:3px}
+.fin-fbars i.in{background:#22C55E}
+.fin-fbars i.out{background:#FCA5A5}
+.fin-fcol small{font-size:9px;color:#94A3B8;font-weight:800}
+.fin-flow-legend{display:flex;gap:14px;justify-content:center;margin-top:10px;font-size:10.5px;font-weight:600;color:#64748B}
+.fin-flow-legend i{display:inline-block;width:8px;height:8px;border-radius:3px;margin-right:4px}
+.ld-actions{display:flex;gap:8px;margin-top:10px}
+.ld-btn{flex:1;height:40px;border-radius:12px;border:1.5px solid #E2E8F0;background:#fff;font-size:12px;font-weight:800;cursor:pointer;touch-action:manipulation;display:flex;align-items:center;justify-content:center;gap:6px;font-family:var(--font-app)}
+.ld-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.ld-btn.pago{color:#16A34A;border-color:#BBF7D0;background:#F0FDF4}
+.ld-btn.edit{color:#0A2F6B;border-color:#C7D8F5;background:#F0F6FF}
+.ld-btn.del{color:#EF4444;border-color:#FECACA;background:#FEF2F2;flex:0 0 44px}
+.obj-tag{display:inline-block;font-size:9px;font-weight:800;padding:2px 7px;border-radius:99px;margin-right:6px;vertical-align:1px}
+.obj-tag.rec{background:#E9FBEF;color:#16A34A}
+.obj-tag.desp{background:#FEF2F2;color:#EF4444}
 .obj-switch,.type-switch2{display:flex;background:#EAF0F6;border:1px solid rgba(15,23,42,.06);padding:4px;border-radius:18px;margin-bottom:16px}
 .obj-btn,.type-btn2{flex:1;border:none;background:transparent;color:var(--muted);padding:10px 8px;border-radius:14px;font-size:13.5px;font-weight:900;cursor:pointer;font-family:var(--font-app)}
 .obj-btn.active,.type-btn2.active{background:#fff;color:var(--text);box-shadow:0 4px 12px rgba(15,23,42,.08)}
-.gbar.rec i{background:linear-gradient(90deg,#8b5cf6,#0ea5e9)}.gbar.exp i{background:linear-gradient(90deg,#F59E0B,#F59E0B)}.gbar.exp.over i,.gbar.rec.over i{background:linear-gradient(90deg,#EF4444,#EF4444)}
+.gbar.rec i{background:linear-gradient(90deg,#22C55E,#0EA5E9)}.gbar.exp i{background:linear-gradient(90deg,#F59E0B,#F59E0B)}.gbar.exp.over i,.gbar.rec.over i{background:linear-gradient(90deg,#EF4444,#EF4444)}
 .goal-locked{display:flex;align-items:center;justify-content:space-between;background:#F8FAFC;border:1px dashed #D8E0EA;border-radius:14px;padding:10px 12px;cursor:pointer}.goal-locked span{font-size:12px;color:var(--muted);font-weight:600}.goal-locked b{font-size:12px;color:#0A2F6B;font-weight:800}
 .cfg-link{display:block;text-align:center;font-size:12.5px;font-weight:700;color:#0A2F6B;background:#F8FAFC;border:1px solid var(--line);border-radius:14px;padding:11px;margin-top:4px;cursor:pointer;font-family:var(--font-app)}
 .cat-row2{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #edf1f6}.cat-row2:last-child{border-bottom:0}.cat-lbl2{flex:1;font-size:14px;font-weight:650}
@@ -1206,9 +1224,10 @@ h1.hd-title{font-family:var(--font-brand)!important}
     <section class="card cardPad" style="margin-bottom:14px">
       <div class="cardHead"><h2>Resumo</h2><div class="seg"><button class="on" id="fs-all" onclick="setFinScope('all')">Tudo</button><button id="fs-prof" onclick="setFinScope('prof')">Prof.</button><button id="fs-pes" onclick="setFinScope('pes')">Pessoal</button></div></div>
       <div class="fin-metrics">
-        <div class="fin-metric"><strong id="fin-rec">R$ 0,00</strong><span>Receitas</span></div>
-        <div class="fin-metric"><strong id="fin-desp">R$ 0,00</strong><span>Despesas</span></div>
-        <div class="fin-metric"><strong id="fin-lucro">R$ 0,00</strong><span>Lucro</span></div>
+        <div class="fin-metric g"><span>Corridas</span><strong id="fin-corr">R$ 0,00</strong><small id="fin-corr-sub">&nbsp;</small></div>
+        <div class="fin-metric g"><span>Receitas extras</span><strong id="fin-rec">R$ 0,00</strong><small>gorjetas, b&#244;nus...</small></div>
+        <div class="fin-metric r"><span>Despesas</span><strong id="fin-desp">R$ 0,00</strong><small id="fin-desp-sub">&nbsp;</small></div>
+        <div class="fin-metric"><span>Lucro</span><strong id="fin-lucro">R$ 0,00</strong><small id="fin-lucro-sub">&nbsp;</small></div>
       </div>
     </section>
     <section class="card cardPad" style="margin-bottom:14px">
@@ -1223,20 +1242,19 @@ h1.hd-title{font-family:var(--font-brand)!important}
     </section>
     <section class="card cardPad" style="margin-bottom:14px">
       <div class="cardHead"><h2>Fluxo do mês</h2></div>
-      <div class="chart"><div id="fin-bars" style="display:flex;gap:4px;align-items:flex-end;height:80px">
-        <div class="barCol" id="fin-b1"><i style="height:10%"></i><small>S1</small></div>
-        <div class="barCol" id="fin-b2"><i style="height:10%"></i><small>S2</small></div>
-        <div class="barCol" id="fin-b3"><i style="height:10%"></i><small>S3</small></div>
-        <div class="barCol" id="fin-b4"><i style="height:10%"></i><small>S4</small></div>
-      </div></div>
+      <div class="fin-flow" id="fin-flow"></div>
+      <div class="fin-flow-legend">
+        <span><i style="background:#22C55E"></i>Entradas (com corridas)</span>
+        <span><i style="background:#FCA5A5"></i>Sa&#237;das</span>
+      </div>
     </section>
     <section class="card cardPad" style="margin-bottom:14px">
       <div class="cardHead"><h2>Ações rápidas</h2></div>
       <div class="fin-actions">
         <button class="fin-action" onclick="openLanc('receita')"><div class="ico green"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></div>Receita</button>
-        <button class="action" onclick="openLanc('despesa')"><div class="ico red"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></div>Despesa</button>
-        <button class="action" onclick="navTo('lancamentos')"><div class="ico purple"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2Z"/></svg></div>Histórico</button>
-        <button class="action" onclick="navTo('mais')"><div class="ico orange"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-4 4"/></svg></div>Relatório</button>
+        <button class="fin-action" onclick="openLanc('despesa')"><div class="ico red"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></div>Despesa</button>
+        <button class="fin-action" onclick="navTo('lancamentos')"><div class="ico purple"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2Z"/></svg></div>Histórico</button>
+        <button class="fin-action" onclick="navTo('mais')"><div class="ico orange"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-4 4"/></svg></div>Relatório</button>
       </div>
     </section>
     <section class="card" style="margin-bottom:14px">
@@ -3238,6 +3256,57 @@ async function loadAutoTripsForDay(dateStr) {
   return error ? [] : (data||[]);
 }
 
+// ── Corridas automaticas no Financeiro (soma por dia, cacheada em memoria) ──
+// auto_trips vivem so no Supabase; o Financeiro cobre Mes/Ano, entao busca em
+// lote (paginado) o intervalo do periodo + periodo anterior + mes corrente,
+// agrupa por data LOCAL (fuso: margem de 1 dia em cada ponta da query).
+let _finAuto = { key:'', byDate:{}, loading:false, ts:0 };
+function finAutoDay(ds) { return _finAuto.byDate[ds] || { sum:0, count:0, items:[] }; }
+async function loadFinAutoTrips() {
+  if (!_supaUser) return;
+  const today = new Date();
+  const dim = new Date(today.getFullYear(), today.getMonth()+1, 0).getDate();
+  const all = [...getFinDays(), ...getFinDaysPrev(),
+    today.getFullYear()+'-'+p2(today.getMonth()+1)+'-01',
+    today.getFullYear()+'-'+p2(today.getMonth()+1)+'-'+p2(dim)];
+  let from = all[0], to = all[0];
+  all.forEach(d => { if (d < from) from = d; if (d > to) to = d; });
+  const key = from + '|' + to;
+  if (_finAuto.loading) return;
+  if (_finAuto.key === key && (Date.now() - _finAuto.ts) < 120000) return;
+  _finAuto.loading = true;
+  try {
+    const fromIso = new Date(new Date(from+'T00:00:00').getTime() - 86400000).toISOString();
+    const toIso   = new Date(new Date(to+'T23:59:59').getTime() + 86400000).toISOString();
+    const rows = [];
+    let off = 0;
+    while (true) {
+      const { data, error } = await _SUPA.from('auto_trips')
+        .select('id,trip_started_at,accepted_at,offer_value,platform')
+        .eq('user_id', _supaUser.id)
+        .gte('trip_started_at', fromIso).lte('trip_started_at', toIso)
+        .order('trip_started_at', {ascending:true})
+        .range(off, off + 999);
+      if (error || !data || !data.length) break;
+      rows.push(...data);
+      if (data.length < 1000) break;
+      off += 1000;
+    }
+    const byDate = {};
+    rows.forEach(t => {
+      const ts = autoTripTs(t); if (!ts) return;
+      const d = new Date(ts);
+      const ds = d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+      const b = byDate[ds] || (byDate[ds] = { sum:0, count:0, items:[] });
+      b.sum += (t.offer_value || 0);
+      b.count++;
+      b.items.push(t);
+    });
+    _finAuto = { key, byDate, loading:false, ts: Date.now() };
+    if (S.sec === 'financeiro') { try { renderFin(); } catch(e) {} }
+  } catch(e) { _finAuto.loading = false; console.warn('[loadFinAutoTrips]', e); }
+}
+
 function renderCorridasActive() {
   if ((S.corSource||'imp') === 'auto') loadAutoTrips(); else renderCorridas();
 }
@@ -4213,11 +4282,20 @@ function lancItemJornada(it) {
     `<div class="lanc-detail-row"><span>Tipo</span><strong>${isRec?'Receita':'Despesa'}</strong></div>`,
   ].filter(Boolean).join('');
 
+  const refArgs = `'${it.id}','${it.date||today}','${it._type||'despesa'}'`;
   const pagarBtn = status !== 'pago'
-    ? `<button class="btn-marcar-pago" onclick="event.stopPropagation();markLancPago('${it.id}','${it.date||today}','${it._type||'despesa'}')">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-        Marcar como pago
+    ? `<button class="ld-btn pago" onclick="event.stopPropagation();markLancPago(${refArgs})">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Marcar pago
       </button>` : '';
+  const actionsRow = `<div class="ld-actions">
+      <button class="ld-btn edit" onclick="event.stopPropagation();editLanc(${refArgs})">
+        <svg viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Editar
+      </button>
+      ${pagarBtn}
+      <button class="ld-btn del" onclick="event.stopPropagation();delLanc(${refArgs})" aria-label="Excluir">
+        <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+      </button>
+    </div>`;
 
   return `<div class="lanc-item-wrap" id="li-wrap-${it.id}">
     <div class="${rowCls}" id="li-row-${it.id}" onclick="toggleLancDetail('${it.id}')">
@@ -4234,7 +4312,7 @@ function lancItemJornada(it) {
       </div>
     </div>
     <div class="lanc-detail-panel" id="li-detail-${it.id}" style="display:none">
-      ${rows}${pagarBtn}
+      ${rows}${actionsRow}
     </div>
   </div>`;
 }
@@ -4342,24 +4420,46 @@ function getFinDaysPrev() {
   return days;
 }
 function renderFin() {
-  const allDays = getFinDays().map(d => DB.day(d));
+  loadFinAutoTrips(); // async; re-renderiza sozinho quando os dados chegarem
+  const finDates = getFinDays();
+  const allDays = finDates.map(d => DB.day(d));
   const sc = S.finScope;
+  const incAuto = sc !== 'pes'; // corridas automaticas sao sempre operacionais
   const filterExp = e => sc === 'all' || (sc === 'prof' && e.scope !== 'pessoal') || (sc === 'pes' && e.scope === 'pessoal');
   const filterRev = r => sc === 'all' || (sc === 'prof' && r.scope !== 'pessoal') || (sc === 'pes' && r.scope === 'pessoal');
-  const sumPeriodo = ds => ({
-    rev: ds.reduce((s,d) => s + d.trips.filter(filterRev).reduce((a,t)=>a+(t.value||0),0) + d.revenues.filter(filterRev).reduce((a,r)=>a+(r.amount||0),0), 0),
-    exp: ds.reduce((s,d) => s + d.expenses.filter(filterExp).reduce((a,e)=>a+(e.amount||0),0), 0)
-  });
-  const { rev, exp } = sumPeriodo(allDays);
+  const sumPeriodo = dss => {
+    const ds = dss.map(x => DB.day(x));
+    const tripsRev = ds.reduce((s,d) => s + d.trips.filter(filterRev).reduce((a,t)=>a+(t.value||0),0), 0);
+    const autoRev  = incAuto ? dss.reduce((s,x) => s + finAutoDay(x).sum, 0) : 0;
+    const manRev   = ds.reduce((s,d) => s + d.revenues.filter(filterRev).reduce((a,r)=>a+(r.amount||0),0), 0);
+    const exp      = ds.reduce((s,d) => s + d.expenses.filter(filterExp).reduce((a,e)=>a+(e.amount||0),0), 0);
+    return { tripsRev, autoRev, manRev, rev: tripsRev + autoRev + manRev, exp };
+  };
+  const { tripsRev, autoRev, manRev, rev, exp } = sumPeriodo(finDates);
+  const corridasRev = tripsRev + autoRev;
+  const corridasCnt = allDays.reduce((s,d)=>s+d.trips.filter(filterRev).length,0)
+                    + (incAuto ? finDates.reduce((s,x)=>s+finAutoDay(x).count,0) : 0);
+  const autoCnt = incAuto ? finDates.reduce((s,x)=>s+finAutoDay(x).count,0) : 0;
   const profit = rev - exp;
-  const days  = getFinDays().length;
+  const days  = finDates.length;
   const pctL  = rev > 0 ? Math.round(profit/rev*100) : 0;
   const media = days > 0 ? rev/days : 0;
   setText('fin-amount', DB.fR(profit));
-  setText('fin-sub', 'Entradas '+DB.fRI(rev)+' · Saídas '+DB.fRI(exp));
-  setText('fin-rec',   DB.fR(rev));
+  setText('fin-sub', 'Corridas '+DB.fRI(corridasRev)+' · Receitas '+DB.fRI(manRev)+' · Saídas '+DB.fRI(exp));
+  setText('fin-corr', DB.fR(corridasRev));
+  setText('fin-corr-sub', corridasCnt ? corridasCnt+' corrida'+(corridasCnt>1?'s':'')+(autoCnt?' · '+autoCnt+' automática'+(autoCnt>1?'s':''):'') : 'nenhuma no período');
+  setText('fin-rec',   DB.fR(manRev));
   setText('fin-desp',  DB.fR(exp));
+  // maior categoria de despesa do período
+  const catSum = {};
+  allDays.forEach(d => d.expenses.filter(filterExp).forEach(e => {
+    const lbl = e.categoryLabel || e.category || 'outros';
+    catSum[lbl] = (catSum[lbl]||0) + (e.amount||0);
+  }));
+  const topCat = Object.entries(catSum).sort((a,b)=>b[1]-a[1])[0];
+  setText('fin-desp-sub', topCat && exp > 0 ? topCat[0].toLowerCase()+' '+Math.round(topCat[1]/exp*100)+'%' : '\u00A0');
   setText('fin-lucro', DB.fR(profit));
+  setText('fin-lucro-sub', rev > 0 ? pctL+'% da entrada' : '\u00A0');
   setText('fin-pct-lucro', pctL+'%');
   setText('fin-media',     DB.fRI(media));
 
@@ -4367,7 +4467,7 @@ function renderFin() {
   const dimAtual = new Date(today.getFullYear(), today.getMonth()+1, 0).getDate();
 
   // vs período anterior (mesmo recorte de dias do período atual, deslocado pra trás)
-  const prevSums = sumPeriodo(getFinDaysPrev().map(d => DB.day(d)));
+  const prevSums = sumPeriodo(getFinDaysPrev());
   const prevProfit = prevSums.rev - prevSums.exp;
   const vsLabels = { today: 'vs ontem', month: 'vs mês ant.', year: 'vs ano ant.' };
   setText('fin-vs-ant-lbl', vsLabels[S.finPer] || 'vs ant.');
@@ -4378,31 +4478,49 @@ function renderFin() {
     setText('fin-vs-ant', '—');
   }
 
-  // Fluxo do mês — sempre o mês atual de verdade, não muda com o seletor Hoje/Mês/Ano
-  const mesAtualDays = Array.from({length: dimAtual}, (_,i) => DB.day(today.getFullYear()+'-'+p2(today.getMonth()+1)+'-'+p2(i+1)));
-  const bucketSize = Math.ceil(dimAtual/4);
-  const weeks = [0,1,2,3].map(w => {
-    const wDays = mesAtualDays.slice(w*bucketSize, (w+1)*bucketSize);
-    return wDays.reduce((s,d)=>s+d.trips.reduce((a,t)=>a+(t.value||0),0)+d.revenues.reduce((a,r)=>a+(r.amount||0),0),0);
+  // Fluxo do mês — sempre o mês atual de verdade, não muda com o seletor Hoje/Mês/Ano.
+  // Barras duplas: entrada (corridas + receitas) x saída, por semana real do mês.
+  const mesDates = Array.from({length: dimAtual}, (_,i) => today.getFullYear()+'-'+p2(today.getMonth()+1)+'-'+p2(i+1));
+  const weekDefs = [[1,7],[8,14],[15,21],[22,28],[29,dimAtual]].filter(w => w[0] <= dimAtual);
+  const weeks = weekDefs.map(([a,b]) => {
+    const wDates = mesDates.slice(a-1, b);
+    const inSum = wDates.reduce((s,x) => {
+      const d = DB.day(x);
+      return s + d.trips.reduce((acc,t)=>acc+(t.value||0),0)
+               + d.revenues.reduce((acc,r)=>acc+(r.amount||0),0)
+               + finAutoDay(x).sum;
+    }, 0);
+    const outSum = wDates.reduce((s,x) => s + DB.day(x).expenses.reduce((acc,e)=>acc+(e.amount||0),0), 0);
+    return { label: a === b ? String(a) : a+'–'+b, inSum, outSum };
   });
-  const maxW = Math.max(...weeks, 1);
-  weeks.forEach((v,i) => {
-    const el = document.getElementById('fin-b'+(i+1));
-    if (el) { const bar = el.querySelector('i'); if (bar) bar.style.height = Math.max(8,Math.round(v/maxW*90))+'%'; }
-  });
+  const maxW = Math.max(...weeks.flatMap(w => [w.inSum, w.outSum]), 1);
+  const flowEl = document.getElementById('fin-flow');
+  if (flowEl) flowEl.innerHTML = weeks.map(w => `<div class="fin-fcol">
+      <div class="fin-fbars">
+        <i class="in" style="height:${Math.max(4, Math.round(w.inSum/maxW*82))}px"></i>
+        <i class="out" style="height:${Math.max(4, Math.round(w.outSum/maxW*82))}px"></i>
+      </div><small>${w.label}</small>
+    </div>`).join('');
   // Recent moves
   renderObjetivos();
   const movEl = document.getElementById('fin-mov');
   if (movEl) {
-    const all = allDays.flatMap(d => [
+    const autoMovs = incAuto ? finDates.flatMap(x => finAutoDay(x).items.map(t => ({
+      id: t.id, _type:'corrida', _auto:true, _date:x, _val:t.offer_value||0,
+      desc: (t.platform==='99'?'99':'Uber')+' · corrida automática'
+    }))) : [];
+    const all = [...allDays.flatMap(d => [
       ...d.trips.map(t=>({...t, _type:'corrida',_date:d.date,_val:t.value})),
       ...d.expenses.map(e=>({...e, _type:'despesa',_date:d.date,_val:-e.amount})),
       ...d.revenues.map(r=>({...r, _type:'receita',_date:d.date,_val:r.amount}))
-    ]).filter(e => sc==='all' || (sc==='prof'&&e.scope!=='pessoal') || (sc==='pes'&&e.scope==='pessoal'))
-      .sort((a,b)=>b._date.localeCompare(a._date)).slice(0,8);
+    ]).filter(e => sc==='all' || (sc==='prof'&&e.scope!=='pessoal') || (sc==='pes'&&e.scope==='pessoal')),
+      ...autoMovs
+    ].sort((a,b)=>b._date.localeCompare(a._date)).slice(0,8);
     movEl.innerHTML = all.length ? all.map(e => {
       const isPos = e._val >= 0;
-      return `<div class="item" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #E2E8F0">
+      const canEdit = e._type === 'despesa' || e._type === 'receita';
+      const tapAttr = canEdit ? ` onclick="editLanc('${e.id}','${e._date}','${e._type}')"` : '';
+      return `<div class="item"${tapAttr} style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #E2E8F0${canEdit?';cursor:pointer':''}">
         <div style="width:36px;height:36px;border-radius:12px;background:${isPos?'#ECFDF3':'#FEF2F2'};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:${isPos?'#16A34A':'#EF4444'}">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">${isPos?'<path d="M12 5v14M5 12h14"/>':'<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>'}</svg>
         </div>
@@ -4421,28 +4539,28 @@ function renderObjetivos() {
 
   function build(kind) {
     const listKey = kind === 'receita' ? 'revenues' : 'expenses';
-    const rows = [], locked = [];
+    const rows = [];
     [kind+'_operacional', kind+'_pessoal'].forEach(key => {
       const scope = key.endsWith('pessoal') ? 'pessoal' : 'operacional';
       const cats  = DB.cats(key) || [];
       const goals = DB.objGoals(key) || {};
       cats.forEach(c => {
         const goal = parseFloat(goals[c.id]) || 0;
-        if (!goal) { locked.push(c.l); return; }
+        if (!goal) return; // só objetivos configurados (> 0) aparecem na lista
         const spent = mesAtualDays.reduce((s,d) => s + d[listKey].filter(x => x.category === c.id && x.scope === scope).reduce((a,x)=>a+(x.amount||0),0), 0);
         const pct = goal ? Math.round(spent/goal*100) : 0;
         rows.push({ label: c.l, spent, goal, pct, over: pct > 100 });
       });
     });
-    return { rows, locked };
+    return { rows };
   }
 
   [['rec','receita'], ['desp','despesa']].forEach(([tab, kind]) => {
-    const { rows, locked } = build(kind);
+    const { rows } = build(kind);
     const barClass = tab === 'rec' ? 'rec' : 'exp';
-    let html = rows.map(r => `<div class="goal-item"><div class="goal-top"><strong>${r.label}</strong><span${r.over?' style="color:#EF4444"':''}>${DB.fRI(r.spent)} de ${DB.fRI(r.goal)} · ${r.pct}%</span></div><div class="gbar ${barClass}${r.over?' over':''}"><i style="width:${Math.min(100,r.pct)}%"></i></div></div>`).join('');
-    html += locked.map(l => `<div class="goal-locked" onclick="openObjConfig()"><span>${l} — objetivo não definido</span><b>Configurar</b></div>`).join('');
-    if (!rows.length && !locked.length) html = '<div class="empty">Nenhuma categoria cadastrada</div>';
+    const tagHtml = `<span class="obj-tag ${tab}">${tab === 'rec' ? 'Receita' : 'Despesa'}</span>`;
+    let html = rows.map(r => `<div class="goal-item"><div class="goal-top"><strong>${tagHtml}${r.label}</strong><span${r.over?' style="color:#EF4444"':''}>${DB.fRI(r.spent)} de ${DB.fRI(r.goal)} · ${r.pct}%</span></div><div class="gbar ${barClass}${r.over?' over':''}"><i style="width:${Math.min(100,r.pct)}%"></i></div></div>`).join('');
+    if (!rows.length) html = '<div class="empty">Nenhum objetivo configurado ainda</div>';
     const listEl = document.getElementById('obj-'+tab+'-list');
     if (listEl) listEl.innerHTML = html;
   });
@@ -4605,6 +4723,7 @@ function setLancFormStatus(s) {
 }
 
 function openLanc(tipo) {
+  _lancResetEdit();
   setType(tipo || 'receita');
   // Pré-preenche com a data da jornada que estava aberta (S.curDate),
   // não a data de hoje — evita lançar no dia errado sem perceber.
@@ -4693,10 +4812,10 @@ function renderCatsModal(resetState = true) {
 }
 
 function catIconPickerHtml(selectedIcon, pickFn, wrapId) {
-  return `<div id="${wrapId}" style="display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-bottom:12px">
+  return `<div id="${wrapId}" style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px;margin-bottom:12px">
       ${CAT_SVG_ICONS.map(ic => `
         <button onclick="${pickFn}('${ic.k}')" data-ic="${ic.k}"
-          style="width:44px;height:44px;border-radius:11px;border:1.5px solid ${selectedIcon===ic.k?'#22C55E':'#E2E8F0'};background:${selectedIcon===ic.k?'#F0FDF4':'#F8FAFC'};color:${selectedIcon===ic.k?'#16A34A':'#64748B'};display:flex;align-items:center;justify-content:center;cursor:pointer">${ic.svg}</button>
+          style="width:100%;height:42px;border-radius:11px;border:1.5px solid ${selectedIcon===ic.k?'#22C55E':'#E2E8F0'};background:${selectedIcon===ic.k?'#F0FDF4':'#F8FAFC'};color:${selectedIcon===ic.k?'#16A34A':'#64748B'};display:flex;align-items:center;justify-content:center;cursor:pointer">${ic.svg}</button>
       `).join('')}
     </div>`;
 }
@@ -4836,6 +4955,65 @@ function setFreq(btn) {
   document.querySelectorAll('.freq button').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
+// ── Edição de lançamento (reaproveita o modal mo-lancamento) ──
+let lancEditRef = null; // {id, date, type} quando editando
+function _lancResetEdit() {
+  lancEditRef = null;
+  const br = document.getElementById('l-btn-rec'), bd = document.getElementById('l-btn-dep');
+  if (br) { br.disabled = false; br.style.opacity = ''; }
+  if (bd) { bd.disabled = false; bd.style.opacity = ''; }
+}
+function editLanc(id, date, type) {
+  const day = DB.day(date);
+  const arr = type === 'receita' ? day.revenues : day.expenses;
+  const it = (arr||[]).find(x => x.id === id);
+  if (!it) { showToast('Lançamento não encontrado', 'error'); return; }
+  lancEditRef = { id, date, type };
+  setType(type);
+  setScope(it.scope || 'operacional');
+  // Troca receita<->despesa travada na edição (excluir e relançar se precisar)
+  const br = document.getElementById('l-btn-rec'), bd = document.getElementById('l-btn-dep');
+  if (br) { br.disabled = type !== 'receita'; br.style.opacity = type !== 'receita' ? '.4' : ''; }
+  if (bd) { bd.disabled = type !== 'despesa'; bd.style.opacity = type !== 'despesa' ? '.4' : ''; }
+  const key = type + '_' + (it.scope || 'operacional');
+  const cats = DB.cats(key) || DEFAULT_CATS[key] || [];
+  const ci = cats.findIndex(c => c.id === it.category);
+  lancCatSel = ci >= 0 ? ci : 0;
+  renderLancCats();
+  const v = document.getElementById('l-valor'); if (v) v.value = it.amount || '';
+  const ds = document.getElementById('l-desc'); if (ds) ds.value = it.desc || '';
+  const di = document.getElementById('l-data'); if (di) di.value = it.date || date;
+  lancRecOn = !!it.recorrente;
+  lancFreqSel = it.freq || 'Semanal';
+  const tog = document.getElementById('l-toggle-rec'); if (tog) tog.classList.toggle('on', lancRecOn);
+  const fq = document.getElementById('l-freq');
+  if (fq) {
+    fq.classList.toggle('show', lancRecOn);
+    fq.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.textContent === lancFreqSel));
+  }
+  setLancFormStatus(it.status || 'pago');
+  const sb = document.getElementById('l-save');
+  if (sb) sb.textContent = 'Salvar alterações';
+  openMo('mo-lancamento');
+}
+function delLanc(id, date, type) {
+  showConfirm('Excluir ' + (type === 'receita' ? 'esta receita' : 'esta despesa') + '?', () => {
+    const day = DB.day(date);
+    const key = type === 'receita' ? 'revenues' : 'expenses';
+    const before = (day[key]||[]).length;
+    day[key] = (day[key]||[]).filter(x => x.id !== id);
+    if (day[key].length === before) return;
+    DB.saveDay(day);
+    SYNC.del(type === 'receita' ? 'revenues' : 'expenses', { id });
+    showToast(type === 'receita' ? 'Receita excluída' : 'Despesa excluída');
+    setTimeout(() => {
+      try { renderJornada(); } catch(e) {}
+      try { renderHome(); } catch(e) {}
+      try { renderFin(); } catch(e) {}
+      try { renderLancamentos(); } catch(e) {}
+    }, 60);
+  });
+}
 function saveLanc() {
   const val = parseFloat(document.getElementById('l-valor')?.value || 0);
   if (!val) { showToast('Informe o valor', 'error'); return; }
@@ -4843,6 +5021,51 @@ function saveLanc() {
   const cats = DB.cats(key) || DEFAULT_CATS[key] || [];
   const cat  = cats[lancCatSel];
   const date = document.getElementById('l-data')?.value || DB.today();
+
+  // ── Modo edição: atualiza o lançamento existente (mesmo id) ──
+  if (lancEditRef) {
+    const { id, date: oldDate, type } = lancEditRef;
+    const listKey = type === 'receita' ? 'revenues' : 'expenses';
+    const oldDay = DB.day(oldDate);
+    const idx = (oldDay[listKey]||[]).findIndex(x => x.id === id);
+    if (idx === -1) { _lancResetEdit(); closeMo('mo-lancamento'); return; }
+    const it = oldDay[listKey][idx];
+    Object.assign(it, {
+      category: cat?.id || '', categoryLabel: cat?.l || '',
+      desc: document.getElementById('l-desc')?.value || '',
+      amount: val, date, scope: S.lancScope,
+      recorrente: lancRecOn, freq: lancFreqSel,
+      status: _lancStatusSel || it.status || 'pago'
+    });
+    if (date !== oldDate) {
+      oldDay[listKey].splice(idx, 1);
+      DB.saveDay(oldDay);
+      const newDay = DB.day(date);
+      if (!newDay[listKey]) newDay[listKey] = [];
+      newDay[listKey].push(it);
+      DB.saveDay(newDay);
+    } else {
+      DB.saveDay(oldDay);
+    }
+    SYNC.push(listKey, {
+      id: it.id, date: it.date, category: it.category, category_label: it.categoryLabel,
+      amount: it.amount, description: it.desc, scope: it.scope,
+      recorrente: it.recorrente, freq: it.freq, status: it.status, due_date: it.date || null
+    });
+    _lancResetEdit();
+    closeMo('mo-lancamento');
+    document.getElementById('l-valor').value = '';
+    document.getElementById('l-desc').value = '';
+    showToast('Alterações salvas');
+    setTimeout(() => {
+      try { renderJornada(); } catch(e) {}
+      try { renderHome(); } catch(e) {}
+      try { renderFin(); } catch(e) {}
+      try { renderLancamentos(); } catch(e) {}
+    }, 60);
+    return;
+  }
+
   const day  = DB.day(date);
   const entry = {
     id: DB.uid(), category: cat?.id || '', categoryLabel: cat?.l || '',
