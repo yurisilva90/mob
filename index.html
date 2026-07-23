@@ -3244,6 +3244,27 @@ function setCorridasPlat(p) {
   renderCorridasActive();
 }
 // ── Corridas: alterna entre Importadas (trips locais) e Automáticas (auto_trips no Supabase) ──
+// ── Corridas automáticas → alimentam a Jornada (pedido do Yuri, 23/07/2026) ──
+// Busca auto_trips do dia pra somar em ganhos/km/corridas da Jornada e da
+// sessão certa dentro dela — sem se misturar com day.trips (Importadas),
+// só somando junto na hora de mostrar total. Timestamp de referência:
+// trip_started_at (início real da corrida) — cai sempre dentro da sessão
+// (Jornada) que estava rodando, diferente de accepted_at que pode ser
+// alguns segundos antes ainda na sessão anterior num caso raro de virada.
+function autoTripTs(t) {
+  const iso = t.trip_started_at || t.accepted_at;
+  return iso ? new Date(iso).getTime() : 0;
+}
+async function loadAutoTripsForDay(dateStr) {
+  if (!_supaUser) return [];
+  const from = dateStr+'T00:00:00', to = dateStr+'T23:59:59';
+  const { data, error } = await _SUPA.from('auto_trips').select('*')
+    .eq('user_id', _supaUser.id)
+    .gte('trip_started_at', from).lte('trip_started_at', to)
+    .order('trip_started_at', {ascending:true});
+  return error ? [] : (data||[]);
+}
+
 function renderCorridasActive() {
   if ((S.corSource||'imp') === 'auto') loadAutoTrips(); else renderCorridas();
 }
@@ -3460,7 +3481,22 @@ function renderJornada() {
   // Dia da semana + badge "Hoje" na mesma linha
   if (dowEl) dowEl.innerHTML = dows[dt.getDay()];
   const day = DB.day(d);
-  const rev = day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0);
+  // Corridas automáticas do dia — busca assíncrona, cacheada por data (não
+  // refaz a busca em toda chamada de renderJornada, que roda com frequência
+  // inclusive a cada tick do timer da jornada ativa). Refresh periódico via
+  // _syncTick (a cada 1min) cobre corridas novas capturadas durante o dia.
+  if (S.autoTripsDate !== d) {
+    S.autoTripsDate = d;
+    S.autoTrips = [];
+    loadAutoTripsForDay(d).then(list => {
+      if (S.autoTripsDate !== d) return; // usuário já trocou de dia
+      S.autoTrips = list;
+      renderJornada();
+    });
+  }
+  day.autoTrips = S.autoTrips || [];
+  const rev = day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0)
+            + day.autoTrips.reduce((s,t)=>s+(t.offer_value||0),0);
   const exp = day.expenses.reduce((s,e)=>s+(e.amount||0),0);
   setText('d-rev', DB.fRI(rev));
   setText('d-exp', DB.fRI(exp));
@@ -3492,16 +3528,23 @@ function renderJornada() {
     sessToggleBtn.style.display = (day.sessions||[]).length > 3 ? '' : 'none';
     sessToggleBtn.innerHTML = S.sessionsExpanded ? 'Ver menos' : 'Ver todas &#8250;';
   }
-  // Corridas (5 mais recentes, ou todas)
+  // Corridas (5 mais recentes, ou todas) — Importadas + Automáticas juntas,
+  // ordenadas por horário real (não por ordem de gravação/sync).
   const tEl = document.getElementById('trips-list');
   const toggleBtn = document.getElementById('trips-toggle');
   if (tEl) {
-    const all = day.trips.slice().reverse();
-    const show = S.tripsExpanded ? all : all.slice(0,5);
-    tEl.innerHTML = show.length ? show.map(t => tripItem(t)).join('') : '<div class="empty">Nenhuma corrida registrada</div>';
+    const manualTs = t => t.ts || (t.time ? new Date(d+'T'+t.time+':00').getTime() : 0);
+    const merged = [
+      ...day.trips.map(t => ({ kind:'manual', ts: manualTs(t), t })),
+      ...day.autoTrips.map(t => ({ kind:'auto', ts: autoTripTs(t), t })),
+    ].sort((a,b) => b.ts - a.ts);
+    const show = S.tripsExpanded ? merged : merged.slice(0,5);
+    tEl.innerHTML = show.length
+      ? show.map(x => x.kind==='manual' ? tripItem(x.t) : autoTripItem(x.t)).join('')
+      : '<div class="empty">Nenhuma corrida registrada</div>';
+    if (toggleBtn) toggleBtn.style.display = merged.length > 5 ? '' : 'none';
   }
   if (toggleBtn) {
-    toggleBtn.style.display = day.trips.length > 5 ? '' : 'none';
     toggleBtn.innerHTML = S.tripsExpanded ? 'Ver menos' : 'Ver todas &#8250;';
   }
   // Lançamentos (5 mais recentes, ou todos)
@@ -3762,12 +3805,20 @@ function sessionItem(label, sess, origIdx, dateStr, day, live) {
     if (!ts) return false;
     return ts >= startMs && (!endMs || ts <= endMs);
   });
-  const corridas = trips.length;
-  const ganhos = trips.reduce((s,t)=>s+(t.value||0),0);
+  // Corridas automáticas desta sessão — mesmo filtro por horário, usando
+  // trip_started_at/accepted_at (autoTripTs, ver loadAutoTripsForDay).
+  const autoTrips = (day?.autoTrips||[]).filter(t => {
+    const ts = autoTripTs(t);
+    if (!ts) return false;
+    return ts >= startMs && (!endMs || ts <= endMs);
+  });
+  const corridas = trips.length + autoTrips.length;
+  const ganhos = trips.reduce((s,t)=>s+(t.value||0),0) + autoTrips.reduce((s,t)=>s+(t.offer_value||0),0);
   // Km ativo = soma do km de cada corrida realizada (tempo 'em corrida')
   // Km deslocamento = km total do GPS MENOS o km ativo (tempo rodando sem
   // corrida — indo pro ponto, retornando pra casa, esperando chamado etc.)
-  const kmAtivo = trips.reduce((s,t)=>s+(parseFloat(t.km)||0),0);
+  const kmAtivo = trips.reduce((s,t)=>s+(parseFloat(t.km)||0),0)
+                + autoTrips.reduce((s,t)=>s+(parseFloat(t.real_km_trip ?? t.offer_km_trip)||0),0);
   const kmDesloc = Math.max(0, km - kmAtivo);
 
   const horasDecimal = elapsedSecs > 0 ? elapsedSecs/3600 : 0;
@@ -3800,7 +3851,10 @@ function sessionItem(label, sess, origIdx, dateStr, day, live) {
         ${corridas > 0 ? `<span>${corridas} corrida${corridas !== 1 ? 's' : ''}</span>` : ''}
       </div>
       ${corridas > 0
-        ? trips.map(t => tripItem(t)).join('')
+        ? [
+            ...trips.map(t => ({ ts: t.ts || (t.time?new Date(dateStr+'T'+t.time+':00').getTime():0), html: tripItem(t) })),
+            ...autoTrips.map(t => ({ ts: autoTripTs(t), html: autoTripItem(t) })),
+          ].sort((a,b)=>b.ts-a.ts).map(x=>x.html).join('')
         : '<div class="jss-trips-empty">Nenhuma corrida nesta jornada</div>'}
     </div>
   </div>`;
@@ -6345,6 +6399,16 @@ async function _syncTick() {
   await _pullTripsCorrections();
   await _autoSyncLocalData();
   _backfillKmEstimates();
+  // Corridas automáticas novas capturadas durante o dia (pedido do Yuri,
+  // 23/07/2026) — a busca em renderJornada só roda quando a data muda, esse
+  // tick de 1min é quem mantém atualizado num dia que já está aberto.
+  if (S && S.sec === 'jornada' && S.curDate) {
+    try {
+      const list = await loadAutoTripsForDay(S.curDate);
+      S.autoTrips = list; S.autoTripsDate = S.curDate;
+      renderJornada();
+    } catch(e) {}
+  }
 }
 // Migração única: limpa prefixo "Bairro da/do" de corridas já salvas localmente
 (function _migrateBairroNames(){
