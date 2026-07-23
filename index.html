@@ -2699,7 +2699,7 @@ async function renderHgInsight(rev, tc, km, exp, hrs, pctL) {
   const prevDates = getHomeDaysPrev ? getHomeDaysPrev() : null;
   let revPrev = null, tcPrev = null;
   if (prevDates && prevDates.length) {
-    const pd = prevDates.map(d => DB.day(d));
+    const pd = prevDates.map(d => ({ ...DB.day(d), trips: DB.day(d).trips.concat(autoTripsAsTrips(d)) }));
     revPrev = pd.reduce((s,d) => s + d.trips.reduce((a,t)=>a+(t.value||0),0) + d.revenues.reduce((a,r)=>a+(r.amount||0),0), 0);
     tcPrev  = pd.reduce((s,d) => s + d.trips.length, 0);
   }
@@ -2716,7 +2716,7 @@ async function renderHgInsight(rev, tc, km, exp, hrs, pctL) {
   // melhor hora
   const horaOrder = Array.from({length:24},(_,h)=>h+'h');
   const horaKeyFn = date => {
-    const trips = DB.day(date).trips.filter(t => t.time);
+    const trips = dayTripsAll(date).filter(t => t.time);
     const pk = {};
     trips.forEach(t => { const h = parseInt(t.time.split(':')[0])+'h'; pk[h]=(pk[h]||0)+(t.value||0); });
     return Object.keys(pk).map(k=>({key:k,value:pk[k]}));
@@ -2731,13 +2731,13 @@ async function renderHgInsight(rev, tc, km, exp, hrs, pctL) {
     if (plan && plan.moneyGoal > 0) metaPct = Math.round(rev / plan.moneyGoal * 100);
   } catch(e) {}
 
-  const diasTrabalhados = dates.filter(d => DB.day(d).trips.length > 0).length || 1;
+  const diasTrabalhados = dates.filter(d => dayTripsAll(d).length > 0).length || 1;
   const nDays = diasTrabalhados; // ritmo por dia TRABALHADO, não por dia do período
   const rpkm  = km > 0 ? rev/km : 0;
   const rphr  = hrs > 0 ? rev/hrs : 0;
 
   // confiabilidade dos dados de hora — só conta corridas que vieram com hora registrada
-  const corridasComHora = dates.reduce((s,d) => s + DB.day(d).trips.filter(t => t.time && t.time.trim()).length, 0);
+  const corridasComHora = dates.reduce((s,d) => s + dayTripsAll(d).filter(t => t.time && t.time.trim()).length, 0);
 
   try {
     const { data:{ session } } = await _SUPA.auth.getSession();
@@ -2945,7 +2945,25 @@ function hgGroupBy(items, keyFn, valFn) {
 function renderHomeGraphs() {
   if (!S || !DB || !getHomeDays) return;
   const dates = getHomeDays();
-  const days = dates.map(d => DB.day(d));
+  // Corridas automáticas do período inteiro (mais o período anterior, que
+  // o insight usa pra comparação) — busca em lote UMA VEZ, cacheada pelo
+  // intervalo. Refresh próprio a cada 60s enquanto na Home (setInterval no
+  // fim do arquivo), pra pegar corrida nova sem precisar sair e voltar.
+  const prevDatesForRange = getHomeDaysPrev ? getHomeDaysPrev() : [];
+  const allDatesForRange = dates.concat(prevDatesForRange).sort();
+  const rangeKey = (allDatesForRange[0]||'') + '..' + (allDatesForRange[allDatesForRange.length-1]||'');
+  if (S.autoTripsHomeRange !== rangeKey) {
+    S.autoTripsHomeRange = rangeKey;
+    loadAutoTripsIndexed(allDatesForRange[0], allDatesForRange[allDatesForRange.length-1]).then(map => {
+      if (S.autoTripsHomeRange !== rangeKey) return; // período já mudou de novo
+      S.autoTripsByDate = map;
+      if (S.sec === 'home') renderHomeGraphs();
+    });
+  }
+  const days = dates.map(d => {
+    const day = DB.day(d);
+    return { ...day, trips: day.trips.concat(autoTripsAsTrips(d)) };
+  });
   const rev   = days.reduce((s,d) => s + d.trips.reduce((a,t)=>a+(t.value||0),0) + d.revenues.reduce((a,r)=>a+(r.amount||0),0), 0);
   const exp   = days.reduce((s,d) => s + d.expenses.reduce((a,e)=>a+(e.amount||0),0), 0);
   const km    = days.reduce((s,d) => s + d.trips.reduce((a,t)=>a+(t.km||0),0), 0);
@@ -3064,7 +3082,7 @@ function hgBucketStats(dates, keyFn, valueFn, order) {
 }
 function hgDayTotal(date) {
   const day = DB.day(date);
-  return day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0);
+  return dayTripsAll(date).reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0);
 }
 function hgWeekStart(date) {
   const d = new Date(date+'T00:00:00'); const dow = (d.getDay()+6)%7; d.setDate(d.getDate()-dow);
@@ -3114,7 +3132,7 @@ function renderHgChartHora() {
   // assim um dia com 2 corridas na mesma hora conta certo, e dias diferentes na mesma
   // hora ficam no mesmo balde.
   const keyFn = date => {
-    const trips = DB.day(date).trips.filter(t => t.time);
+    const trips = dayTripsAll(date).filter(t => t.time);
     const perKey = {};
     trips.forEach(t => {
       const hr = parseInt(t.time.split(':')[0]);
@@ -3186,7 +3204,7 @@ function renderHgPlatformPie(days) {
 function setHgRevDesp(m) {
   S.hgRevDesp = m;
   ['receita','despesa'].forEach(x => { const e=document.getElementById('hg-rd-'+x); if(e) e.classList.toggle('active', x===m); });
-  renderHgCatPie(getHomeDays().map(d => DB.day(d)));
+  renderHgCatPie(getHomeDays().map(d => ({ ...DB.day(d), trips: DB.day(d).trips.concat(autoTripsAsTrips(d)) })));
 }
 function renderHgCatPie(days) {
   let items;
@@ -3298,6 +3316,64 @@ async function loadAutoTripsForDay(dateStr) {
     .gte('trip_started_at', from).lte('trip_started_at', to)
     .order('trip_started_at', {ascending:true});
   return error ? [] : (data||[]);
+}
+
+// ── Corridas automáticas → alimentam a Home (pedido do Yuri, 23/07/2026) ──
+// Mesmo gap da Jornada, só que espalhado pela Home inteira: valor, km,
+// corridas, todos os gráficos e o insight de IA só olhavam day.trips
+// (Importadas) e ficavam cegos pra qualquer dia 100% automático. Em vez de
+// corrigir função por função (arriscado, muita superfície), busca TODAS as
+// automáticas do período de UMA VEZ (não uma consulta por dia — helper
+// abaixo cobre semana/mês/ano inteiros numa chamada só) e injeta como
+// corridas "de mentira" no formato de trip normal — todo código que já lê
+// day.trips corretamente passa a enxergar as automáticas de graça, sem
+// precisar tocar em cada gráfico individualmente.
+async function loadAutoTripsIndexed(fromDate, toDate) {
+  if (!_supaUser) return {};
+  const from = fromDate+'T00:00:00', to = toDate+'T23:59:59';
+  const { data, error } = await _SUPA.from('auto_trips').select('*')
+    .eq('user_id', _supaUser.id)
+    .gte('trip_started_at', from).lte('trip_started_at', to)
+    .order('trip_started_at', {ascending:true});
+  if (error || !data) return {};
+  const map = {};
+  data.forEach(t => {
+    const iso = t.trip_started_at || t.accepted_at;
+    if (!iso) return;
+    const dt = new Date(iso);
+    const dateStr = dt.getFullYear()+'-'+p2(dt.getMonth()+1)+'-'+p2(dt.getDate());
+    (map[dateStr] = map[dateStr] || []).push(t);
+  });
+  return map;
+}
+// Converte as automáticas de um dia (já indexadas em S.autoTripsByDate) pro
+// MESMO formato de objeto que day.trips usa — value/km/time/duration/
+// platform/dinheiro — assim qualquer soma/filtro que já existe funciona
+// sem mudança nenhuma. NUNCA usar pra salvar (é só leitura/exibição —
+// misturar isso em day.trips de verdade duplicaria dado no Supabase).
+function autoTripsAsTrips(date) {
+  const list = (S.autoTripsByDate && S.autoTripsByDate[date]) || [];
+  return list.map(at => {
+    const start = at.trip_started_at ? new Date(at.trip_started_at) : null;
+    const end   = at.trip_ended_at ? new Date(at.trip_ended_at) : null;
+    const durMin = start && end ? Math.max(0, Math.round((end-start)/60000))
+                 : Math.round((at.offer_duration_trip_sec||0)/60);
+    return {
+      id: 'auto_'+at.id, _auto: true,
+      platform: at.platform || 'uber',
+      time: start ? p2(start.getHours())+':'+p2(start.getMinutes()) : '',
+      duration: durMin,
+      value: parseFloat(at.offer_value)||0,
+      km: parseFloat(at.real_km_trip ?? at.offer_km_trip) || 0,
+      dinheiro: !!at.dinheiro,
+      origin:'', dest:'', category:''
+    };
+  });
+}
+// Todas as corridas de um dia — Importadas + Automáticas juntas, no mesmo
+// formato. Uso exclusivo de leitura/agregação (gráficos, insights, somas).
+function dayTripsAll(date) {
+  return DB.day(date).trips.concat(autoTripsAsTrips(date));
 }
 
 // ── Corridas automaticas no Financeiro (soma por dia, cacheada em memoria) ──
@@ -6882,6 +6958,18 @@ async function _refreshAutoTripsIfOnJornada() {
   } catch(e) {}
 }
 setTimeout(()=>{ _refreshAutoTripsIfOnJornada(); setInterval(_refreshAutoTripsIfOnJornada, 25*1000); }, 4000);
+
+// Mesma lógica pra Home (pedido do Yuri, 23/07/2026) — a checagem de cache
+// em renderHomeGraphs() só refaz a busca quando o INTERVALO DE DATAS muda
+// (troca de semana/mês/etc), nunca por tempo — uma corrida nova no meio do
+// dia nunca apareceria sozinha sem isso. 60s (não precisa ser tão rápido
+// quanto a Jornada, que é tempo real; Home é histórico/agregado).
+async function _refreshAutoTripsIfOnHome() {
+  if (!(S && S.sec === 'home')) return;
+  S.autoTripsHomeRange = null; // força o próximo renderHomeGraphs a rebuscar
+  try { renderHomeGraphs(); } catch(e) {}
+}
+setTimeout(()=>{ setInterval(_refreshAutoTripsIfOnHome, 60*1000); }, 5000);
 
 // ── Status de rede: indicador visual + reconciliação ao voltar online ──
 let _netSyncing = false;
