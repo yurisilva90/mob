@@ -152,10 +152,19 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .stats-cards .v.red{color:#EF4444}
 .stats-cards .l{font-size:9.5px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:6px}
 /* R$/h e R$/km — largura total, preenchendo até as bordas do card */
-.j-wide{display:flex;gap:8px;margin-top:8px}
-.j-wide-cell{flex:1;background:rgba(0,0,0,.16);border-radius:12px;padding:9px 4px;text-align:center}
-.j-wide-cell strong{display:block;font-size:16px;font-weight:800;color:#fff}
-.j-wide-cell span{font-size:9px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+/* Faixa de destaque R$/h + R$/km (23/07/2026, mockup aprovado — Opção A).
+   Cor dinâmica POR INDICADOR (independente um do outro — R$/h pode estar
+   verde com R$/km em vermelho ao mesmo tempo): compara com os mesmos
+   limiares vermelho/verde que o MōB Flash já usa
+   (DB.cfg().flashReader.kpis.rhora/.rkm), aplicada em renderJourneyCard(). */
+.rate-strip{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.rate-cell{text-align:center;border-radius:14px;padding:11px 6px;background:rgba(34,197,94,.16);border:1px solid rgba(34,197,94,.4);transition:background .3s,border-color .3s}
+.rate-cell.o{background:rgba(245,158,11,.18);border-color:rgba(245,158,11,.45)}
+.rate-cell.r{background:rgba(239,68,68,.20);border-color:rgba(239,68,68,.5)}
+.rate-cell strong{display:block;font-size:21px;font-weight:800;color:#fff;letter-spacing:-.02em}
+.rate-cell span{display:block;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#86efac;margin-top:2px}
+.rate-cell.o span{color:#fde68a}
+.rate-cell.r span{color:#fca5a5}
 /* Metas do dia: CSS movido pra seção solta (ver .goal-item/.gbar mais
    abaixo, estilo "grande" já existente) — removido daqui em 23/07/2026,
    não fica mais embutido no fundo escuro do card da jornada. */
@@ -1158,6 +1167,10 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <div><h2 id="jc-timer">00:00:00</h2><p id="jc-sub">Nenhuma sessão iniciada</p></div>
       <div class="j-km"><strong id="jc-km">0,0</strong><span>Km</span></div>
     </div>
+    <div class="rate-strip" id="jc-rate-strip">
+      <div class="rate-cell" id="jc-rate-hora"><strong id="jc-rsh">R$0,00</strong><span>R$ / hora</span></div>
+      <div class="rate-cell" id="jc-rate-km"><strong id="jc-rskm">R$0,00</strong><span>R$ / km</span></div>
+    </div>
     <div class="j-metrics">
       <div class="j-mini">
         <div style="display:flex;align-items:center;justify-content:center;gap:5px">
@@ -1182,10 +1195,6 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <div class="j-mini sm"><strong id="jc-trips">0</strong><span>Corridas</span></div>
       <div class="j-mini sm"><strong id="jc-kmativo">0,0</strong><span>Km ativo</span></div>
       <div class="j-mini sm"><strong id="jc-kmdesl">0,0</strong><span>Km deslc.</span></div>
-    </div>
-    <div class="j-wide">
-      <div class="j-wide-cell"><strong id="jc-rsh">R$0,00</strong><span>R$ por hora</span></div>
-      <div class="j-wide-cell"><strong id="jc-rskm">R$0,00</strong><span>R$ por km</span></div>
     </div>
     <div class="j-actions" id="jc-actions"></div>
   </div>
@@ -3763,8 +3772,19 @@ function renderJourneyCard(day, isToday) {
   const ganhosDia = day.trips.reduce((s,t)=>s+(t.value||0),0)
                   + autoTripsHoje.reduce((s,t)=>s+(t.offer_value||0),0);
   const horasDecimal = totalElapsed > 0 ? totalElapsed/3600 : 0;
-  setText('jc-rsh', horasDecimal > 0 ? DB.fRI(ganhosDia/horasDecimal) : 'R$0,00');
-  setText('jc-rskm', totalKm > 0 ? DB.fRI(ganhosDia/totalKm) : 'R$0,00');
+  const rsh  = horasDecimal > 0 ? ganhosDia/horasDecimal : null;
+  const rskm = totalKm > 0 ? ganhosDia/totalKm : null;
+  setText('jc-rsh', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
+  setText('jc-rskm', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
+  // Cor por indicador — pedido do Yuri (23/07/2026, mockup aprovado):
+  // mesmos limiares vermelho/verde que o motorista já ajusta na régua do
+  // MōB Flash (Indicadores → R$/km e R$/hora), cada indicador troca de cor
+  // por conta própria. Sem dado ainda (sessão não rodou tempo/km) fica
+  // neutro (verde), não faz sentido alarmar antes de ter dado de verdade.
+  const rateEl = document.getElementById('jc-rate-hora');
+  const kmEl   = document.getElementById('jc-rate-km');
+  if (rateEl) rateEl.className = 'rate-cell' + (rsh !== null ? ' ' + rateColorClass('rhora', rsh) : '');
+  if (kmEl)   kmEl.className   = 'rate-cell' + (rskm !== null ? ' ' + rateColorClass('rkm', rskm) : '');
 
   const actions = document.getElementById('jc-actions');
   if (!actions) return;
@@ -8991,6 +9011,23 @@ const FLASH_KPI_DEFS = [
 ];
 const FLASH_DEFAULT_ON = { rkm:true, rhora:true, rmin:false, margem:true, lucro:true };
 const FLASH_PREVIEW_SAMPLE = { rkm:2.37, rhora:49, rmin:0.58, margem:12, lucro:4 };
+
+// Reaproveita o mesmo limiar vermelho/verde do MōB Flash (Indicadores) pra
+// colorir a faixa de destaque R$/h · R$/km da Jornada (23/07/2026, pedido
+// do Yuri) — mesma calibração em dois lugares, sem duplicar configuração.
+// value <= red → 'r' | value >= green → '' (verde, classe base) | entre os
+// dois → 'o'. Se o motorista nunca mexeu na régua, cai no padrão de
+// fábrica (defRed/defGreen do FLASH_KPI_DEFS).
+function rateColorClass(kpiKey, value) {
+  const def = FLASH_KPI_DEFS.find(d => d.key === kpiKey);
+  if (!def) return '';
+  const cfg = (DB.cfg().flashReader && DB.cfg().flashReader.kpis && DB.cfg().flashReader.kpis[kpiKey]) || {};
+  const red = cfg.red !== undefined ? cfg.red : def.defRed;
+  const green = cfg.green !== undefined ? cfg.green : def.defGreen;
+  if (value <= red) return 'r';
+  if (value >= green) return '';
+  return 'o';
+}
 
 // ── MōB Flash: "Recusas" — regras que recusam a corrida sozinhas, mesmo
 // com os Indicadores financeiros bons. PEDIDO (16-17/07/2026): saiu do
