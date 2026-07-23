@@ -3672,12 +3672,20 @@ function renderJourneyCard(day, isToday) {
   const tth = Math.floor(totalElapsed/3600), ttm = Math.floor(totalElapsed%3600/60);
   setText('jc-total', tth+'h'+p2(ttm)+'m');
   setText('jc-kmtotal', totalKm.toFixed(1)+' km');
-  setText('jc-trips', day.trips.length);
-  const kmAtivo = day.trips.reduce((s,t)=>s+(t.km||0),0);
+  // CORRIGIDO (23/07/2026, confirmado com dado real pelo Yuri): esses 4
+  // KPIs do card principal (corridas, km ativo, R$/h, R$/km) só somavam
+  // day.trips (Importadas) — sessão só com automáticas mostrava tudo
+  // zerado mesmo com corridas de verdade rodando. Mesma correção que já
+  // tinha sido feita em rev/sessionItem/renderMetasDoDia, faltava aqui.
+  const autoTripsHoje = day.autoTrips || [];
+  setText('jc-trips', day.trips.length + autoTripsHoje.length);
+  const kmAtivo = day.trips.reduce((s,t)=>s+(t.km||0),0)
+                + autoTripsHoje.reduce((s,t)=>s+(parseFloat(t.real_km_trip ?? t.offer_km_trip)||0),0);
   const kmDesl = Math.max(0, totalKm - kmAtivo);
   setText('jc-kmativo', kmAtivo.toFixed(1));
   setText('jc-kmdesl', kmDesl.toFixed(1));
-  const ganhosDia = day.trips.reduce((s,t)=>s+(t.value||0),0);
+  const ganhosDia = day.trips.reduce((s,t)=>s+(t.value||0),0)
+                  + autoTripsHoje.reduce((s,t)=>s+(t.offer_value||0),0);
   const horasDecimal = totalElapsed > 0 ? totalElapsed/3600 : 0;
   setText('jc-rsh', horasDecimal > 0 ? DB.fRI(ganhosDia/horasDecimal) : 'R$0,00');
   setText('jc-rskm', totalKm > 0 ? DB.fRI(ganhosDia/totalKm) : 'R$0,00');
