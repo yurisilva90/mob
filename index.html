@@ -145,31 +145,20 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 /* ── Jornada screen extras ── */
 .daybar{display:flex;align-items:center;gap:10px;margin:4px 0 12px;padding:0 16px}.arrow{width:38px;height:38px;border-radius:14px;background:#fff;border:1px solid var(--line);box-shadow:0 3px 14px rgba(15,23,42,.06);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:20px;cursor:pointer;touch-action:manipulation}.datebox{flex:1;text-align:center}.datebox h1{font-size:19px;line-height:1.1;letter-spacing:-.04em}.datebox p{font-size:12px;color:var(--muted);margin-top:3px;font-weight:600}.today{font-size:10px;padding:2px 8px;border-radius:999px;background:rgba(14,165,233,.12);color:#0A2F6B;margin-left:5px}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px;margin-bottom:12px}
-.stats-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.stats-cards .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 4px;text-align:center}
-.stats-cards .v{font-size:14px;font-weight:800}
-.stats-cards .v.green{color:var(--green)}
+.stats-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.stats-cards .stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 6px;text-align:center;box-shadow:0 3px 14px rgba(15,23,42,.06)}
+.stats-cards .v{font-size:15px;font-weight:800;line-height:1}
+.stats-cards .v.green{color:var(--green2)}
 .stats-cards .v.red{color:#EF4444}
-.stats-cards .l{font-size:9px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin-top:3px}
+.stats-cards .l{font-size:9.5px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:6px}
 /* R$/h e R$/km — largura total, preenchendo até as bordas do card */
 .j-wide{display:flex;gap:8px;margin-top:8px}
 .j-wide-cell{flex:1;background:rgba(0,0,0,.16);border-radius:12px;padding:9px 4px;text-align:center}
 .j-wide-cell strong{display:block;font-size:16px;font-weight:800;color:#fff}
 .j-wide-cell span{font-size:9px;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.05em;font-weight:700}
-/* Metas do dia dentro do card da jornada (fundo escuro) */
-.j-metas-inline{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.18)}
-.j-metas-inline-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.j-metas-inline-head span{font-size:10.5px;font-weight:800;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.04em}
-.j-metas-inline-head a{font-size:10px;color:rgba(255,255,255,.65);font-weight:700;cursor:pointer}
-.j-metas-inline .goal-item{margin-bottom:6px;border-bottom:none !important;padding-bottom:0 !important}
-.j-metas-inline .goal-item:last-child{margin-bottom:0}
-.j-metas-inline .goal-top{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.8);font-weight:700;margin-bottom:4px}
-.j-metas-inline .goal-top strong{color:#fff;font-weight:800}
-.j-metas-inline .goal-top span:last-child{color:rgba(255,255,255,.85) !important;font-weight:700}
-.j-metas-inline .gbar{height:6px;background:rgba(0,0,0,.22);border-radius:99px;overflow:hidden}
-.j-metas-inline .gbar i,.j-metas-inline .gbar.money i,.j-metas-inline .gbar.km i,.j-metas-inline .gbar.time i{display:block;height:100%;background:#fff !important;border-radius:99px}
-.j-metas-inline .goal-locked{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:rgba(255,255,255,.75);font-weight:700;cursor:pointer}
-.j-metas-inline .goal-locked b{color:#fff;font-weight:800}
+/* Metas do dia: CSS movido pra seção solta (ver .goal-item/.gbar mais
+   abaixo, estilo "grande" já existente) — removido daqui em 23/07/2026,
+   não fica mais embutido no fundo escuro do card da jornada. */
 .stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px 8px;text-align:center;box-shadow:0 3px 14px rgba(15,23,42,.06)}.stat .v{font-family:'Inter',system-ui,sans-serif;font-size:15px;font-weight:700;white-space:nowrap}.stat .l{font-size:9px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-top:5px}.green{color:var(--green2)}.red{color:var(--red)}.blue{color:#0A2F6B}
 
 /* ── Journey card (controles embutidos) ── */
@@ -1152,10 +1141,6 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <div class="j-wide-cell"><strong id="jc-rsh">R$0,00</strong><span>R$ por hora</span></div>
       <div class="j-wide-cell"><strong id="jc-rskm">R$0,00</strong><span>R$ por km</span></div>
     </div>
-    <div class="j-metas-inline">
-      <div class="j-metas-inline-head"><span>Metas do dia</span><a onclick="openMetasHojeModal()">Editar &#8250;</a></div>
-      <div id="metas-dia-stack"></div>
-    </div>
     <div class="j-actions" id="jc-actions"></div>
   </div>
 
@@ -1165,14 +1150,20 @@ h1.hd-title{font-family:var(--font-brand)!important}
     <div class="stat"><div class="v" id="d-net">R$0</div><div class="l">Resultado</div></div>
   </div>
 
+  <!-- Metas do dia: pedido do Yuri (23/07/2026) — sai de dentro do card
+       azul da jornada (onde competia por espaço com timer/km/corridas) e
+       vira seção solta, igual "Lançamentos" logo abaixo (título + link no
+       fundo da tela, sem balão/card branco por trás). renderMetasDoDia()
+       não muda nada — só o container onde a mesma função escreve. -->
+  <div class="section" style="padding:0 16px 8px"><h2>Metas do dia</h2><button class="add" onclick="openMetasHojeModal()">Editar &#8250;</button></div>
+  <div style="padding:0 16px 4px" id="metas-dia-stack"></div>
+
   <div class="section" style="padding:0 16px 8px"><h2>Lançamentos</h2><div style="display:flex;gap:8px;align-items:center"><button class="add" onclick="toggleLancView()" id="lanc-toggle" style="display:none">Ver todas &#8250;</button><button class="add" onclick="openLanc('receita')">+ Adicionar</button></div></div>
   <div style="padding:0 16px"><div id="jorn-lanc-list"><div class="empty">Nenhum lançamento registrado</div></div></div>
 
   <div class="section" style="padding:16px 16px 8px"><h2>Jornadas do dia</h2><button class="add" onclick="toggleSessionsView()" id="sessions-toggle" style="display:none">Ver todas &#8250;</button></div>
   <div style="padding:0 16px"><div id="sessions-list"><div class="empty">Nenhuma sessão registrada</div></div></div>
 
-  <div class="section" style="padding:16px 16px 8px"><h2>Corridas</h2><button class="add" onclick="navTo('corridas')" id="trips-toggle">Ver todas &#8250;</button></div>
-  <div style="padding:0 16px"><div id="trips-list"><div class="empty">Nenhuma corrida registrada</div></div></div>
   <div style="height:8px"></div>
 </div>
 
@@ -3528,25 +3519,10 @@ function renderJornada() {
     sessToggleBtn.style.display = (day.sessions||[]).length > 3 ? '' : 'none';
     sessToggleBtn.innerHTML = S.sessionsExpanded ? 'Ver menos' : 'Ver todas &#8250;';
   }
-  // Corridas (5 mais recentes, ou todas) — Importadas + Automáticas juntas,
-  // ordenadas por horário real (não por ordem de gravação/sync).
-  const tEl = document.getElementById('trips-list');
-  const toggleBtn = document.getElementById('trips-toggle');
-  if (tEl) {
-    const manualTs = t => t.ts || (t.time ? new Date(d+'T'+t.time+':00').getTime() : 0);
-    const merged = [
-      ...day.trips.map(t => ({ kind:'manual', ts: manualTs(t), t })),
-      ...day.autoTrips.map(t => ({ kind:'auto', ts: autoTripTs(t), t })),
-    ].sort((a,b) => b.ts - a.ts);
-    const show = S.tripsExpanded ? merged : merged.slice(0,5);
-    tEl.innerHTML = show.length
-      ? show.map(x => x.kind==='manual' ? tripItem(x.t) : autoTripItem(x.t)).join('')
-      : '<div class="empty">Nenhuma corrida registrada</div>';
-    if (toggleBtn) toggleBtn.style.display = merged.length > 5 ? '' : 'none';
-  }
-  if (toggleBtn) {
-    toggleBtn.innerHTML = S.tripsExpanded ? 'Ver menos' : 'Ver todas &#8250;';
-  }
+  // Corridas: removido daqui (23/07/2026, pedido do Yuri) — já ficam
+  // acessíveis dentro do detalhe de cada jornada (seta expande e lista via
+  // sessionItem, que já mescla Importadas + Automáticas). Lista de
+  // Importadas ainda mora na tela Corridas separada (navTo('corridas')).
   // Lançamentos (5 mais recentes, ou todos)
   const lEl = document.getElementById('jorn-lanc-list');
   const lancToggleBtn = document.getElementById('lanc-toggle');
@@ -3667,7 +3643,8 @@ function saveMetasHoje() {
 function renderMetasDoDia(day) {
   const stack = document.getElementById('metas-dia-stack');
   if (!stack) return;
-  const rev = day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0);
+  const rev = day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0)
+            + (day.autoTrips||[]).reduce((s,t)=>s+(t.offer_value||0),0);
   const isToday = day.date === DB.today();
   const liveOn = isToday && S.gps.st==='running';
   const totalKm = (day.sessions||[]).reduce((s,x)=>s+(x.km||0),0) + (liveOn ? S.gps.km : 0) + (day.kmAdjust || 0);
