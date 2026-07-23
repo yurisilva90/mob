@@ -1259,7 +1259,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <div class="cfg-link" onclick="openObjConfig()">Configurar objetivos</div>
     </section>
     <section class="card cardPad" style="margin-bottom:14px">
-      <div class="cardHead"><h2>Fluxo do mês</h2></div>
+      <div class="cardHead"><h2>Fluxo</h2></div>
       <div class="fin-flow" id="fin-flow"></div>
       <div class="fin-flow-legend">
         <span><i style="background:#22C55E"></i>Entradas (com corridas)</span>
@@ -1272,7 +1272,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
         <button class="fin-action" onclick="openLanc('receita')"><div class="ico green"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></div>Receita</button>
         <button class="fin-action" onclick="openLanc('despesa')"><div class="ico red"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></div>Despesa</button>
         <button class="fin-action" onclick="navTo('lancamentos')"><div class="ico purple"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2Z"/></svg></div>Histórico</button>
-        <button class="fin-action" onclick="navTo('mais')"><div class="ico orange"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-4 4"/></svg></div>Relatório</button>
+        <button class="fin-action" onclick="navTo('relatorios')"><div class="ico orange"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-4 4"/></svg></div>Relatório</button>
       </div>
     </section>
     <section class="card" style="margin-bottom:14px">
@@ -1280,6 +1280,17 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <div id="fin-mov"><div class="empty">Nenhuma movimentação</div></div>
     </section>
     <div style="height:8px"></div>
+  </div>
+</div>
+
+<!-- ══ TELA RELATÓRIOS (placeholder — visão geral + alertas vêm na sequência) ══ -->
+<div class="screen" id="sc-relatorios">
+  <div style="display:flex;align-items:center;gap:10px;padding:14px 16px 6px">
+    <button onclick="navTo('financeiro')" style="width:32px;height:32px;border-radius:10px;background:#F1F5F9;border:0;display:flex;align-items:center;justify-content:center;color:#0F172A;cursor:pointer;flex-shrink:0"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+    <h2 style="font-size:17px;letter-spacing:-.02em;flex:1">Relatórios</h2>
+  </div>
+  <div style="padding:60px 16px;text-align:center">
+    <div class="empty">Em construção — aqui vai entrar a visão geral com alertas, incluindo pagamentos vencidos.</div>
   </div>
 </div>
 
@@ -2504,7 +2515,7 @@ function navTo(sec) {
   const sc = document.getElementById('sc-'+sec);
   if (sc) { sc.classList.add('on'); sc.style.display = 'block'; }
   // Map sub-screens to their nav parent
-  const navMap = {financeiro:'fav', lancamentos:'fav', 'planejar-jornada':'mais', corridas:'jornada', agenda:'mais', informes:'agenda', categorias:'mais'};
+  const navMap = {financeiro:'fav', lancamentos:'fav', relatorios:'fav', 'planejar-jornada':'mais', corridas:'jornada', agenda:'mais', informes:'agenda', categorias:'mais'};
   const navId = navMap[sec] || sec;
   const bn = document.getElementById('bn-'+navId);
   if (bn) bn.classList.add('active');
@@ -4551,29 +4562,49 @@ function renderFin() {
     setText('fin-vs-ant', '—');
   }
 
-  // Fluxo do mês — sempre o mês atual de verdade, não muda com o seletor Hoje/Mês/Ano.
-  // Barras duplas: entrada (corridas + receitas) x saída, por semana real do mês.
-  const mesDates = Array.from({length: dimAtual}, (_,i) => today.getFullYear()+'-'+p2(today.getMonth()+1)+'-'+p2(i+1));
-  const weekDefs = [[1,7],[8,14],[15,21],[22,28],[29,dimAtual]].filter(w => w[0] <= dimAtual);
-  const weeks = weekDefs.map(([a,b]) => {
-    const wDates = mesDates.slice(a-1, b);
-    const inSum = wDates.reduce((s,x) => {
+  // Fluxo — segue o período/escopo selecionado (Hoje/Mês/Ano/personalizado, Tudo/Prof/Pessoal).
+  // Granularidade das barras se adapta ao tamanho do período: dias (≤9), semanas
+  // (≤63) ou meses reais (períodos longos, ex: Ano) — sempre uma leitura legível.
+  const MESES_ABV = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  function finFlowBuckets(dates) {
+    const n = dates.length;
+    if (!n) return [];
+    if (n > 70) { // meses reais (calendário), não blocos fixos de 30 dias
+      const map = {};
+      dates.forEach(d => { const k = d.slice(0,7); (map[k] = map[k] || []).push(d); });
+      return Object.keys(map).sort().map(k => ({ label: MESES_ABV[parseInt(k.slice(5,7),10)-1], dates: map[k] }));
+    }
+    const size = n <= 9 ? 1 : 7;
+    const buckets = [];
+    for (let i = 0; i < n; i += size) {
+      const chunk = dates.slice(i, i + size);
+      const dd = s => s.slice(8,10), mm = s => s.slice(5,7);
+      const first = chunk[0], last = chunk[chunk.length-1];
+      let label;
+      if (size === 1 || first === last) label = dd(first) + '/' + mm(first);
+      else label = dd(first) + '–' + dd(last) + (mm(first) !== mm(last) ? '/' + mm(last) : '');
+      buckets.push({ label, dates: chunk });
+    }
+    return buckets;
+  }
+  const flowBuckets = finFlowBuckets(finDates).map(b => {
+    const inSum = b.dates.reduce((s,x) => {
       const d = DB.day(x);
-      return s + d.trips.reduce((acc,t)=>acc+(t.value||0),0)
-               + d.revenues.reduce((acc,r)=>acc+(r.amount||0),0)
-               + finAutoDay(x).sum;
+      return s + d.trips.filter(filterRev).reduce((acc,t)=>acc+(t.value||0),0)
+               + d.revenues.filter(filterRev).reduce((acc,r)=>acc+(r.amount||0),0)
+               + (incAuto ? finAutoDay(x).sum : 0);
     }, 0);
-    const outSum = wDates.reduce((s,x) => s + DB.day(x).expenses.reduce((acc,e)=>acc+(e.amount||0),0), 0);
-    return { label: a === b ? String(a) : a+'–'+b, inSum, outSum };
+    const outSum = b.dates.reduce((s,x) => s + DB.day(x).expenses.filter(filterExp).reduce((acc,e)=>acc+(e.amount||0),0), 0);
+    return { label: b.label, inSum, outSum };
   });
-  const maxW = Math.max(...weeks.flatMap(w => [w.inSum, w.outSum]), 1);
+  const maxW = Math.max(...flowBuckets.flatMap(w => [w.inSum, w.outSum]), 1);
   const flowEl = document.getElementById('fin-flow');
-  if (flowEl) flowEl.innerHTML = weeks.map(w => `<div class="fin-fcol">
+  if (flowEl) flowEl.innerHTML = flowBuckets.length ? flowBuckets.map(w => `<div class="fin-fcol">
       <div class="fin-fbars">
         <i class="in" style="height:${Math.max(4, Math.round(w.inSum/maxW*82))}px"></i>
         <i class="out" style="height:${Math.max(4, Math.round(w.outSum/maxW*82))}px"></i>
       </div><small>${w.label}</small>
-    </div>`).join('');
+    </div>`).join('') : '<div class="empty">Sem dados no período</div>';
   // Recent moves
   renderObjetivos();
   const movEl = document.getElementById('fin-mov');
@@ -5028,6 +5059,83 @@ function setFreq(btn) {
   document.querySelectorAll('.freq button').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
+// ── Recorrência de lançamentos: materialização real ──────────────────
+// Antes, "recorrente" era só um rótulo salvo no registro — nada criava a
+// próxima ocorrência sozinho. Agora, lançamentos recorrentes carregam um
+// seriesId (gerado ao marcar recorrente pela 1ª vez); quando a data da
+// última ocorrência de uma série já passou o período (freq), a próxima
+// é criada automaticamente, encadeando quantas ocorrências faltarem até
+// hoje (limitado por segurança, ver GUARD abaixo). Só series com seriesId
+// participam — lançamentos antigos (antes dessa mudança) não têm seriesId
+// e continuam só como rótulo, sem materializar retroativamente sozinhos.
+function _addByFreq(dateStr, freq) {
+  const d = new Date(dateStr + 'T12:00');
+  if (freq === 'Quinzenal') d.setDate(d.getDate() + 15);
+  else if (freq === 'Mensal') d.setMonth(d.getMonth() + 1);
+  else d.setDate(d.getDate() + 7); // Semanal (padrão)
+  return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+}
+function checkRecurringLancamentos() {
+  const todayStr = DB.today();
+  const flagKey = 'sm_recur_check_' + todayStr;
+  if (localStorage.getItem(flagKey)) return; // só uma vez por dia
+  localStorage.setItem(flagKey, '1');
+  try {
+    const seriesMap = {}; // 'tipo|seriesId' -> {dates:Set, latest, type, listKey}
+    DB.allDates().forEach(ds => {
+      const day = DB.day(ds);
+      [['revenues','receita'], ['expenses','despesa']].forEach(([listKey, type]) => {
+        (day[listKey]||[]).forEach(it => {
+          if (!it.recorrente || !it.seriesId) return;
+          const key = type + '|' + it.seriesId;
+          if (!seriesMap[key]) seriesMap[key] = { dates: new Set(), latest: null, type, listKey };
+          const d = it.date || ds;
+          seriesMap[key].dates.add(d);
+          if (!seriesMap[key].latest || d > seriesMap[key].latest.date) {
+            seriesMap[key].latest = { ...it, date: d };
+          }
+        });
+      });
+    });
+    let created = 0;
+    Object.values(seriesMap).forEach(s => {
+      let cur = s.latest;
+      let guard = 0;
+      while (guard++ < 12) { // limite de segurança: nunca gera mais de 12 de uma vez
+        const next = _addByFreq(cur.date, cur.freq);
+        if (next > todayStr) break;
+        if (!s.dates.has(next)) {
+          const day = DB.day(next);
+          if (!day[s.listKey]) day[s.listKey] = [];
+          const novo = {
+            id: DB.uid(), category: cur.category, categoryLabel: cur.categoryLabel,
+            desc: cur.desc, amount: cur.amount, date: next, scope: cur.scope,
+            recorrente: true, freq: cur.freq, seriesId: cur.seriesId,
+            status: s.type === 'despesa' ? 'a_pagar' : 'pago'
+          };
+          day[s.listKey].push(novo);
+          DB.saveDay(day);
+          SYNC.push(s.listKey, {
+            id: novo.id, date: novo.date, category: novo.category, category_label: novo.categoryLabel,
+            amount: novo.amount, description: novo.desc, scope: novo.scope,
+            recorrente: novo.recorrente, freq: novo.freq, series_id: novo.seriesId,
+            status: novo.status, due_date: novo.date
+          });
+          s.dates.add(next);
+          created++;
+        }
+        cur = { date: next, freq: cur.freq };
+      }
+    });
+    if (created > 0) {
+      showToast(created + (created > 1 ? ' lançamentos recorrentes gerados automaticamente' : ' lançamento recorrente gerado automaticamente'), 'info');
+      try { renderFin(); } catch(e) {}
+      try { renderJornada(); } catch(e) {}
+      try { renderLancamentos(); } catch(e) {}
+    }
+  } catch(e) { console.error('[checkRecurringLancamentos]', e); }
+}
+
 // ── Edição de lançamento (reaproveita o modal mo-lancamento) ──
 let lancEditRef = null; // {id, date, type} quando editando
 function _lancResetEdit() {
@@ -5108,6 +5216,7 @@ function saveLanc() {
       desc: document.getElementById('l-desc')?.value || '',
       amount: val, date, scope: S.lancScope,
       recorrente: lancRecOn, freq: lancFreqSel,
+      seriesId: lancRecOn ? (it.seriesId || DB.uid()) : it.seriesId,
       status: _lancStatusSel || it.status || 'pago'
     });
     if (date !== oldDate) {
@@ -5123,7 +5232,8 @@ function saveLanc() {
     SYNC.push(listKey, {
       id: it.id, date: it.date, category: it.category, category_label: it.categoryLabel,
       amount: it.amount, description: it.desc, scope: it.scope,
-      recorrente: it.recorrente, freq: it.freq, status: it.status, due_date: it.date || null
+      recorrente: it.recorrente, freq: it.freq, series_id: it.seriesId,
+      status: it.status, due_date: it.date || null
     });
     _lancResetEdit();
     closeMo('mo-lancamento');
@@ -5145,6 +5255,7 @@ function saveLanc() {
     desc: document.getElementById('l-desc')?.value || '',
     amount: val, date, scope: S.lancScope,
     recorrente: lancRecOn, freq: lancFreqSel,
+    seriesId: lancRecOn ? DB.uid() : null,
     status: _lancStatusSel || (S.lancType==='receita'?'pago':'a_pagar')
   };
   if (S.lancType === 'receita') day.revenues.push(entry);
@@ -5153,7 +5264,7 @@ function saveLanc() {
   SYNC.push(S.lancType === 'receita' ? 'revenues' : 'expenses', {
     id: entry.id, date: entry.date, category: entry.category, category_label: entry.categoryLabel,
     amount: entry.amount, description: entry.desc, scope: entry.scope,
-    recorrente: entry.recorrente, freq: entry.freq,
+    recorrente: entry.recorrente, freq: entry.freq, series_id: entry.seriesId,
     status: entry.status || (S.lancType==='receita'?'pago':'a_pagar'),
     due_date: entry.date || null
   });
@@ -9626,6 +9737,7 @@ const SYNC = {
           id: e.id, category: e.category || '', categoryLabel: e.category_label || '',
           desc: e.description || '', amount: parseFloat(e.amount) || 0, date: e.date,
           scope: e.scope || 'operacional', recorrente: e.recorrente || false, freq: e.freq || null,
+          seriesId: e.series_id || null,
           status: e.status || 'a_pagar', dueDate: e.due_date || e.date
         }); }
       });
@@ -9635,6 +9747,7 @@ const SYNC = {
           id: r.id, category: r.category || '', categoryLabel: r.category_label || '',
           desc: r.description || '', amount: parseFloat(r.amount) || 0, date: r.date,
           scope: r.scope || 'operacional', recorrente: r.recorrente || false, freq: r.freq || null,
+          seriesId: r.series_id || null,
           status: r.status || 'pago', dueDate: r.due_date || r.date
         }); }
       });
@@ -10031,6 +10144,7 @@ async function _waitBootPull(maxMs = 4000) {
 async function _bootPullBg() {
   try { await SYNC.pullAll(); } catch(e) { console.error('pullAll boot:', e); }
   try { await SYNC.flushQueue(); } catch(e) { console.error('flushQueue boot:', e); }
+  try { checkRecurringLancamentos(); } catch(e) { console.error('checkRecurringLancamentos boot:', e); }
   try{restoreGpsSession();} catch(e){}
   try{syncNavButton();}  catch(e){}
   try{renderHome();}     catch(e){}
