@@ -418,8 +418,10 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .ag-month-btn{display:flex;align-items:center;gap:6px;border:0;background:transparent;cursor:pointer;touch-action:manipulation;font-family:var(--font-brand);font-size:19px;font-weight:800;color:var(--text);letter-spacing:-.03em;padding:0}
 .ag-month-btn svg{transition:transform .2s}
 .ag-month-btn.open svg{transform:rotate(180deg)}
-.ag-calexp{max-height:0;overflow:hidden;transition:max-height .25s ease}
-.ag-calexp.open{max-height:460px}
+.ag-backdrop{position:absolute;left:-16px;right:-16px;top:100%;height:3000px;background:var(--bg);opacity:0;pointer-events:none;transition:opacity .18s ease;z-index:15}
+.ag-backdrop.show{opacity:.98;pointer-events:auto}
+.ag-calpanel{position:absolute;left:0;right:0;top:calc(100% + 8px);background:var(--card);border:1px solid rgba(15,23,42,.08);border-radius:22px;box-shadow:0 20px 44px rgba(15,23,42,.16);padding:14px;z-index:21;opacity:0;transform:translateY(-8px);pointer-events:none;transition:opacity .18s ease,transform .18s ease}
+.ag-calpanel.show{opacity:1;transform:translateY(0);pointer-events:auto}
 .agcal-nav{display:flex;align-items:center;justify-content:space-between;margin:4px 0 8px}
 .agcal-nav button{width:34px;height:34px;border-radius:12px;border:1px solid #e4eaf2;background:#fff;font-size:17px;color:#0A2F6B;cursor:pointer;touch-action:manipulation}
 .agcal-nav h2{font-size:14px;font-weight:800}
@@ -1348,8 +1350,13 @@ h1.hd-title{font-family:var(--font-brand)!important}
       </button>
       <button class="ag-pill" onclick="agGoToday()">Hoje</button>
     </div>
+    <div class="ag-strip" id="ag-strip"></div>
 
-    <div class="ag-calexp" id="ag-calexp">
+    <!-- Calendário flutua por cima (nunca empurra o cabeçalho/régua); fica dentro do
+         .ag-head (sticky) pra ficar ancorado nele durante o scroll, não na timeline.
+         Backdrop opaco esconde a timeline colorida atrás enquanto está aberto. -->
+    <div class="ag-backdrop" id="ag-backdrop" onclick="agCloseCal()"></div>
+    <div class="ag-calpanel" id="ag-calpanel">
       <div class="agcal-nav">
         <button onclick="agCalNav(-1)">&#8249;</button>
         <h2 id="agcal-title">&nbsp;</h2>
@@ -1366,8 +1373,6 @@ h1.hd-title{font-family:var(--font-brand)!important}
         <span><i style="background:#3B82F6"></i>Operacional</span>
       </div>
     </div>
-
-    <div class="ag-strip" id="ag-strip"></div>
   </div>
 
   <!-- Conteudo: dia unico (timeline) -->
@@ -8109,8 +8114,8 @@ function agColorClass(hex) {
 function renderAgenda() {
   renderAgStrip();
   renderAgTimeline();
-  const ex = document.getElementById('ag-calexp');
-  if (ex && ex.classList.contains('open')) renderAgCal();
+  const panel = document.getElementById('ag-calpanel');
+  if (panel && panel.classList.contains('show')) renderAgCal();
 }
 function agGoToday() {
   agSelDate = DB.today();
@@ -8121,11 +8126,13 @@ function agGoToday() {
   agScrollToFirst();
 }
 function agToggleCal() {
-  const ex  = document.getElementById('ag-calexp');
-  const btn = document.getElementById('ag-month-btn');
-  if (!ex) return;
-  const open = !ex.classList.contains('open');
-  ex.classList.toggle('open', open);
+  const bd    = document.getElementById('ag-backdrop');
+  const panel = document.getElementById('ag-calpanel');
+  const btn   = document.getElementById('ag-month-btn');
+  if (!bd || !panel) return;
+  const open = !panel.classList.contains('show');
+  bd.classList.toggle('show', open);
+  panel.classList.toggle('show', open);
   if (btn) btn.classList.toggle('open', open);
   if (open) {
     const dt = new Date(agSelDate + 'T12:00');
@@ -8134,7 +8141,8 @@ function agToggleCal() {
   }
 }
 function agCloseCal() {
-  document.getElementById('ag-calexp')?.classList.remove('open');
+  document.getElementById('ag-backdrop')?.classList.remove('show');
+  document.getElementById('ag-calpanel')?.classList.remove('show');
   document.getElementById('ag-month-btn')?.classList.remove('open');
 }
 // Rola a timeline ate o primeiro item do dia (jornada, planejado ou compromisso).
