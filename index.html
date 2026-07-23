@@ -317,6 +317,14 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .card{background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:0 2px 10px rgba(15,23,42,.05)}.cardPad{padding:16px}.cardHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.cardHead h2{font-size:16px;font-weight:700;letter-spacing:-.03em}.cardHead a,.cardHead button{font-size:12px;color:#0A2F6B;font-weight:700;background:none;border:none;cursor:pointer}
 .seg{display:flex;gap:4px}.seg button{padding:7px 12px;border-radius:12px;border:none;background:#F1F5F9;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation}.seg button.on{background:rgba(14,165,233,.1);color:#0A2F6B}
 .kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}.kpi{background:#F8FAFC;border-radius:16px;padding:14px}.kpi .row{display:flex;align-items:center;gap:8px;margin-bottom:6px}.ico{width:34px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}.ico.green{background:#ECFDF3;color:#16A34A}.ico.red{background:#FEF2F2;color:#EF4444}.ico.blue{background:#EFF6FF;color:#0EA5E9}.ico.orange{background:#FFF7ED;color:#F59E0B}.ico.purple{background:#F5F3FF;color:#7C3AED}.kpiVal{font-family:'Inter',system-ui,sans-serif;font-size:20px;font-weight:700;line-height:1}.kpiLbl{font-size:11px;color:var(--muted);font-weight:600;margin-top:2px}
+.fin-hero-top{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.fin-ptabs{display:flex;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:4px;gap:3px;flex:1}
+.fin-ptabs button{flex:1;border:0;background:transparent;color:rgba(255,255,255,.76);font-size:12px;font-weight:800;padding:8px 0;border-radius:999px;cursor:pointer;touch-action:manipulation;font-family:var(--font-app)}
+.fin-ptabs button.on{background:#fff;color:#0f172a;box-shadow:0 3px 10px rgba(0,0,0,.10)}
+.fin-filter-btn{width:36px;height:36px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);color:#fff;cursor:pointer;touch-action:manipulation}
+.fin-filter-btn.active{background:#fff;color:#0A2F6B;border-color:#fff}
+.fin-range-chip{display:flex;align-items:center;gap:6px;margin-top:12px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:8px 12px;font-size:11.5px;font-weight:700;color:#fff}
+.fin-range-chip button{margin-left:auto;background:none;border:0;color:#fff;font-size:14px;cursor:pointer;line-height:1;opacity:.8}
 .fin-metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.fin-metric{background:#FAFBFD;border:1px solid #EEF2F7;border-radius:16px;padding:12px;text-align:left}.fin-metric strong{display:block;font-size:16px;font-weight:800;letter-spacing:-.03em;font-family:'Inter',system-ui,sans-serif}.fin-metric span{display:block;font-size:10px;font-weight:750;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:3px}.fin-metric small{display:block;font-size:10px;color:#94A3B8;margin-top:3px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fin-metric.g strong{color:#16A34A}.fin-metric.r strong{color:#EF4444}
 .fin-flow{display:flex;gap:10px;align-items:flex-end;height:96px;padding-top:6px}
 .fin-fcol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:5px}
@@ -1208,14 +1216,22 @@ h1.hd-title{font-family:var(--font-brand)!important}
 <!-- ══ TELA FINANCEIRO ════════════════════════════════════════════════════ -->
 <div class="screen" id="sc-financeiro">
   <div class="wrap">
-    <div class="period" style="margin-bottom:14px">
-      <button id="fp-today" onclick="setFinPer('today')">Hoje</button>
-      <button id="fp-month" class="on" onclick="setFinPer('month')">Mês</button>
-      <button id="fp-year" onclick="setFinPer('year')">Ano</button>
-    </div>
     <section class="hero" style="margin-bottom:14px">
+      <div class="fin-hero-top">
+        <div class="fin-ptabs">
+          <button id="fp-today" onclick="setFinPer('today')">Hoje</button>
+          <button id="fp-month" class="on" onclick="setFinPer('month')">Mês</button>
+          <button id="fp-year" onclick="setFinPer('year')">Ano</button>
+        </div>
+        <button class="fin-filter-btn" id="fin-filter-btn" onclick="openFinFilter()"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/></svg></button>
+      </div>
       <div class="heroTop">
         <div><div class="label">Saldo líquido</div><div class="amount" id="fin-amount">R$ 0,00</div><div class="sub" id="fin-sub">Entradas R$ 0 · Saídas R$ 0</div></div>
+      </div>
+      <div class="fin-range-chip" id="fin-range-chip" style="display:none">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span id="fin-range-txt"></span>
+        <button onclick="event.stopPropagation();clearFinFilter()">&#x2715;</button>
       </div>
       <div class="heroGrid">
         <div class="heroCell"><strong id="fin-pct-lucro">0%</strong><span>% lucro</span></div>
@@ -1812,6 +1828,18 @@ h1.hd-title{font-family:var(--font-brand)!important}
 
 
 <!-- Ajustar Km (GPS impreciso) -->
+<div class="mo ctr" id="mo-fin-filter">
+  <div class="sheet ctr">
+    <div class="sheet-head"><h2>Período personalizado</h2><button class="xbtn" onclick="closeMo('mo-fin-filter')">&#x2715;</button></div>
+    <div style="font-size:12.5px;color:#64748B;margin-bottom:16px;line-height:1.4">Escolha um intervalo de datas pra ver o resumo só desse período.</div>
+    <div class="hg-filter-row" style="margin-bottom:18px">
+      <input id="fin-filter-start" type="date">
+      <input id="fin-filter-end" type="date">
+    </div>
+    <button class="btn-p" onclick="applyFinFilter()">Aplicar</button>
+  </div>
+</div>
+
 <div class="mo ctr" id="mo-hg-filter">
   <div class="sheet ctr">
     <div class="sheet-head"><h2>Período personalizado</h2><button class="xbtn" onclick="closeMo('mo-hg-filter')">&#x2715;</button></div>
@@ -4385,7 +4413,33 @@ function setFinPer(p) {
   ['today','month','year'].forEach(x => {
     const el = document.getElementById('fp-'+x); if (el) el.classList.toggle('on', x === p);
   });
+  document.getElementById('fin-filter-btn')?.classList.remove('active');
+  const chip = document.getElementById('fin-range-chip'); if (chip) chip.style.display = 'none';
   renderFin();
+}
+// ── Filtro de período personalizado (mesmo padrão do filtro da Home) ──
+function openFinFilter() {
+  const sEl = document.getElementById('fin-filter-start'), eEl = document.getElementById('fin-filter-end');
+  if (sEl) sEl.value = S.finCustomStart || DB.today();
+  if (eEl) eEl.value = S.finCustomEnd || DB.today();
+  openMo('mo-fin-filter');
+}
+function applyFinFilter() {
+  const s = document.getElementById('fin-filter-start')?.value;
+  const e = document.getElementById('fin-filter-end')?.value;
+  if (!s || !e || s > e) { showToast('Escolha um intervalo de datas válido', 'error'); return; }
+  S.finCustomStart = s; S.finCustomEnd = e; S.finPer = 'custom';
+  ['today','month','year'].forEach(x => { const el = document.getElementById('fp-'+x); if (el) el.classList.toggle('on', false); });
+  document.getElementById('fin-filter-btn')?.classList.add('active');
+  const fmtBR = d => d.split('-').reverse().slice(0,2).join('/');
+  const chip = document.getElementById('fin-range-chip'), txt = document.getElementById('fin-range-txt');
+  if (txt) txt.textContent = fmtBR(s) + ' → ' + fmtBR(e);
+  if (chip) chip.style.display = 'flex';
+  closeMo('mo-fin-filter');
+  renderFin();
+}
+function clearFinFilter() {
+  setFinPer('month');
 }
 function setFinScope(sc) {
   S.finScope = sc;
@@ -4397,6 +4451,11 @@ function setFinScope(sc) {
 function getFinDays() {
   const today = new Date(), p = S.finPer;
   const fmt = d => d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+  if (p === 'custom' && S.finCustomStart && S.finCustomEnd) {
+    const days = [];
+    for (let d = new Date(S.finCustomStart+'T12:00'); fmt(d) <= S.finCustomEnd; d.setDate(d.getDate()+1)) days.push(fmt(new Date(d)));
+    return days;
+  }
   if (p === 'today') return [fmt(today)];
   if (p === 'month') {
     return Array.from({length: today.getDate()}, (_,i) => today.getFullYear()+'-'+p2(today.getMonth()+1)+'-'+p2(i+1));
@@ -4408,6 +4467,15 @@ function getFinDays() {
 // Mesmo recorte de dias do período atual, deslocado pra trás — usado na comparação "vs período anterior"
 function getFinDaysPrev() {
   const today = new Date(), p = S.finPer, fmt = d => d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+  if (p === 'custom' && S.finCustomStart && S.finCustomEnd) {
+    // Mesma quantidade de dias do intervalo escolhido, deslocada pra trás
+    const start = new Date(S.finCustomStart+'T12:00'), end = new Date(S.finCustomEnd+'T12:00');
+    const n = Math.round((end - start) / 86400000) + 1;
+    const prevEnd = new Date(start); prevEnd.setDate(prevEnd.getDate() - 1);
+    const days = [];
+    for (let i = 0; i < n; i++) { const d = new Date(prevEnd); d.setDate(d.getDate() - (n - 1 - i)); days.push(fmt(d)); }
+    return days;
+  }
   if (p === 'today') {
     const y = new Date(today); y.setDate(y.getDate()-1);
     return [fmt(y)];
@@ -4474,7 +4542,7 @@ function renderFin() {
   // vs período anterior (mesmo recorte de dias do período atual, deslocado pra trás)
   const prevSums = sumPeriodo(getFinDaysPrev());
   const prevProfit = prevSums.rev - prevSums.exp;
-  const vsLabels = { today: 'vs ontem', month: 'vs mês ant.', year: 'vs ano ant.' };
+  const vsLabels = { today: 'vs ontem', month: 'vs mês ant.', year: 'vs ano ant.', custom: 'vs período ant.' };
   setText('fin-vs-ant-lbl', vsLabels[S.finPer] || 'vs ant.');
   if (prevProfit !== 0) {
     const delta = Math.round((profit - prevProfit) / Math.abs(prevProfit) * 100);
