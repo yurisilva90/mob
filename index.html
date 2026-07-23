@@ -6838,16 +6838,6 @@ async function _syncTick() {
   await _pullTripsCorrections();
   await _autoSyncLocalData();
   _backfillKmEstimates();
-  // Corridas automáticas novas capturadas durante o dia (pedido do Yuri,
-  // 23/07/2026) — a busca em renderJornada só roda quando a data muda, esse
-  // tick de 1min é quem mantém atualizado num dia que já está aberto.
-  if (S && S.sec === 'jornada' && S.curDate) {
-    try {
-      const list = await loadAutoTripsForDay(S.curDate);
-      S.autoTrips = list; S.autoTripsDate = S.curDate;
-      renderJornada();
-    } catch(e) {}
-  }
 }
 // Migração única: limpa prefixo "Bairro da/do" de corridas já salvas localmente
 (function _migrateBairroNames(){
@@ -6866,6 +6856,24 @@ async function _syncTick() {
   } catch(e) { console.warn('[_migrateBairroNames]', e); }
 })();
 setTimeout(()=>{ _syncTick(); setInterval(_syncTick, 60*1000); }, 3000); // primeira vez em 3s, depois a cada 1 minuto
+
+// Corridas automáticas novas capturadas durante o dia (pedido do Yuri,
+// 23/07/2026) — INTERVALO PRÓPRIO, separado do _syncTick de propósito: se
+// qualquer etapa do _syncTick (correção de trips, auto-sync, backfill de
+// km) travar ou lançar erro, essa atualização não pode ficar refém disso —
+// foi exatamente isso que aconteceu (corridas paravam de aparecer na
+// Jornada ativa depois de um tempo, travadas no que existia no momento do
+// primeiro carregamento do dia). 25s pra sentir a corrida nova rápido sem
+// martelar o Supabase.
+async function _refreshAutoTripsIfOnJornada() {
+  if (!(S && S.sec === 'jornada' && S.curDate)) return;
+  try {
+    const list = await loadAutoTripsForDay(S.curDate);
+    S.autoTrips = list; S.autoTripsDate = S.curDate;
+    renderJornada();
+  } catch(e) {}
+}
+setTimeout(()=>{ _refreshAutoTripsIfOnJornada(); setInterval(_refreshAutoTripsIfOnJornada, 25*1000); }, 4000);
 
 // ── Status de rede: indicador visual + reconciliação ao voltar online ──
 let _netSyncing = false;
