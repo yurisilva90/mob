@@ -198,6 +198,7 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .j-mini.sm strong{font-size:13px}
 .j-mini.sm span{font-size:8.5px}
 .km-edit-btn{width:18px;height:18px;border-radius:50%;border:0;background:rgba(255,255,255,.22);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;flex-shrink:0;padding:0}
+.val-edit-btn{width:20px;height:20px;border-radius:7px;border:0;background:#F1F5F9;color:#0A2F6B;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;flex-shrink:0;padding:0}
 .j-actions{display:grid;gap:10px;margin-top:6px}
 .j-actions.two{grid-template-columns:1fr 1fr}
 .j-actions.single{display:flex;justify-content:center}
@@ -1872,6 +1873,19 @@ h1.hd-title{font-family:var(--font-brand)!important}
   </div>
 </div>
 
+<div class="mo ctr" id="mo-autotrip-value">
+  <div class="sheet ctr">
+    <div class="sheet-head"><h2>Ajustar valor da corrida</h2><button class="xbtn" onclick="closeMo('mo-autotrip-value')">&#x2715;</button></div>
+    <div style="font-size:12.5px;color:#64748B;margin-bottom:18px;line-height:1.4">Ao salvar, essa corrida vira Confirmada.</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:18px">
+      <span style="font-size:22px;font-weight:700;color:#0F172A">R$</span>
+      <input id="autotripval-val" type="number" inputmode="decimal" step="0.01"
+        style="width:150px;height:64px;text-align:center;font-size:26px;font-family:'Inter',system-ui,sans-serif;font-weight:700;border:1.5px solid #E2E8F0;border-radius:16px;background:#F8FAFC;color:#0F172A;outline:none;box-sizing:border-box">
+    </div>
+    <button class="btn-p" onclick="saveAutoTripValueEdit()">Confirmar</button>
+  </div>
+</div>
+
 <div class="mo ctr" id="mo-km-adjust">
   <div class="sheet ctr">
     <div class="sheet-head"><h2>Ajustar km total</h2><button class="xbtn" onclick="closeMo('mo-km-adjust')">&#x2715;</button></div>
@@ -3530,32 +3544,54 @@ function autoTripItem(t) {
   const realDurPickup = (t.pickup_started_at && t.trip_started_at) ? (new Date(t.trip_started_at)-new Date(t.pickup_started_at))/60000 : null;
   const offerDurPickupMin = t.offer_duration_pickup_sec!=null ? t.offer_duration_pickup_sec/60 : null;
   const offerDurTripMin = t.offer_duration_trip_sec!=null ? t.offer_duration_trip_sec/60 : null;
-  // Linha de baixo do card: km + tempo até o destino (real se já tiver rodado, senão o previsto da oferta)
+  // Horário real de início de cada perna — pedido do Yuri (23/07/2026):
+  // instante em que o status virou buscar (pickup_started_at) e em que
+  // virou corrida (trip_started_at), no fuso local.
+  const hhmm = iso => { if (!iso) return null; const d = new Date(iso); return p2(d.getHours())+':'+p2(d.getMinutes()); };
+  const hhmmPickup = hhmm(t.pickup_started_at);
+  const hhmmTrip = hhmm(t.trip_started_at);
+  // Linha minimizada: horário + km + tempo da perna CORRIDA (real se já
+  // rodou, senão previsto da oferta) — sem repetir a plataforma, que já
+  // aparece no ícone ao lado.
   const kmDestVal = t.real_km_trip!=null ? t.real_km_trip : t.offer_km_trip;
-  const kmDestTxt = kmDestVal!=null ? (t.real_km_trip==null?'~':'')+(+kmDestVal).toFixed(1)+' km' : '';
   const durDestVal = realDurTrip!=null ? realDurTrip : offerDurTripMin;
-  const durDestTxt = durDestVal!=null ? ' · '+fmtDur(durDestVal) : '';
-  const subLine = `${plat}${kmDestTxt?' · '+kmDestTxt:''}${durDestTxt}`;
+  const subParts = [];
+  if (hhmmTrip) subParts.push(hhmmTrip);
+  if (kmDestVal!=null) subParts.push((t.real_km_trip==null?'~':'')+(+kmDestVal).toFixed(1)+' km');
+  if (durDestVal!=null) subParts.push(fmtDur(durDestVal));
+  const subLine = subParts.join(' · ');
+  // Deslocamento/Corrida: horário real de início + km (tempo), uma linha
+  // cada — pedido do Yuri (23/07/2026) pra simplificar o detalhe, tirando
+  // a comparação real-vs-previsto de 4 linhas separadas.
+  const kmPickupVal = t.real_km_pickup!=null ? t.real_km_pickup : t.offer_km_pickup;
+  const durPickupVal = realDurPickup!=null ? realDurPickup : offerDurPickupMin;
+  const deslocTxt = kmPickupVal!=null
+    ? `${hhmmPickup?hhmmPickup+' · ':''}${(t.real_km_pickup==null?'~':'')+(+kmPickupVal).toFixed(1)} km${durPickupVal!=null?' ('+fmtDur(durPickupVal)+')':''}`
+    : '—';
+  const corridaTxt = kmDestVal!=null
+    ? `${hhmmTrip?hhmmTrip+' · ':''}${(t.real_km_trip==null?'~':'')+(+kmDestVal).toFixed(1)} km${durDestVal!=null?' ('+fmtDur(durDestVal)+')':''}`
+    : '—';
   const detRows = [
     `<div class="det-row"><span>Plataforma</span><strong>${plat}</strong></div>`,
     t.passenger_name?`<div class="det-row"><span>Passageiro</span><strong>${esc(t.passenger_name)}</strong></div>`:'',
     t.origin_address?`<div class="det-row"><span>Origem</span><strong>${esc(t.origin_address)}</strong></div>`:'',
-    t.gps_origin_address?`<div class="det-row"><span>Origem (GPS)</span><strong style="color:#64748B">${esc(t.gps_origin_address)}</strong></div>`:'',
     t.dest_address?`<div class="det-row"><span>Destino</span><strong>${esc(t.dest_address)}</strong></div>`:'',
-    t.gps_dest_address?`<div class="det-row"><span>Destino (GPS)</span><strong style="color:#64748B">${esc(t.gps_dest_address)}</strong></div>`:'',
-    `<div class="det-row"><span>Km até buscar</span><strong>${fmtKmComp(t.real_km_pickup, t.offer_km_pickup)}</strong></div>`,
-    `<div class="det-row"><span>Tempo até buscar</span><strong>${fmtDurComp(realDurPickup, offerDurPickupMin)}</strong></div>`,
-    `<div class="det-row"><span>Km da corrida</span><strong>${fmtKmComp(t.real_km_trip, t.offer_km_trip)}</strong></div>`,
-    `<div class="det-row"><span>Tempo de corrida</span><strong>${fmtDurComp(realDurTrip, offerDurTripMin)}</strong></div>`,
+    `<div class="det-row"><span>Deslocamento</span><strong>${deslocTxt}</strong></div>`,
+    `<div class="det-row"><span>Corrida</span><strong>${corridaTxt}</strong></div>`,
     t.offer_dinamico>0?`<div class="det-row"><span>Preço dinâmico</span><strong style="color:#F59E0B">+ ${DB.fR(t.offer_dinamico)}</strong></div>`:'',
-    `<div class="det-row"><span>Pagamento</span><strong>${t.dinheiro?'Dinheiro':'App'}</strong></div>`,
-    `<div class="det-row"><span>Status</span><strong>${statusTxt}</strong></div>`,
   ].filter(Boolean).join('');
+  const pencilSvg = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>`;
   return `<div class="trip-item-wrap" id="tw-${tid}">
     <div class="li-row" id="tr-${tid}" onclick="toggleTripDetail('${tid}')">
       ${platIcon(t.platform)}
       <div class="li-info"><h3 class="trip-title">${t.origin_address?esc(extractBairro(t.origin_address)):'—'}${dest}</h3><p>${subLine}</p><div class="li-extra">${extras.join('')}</div></div>
-      <div class="li-val"><strong>${DB.fR(t.offer_value)}</strong><span class="auto-status ${statusCls}">${statusTxt}</span></div>
+      <div class="li-val">
+        <div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">
+          <strong>${DB.fR(t.offer_value)}</strong>
+          <button class="val-edit-btn" onclick="event.stopPropagation();openAutoTripValueEdit('${t.id}',${t.offer_value||0})" aria-label="Editar valor da corrida">${pencilSvg}</button>
+        </div>
+        <span class="auto-status ${statusCls}">${statusTxt}</span>
+      </div>
     </div>
     <div class="trip-detail-panel" id="td-${tid}" style="display:none">${detRows}</div>
   </div>`;
@@ -5422,6 +5458,41 @@ function saveKm() {
 
 // ── AJUSTE MANUAL DE KM (corrige imprecisão do GPS) ─────────────
 let kmAdjBase = 0;
+// ── Editar valor de uma corrida automática direto no card (23/07/2026,
+// mockup aprovado) — ao salvar, vira Confirmada (agora tem um valor que o
+// próprio motorista conferiu, mais confiável que a oferta estimada).
+let autoTripValEditId = null;
+function openAutoTripValueEdit(id, currentValue) {
+  autoTripValEditId = id;
+  const inp = document.getElementById('autotripval-val');
+  if (inp) inp.value = (currentValue||0).toFixed(2);
+  openMo('mo-autotrip-value');
+}
+async function saveAutoTripValueEdit() {
+  const inp = document.getElementById('autotripval-val');
+  const newVal = parseFloat(inp?.value);
+  if (isNaN(newVal) || newVal < 0) { showToast('Valor inválido', 'error'); return; }
+  if (!autoTripValEditId) { closeMo('mo-autotrip-value'); return; }
+  if (!_supaUser) { showToast('Sem conexão com a nuvem.', 'error'); return; }
+  try {
+    const { error } = await _SUPA.from('auto_trips')
+      .update({ offer_value: newVal, status: 'confirmada' })
+      .eq('id', autoTripValEditId);
+    if (error) throw error;
+    closeMo('mo-autotrip-value');
+    showToast('Valor atualizado.');
+    // Cache de automáticas fica potencialmente desatualizado em 3 telas —
+    // força recarregar todas que dependem dela, só a que está ativa
+    // agora re-renderiza na hora (mesmo padrão do refresh de 60s/25s).
+    S.autoTripsDate = null; S.autoTripsHomeRange = null;
+    if (S.sec === 'jornada') renderJornada();
+    if (S.sec === 'home') renderHomeGraphs();
+    if (S.sec === 'corridas') renderCorridasActive();
+  } catch (e) {
+    console.error('saveAutoTripValueEdit', e);
+    showToast('Erro ao salvar. Tente de novo.', 'error');
+  }
+}
 function openKmAdjust() {
   const day = DB.day(S.curDate);
   const isToday = S.curDate === DB.today();
