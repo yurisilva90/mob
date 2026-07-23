@@ -5798,6 +5798,47 @@ function isTripDuplicate(newT, existing) {
   });
 }
 
+// ── Casar corrida importada com corrida automática já capturada ────────────
+// Pedido do Yuri (23/07/2026): ao importar, se a corrida já foi capturada
+// automaticamente, ATUALIZA a automática com o valor real (confirmado pela
+// tela de histórico da plataforma — mais confiável que a oferta estimada),
+// em vez de criar uma corrida manual duplicada. Só corridas GENUINAMENTE
+// novas (sem correspondência) seguem pro fluxo normal de criar.
+// Mesmos critérios do isTripDuplicate acima, adaptados pros campos de
+// auto_trips (trip_started_at em vez de time, offer_value em vez de value,
+// real_km_trip em vez de km, origin_address/dest_address em vez de
+// origin/dest) — time da automática convertido pro fuso local em HH:MM.
+function _autoTripLocalTime(at) {
+  const ts = at.trip_started_at || at.accepted_at;
+  if (!ts) return null;
+  const dt = new Date(ts);
+  return String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
+}
+function matchAutoTrip(newT, autoTrips) {
+  return autoTrips.find(at => {
+    const samePlat = (at.platform||'uber') === (newT.platform||'uber');
+    if (!samePlat) return false;
+    const atTime = _autoTripLocalTime(at);
+    const sameTime = atTime && newT.time && atTime === newT.time;
+    const sameVal  = Math.abs((at.offer_value||0)-(newT.value||0)) < 0.02;
+    const sameKm   = newT.km > 0 && at.real_km_trip > 0 && Math.abs((at.real_km_trip||0)-(newT.km||0)) < 0.5;
+    const sameRoute = !!(at.origin_address && newT.origin && at.dest_address && newT.dest
+                       && _normRoute(at.origin_address).includes(_normRoute(newT.origin))
+                       && _normRoute(at.dest_address).includes(_normRoute(newT.dest)));
+    const nearTime = atTime && newT.time && (() => {
+      const [h1,m1] = atTime.split(':').map(Number);
+      const [h2,m2] = newT.time.split(':').map(Number);
+      return Math.abs((h1*60+m1)-(h2*60+m2)) <= 5;
+    })();
+    if (sameTime && sameVal) return true;
+    if (sameTime && sameRoute) return true;
+    if (sameTime && sameKm && newT.km > 0) return true;
+    if (sameVal && nearTime && sameKm) return true;
+    if (sameVal && nearTime && sameRoute) return true;
+    return false;
+  }) || null;
+}
+
 // ── Reconciliação de sessões × corridas ───────────────────────────────────
 // Regra híbrida: < 15 min → agrupa na sessão + ajusta horários
 //                >= 15 min → cria nova sessão
@@ -5906,12 +5947,19 @@ async function reconcileAllExistingDays() {
   }
 }
 
-function confirmImport() {
+async function confirmImport() {
   const selected = (window._pendingTrips||[]).filter(t=>t._sel);
   if (!selected.length) { closeMo('mo-import-confirm'); return; }
   const day = DB.day(S.curDate);
-  let added=0, skipped=0;
+  // Corridas automáticas do dia — usa cache se já carregado pra essa data
+  // (normalmente já está, quem importa costuma estar na Jornada/Corridas),
+  // senão busca na hora. Pool vai sendo consumido conforme casa, pra uma
+  // automática nunca ser vinculada a duas importadas do mesmo lote.
+  const autoTripsPool = (S.autoTripsDate === S.curDate)
+    ? (S.autoTrips||[]).slice() : await loadAutoTripsForDay(S.curDate);
+  let added=0, skipped=0, updated=0;
   const toPush = [];
+  const toUpdateAuto = [];
   selected.forEach(t => {
     // Rejeita corridas claramente inválidas (0min E 0km E sem endereço)
     // NOTA: 99 não reporta km nem duration — mas tem origin/dest. Não bloquear.
@@ -5920,6 +5968,17 @@ function confirmImport() {
                      && hasValue && !t.origin && !t.dest;
     if (isGhost) { skipped++; return; }
     if (isTripDuplicate(t, day.trips)) { skipped++; return; }
+    // Já capturada automaticamente? Atualiza ela com o valor real (vindo da
+    // tela de histórico da plataforma, mais confiável que a oferta
+    // estimada) em vez de criar uma corrida manual duplicada.
+    const matched = matchAutoTrip(t, autoTripsPool);
+    if (matched) {
+      autoTripsPool.splice(autoTripsPool.indexOf(matched), 1);
+      toUpdateAuto.push({ id: matched.id, value: parseFloat(t.value)||0, km: parseFloat(t.km)||0,
+        dinheiro: !!t.dinheiro });
+      updated++;
+      return;
+    }
     const trip = {id:DB.uid(), platform:t.platform||'uber', time:t.time||'',
       duration:t.duration||0, origin:_cleanBairro(t.origin||''), dest:_cleanBairro(t.dest||''),
       originFull:t.originFull||t.origin||'', destFull:t.destFull||t.dest||'',
@@ -5932,6 +5991,18 @@ function confirmImport() {
     toPush.push(trip);
     added++;
   });
+  // Aplica as atualizações nas automáticas casadas — valor real por cima do
+  // estimado, km real quando a importação trouxe (senão mantém o que já
+  // tinha), status vira confirmada (agora tem valor confirmado de verdade).
+  toUpdateAuto.forEach(u => {
+    _SUPA.from('auto_trips').update({
+      offer_value: u.value,
+      real_km_trip: u.km > 0 ? u.km : undefined,
+      dinheiro: u.dinheiro,
+      status: 'confirmada'
+    }).eq('id', u.id).then(() => {}).catch(() => {});
+  });
+  if (toUpdateAuto.length) { S.autoTripsDate = null; } // força recarregar no próximo renderJornada
   DB.saveDay(day); closeMo('mo-import-confirm'); window._pendingTrips=null;
   // Corridas sem km (comum na 99, que não mostra km na tela) — estima via
   // endereço em segundo plano, não bloqueia a UI
@@ -5960,9 +6031,11 @@ function confirmImport() {
 
   const dateHint = S.curDate !== DB.today()
     ? ` (data: ${S.curDate.split('-').reverse().slice(0,2).join('/')})` : '';
-  const baseMsg = skipped > 0
-    ? `${added} corrida${added!==1?'s':''} importada${added!==1?'s':''}${added?dateHint:''}. ${skipped} ignorada${skipped!==1?'s':''} (já existente${skipped!==1?'s':''}).`
-    : `${added} corrida${added!==1?'s':''} importada${added!==1?'s':''}!${dateHint}`;
+  const parts = [];
+  if (added > 0) parts.push(`${added} corrida${added!==1?'s':''} importada${added!==1?'s':''}${dateHint}`);
+  if (updated > 0) parts.push(`${updated} já capturada${updated!==1?'s':''} automaticamente, valor atualizado`);
+  if (skipped > 0) parts.push(`${skipped} ignorada${skipped!==1?'s':''} (já existente${skipped!==1?'s':''})`);
+  const baseMsg = parts.length ? parts.join('. ')+'.' : 'Nenhuma corrida nova.';
 
   if (hasChanges) {
     const reconMsg = [
