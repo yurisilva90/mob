@@ -3538,6 +3538,10 @@ function autoTripItem(t) {
   const cashSvg = `<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M2 10h20" stroke="white" stroke-width="1.2" fill="none"/><path d="M2 17h20" stroke="white" stroke-width="1.2" fill="none"/><circle cx="12" cy="13" r="2.5" fill="white"/></svg>`;
   const extras = [`<span class="chip chip-auto">Captura automática</span>`];
   if (t.dinheiro) extras.push(`<span class="chip-icon chip-cash">${cashSvg}</span>`);
+  // Mesmo chip/ícone já usado nas corridas manuais (raio laranja + valor) —
+  // pedido do Yuri (24/07/2026): dinâmico da 99 (base + espera longa, já
+  // somados no app) e da Uber aparecerem na listagem, não só no detalhe.
+  if (t.offer_dinamico > 0) extras.push(`<span class="chip chip-d"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><strong>${DB.fR(t.offer_dinamico)}</strong></span>`);
   const statusCls = t.status==='confirmada' ? 'conf' : 'pend';
   const statusTxt = t.status==='confirmada' ? 'Confirmada' : 'Aguardando revisão';
   const realDurTrip = (t.trip_started_at && t.trip_ended_at) ? (new Date(t.trip_ended_at)-new Date(t.trip_started_at))/60000 : null;
@@ -3578,7 +3582,6 @@ function autoTripItem(t) {
     t.dest_address?`<div class="det-row"><span>Destino</span><strong>${esc(t.dest_address)}</strong></div>`:'',
     `<div class="det-row"><span>Deslocamento</span><strong>${deslocTxt}</strong></div>`,
     `<div class="det-row"><span>Corrida</span><strong>${corridaTxt}</strong></div>`,
-    t.offer_dinamico>0?`<div class="det-row"><span>Preço dinâmico</span><strong style="color:#F59E0B">+ ${DB.fR(t.offer_dinamico)}</strong></div>`:'',
   ].filter(Boolean).join('');
   const pencilSvg = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>`;
   return `<div class="trip-item-wrap" id="tw-${tid}">
