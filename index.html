@@ -3498,9 +3498,9 @@ async function fetchBestOfferTexts(t) {
   const { data, error } = await _SUPA.from('trip_reader_log').select('texts,created_at')
     .eq('user_id', _supaUser.id).eq('platform', plat)
     .gte('created_at', from).lte('created_at', to)
-    .contains('texts', { state: 'OFERTA' })
+    .or('texts->>state.eq.OFERTA,texts->>state.eq.OFERTA_OCR')
     .order('created_at', { ascending: false })
-    .limit(20);
+    .limit(30);
   if (error || !data || !data.length) return null;
   let best = null, bestLen = -1;
   data.forEach(row => {
@@ -3845,7 +3845,7 @@ function autoTripItem(t) {
     // Reconferir com o log — pedido do Yuri (24/07/2026): reaplica a
     // leitura corrigida em cima do texto original da tela daquele
     // instante, em vez de tentar adivinhar o valor certo.
-    `<button class="det-refresh-btn" id="refbtn-${tid}" onclick="event.stopPropagation();refreshAutoTripFromLog('${t.id}',document.getElementById('refbtn-${tid}'))">${refreshSvg}Reconferir com o log</button>`,
+    `<button class="det-refresh-btn" id="refbtn-${tid}" onclick="event.stopPropagation();refreshAutoTripFromLog('${t.id}',document.getElementById('refbtn-${tid}'))">${refreshSvg}Atualizar informações</button>`,
   ].filter(Boolean).join('');
   const pencilSvg = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>`;
   // Vínculo à jornada — pedido do Yuri (24/07/2026): ícone verde se a
