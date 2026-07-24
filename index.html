@@ -3504,7 +3504,11 @@ async function fetchBestOfferTexts(t) {
     .eq('user_id', _supaUser.id).eq('platform', plat)
     .gte('created_at', from).lte('created_at', to)
     .order('created_at', { ascending: false })
-    .limit(500);
+    // CONFIRMADO EM DADO REAL (24/07/2026): um intervalo de 10min30s desses
+    // teve 523 linhas no total (todo tipo de leitura, não só oferta) — o
+    // limite de 500 cortava fora justamente as leituras mais antigas, que
+    // eram as que tinham a oferta. Margem bem folgada agora.
+    .limit(3000);
   if (error) { console.error('fetchBestOfferTexts', error); return null; }
   if (!data || !data.length) return null;
   let best = null, bestLen = -1;
