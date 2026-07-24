@@ -3495,15 +3495,22 @@ async function fetchBestOfferTexts(t) {
   const anchorMs = new Date(anchor).getTime();
   const from = new Date(anchorMs - 10*60*1000).toISOString();
   const to = new Date(anchorMs + 30*1000).toISOString();
+  // Filtro do servidor só com colunas simples (usuário/plataforma/horário) —
+  // evitei filtrar por texts->>state direto na consulta (sintaxe de
+  // caminho JSON em .or() pode não ser suportada igual em toda versão do
+  // client, e uma falha ali derruba a busca inteira sem avisar direito).
+  // Mais seguro: traz tudo do intervalo e escolhe o certo aqui em JS.
   const { data, error } = await _SUPA.from('trip_reader_log').select('texts,created_at')
     .eq('user_id', _supaUser.id).eq('platform', plat)
     .gte('created_at', from).lte('created_at', to)
-    .or('texts->>state.eq.OFERTA,texts->>state.eq.OFERTA_OCR')
     .order('created_at', { ascending: false })
-    .limit(30);
-  if (error || !data || !data.length) return null;
+    .limit(500);
+  if (error) { console.error('fetchBestOfferTexts', error); return null; }
+  if (!data || !data.length) return null;
   let best = null, bestLen = -1;
   data.forEach(row => {
+    const st = row.texts && row.texts.state;
+    if (st !== 'OFERTA' && st !== 'OFERTA_OCR') return;
     const raw = row.texts && row.texts.raw;
     if (Array.isArray(raw) && raw.length > bestLen) { best = raw; bestLen = raw.length; }
   });
