@@ -258,6 +258,10 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .src-btn{flex:1;border:none;background:transparent;color:var(--muted);padding:10px 8px;border-radius:14px;font-size:13.5px;font-weight:900;cursor:pointer;font-family:var(--font-app)}
 .src-btn.active{background:#fff;color:var(--text);box-shadow:0 4px 12px rgba(15,23,42,.08)}
 .cor-subnote{padding:0 16px 10px;font-size:11.5px;color:var(--muted2);line-height:1.4}.li-row.open{border-radius:14px 14px 0 0;border-bottom:0!important}.trip-detail-panel{background:var(--card);border:1.5px solid var(--line);border-top:0;border-radius:0 0 12px 12px;padding:8px 12px 10px}.det-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);padding:4px 0;font-weight:500}.det-row:not(:last-child){border-bottom:1px solid var(--line)}.det-row strong{color:var(--text);font-weight:700}.det-del-btn{display:flex;align-items:center;gap:6px;width:100%;margin-top:8px;padding:8px 0 2px;background:none;border:none;border-top:1px solid var(--line);font-size:12px;font-weight:700;color:#EF4444;cursor:pointer;font-family:inherit}
+.det-refresh-btn{display:flex;align-items:center;gap:6px;width:100%;margin-top:8px;padding:8px 0 2px;background:none;border:none;border-top:1px solid var(--line);font-size:12px;font-weight:700;color:#0A2F6B;cursor:pointer;font-family:inherit}
+.det-refresh-btn svg{transition:transform .2s}
+.det-refresh-btn.spinning svg{animation:detrefspin .8s linear infinite}
+@keyframes detrefspin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 .sw{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0}.sw input{opacity:0;width:0;height:0;position:absolute}.sw .trk{position:absolute;inset:0;background:#E2E8F0;border-radius:99px;transition:.2s;cursor:pointer}.sw .trk:before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}.sw input:checked + .trk{background:#22C55E}.sw input:checked + .trk:before{transform:translateX(20px)}
 .acc-card{background:#F8FAFC;border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:14px}
 .acc-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -3361,6 +3365,184 @@ function isAutoTripLinkedToSession(t) {
     return ts >= start && (!end || ts <= end);
   });
 }
+
+// ── Reconferir corrida usando o texto bruto do log (24/07/2026) ────────────
+// Pedido do Yuri: em vez de tentar "adivinhar" o valor certo de uma corrida
+// já salva errada, reaplica a MESMA lógica de leitura (já corrigida no app
+// nativo em 24/07/2026) em cima do texto ORIGINAL da tela, salvo em
+// trip_reader_log — usa o dado real daquele instante, não um chute.
+// Porta fiel de parseOffer() do TripReaderService.kt (Kotlin) — mesmas
+// regras, mesma ordem, incluindo as 3 correções de 24/07 (R$/km nunca
+// compete como valor total; dinâmico soma os 2 tipos da 99 + Uber; linha
+// de avaliação/corridas nunca vira endereço).
+function moneyToDoubleJS(raw) {
+  const clean = raw.replace('R$','').trim().replace(/\./g,'').replace(',','.');
+  const n = parseFloat(clean);
+  return isNaN(n) ? null : n;
+}
+function extractMoneyJS(s) {
+  const re = /R\$\s?\d{1,4}(?:[.,]\d{2})?/g;
+  const out = []; let m;
+  while ((m = re.exec(s))) if (!out.includes(m[0])) out.push(m[0]);
+  return out;
+}
+function parseOfferJS(texts) {
+  const joinedRaw = texts.join('  ');
+  const low = joinedRaw.toLowerCase()
+    .replace(/\b[lI](?=[.,]\d)/g, '1')
+    .replace(/(?<=\d[.,])[lI]\b/g, '1');
+
+  let valor = null;
+  let m = /aceitar por\s*r\$\s*([\d.]+,\d{2})/.exec(low);
+  if (m) valor = moneyToDoubleJS(m[1]);
+
+  let rkmDirect = null;
+  m = /r\$\s*([\d.]+,\d{2})\s*\/\s*km/.exec(low);
+  if (m) rkmDirect = moneyToDoubleJS(m[1]);
+
+  let totMin = 0, totKm = 0, legs = 0;
+  const legsList = [];
+  function addLeg(minsStr, distStr, unit) {
+    const mins = parseInt(minsStr, 10);
+    const dist = parseFloat(distStr.replace(',', '.'));
+    if (isNaN(mins) || isNaN(dist)) return;
+    const km2 = unit === 'm' ? dist/1000 : dist;
+    if (mins >= 1 && mins <= 90 && km2 >= 0.05 && km2 <= 80) {
+      totMin += mins; totKm += km2; legs++; legsList.push([mins, km2]);
+    }
+  }
+  let re = /(\d{1,3})\s*min(?:utos)?\s*\((\d+(?:[.,]\d+)?)\s*(m|km)\)/g;
+  while ((m = re.exec(low))) addLeg(m[1], m[2], m[3]);
+  re = /\(\s*(\d{1,3})\s*min(?:utos)?\s+(\d+(?:[.,]\d+)?)\s*(m|km)\s*\)/g;
+  while ((m = re.exec(low))) addLeg(m[1], m[2], m[3]);
+
+  let km = (legs > 0 && totKm > 0) ? totKm : null;
+  let min = (legs > 0 && totMin > 0) ? totMin : null;
+  const kmPickup = legsList[0] ? legsList[0][1] : null;
+  const kmTrip = legsList[1] ? legsList[1][1] : null;
+  const minPickup = legsList[0] ? legsList[0][0] : null;
+  const minTrip = legsList[1] ? legsList[1][0] : null;
+
+  let dinamicoBase = 0, dinamicoEspera = 0, dinamicoUber = 0;
+  m = /r\$\s*([\d.]+,\d{2})\s*tarifa base din[aâ]mica/.exec(low);
+  if (m) dinamicoBase = moneyToDoubleJS(m[1]) || 0;
+  m = /r\$\s*([\d.]+,\d{2})\s*por espera longa/.exec(low);
+  if (m) dinamicoEspera = moneyToDoubleJS(m[1]) || 0;
+  m = /\+\s*r\$\s*([\d.]+,\d{2})\s*inclu[ií]do/.exec(low);
+  if (m) dinamicoUber = moneyToDoubleJS(m[1]) || 0;
+  const dinamico = dinamicoBase + dinamicoEspera + dinamicoUber;
+
+  if (valor === null) {
+    let monies = extractMoneyJS(joinedRaw).map(moneyToDoubleJS).filter(v => v !== null && v > 0);
+    if (rkmDirect !== null) monies = monies.filter(v => Math.abs(v - rkmDirect) > 0.01);
+    if (rkmDirect !== null && km !== null) {
+      const found = monies.find(v => Math.abs(v/km - rkmDirect)/rkmDirect < 0.35);
+      valor = found !== undefined ? found : null;
+    } else if (km !== null && km > 0) {
+      const found = monies.find(v => (v/km) >= 0.4 && (v/km) <= 12.0);
+      valor = found !== undefined ? found : (monies[0] !== undefined ? monies[0] : null);
+    } else {
+      valor = monies[0] !== undefined ? monies[0] : null;
+    }
+  }
+  if (km === null && valor !== null && rkmDirect !== null && rkmDirect > 0) km = valor / rkmDirect;
+
+  function looksLikeAddress(s) {
+    const sl = s.toLowerCase().trim();
+    if (sl.length < 6) return false;
+    if (sl.includes('parada')) return false;
+    if (sl.includes('não afeta') || sl.includes('nao afeta')) return false;
+    if (/^\(?\d{1,3}([.,]\d+)?\s*(min|km|m)\b/.test(sl)) return false;
+    if (/^[x%\d.,\s]+$/.test(sl)) return false;
+    if (sl.includes('r$')) return false;
+    if (sl.includes('tarifa') || sl.includes('incl.') || sl.includes('incluído') || sl.includes('incluido')) return false;
+    if (sl.includes('taxa de espera') || sl.includes('espera longa')) return false;
+    if (sl === 'online' || sl === 'buscando' || sl === 'offline' || sl === 'conectar') return false;
+    if (sl.includes('perfil essencial') || sl.includes('perfil premium') || sl.includes('perfil prata')) return false;
+    if (sl.includes('pgto. no app') || sl === 'dinheiro' || sl === 'negocia' || sl === 'qr code') return false;
+    if (/[1-5][.,]\d{2}.{0,15}corrid/.test(sl)) return false;
+    if (sl.includes('verif.') || sl.includes('cpf e cart')) return false;
+    return true;
+  }
+  const legLineRe = /^\(?\s*\d{1,3}\s*min(?:utos)?/i;
+  const addrCandidates = [];
+  for (let i = 0; i < texts.length; i++) {
+    if (legLineRe.test(texts[i])) {
+      for (let j = i+1; j <= Math.min(i+3, texts.length-1); j++) {
+        const cand = (texts[j]||'').trim();
+        if (!cand) break;
+        const nl = cand.toLowerCase();
+        if (legLineRe.test(cand)) break;
+        if (nl.includes('aceitar') || nl.includes('selecionar') || nl.includes('escolher')) break;
+        if (looksLikeAddress(cand)) { addrCandidates.push(cand); break; }
+      }
+    }
+  }
+  return {
+    valor, km, min, rkmDirect, dinamico,
+    origem: addrCandidates[0] || null, destino: addrCandidates[1] || null,
+    kmPickup, kmTrip, minPickup, minTrip
+  };
+}
+// Busca a leitura mais completa (mais linhas no 'raw') da oferta dessa
+// corrida, num intervalo de 10min antes do aceite até 30s depois — mesma
+// janela usada pelo cache de oferta no app nativo.
+async function fetchBestOfferTexts(t) {
+  if (!_supaUser) return null;
+  const plat = t.platform === 'uber' ? 'UBER' : '99';
+  const anchor = t.accepted_at || t.trip_started_at;
+  if (!anchor) return null;
+  const anchorMs = new Date(anchor).getTime();
+  const from = new Date(anchorMs - 10*60*1000).toISOString();
+  const to = new Date(anchorMs + 30*1000).toISOString();
+  const { data, error } = await _SUPA.from('trip_reader_log').select('texts,created_at')
+    .eq('user_id', _supaUser.id).eq('platform', plat)
+    .gte('created_at', from).lte('created_at', to)
+    .contains('texts', { state: 'OFERTA' })
+    .order('created_at', { ascending: false })
+    .limit(20);
+  if (error || !data || !data.length) return null;
+  let best = null, bestLen = -1;
+  data.forEach(row => {
+    const raw = row.texts && row.texts.raw;
+    if (Array.isArray(raw) && raw.length > bestLen) { best = raw; bestLen = raw.length; }
+  });
+  return best;
+}
+async function refreshAutoTripFromLog(tripId, btnEl) {
+  if (btnEl) btnEl.classList.add('spinning');
+  try {
+    const { data: rows, error: e1 } = await _SUPA.from('auto_trips').select('*').eq('id', tripId).limit(1);
+    if (e1 || !rows || !rows.length) { showToast('Corrida não encontrada.', 'error'); return; }
+    const t = rows[0];
+    const texts = await fetchBestOfferTexts(t);
+    if (!texts) { showToast('Não achei o texto original da oferta no log.', 'error'); return; }
+    const parsed = parseOfferJS(texts);
+    if (parsed.valor == null) { showToast('Não consegui reconferir — texto insuficiente.', 'error'); return; }
+    // Só os campos NUMÉRICOS — testado contra casos reais, o valor sai
+    // confiável em várias leituras diferentes da mesma oferta, mas o
+    // endereço às vezes sai lixo ("% LUCRO" etc) mesmo na leitura mais
+    // completa. Melhor não arriscar sobrescrever um endereço bom.
+    const patch = { offer_value: parsed.valor, status: 'confirmada' };
+    if (parsed.dinamico != null) patch.offer_dinamico = parsed.dinamico;
+    if (parsed.kmPickup != null) patch.offer_km_pickup = parsed.kmPickup;
+    if (parsed.kmTrip != null) patch.offer_km_trip = parsed.kmTrip;
+    if (parsed.minPickup != null) patch.offer_duration_pickup_sec = Math.round(parsed.minPickup*60);
+    if (parsed.minTrip != null) patch.offer_duration_trip_sec = Math.round(parsed.minTrip*60);
+    const { error: e2 } = await _SUPA.from('auto_trips').update(patch).eq('id', tripId);
+    if (e2) { showToast('Erro ao salvar.', 'error'); return; }
+    showToast('Reconferida — '+DB.fR(parsed.valor), 'success');
+    S.autoTripsDate = null; S.autoTripsHomeRange = null;
+    if (S.sec === 'jornada') renderJornada();
+    if (S.sec === 'home') renderHomeGraphs();
+    if (S.sec === 'corridas') renderCorridasActive();
+  } catch (e) {
+    console.error('refreshAutoTripFromLog', e);
+    showToast('Erro ao reconferir.', 'error');
+  } finally {
+    if (btnEl) btnEl.classList.remove('spinning');
+  }
+}
 // Balãozinho discreto ao tocar num símbolo (dinâmico, vínculo à jornada,
 // dinheiro) — pedido do Yuri (24/07/2026). Some sozinho, não navega nem
 // abre nada.
@@ -3652,6 +3834,7 @@ function autoTripItem(t) {
   }
   const deslocRow = cmpRow('Deslocamento', t.real_km_pickup, t.offer_km_pickup, realDurPickup, offerDurPickupMin, deslocTxt, 'cmp-'+tid+'-d');
   const corridaRow = cmpRow('Corrida', t.real_km_trip, t.offer_km_trip, realDurTrip, offerDurTripMin, corridaTxt, 'cmp-'+tid+'-c');
+  const refreshSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>`;
   const detRows = [
     `<div class="det-row"><span>Plataforma</span><strong>${plat}</strong></div>`,
     t.passenger_name?`<div class="det-row"><span>Passageiro</span><strong>${esc(t.passenger_name)}</strong></div>`:'',
@@ -3659,6 +3842,10 @@ function autoTripItem(t) {
     t.dest_address?`<div class="det-row"><span>Destino</span><strong>${esc(t.dest_address)}</strong></div>`:'',
     deslocRow,
     corridaRow,
+    // Reconferir com o log — pedido do Yuri (24/07/2026): reaplica a
+    // leitura corrigida em cima do texto original da tela daquele
+    // instante, em vez de tentar adivinhar o valor certo.
+    `<button class="det-refresh-btn" id="refbtn-${tid}" onclick="event.stopPropagation();refreshAutoTripFromLog('${t.id}',document.getElementById('refbtn-${tid}'))">${refreshSvg}Reconferir com o log</button>`,
   ].filter(Boolean).join('');
   const pencilSvg = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>`;
   // Vínculo à jornada — pedido do Yuri (24/07/2026): ícone verde se a
