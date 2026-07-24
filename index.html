@@ -3381,7 +3381,10 @@ function moneyToDoubleJS(raw) {
   return isNaN(n) ? null : n;
 }
 function extractMoneyJS(s) {
-  const re = /R\$\s?\d{1,4}(?:[.,]\d{2})?/g;
+  // CORRIGIDO (24/07/2026) - mesma correção do Kotlin: centavos passam a
+  // ser obrigatórios, evita aceitar "R$96" como valor quando o OCR engoliu
+  // a vírgula de "R$9,60".
+  const re = /R\$\s?\d{1,4}[.,]\d{2}/g;
   const out = []; let m;
   while ((m = re.exec(s))) if (!out.includes(m[0])) out.push(m[0]);
   return out;
@@ -3423,14 +3426,18 @@ function parseOfferJS(texts) {
   const minPickup = legsList[0] ? legsList[0][0] : null;
   const minTrip = legsList[1] ? legsList[1][0] : null;
 
-  let dinamicoBase = 0, dinamicoEspera = 0, dinamicoUber = 0;
+  let dinamicoBase = 0, dinamicoEspera = 0, dinamicoEmbarque = 0, dinamicoDeslocamento = 0, dinamicoUber = 0;
   m = /r\$\s*([\d.]+,\d{2})\s*tarifa base din[aâ]mica/.exec(low);
   if (m) dinamicoBase = moneyToDoubleJS(m[1]) || 0;
   m = /r\$\s*([\d.]+,\d{2})\s*por espera longa/.exec(low);
   if (m) dinamicoEspera = moneyToDoubleJS(m[1]) || 0;
+  m = /r\$\s*([\d.]+,\d{2})\s*por embarque distante/.exec(low);
+  if (m) dinamicoEmbarque = moneyToDoubleJS(m[1]) || 0;
+  m = /r\$\s*([\d.]+,\d{2})\s*por deslocamento/.exec(low);
+  if (m) dinamicoDeslocamento = moneyToDoubleJS(m[1]) || 0;
   m = /\+\s*r\$\s*([\d.]+,\d{2})\s*inclu[ií]do/.exec(low);
   if (m) dinamicoUber = moneyToDoubleJS(m[1]) || 0;
-  const dinamico = dinamicoBase + dinamicoEspera + dinamicoUber;
+  const dinamico = dinamicoBase + dinamicoEspera + dinamicoEmbarque + dinamicoDeslocamento + dinamicoUber;
 
   if (valor === null) {
     let monies = extractMoneyJS(joinedRaw).map(moneyToDoubleJS).filter(v => v !== null && v > 0);
