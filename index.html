@@ -238,6 +238,21 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .li-val{text-align:right;font-size:11px;color:var(--muted);font-weight:600;flex:0 0 auto}.li-val strong{display:block;color:var(--text);font-size:13.5px;font-weight:760;font-family:'Inter',system-ui,sans-serif}.li-time{display:block;color:var(--muted2);font-size:10.5px;font-weight:600;margin-top:2px}
 .li-liq{display:block;color:#16A34A;font-size:11px;font-weight:800;margin-top:2px}
 .li-extra{display:flex;gap:6px;margin-top:5px}.chip{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px;font-family:'Inter',system-ui,sans-serif;letter-spacing:-.01em}.chip svg{flex-shrink:0}.chip-d{background:#FFF7ED;color:#F59E0B}.chip-g{background:#F5F3FF;color:#7C3AED}.chip-taxa{background:#FEF9C3;color:#854D0E;display:inline-flex;align-items:center;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px}.chip-toll{background:#F1F5F9;color:#475569;display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;border-radius:7px;flex-shrink:0}.chip-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;border-radius:7px;flex-shrink:0}.chip-cash{background:#DCFCE7;color:#15803D}.chip-auto{background:#EFF6FF;color:#0EA5E9}.auto-status{display:inline-block;font-size:9.5px;font-weight:800;padding:2.5px 7px;border-radius:99px;margin-top:4px;white-space:nowrap}.auto-status.pend{background:#FEF3C7;color:#92400E}.auto-status.conf{background:#DCFCE7;color:#15803D}.trip-item-wrap{margin-bottom:6px}
+.li-title-row{display:flex;align-items:center;gap:5px}
+.link-tag{width:15px;height:15px;flex-shrink:0;display:inline-flex;cursor:pointer}
+.link-tag.on{color:#16A34A}
+.link-tag.off{color:#CBD5E1}
+.tap-legend-wrap{position:relative;display:inline-flex;cursor:pointer}
+.tap-legend-tip{position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);background:#0F172A;color:#fff;font-size:10.5px;font-weight:700;padding:6px 10px;border-radius:9px;white-space:nowrap;box-shadow:0 6px 16px rgba(0,0,0,.25);z-index:5;pointer-events:none}
+.tap-legend-tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#0F172A}
+.cmp{cursor:pointer}
+.cmp.g{color:#16A34A}
+.cmp.r{color:#DC2626}
+.cmp-legend{background:#F8FAFC;border:1px solid var(--line);border-radius:12px;padding:9px 11px;margin:2px 0 8px;font-size:11px;color:#64748B;line-height:1.7}
+.cmp-legend .row{display:flex;justify-content:space-between}
+.cmp-legend .row b{color:#0F172A}
+.cmp-legend.g{background:#F0FDF4;border-color:#BBF7D0}
+.cmp-legend.r{background:#FEF2F2;border-color:#FECACA}
 /* ── Corridas: toggle Importadas / Automáticas (fonte dos dados) ── */
 .src-switch{display:flex;background:#EAF0F6;border:1px solid rgba(15,23,42,.06);padding:4px;border-radius:18px;margin:2px 16px 10px}
 .src-btn{flex:1;border:none;background:transparent;color:var(--muted);padding:10px 8px;border-radius:14px;font-size:13.5px;font-weight:900;cursor:pointer;font-family:var(--font-app)}
@@ -3331,6 +3346,42 @@ function autoTripTs(t) {
   const iso = t.trip_started_at || t.accepted_at;
   return iso ? new Date(iso).getTime() : 0;
 }
+// Corrida cai dentro do horário de alguma jornada do dia dela? Pedido do
+// Yuri (24/07/2026) — o vínculo nunca é salvo, é sempre calculado (mesma
+// lógica de sessionItem/renderJornada) — então dá pra checar pra QUALQUER
+// corrida, de qualquer tela, sem precisar saber de antemão qual sessão.
+function isAutoTripLinkedToSession(t) {
+  const ts = autoTripTs(t);
+  if (!ts) return false;
+  const d = new Date(ts);
+  const dateStr = d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+  const sessions = (DB.day(dateStr).sessions) || [];
+  return sessions.some(s => {
+    const start = s.start || 0, end = s.end || 0;
+    return ts >= start && (!end || ts <= end);
+  });
+}
+// Balãozinho discreto ao tocar num símbolo (dinâmico, vínculo à jornada,
+// dinheiro) — pedido do Yuri (24/07/2026). Some sozinho, não navega nem
+// abre nada.
+function showTapLegend(event, text) {
+  event.stopPropagation();
+  document.querySelectorAll('.tap-legend-tip').forEach(el => el.remove());
+  const wrap = event.currentTarget;
+  const tip = document.createElement('div');
+  tip.className = 'tap-legend-tip';
+  tip.textContent = text;
+  wrap.appendChild(tip);
+  setTimeout(() => tip.remove(), 2500);
+}
+// Legenda de comparação previsto × real (Deslocamento/Corrida coloridos) —
+// abre/fecha um painel fixo embaixo da linha, diferente do balãozinho dos
+// símbolos porque tem mais texto (2 linhas de números).
+function toggleCmpLegend(event, id) {
+  event.stopPropagation();
+  const el = document.getElementById(id);
+  if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
+}
 async function loadAutoTripsForDay(dateStr) {
   if (!_supaUser) return [];
   const from = dateStr+'T00:00:00', to = dateStr+'T23:59:59';
@@ -3537,11 +3588,11 @@ function autoTripItem(t) {
   const tid = 'ta'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
   const cashSvg = `<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M2 10h20" stroke="white" stroke-width="1.2" fill="none"/><path d="M2 17h20" stroke="white" stroke-width="1.2" fill="none"/><circle cx="12" cy="13" r="2.5" fill="white"/></svg>`;
   const extras = [`<span class="chip chip-auto">Captura automática</span>`];
-  if (t.dinheiro) extras.push(`<span class="chip-icon chip-cash">${cashSvg}</span>`);
+  if (t.dinheiro) extras.push(`<span class="tap-legend-wrap chip-icon chip-cash" onclick="showTapLegend(event,'Pago em dinheiro')">${cashSvg}</span>`);
   // Mesmo chip/ícone já usado nas corridas manuais (raio laranja + valor) —
   // pedido do Yuri (24/07/2026): dinâmico da 99 (base + espera longa, já
   // somados no app) e da Uber aparecerem na listagem, não só no detalhe.
-  if (t.offer_dinamico > 0) extras.push(`<span class="chip chip-d"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><strong>${DB.fR(t.offer_dinamico)}</strong></span>`);
+  if (t.offer_dinamico > 0) extras.push(`<span class="tap-legend-wrap chip chip-d" onclick="showTapLegend(event,'Tarifa dinâmica: +${DB.fR(t.offer_dinamico).replace(/'/g,"")}')"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><strong>${DB.fR(t.offer_dinamico)}</strong></span>`);
   const statusCls = t.status==='confirmada' ? 'conf' : 'pend';
   const statusTxt = t.status==='confirmada' ? 'Confirmada' : 'Aguardando revisão';
   const realDurTrip = (t.trip_started_at && t.trip_ended_at) ? (new Date(t.trip_ended_at)-new Date(t.trip_started_at))/60000 : null;
@@ -3575,19 +3626,52 @@ function autoTripItem(t) {
   const corridaTxt = kmDestVal!=null
     ? `${hhmmTrip?hhmmTrip+' · ':''}${(t.real_km_trip==null?'~':'')+(+kmDestVal).toFixed(1)} km${durDestVal!=null?' ('+fmtDur(durDestVal)+')':''}`
     : '—';
+  // Cor por comparação previsto × real — pedido do Yuri (24/07/2026): se
+  // km OU tempo (basta um dos dois) ficou pior que o previsto, vermelho
+  // (prioridade — é o que mais importa notar); se algum ficou melhor,
+  // verde; bateu nos dois, preto normal (não clicável). Pequena tolerância
+  // pra não colorir por ruído mínimo de GPS/OCR.
+  function cmpColor(realKm, offerKm, realMin, offerMin) {
+    if (realKm==null || offerKm==null || realMin==null || offerMin==null) return null;
+    const kmWorse = realKm > offerKm + 0.15, kmBetter = realKm < offerKm - 0.15;
+    const minWorse = realMin > offerMin + 1, minBetter = realMin < offerMin - 1;
+    if (kmWorse || minWorse) return 'r';
+    if (kmBetter || minBetter) return 'g';
+    return null;
+  }
+  function cmpRow(label, realKm, offerKm, realMin, offerMin, txt, rowId) {
+    const cls = cmpColor(realKm, offerKm, realMin, offerMin);
+    if (!cls) return `<div class="det-row"><span>${label}</span><strong>${txt}</strong></div>`;
+    const previstoTxt = (+offerKm).toFixed(1)+' km · '+fmtDur(offerMin);
+    const realTxt = (+realKm).toFixed(1)+' km · '+fmtDur(realMin);
+    return `<div class="det-row"><span>${label}</span><strong class="cmp ${cls}" onclick="toggleCmpLegend(event,'${rowId}')">${txt}</strong></div>
+      <div class="cmp-legend ${cls}" id="${rowId}" style="display:none">
+        <div class="row"><span>Previsto na oferta</span><b>${previstoTxt}</b></div>
+        <div class="row"><span>Real (GPS)</span><b>${realTxt}</b></div>
+      </div>`;
+  }
+  const deslocRow = cmpRow('Deslocamento', t.real_km_pickup, t.offer_km_pickup, realDurPickup, offerDurPickupMin, deslocTxt, 'cmp-'+tid+'-d');
+  const corridaRow = cmpRow('Corrida', t.real_km_trip, t.offer_km_trip, realDurTrip, offerDurTripMin, corridaTxt, 'cmp-'+tid+'-c');
   const detRows = [
     `<div class="det-row"><span>Plataforma</span><strong>${plat}</strong></div>`,
     t.passenger_name?`<div class="det-row"><span>Passageiro</span><strong>${esc(t.passenger_name)}</strong></div>`:'',
     t.origin_address?`<div class="det-row"><span>Origem</span><strong>${esc(t.origin_address)}</strong></div>`:'',
     t.dest_address?`<div class="det-row"><span>Destino</span><strong>${esc(t.dest_address)}</strong></div>`:'',
-    `<div class="det-row"><span>Deslocamento</span><strong>${deslocTxt}</strong></div>`,
-    `<div class="det-row"><span>Corrida</span><strong>${corridaTxt}</strong></div>`,
+    deslocRow,
+    corridaRow,
   ].filter(Boolean).join('');
   const pencilSvg = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>`;
+  // Vínculo à jornada — pedido do Yuri (24/07/2026): ícone verde se a
+  // corrida cai dentro do horário de alguma jornada, cinza se não (jornada
+  // excluída, ou nunca teve jornada aberta ali) — sinal pra ajustar horário
+  // de uma jornada se quiser trazer ela de volta.
+  const linked = isAutoTripLinkedToSession(t);
+  const linkSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 1 1 0 10h-2M8 12h8"/></svg>`;
+  const linkTag = `<span class="tap-legend-wrap link-tag ${linked?'on':'off'}" onclick="showTapLegend(event,'${linked?'Vinculada a uma jornada':'Não está em nenhuma jornada'}')">${linkSvg}</span>`;
   return `<div class="trip-item-wrap" id="tw-${tid}">
     <div class="li-row" id="tr-${tid}" onclick="toggleTripDetail('${tid}')">
       ${platIcon(t.platform)}
-      <div class="li-info"><h3 class="trip-title">${t.origin_address?esc(extractBairro(t.origin_address)):'—'}${dest}</h3><p>${subLine}</p><div class="li-extra">${extras.join('')}</div></div>
+      <div class="li-info"><div class="li-title-row"><h3 class="trip-title">${t.origin_address?esc(extractBairro(t.origin_address)):'—'}${dest}</h3>${linkTag}</div><p>${subLine}</p><div class="li-extra">${extras.join('')}</div></div>
       <div class="li-val">
         <div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">
           <strong>${DB.fR(t.offer_value)}</strong>
