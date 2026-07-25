@@ -10849,7 +10849,7 @@ async function authInit() {
   if (session?.user) { _supaUser=session.user; await loadProfile(); showApp(); }
   else showLogin();
   _SUPA.auth.onAuthStateChange(async (ev, session) => {
-    if (ev==='SIGNED_IN' && session?.user) {
+    if ((ev==='SIGNED_IN' || ev==='TOKEN_REFRESHED') && session?.user) {
       _supaUser = session.user;
       // Salva tokens no storage nativo (persiste mesmo com app morto)
       if (window.SmartMobiNative?.saveSession) {
@@ -10858,11 +10858,15 @@ async function authInit() {
           refresh_token: session.refresh_token
         })); } catch(e) {}
       }
-      // Salva credenciais para o GpsService usar nas notificações de reporte rápido
+      // Salva credenciais para o GpsService usar nas notificações de reporte
+      // rápido e no alerta automático de dinâmico do feed. Reenviado também
+      // a cada TOKEN_REFRESHED (autoRefreshToken troca o token ~1x/hora) —
+      // antes só rodava no SIGNED_IN, então esses recursos paravam de
+      // funcionar (silenciosamente) depois de ~1h de app aberto.
       if (window.SmartMobiNative?.saveUserToken) {
         try { SmartMobiNative.saveUserToken(session.user.id, session.access_token); } catch(e) {}
       }
-      await loadProfile(); showApp();
+      if (ev==='SIGNED_IN') { await loadProfile(); showApp(); }
     } else if (ev==='SIGNED_OUT') {
       _supaUser = null;
       if (window.SmartMobiNative?.saveSession) {
