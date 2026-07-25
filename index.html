@@ -3495,18 +3495,16 @@ function parseOfferJS(texts) {
 // corrida, num intervalo de 10min antes do aceite até 30s depois — mesma
 // janela usada pelo cache de oferta no app nativo.
 async function fetchBestOfferTexts(t) {
-  if (!_supaUser) return null;
+  // Retorna { texts, reason } em vez de só null/array — pedido do Yuri
+  // (24/07/2026): precisa ver o motivo exato na tela (sem abrir console do
+  // navegador) quando não achar nada, pra investigar mais rápido.
+  if (!_supaUser) return { texts: null, reason: 'sem sessão ativa' };
   const plat = t.platform === 'uber' ? 'UBER' : '99';
   const anchor = t.accepted_at || t.trip_started_at;
-  if (!anchor) return null;
+  if (!anchor) return { texts: null, reason: 'corrida sem horário de aceite salvo' };
   const anchorMs = new Date(anchor).getTime();
   const from = new Date(anchorMs - 10*60*1000).toISOString();
   const to = new Date(anchorMs + 30*1000).toISOString();
-  // Filtro do servidor só com colunas simples (usuário/plataforma/horário) —
-  // evitei filtrar por texts->>state direto na consulta (sintaxe de
-  // caminho JSON em .or() pode não ser suportada igual em toda versão do
-  // client, e uma falha ali derruba a busca inteira sem avisar direito).
-  // Mais seguro: traz tudo do intervalo e escolhe o certo aqui em JS.
   const { data, error } = await _SUPA.from('trip_reader_log').select('texts,created_at')
     .eq('user_id', _supaUser.id).eq('platform', plat)
     .gte('created_at', from).lte('created_at', to)
@@ -3516,16 +3514,21 @@ async function fetchBestOfferTexts(t) {
     // limite de 500 cortava fora justamente as leituras mais antigas, que
     // eram as que tinham a oferta. Margem bem folgada agora.
     .limit(3000);
-  if (error) { console.error('fetchBestOfferTexts', error); return null; }
-  if (!data || !data.length) return null;
-  let best = null, bestLen = -1;
+  if (error) {
+    console.error('fetchBestOfferTexts', error);
+    return { texts: null, reason: 'erro na busca: '+(error.message || error.code || '?') };
+  }
+  if (!data || !data.length) return { texts: null, reason: `0 linhas no log entre ${from.slice(11,19)} e ${to.slice(11,19)} (plataforma ${plat})` };
+  let best = null, bestLen = -1, offerRows = 0;
   data.forEach(row => {
     const st = row.texts && row.texts.state;
     if (st !== 'OFERTA' && st !== 'OFERTA_OCR') return;
+    offerRows++;
     const raw = row.texts && row.texts.raw;
     if (Array.isArray(raw) && raw.length > bestLen) { best = raw; bestLen = raw.length; }
   });
-  return best;
+  if (!best) return { texts: null, reason: `${data.length} linhas no log, nenhuma de oferta (plataforma ${plat})` };
+  return { texts: best, reason: null };
 }
 async function refreshAutoTripFromLog(tripId, btnEl) {
   if (btnEl) btnEl.classList.add('spinning');
@@ -3533,8 +3536,8 @@ async function refreshAutoTripFromLog(tripId, btnEl) {
     const { data: rows, error: e1 } = await _SUPA.from('auto_trips').select('*').eq('id', tripId).limit(1);
     if (e1 || !rows || !rows.length) { showToast('Corrida não encontrada.', 'error'); return; }
     const t = rows[0];
-    const texts = await fetchBestOfferTexts(t);
-    if (!texts) { showToast('Não achei o texto original da oferta no log.', 'error'); return; }
+    const { texts, reason } = await fetchBestOfferTexts(t);
+    if (!texts) { showToast('Não achei: '+reason, 'error'); return; }
     const parsed = parseOfferJS(texts);
     if (parsed.valor == null) { showToast('Não consegui reconferir — texto insuficiente.', 'error'); return; }
     // Só os campos NUMÉRICOS — testado contra casos reais, o valor sai
