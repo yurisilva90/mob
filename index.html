@@ -11100,6 +11100,22 @@ if ('serviceWorker' in navigator) {
   }).catch(() => {});
 }
 
+// Reporta qual versão da PWA o usuário está rodando de verdade (pedido do
+// Yuri, 24/07/2026) — pra investigar problema de cache/versão desatualizada
+// sem precisar perguntar "que versão você tá vendo?". IMPORTANTE: manter
+// igual ao CACHE_NAME de sw.js sempre que um dos dois mudar.
+const PWA_VERSION = 'mob-v25-sw-update-check';
+async function reportClientVersion() {
+  if (!_supaUser) return;
+  try {
+    await _SUPA.from('client_versions').upsert(
+      { user_id: _supaUser.id, platform: 'pwa', version: PWA_VERSION, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id,platform' }
+    );
+  } catch (e) {}
+}
+setTimeout(()=>{ reportClientVersion(); setInterval(reportClientVersion, 3*60*1000); }, 5000);
+
 // ══════════════════════════════════════════════
 // INFORMES
 // ══════════════════════════════════════════════
