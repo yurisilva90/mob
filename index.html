@@ -255,6 +255,35 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .cmp-legend.r{background:#FEF2F2;border-color:#FECACA}
 /* ── Corridas: toggle Importadas / Automáticas (fonte dos dados) ── */
 .cor-subnote{padding:0 16px 10px;font-size:11.5px;color:var(--muted2);line-height:1.4}.li-row.open{border-radius:14px 14px 0 0;border-bottom:0!important}.trip-detail-panel{background:var(--card);border:1.5px solid var(--line);border-top:0;border-radius:0 0 12px 12px;padding:8px 12px 10px}.det-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);padding:4px 0;font-weight:500}.det-row:not(:last-child){border-bottom:1px solid var(--line)}.det-row strong{color:var(--text);font-weight:700}.det-del-btn{display:flex;align-items:center;gap:6px;width:100%;margin-top:8px;padding:8px 0 2px;background:none;border:none;border-top:1px solid var(--line);font-size:12px;font-weight:700;color:#EF4444;cursor:pointer;font-family:inherit}
+.decl-toggle{display:flex;align-items:center;gap:8px;padding:12px 16px;background:#fff;border-bottom:1px solid var(--line);cursor:pointer}
+.decl-toggle svg.chev{margin-left:auto;transition:transform .2s}
+.decl-toggle.open svg.chev{transform:rotate(180deg)}
+.decl-icon{width:30px;height:30px;border-radius:9px;background:#FEF2F2;color:#DC2626;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.decl-toggle h3{font-size:13px;margin:0;color:var(--text)}
+.decl-toggle p{font-size:11px;color:var(--muted);margin:1px 0 0}
+.decl-body{background:#fff;border-bottom:1px solid var(--line);padding:12px 16px 16px}
+.cmp-strip{display:flex;gap:8px;margin-bottom:14px}
+.cmp-card{flex:1;border-radius:14px;padding:11px 10px;text-align:center}
+.cmp-card.g{background:#F0FDF4;border:1px solid #BBF7D0}
+.cmp-card.r{background:#FEF2F2;border:1px solid #FECACA}
+.cmp-card .t{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+.cmp-card.g .t{color:#15803D}
+.cmp-card.r .t{color:#B91C1C}
+.cmp-card .v{font-size:15px;font-weight:800;color:var(--text)}
+.cmp-card .v2{font-size:11px;color:var(--muted);margin-top:2px}
+.cmp-note{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:14px;background:#F8FAFC;border-radius:10px;padding:9px 11px}
+.cmp-note b{color:var(--text)}
+.dsec{font-size:10.5px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.05em;margin:4px 0 8px}
+.di-row{display:flex;gap:10px;align-items:center;background:#FEFEFE;border:1px solid #F1F5F9;border-radius:13px;padding:10px 11px;margin-bottom:7px}
+.di-plat{width:28px;height:28px;border-radius:9px;font-weight:900;font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.di-plat.n99{background:#FFC800;color:#111}
+.di-plat.uber{background:#000;color:#fff}
+.di-info{flex:1;min-width:0}
+.di-info h4{font-size:11.5px;font-weight:700;margin:0;color:var(--text)}
+.di-info p{font-size:10.5px;color:var(--muted);margin:2px 0 0}
+.di-val{text-align:right;flex-shrink:0}
+.di-val strong{font-size:12.5px;color:var(--text);display:block}
+.di-val span{font-size:10px;color:#DC2626;font-weight:700}
 .det-refresh-btn{display:flex;align-items:center;gap:6px;width:100%;margin-top:8px;padding:8px 0 2px;background:none;border:none;border-top:1px solid var(--line);font-size:12px;font-weight:700;color:#0A2F6B;cursor:pointer;font-family:inherit}
 .det-refresh-btn svg{transition:transform .2s}
 .det-refresh-btn.spinning svg{animation:detrefspin .8s linear infinite}
@@ -1462,6 +1491,12 @@ h1.hd-title{font-family:var(--font-brand)!important}
     <div style="flex:1;text-align:center;border-left:1px solid #F1F5F9"><span style="display:block;font-size:9px;color:#94A3B8;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Km</span><strong id="cor-sum-km" style="font-size:14px;font-weight:800;color:#0F172A">0,0</strong></div>
     <div style="flex:1;text-align:center;border-left:1px solid #F1F5F9"><span style="display:block;font-size:9px;color:#94A3B8;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Corridas</span><strong id="cor-sum-n" style="font-size:14px;font-weight:800;color:#0F172A">0</strong></div>
   </div>
+  <div class="decl-toggle" id="decl-toggle" onclick="toggleDeclinedOffers()" style="display:none">
+    <div class="decl-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg></div>
+    <div><h3>Corridas recusadas</h3><p id="decl-subtitle">0 ofertas não aceitas</p></div>
+    <svg class="chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#94A3B8" stroke-width="2.3"><path d="M6 9l6 6 6-6"/></svg>
+  </div>
+  <div class="decl-body" id="decl-body" style="display:none"></div>
   <div style="padding:12px 16px 30px" id="cor-list"></div>
 </div>
 
@@ -3902,7 +3937,7 @@ async function renderCorridasActive() {
     });
   }
 
-  let totalVal = 0, totalKm = 0, totalN = 0;
+  let totalVal = 0, totalKm = 0, totalN = 0, totalMin = 0;
   const groups = [];
   dates.forEach(d => {
     const day = DB.day(d);
@@ -3913,8 +3948,11 @@ async function renderCorridasActive() {
     const merged = [...manual, ...auto].sort((a,b)=>b.ts-a.ts);
     if (!merged.length) return;
     merged.forEach(x => {
-      if (x.kind==='manual') { totalVal += (x.t.value||0); totalKm += (x.t.km||0); }
-      else { totalVal += (x.t.offer_value||0); totalKm += (x.t.real_km_trip||0); }
+      if (x.kind==='manual') { totalVal += (x.t.value||0); totalKm += (x.t.km||0); totalMin += (x.t.duration||0); }
+      else {
+        totalVal += (x.t.offer_value||0); totalKm += (x.t.real_km_trip||0);
+        if (x.t.accepted_at && x.t.trip_ended_at) totalMin += Math.max(0,(new Date(x.t.trip_ended_at)-new Date(x.t.accepted_at))/60000);
+      }
       totalN++;
     });
     groups.push({ date: d, items: merged });
@@ -3923,6 +3961,7 @@ async function renderCorridasActive() {
   setText('cor-sum-val', DB.fR(totalVal));
   setText('cor-sum-km', totalKm.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}));
   setText('cor-sum-n', totalN);
+  renderDeclinedOffers(dates, plats, totalVal, totalKm, totalMin);
 
   const listEl = document.getElementById('cor-list');
   if (!listEl) return;
@@ -3950,6 +3989,83 @@ function autoCorridasDateRange() {
   const dates = getCorridasDays().slice().sort();
   if (!dates.length) return null;
   return { from: dates[0]+'T00:00:00', to: dates[dates.length-1]+'T23:59:59' };
+}
+
+// Corridas recusadas/expiradas — pedido do Yuri (24/07/2026): seção
+// expansível em Corridas, R$/km e R$/h somando deslocamento (até o
+// embarque) + corrida, comparando com o que foi de fato aceito. Respeita
+// os mesmos filtros de plataforma/período já usados na lista principal.
+function toggleDeclinedOffers() {
+  const body = document.getElementById('decl-body');
+  const toggle = document.getElementById('decl-toggle');
+  if (!body || !toggle) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  toggle.classList.toggle('open', !open);
+}
+async function renderDeclinedOffers(dates, plats, acceptedVal, acceptedKm, acceptedMin) {
+  const toggle = document.getElementById('decl-toggle');
+  const body = document.getElementById('decl-body');
+  const subtitle = document.getElementById('decl-subtitle');
+  if (!toggle || !body || !_supaUser) return;
+  const range = autoCorridasDateRange();
+  if (!range) { toggle.style.display = 'none'; return; }
+  let q = _SUPA.from('declined_offers').select('*').eq('user_id', _supaUser.id)
+    .gte('seen_at', range.from).lte('seen_at', range.to)
+    .order('seen_at', { ascending:false });
+  if (plats.size === 1) q = q.eq('platform', [...plats][0]);
+  const { data, error } = await q;
+  const list = error ? [] : (data||[]);
+  if (!list.length) { toggle.style.display = 'none'; body.style.display = 'none'; return; }
+  toggle.style.display = 'flex';
+  setText('decl-subtitle', list.length===1 ? '1 oferta não aceita' : list.length+' ofertas não aceitas');
+
+  let declVal = 0, declKm = 0, declMin = 0;
+  const byDate = {};
+  list.forEach(o => {
+    const km = (o.offer_km_pickup||0) + (o.offer_km_trip||0);
+    const minTot = ((o.offer_duration_pickup_sec||0) + (o.offer_duration_trip_sec||0)) / 60;
+    declVal += (o.offer_value||0); declKm += km; declMin += minTot;
+    const d = new Date(o.seen_at);
+    const dateStr = d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+    (byDate[dateStr] = byDate[dateStr]||[]).push({ o, km, minTot, ts: d.getTime() });
+  });
+
+  const acceptedRkm = acceptedKm>0 ? acceptedVal/acceptedKm : 0;
+  const acceptedRph = acceptedMin>0 ? acceptedVal/(acceptedMin/60) : 0;
+  const declRkm = declKm>0 ? declVal/declKm : 0;
+  const declRph = declMin>0 ? declVal/(declMin/60) : 0;
+  const better = acceptedRkm===0 || declRkm===0 ? null : declRkm < acceptedRkm;
+
+  const todayStr = DB.today();
+  const fmtSep = d => d===todayStr ? 'Hoje · '+d.split('-').reverse().slice(0,2).join('/') : d.split('-').reverse().slice(0,2).join('/')+'/'+d.slice(0,4);
+  const sortedDates = Object.keys(byDate).sort().reverse();
+
+  body.innerHTML = `
+    <div class="cmp-strip">
+      <div class="cmp-card g"><div class="t">Aceitas</div><div class="v">${DB.fR(acceptedRkm)}/km</div><div class="v2">${DB.fR(acceptedRph)}/h</div></div>
+      <div class="cmp-card r"><div class="t">Recusadas</div><div class="v">${DB.fR(declRkm)}/km</div><div class="v2">${DB.fR(declRph)}/h</div></div>
+    </div>
+    ${better===null ? '' : `<div class="cmp-note">${better
+      ? '<b>No geral, boa triagem:</b> o que você recusou rendia menos por km e por hora do que o que aceitou.'
+      : '<b>Vale reparar:</b> algumas recusadas renderiam mais por km/hora que a média das aceitas — pode valer olhar os motivos com mais atenção.'}</div>`}
+    ${sortedDates.map(d => `
+      <div class="dsec">${fmtSep(d)}</div>
+      ${byDate[d].sort((a,b)=>b.ts-a.ts).map(({o,km,minTot}) => {
+        const plat = o.platform==='uber' ? 'Uber' : '99';
+        const platCls = o.platform==='uber' ? 'uber' : 'n99';
+        const rkm = km>0 ? DB.fR((o.offer_value||0)/km)+'/km' : '—';
+        const hh = new Date(o.seen_at);
+        const hhmm = p2(hh.getHours())+':'+p2(hh.getMinutes());
+        const title = o.origin_address ? esc(extractBairro(o.origin_address)) + (o.dest_address?' → '+esc(extractBairro(o.dest_address)):'') : (plat+' — sem endereço');
+        return `<div class="di-row">
+          <div class="di-plat ${platCls}">${o.platform==='uber'?'U':'99'}</div>
+          <div class="di-info"><h4>${title}</h4><p>${hhmm}${km>0?' · '+km.toFixed(1)+' km':''}${minTot>0?' · '+Math.round(minTot)+'m':''}</p></div>
+          <div class="di-val"><strong>${DB.fR(o.offer_value||0)}</strong><span>${rkm}</span></div>
+        </div>`;
+      }).join('')}
+    `).join('')}
+  `;
 }
 function fmtKmComp(real, offer) {
   if (real==null && offer==null) return '—';
