@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mob-v24-trip99-fix';
+const CACHE_NAME = 'mob-v25-sw-update-check';
 const ASSETS = [
   '/',
   '/index.html',

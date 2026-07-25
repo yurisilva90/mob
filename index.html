@@ -11082,9 +11082,15 @@ setInterval(() => { SYNC.flushQueue().catch(()=>{}); }, 30000);
 // ── Service worker: registra, força checagem de atualização e recarrega
 // sozinho quando uma versão nova assumir o controle. Sem isso, correções
 // ficavam "presas" numa versão antiga no celular sem nada avisar.
+// CORRIGIDO (24/07/2026, confirmado pelo Yuri): reg.update() só rodava
+// UMA VEZ, na abertura do app — uma sessão que fica aberta o dia inteiro
+// sem fechar de verdade nunca checava de novo, ficando presa na versão
+// carregada de manhã mesmo com correções novas no ar há horas. Agora
+// checa a cada 3min também.
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').then(reg => {
     reg.update();
+    setInterval(() => { reg.update().catch(()=>{}); }, 3*60*1000);
     let reloaded = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (reloaded) return;
