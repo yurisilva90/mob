@@ -297,6 +297,28 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .acc-badge.pro{background:#ECFDF3;color:#16A34A}
 .acc-exp{font-size:11.5px;color:#64748B;margin-top:8px}
 .acc-upgrade{width:100%;height:44px;border:0;border-radius:14px;background:linear-gradient(135deg,#0EA5E9,#0284C7);color:#fff;font-size:13.5px;font-weight:800;cursor:pointer;margin-top:10px;touch-action:manipulation;font-family:var(--font-app)}
+/* ── Perfil: avatar, stats, action sheet de foto ── */
+.av-sec{display:flex;flex-direction:column;align-items:center;padding:8px 0 18px}
+.av-wrap{position:relative;width:88px;height:88px;cursor:pointer}
+.av-photo{width:88px;height:88px;border-radius:99px;object-fit:cover;display:block;border:3px solid #fff;box-shadow:0 0 0 1px var(--line)}
+.av-initials{width:88px;height:88px;border-radius:99px;display:flex;align-items:center;justify-content:center;font-family:var(--font-brand);font-weight:800;font-size:28px;color:#fff;background:linear-gradient(135deg,#0A2F6B,#123B85);border:3px solid #fff;box-shadow:0 0 0 1px var(--line)}
+.av-cam{position:absolute;right:-2px;bottom:-2px;width:30px;height:30px;border-radius:99px;background:var(--green);border:3px solid #fff;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.av-cam svg{stroke:#fff}
+.av-name{font-family:var(--font-brand);font-weight:800;font-size:18px;margin-top:11px;letter-spacing:-.02em;color:var(--text)}
+.av-sub{font-size:12px;color:#64748B;font-weight:500;margin-top:3px;display:flex;align-items:center;gap:5px;text-align:center}
+.av-sub svg{stroke:#94A3B8;flex-shrink:0}
+.p-stats{display:flex;gap:8px;margin-bottom:16px}
+.p-stat{flex:1;background:#F8FAFC;border:1px solid var(--line);border-radius:14px;padding:10px 8px;text-align:center}
+.p-stat .v{font-family:var(--font-brand);font-weight:800;font-size:16px;color:var(--blue)}
+.p-stat .l{font-size:9.5px;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+.p-sec-lbl{font-size:11px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.06em;margin:4px 0 10px}
+/* Action sheet de foto — sheet pequeno, sem handle/head, opções em lista */
+#mo-perfil-foto .sheet{padding:8px 0 0}
+.pf-opt{display:flex;align-items:center;gap:13px;padding:15px 20px;font-size:14.5px;font-weight:700;color:var(--text);cursor:pointer;border-bottom:1px solid #F1F5F9}
+.pf-opt svg{stroke:var(--blue)}
+.pf-opt.danger{color:#EF4444}
+.pf-opt.danger svg{stroke:#EF4444}
+.pf-cancel{display:block;width:calc(100% - 32px);margin:10px 16px 18px;height:48px;background:#F1F5F9;border:none;border-radius:16px;color:#64748B;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-app)}
 .veiculo-btn{width:100%;height:50px;border:1.5px solid var(--line);background:#F8FAFC;border-radius:16px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;font-size:14.5px;font-weight:700;color:var(--text);cursor:pointer;touch-action:manipulation;font-family:var(--font-app)}
 .veiculo-btn svg{color:#94A3B8;flex-shrink:0}
 .sync-dot{width:10px;height:10px;border-radius:50%;background:#22C55E;flex-shrink:0}
@@ -1025,7 +1047,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
 .feed-chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
 .feed-list{padding-bottom:90px}
 .feed-post{display:flex;gap:10px;padding:13px 16px 11px;border-bottom:1px solid var(--soft-line);cursor:pointer}
-.feed-av{width:38px;height:38px;border-radius:99px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-family:var(--font-brand);font-weight:700;font-size:13px;color:#fff}
+.feed-av{width:38px;height:38px;border-radius:99px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-family:var(--font-brand);font-weight:700;font-size:13px;color:#fff;object-fit:cover}
 .feed-body{flex:1;min-width:0}
 .feed-head{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .feed-name{font-weight:800;font-size:13px;color:var(--text)}
@@ -1875,6 +1897,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
     <div class="sheet-handle"></div>
     <div class="sheet-head"><h2>Novo alerta</h2><button class="xbtn" onclick="feedCloseComposer()">&#x2715;</button></div>
     <div class="feed-cp-body">
+      <span id="feed-cp-avatar"></span>
       <textarea class="feed-cp-input" id="feed-cp-text" maxlength="180" placeholder="O que está acontecendo na rua? (opcional)" oninput="feedCpCount()"></textarea>
     </div>
     <div class="feed-cp-types" id="feed-cp-types">
@@ -1910,6 +1933,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <div id="feed-cm-list"></div>
     </div>
     <div class="feed-cm-bar">
+      <span id="feed-cm-bar-avatar"></span>
       <input class="feed-cm-input" id="feed-cm-input" maxlength="180" placeholder="Responder…" onkeydown="if(event.key==='Enter')feedEnviarComentario()">
       <button class="feed-cm-send" onclick="feedEnviarComentario()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -2274,6 +2298,28 @@ h1.hd-title{font-family:var(--font-brand)!important}
     <div class="sheet-handle"></div>
     <div class="sheet-head"><h2>Perfil</h2><button class="xbtn" onclick="closeMo('mo-perfil')">&#x2715;</button></div>
 
+    <div class="av-sec">
+      <div class="av-wrap" onclick="perfilOpenPhotoSheet()">
+        <div class="av-initials" id="p-av-initials" style="display:none"></div>
+        <img class="av-photo" id="p-av-photo" style="display:none" src="" alt="Foto de perfil">
+        <div class="av-cam"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+      </div>
+      <div class="av-name" id="p-av-name">—</div>
+      <div class="av-sub">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span id="p-av-sub">—</span>
+      </div>
+    </div>
+
+    <div class="p-stats">
+      <div class="p-stat"><div class="v" id="p-stat-corridas">—</div><div class="l">Corridas</div></div>
+      <div class="p-stat"><div class="v" id="p-stat-alertas">—</div><div class="l">Alertas</div></div>
+      <div class="p-stat"><div class="v" id="p-stat-conf">—</div><div class="l">Confirmações</div></div>
+    </div>
+
+    <input type="file" id="p-file-camera" accept="image/*" capture="user" style="display:none" onchange="perfilFileSelected(this)">
+    <input type="file" id="p-file-gallery" accept="image/*" style="display:none" onchange="perfilFileSelected(this)">
+
     <div class="acc-card" id="acc-card">
       <div class="acc-row">
         <div><div class="acc-email" id="acc-email">—</div><div class="acc-plan-lbl">Tipo de conta</div></div>
@@ -2283,7 +2329,9 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <button class="acc-upgrade" id="acc-upgrade-btn" onclick="openUpgrade()" style="display:none">Assinar MōB Pro</button>
     </div>
 
+    <div class="p-sec-lbl">Dados</div>
     <div class="field"><label class="lbl">Nome</label><input class="inp" type="text" id="p-nome" placeholder="Seu nome"></div>
+    <div class="field"><label class="lbl">Cidade</label><input class="inp" type="text" id="p-cidade" placeholder="Sua cidade"></div>
     <div class="field"><label class="lbl">Placa</label><input class="inp" type="text" id="p-placa" placeholder="ABC1D23"></div>
     <div class="field">
       <label class="lbl">Veículo</label>
@@ -2294,6 +2342,25 @@ h1.hd-title{font-family:var(--font-brand)!important}
     </div>
     <button class="btn-p" onclick="savePerfil()">Salvar</button>
     <button onclick="authSignOutBtn()" style="width:100%;height:48px;background:transparent;border:1.5px solid #EF4444;border-radius:18px;color:#EF4444;font-size:14px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;margin-top:10px">Sair da conta</button>
+  </div>
+</div>
+
+<!-- Perfil: action sheet de foto -->
+<div class="mo" id="mo-perfil-foto">
+  <div class="sheet">
+    <div class="pf-opt" onclick="perfilPickCamera()">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      Tirar foto
+    </div>
+    <div class="pf-opt" onclick="perfilPickGallery()">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      Escolher da galeria
+    </div>
+    <div class="pf-opt danger" id="p-remove-foto-opt" onclick="perfilRemovePhoto()">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      Remover foto atual
+    </div>
+    <button class="pf-cancel" onclick="closeMo('mo-perfil-foto')">Cancelar</button>
   </div>
 </div>
 
@@ -8890,12 +8957,62 @@ function hav(a,b,c,d) {
 
 // ── PERFIL ────────────────────────────────────────────────────
 function authSignOutBtn() { showConfirm('Sair da conta?', authSignOut, { confirmLabel: 'Sair' }); }
+function perfilAvatarColor() { return feedAvColor((_supaUser && _supaUser.id) || ''); }
+
+function perfilRenderAvatar() {
+  const cfg = DB.cfg();
+  const initEl = document.getElementById('p-av-initials');
+  const imgEl  = document.getElementById('p-av-photo');
+  const url = cfg.avatarUrl;
+  if (!initEl || !imgEl) return;
+  if (url) {
+    imgEl.src = url; imgEl.style.display = 'block';
+    initEl.style.display = 'none';
+  } else {
+    initEl.textContent = feedInitials(cfg.name || 'Motorista');
+    initEl.style.background = perfilAvatarColor();
+    initEl.style.display = 'flex';
+    imgEl.style.display = 'none';
+  }
+  const removeOpt = document.getElementById('p-remove-foto-opt');
+  if (removeOpt) removeOpt.style.display = url ? 'flex' : 'none';
+}
+
+async function perfilLoadStats() {
+  const setStat = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = (v == null ? '—' : v); };
+  if (!_SUPA || !_supaUser) return;
+  try {
+    const [tripsRes, autoRes, postsRes] = await Promise.all([
+      _SUPA.from('trips').select('id', { count:'exact', head:true }).eq('user_id', _supaUser.id),
+      _SUPA.from('auto_trips').select('id', { count:'exact', head:true }).eq('user_id', _supaUser.id),
+      _SUPA.from('feed_posts').select('votes_up').eq('user_id', _supaUser.id)
+    ]);
+    const corridas = (tripsRes.count || 0) + (autoRes.count || 0);
+    const posts = postsRes.data || [];
+    const conf = posts.reduce((s,p) => s + (p.votes_up || 0), 0);
+    setStat('p-stat-corridas', corridas);
+    setStat('p-stat-alertas', posts.length);
+    setStat('p-stat-conf', conf);
+  } catch (e) { console.warn('perfil stats', e); }
+}
+
 function openPerfil() {
   const cfg = DB.cfg();
   if (cfg.name) {const el=document.getElementById('p-nome');if(el)el.value=cfg.name;}
   if (cfg.plate) {const el=document.getElementById('p-placa');if(el)el.value=cfg.plate;}
+  const cidEl = document.getElementById('p-cidade'); if (cidEl) cidEl.value = cfg.city || '';
   const vTxt = document.getElementById('p-veiculo-txt');
   if (vTxt) vTxt.textContent = cfg.vehicle || 'Selecionar veículo';
+
+  const nameEl = document.getElementById('p-av-name');
+  if (nameEl) nameEl.textContent = cfg.name || 'Motorista MōB';
+  const MESES_CURTO = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const created = (_supaUser && _supaUser.created_at) ? new Date(_supaUser.created_at) : null;
+  const memberSince = created ? MESES_CURTO[created.getMonth()]+'/'+created.getFullYear() : '—';
+  const subEl = document.getElementById('p-av-sub');
+  if (subEl) subEl.textContent = (cfg.city ? cfg.city+' · ' : '') + 'na MōB desde '+memberSince;
+  perfilRenderAvatar();
+  perfilLoadStats();
 
   const emailEl = document.getElementById('acc-email');
   if (emailEl) emailEl.textContent = (_supaUser && _supaUser.email) || '—';
@@ -8964,13 +9081,95 @@ function toggleOverlayPref(el) {
 async function savePerfil() {
   const cfg = DB.cfg();
   cfg.name    = document.getElementById('p-nome')?.value || '';
+  cfg.city    = document.getElementById('p-cidade')?.value || '';
   cfg.plate   = document.getElementById('p-placa')?.value || '';
 
   DB.saveCfg(cfg);
+  // Grava na nuvem também — antes esta função só salvava local, então uma
+  // edição de nome nunca chegava em profiles.name, e o feed (que lê de lá
+  // pros posts de outros usuários) continuava mostrando o nome antigo.
+  if (_SUPA && _supaUser) {
+    try {
+      await _SUPA.from('profiles').upsert(
+        { id:_supaUser.id, name:cfg.name, city:cfg.city, plate:cfg.plate, vehicle:cfg.vehicle||null },
+        { onConflict:'id' }
+      );
+    } catch(e) { console.warn('perfil upsert', e); }
+  }
   closeMo('mo-perfil');
   renderMais();
   if (S.sec==='relatorios') renderHome();
   showToast('Perfil salvo!', 'success');
+}
+
+// ── Foto de perfil ────────────────────────────────────────────
+function perfilOpenPhotoSheet() { openMo('mo-perfil-foto'); }
+function perfilPickCamera()  { closeMo('mo-perfil-foto'); document.getElementById('p-file-camera')?.click(); }
+function perfilPickGallery() { closeMo('mo-perfil-foto'); document.getElementById('p-file-gallery')?.click(); }
+
+// Corta em quadrado (cover, centralizado) e comprime antes de subir —
+// evita gastar dados do motorista com foto de câmera em resolução total.
+function perfilResizeImage(file, size, quality) {
+  size = size || 480; quality = quality || 0.85;
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const side = Math.min(img.width, img.height);
+      const sx = (img.width - side) / 2, sy = (img.height - side) / 2;
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size);
+      canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('toBlob falhou')), 'image/jpeg', quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Imagem inválida')); };
+    img.src = url;
+  });
+}
+
+async function perfilFileSelected(inputEl) {
+  const file = inputEl.files && inputEl.files[0];
+  inputEl.value = ''; // permite selecionar o mesmo arquivo de novo depois
+  if (!file) return;
+  if (!file.type || !file.type.startsWith('image/')) { showToast('Selecione uma imagem.'); return; }
+  await perfilUploadAvatar(file);
+}
+
+async function perfilUploadAvatar(file) {
+  if (!_SUPA || !_supaUser) return;
+  showToast('Enviando foto…', 'info');
+  try {
+    const blob = await perfilResizeImage(file, 480, 0.85);
+    const path = _supaUser.id + '/avatar.jpg';
+    const { error: upErr } = await _SUPA.storage.from('avatars').upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
+    if (upErr) throw upErr;
+    const { data: pub } = _SUPA.storage.from('avatars').getPublicUrl(path);
+    const url = pub.publicUrl + '?t=' + Date.now(); // cache-busting — mesmo path, arquivo novo
+    await _SUPA.from('profiles').upsert({ id:_supaUser.id, avatar_url:url }, { onConflict:'id' });
+    const cfg = DB.cfg(); cfg.avatarUrl = url; DB.saveCfg(cfg);
+    perfilRenderAvatar();
+    showToast('Foto atualizada!', 'success');
+  } catch (e) {
+    console.warn('avatar upload', e);
+    showToast('Erro ao enviar a foto. Tente de novo.');
+  }
+}
+
+async function perfilRemovePhoto() {
+  closeMo('mo-perfil-foto');
+  const cfg = DB.cfg();
+  if (!cfg.avatarUrl) return;
+  if (_SUPA && _supaUser) {
+    try {
+      await _SUPA.storage.from('avatars').remove([_supaUser.id + '/avatar.jpg']);
+      await _SUPA.from('profiles').upsert({ id:_supaUser.id, avatar_url:null }, { onConflict:'id' });
+    } catch (e) { console.warn('remove avatar', e); }
+  }
+  cfg.avatarUrl = null; DB.saveCfg(cfg);
+  perfilRenderAvatar();
+  showToast('Foto removida.');
 }
 
 // ── SELETOR DE VEÍCULO (marca → modelo → ano) ────────────────────
@@ -11056,7 +11255,18 @@ async function loginRegister() {
 async function loadProfile() {
   if(!_supaUser) return;
   const { data } = await _SUPA.from('profiles').select('*').eq('id',_supaUser.id).single();
-  if(data?.name) { const cfg=DB.cfg(); if(!cfg.name){cfg.name=data.name;DB.saveCfg(cfg);} }
+  if (!data) return;
+  const cfg = DB.cfg();
+  let changed = false;
+  // Só preenche o que estiver vazio local — não sobrescreve edição que o
+  // usuário já tinha feito antes deste campo existir/sincronizar direito.
+  if (data.name    && !cfg.name)    { cfg.name = data.name; changed = true; }
+  if (data.city     && !cfg.city)    { cfg.city = data.city; changed = true; }
+  if (data.plate    && !cfg.plate)   { cfg.plate = data.plate; changed = true; }
+  if (data.vehicle  && !cfg.vehicle) { cfg.vehicle = data.vehicle; changed = true; }
+  // Avatar é campo novo, sem edição local legada pra proteger — nuvem manda.
+  if ((data.avatar_url || null) !== (cfg.avatarUrl || null)) { cfg.avatarUrl = data.avatar_url || null; changed = true; }
+  if (changed) DB.saveCfg(cfg);
 }
 
 async function authSignOut() { await _SUPA.auth.signOut(); }
@@ -12121,10 +12331,18 @@ async function feedLoadPosts(){
     const uids=[...new Set(_feedPosts.map(p=>p.user_id))];
     if(uids.length){
       const {data:names}=await _SUPA.rpc('get_profile_names',{uids});
-      _feedNames={}; (names||[]).forEach(n=>{_feedNames[n.id]=n.name;});
+      _feedNames={}; (names||[]).forEach(n=>{_feedNames[n.id]={name:n.name, avatar:n.avatar_url};});
     }
     feedRenderList();
   }catch(e){console.warn('feed load',e); if(el) el.innerHTML='<div class="feed-empty">Erro ao carregar o feed</div>';}
+}
+
+// Avatar compartilhado entre feed, comentários e composer: foto real
+// quando existe, senão iniciais coloridas (mesma cor sempre pro mesmo uid).
+function feedAvatarHtml(uid, name, avatarUrl, extraClass){
+  const cls = 'feed-av' + (extraClass?(' '+extraClass):'');
+  if (avatarUrl) return `<img class="${cls}" src="${esc(avatarUrl)}" alt="">`;
+  return `<div class="${cls}" style="background:${feedAvColor(uid)}">${esc(feedInitials(name))}</div>`;
 }
 
 function feedRenderList(){
@@ -12135,13 +12353,15 @@ function feedRenderList(){
 
 function feedPostCardHtml(p){
   const t=FEED_TYPES[p.type]||FEED_TYPES.blitz;
-  const isFriend=false; // amigos: v2
-  const myName=(_supaUser&&p.user_id===_supaUser.id) ? (DB.cfg().name||'Você') : (_feedNames[p.user_id]||'Motorista MōB');
+  const isOwn = _supaUser && p.user_id===_supaUser.id;
+  const cfg = DB.cfg();
+  const myName = isOwn ? (cfg.name||'Você') : ((_feedNames[p.user_id]&&_feedNames[p.user_id].name)||'Motorista MōB');
+  const myAvatar = isOwn ? (cfg.avatarUrl||null) : ((_feedNames[p.user_id]&&_feedNames[p.user_id].avatar)||null);
   const dist=feedDistLabel(p);
   const closed=p.status==='encerrado';
   const myVote=p._myVote; // preenchido depois de votar, só nesta sessão
   return `<div class="feed-post${closed?' closed':''}" onclick="feedAbrirComentarios('${p.id}')">
-    <div class="feed-av" style="background:${feedAvColor(p.user_id)}">${esc(feedInitials(myName))}</div>
+    ${feedAvatarHtml(p.user_id, myName, myAvatar)}
     <div class="feed-body">
       <div class="feed-head">
         <span class="feed-name">${esc(myName)}</span>
@@ -12212,6 +12432,8 @@ function feedOpenComposer(){
   document.getElementById('feed-cp-mic')?.classList.remove('rec');
   const recBar=document.getElementById('feed-cp-recbar'); if(recBar) recBar.style.display='none';
   feedUpdateComposerLoc();
+  const avEl=document.getElementById('feed-cp-avatar');
+  if(avEl){const cfg=DB.cfg();avEl.innerHTML=feedAvatarHtml(_supaUser&&_supaUser.id,cfg.name||'Você',cfg.avatarUrl);}
   openMo('mo-feed-composer');
 }
 function feedCloseComposer(){ closeMo('mo-feed-composer'); }
@@ -12286,6 +12508,8 @@ async function feedAbrirComentarios(postId){
   const host=document.getElementById('feed-cm-post');
   if(host && p) host.innerHTML=feedPostCardHtml(p);
   document.getElementById('feed-cm-list').innerHTML='<div class="feed-empty">Carregando…</div>';
+  const avEl=document.getElementById('feed-cm-bar-avatar');
+  if(avEl){const cfg=DB.cfg();avEl.innerHTML=feedAvatarHtml(_supaUser&&_supaUser.id,cfg.name||'Você',cfg.avatarUrl);}
   openMo('mo-feed-comments');
   feedCarregarComentarios(postId);
 }
@@ -12303,12 +12527,15 @@ async function feedCarregarComentarios(postId){
     let names={};
     if(uids.length){
       const {data:ns}=await _SUPA.rpc('get_profile_names',{uids});
-      (ns||[]).forEach(n=>{names[n.id]=n.name;});
+      (ns||[]).forEach(n=>{names[n.id]={name:n.name, avatar:n.avatar_url};});
     }
     el.innerHTML=list.map(c=>{
-      const nm=(_supaUser&&c.user_id===_supaUser.id)?(DB.cfg().name||'Você'):(names[c.user_id]||'Motorista MōB');
+      const isOwn=_supaUser&&c.user_id===_supaUser.id;
+      const cfg=DB.cfg();
+      const nm=isOwn?(cfg.name||'Você'):((names[c.user_id]&&names[c.user_id].name)||'Motorista MōB');
+      const av=isOwn?(cfg.avatarUrl||null):((names[c.user_id]&&names[c.user_id].avatar)||null);
       return `<div class="feed-cm-reply">
-        <div class="feed-av" style="background:${feedAvColor(c.user_id)}">${esc(feedInitials(nm))}</div>
+        ${feedAvatarHtml(c.user_id, nm, av)}
         <div class="feed-body">
           <div class="feed-head"><span class="feed-name">${esc(nm)}</span><span class="feed-time">· ${feedAgeLabel(c.created_at)}</span></div>
           <div class="feed-text">${esc(c.body)}</div>
