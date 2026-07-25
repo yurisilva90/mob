@@ -3544,16 +3544,24 @@ async function _doRefreshAutoTrip(tripId) {
   if (parsed.kmTrip != null) patch.offer_km_trip = parsed.kmTrip;
   if (parsed.minPickup != null) patch.offer_duration_pickup_sec = Math.round(parsed.minPickup*60);
   if (parsed.minTrip != null) patch.offer_duration_trip_sec = Math.round(parsed.minTrip*60);
+  // Compara ANTES de salvar — pedido do Yuri (24/07/2026): mensagem
+  // precisa dizer o que de fato mudou, não só "reconferida" genérico.
+  const numEq = (a,b,tol) => (a==null && b==null) || (a!=null && b!=null && Math.abs(a-b) <= (tol||0.005));
+  const changes = [];
+  if (!numEq(t.offer_value, patch.offer_value, 0.005)) changes.push('valor '+DB.fR(patch.offer_value));
+  if (patch.offer_dinamico != null && !numEq(t.offer_dinamico, patch.offer_dinamico, 0.005)) changes.push('dinâmico '+DB.fR(patch.offer_dinamico));
+  if (patch.offer_km_trip != null && !numEq(t.offer_km_trip, patch.offer_km_trip, 0.05)) changes.push('km previsto');
+  if (patch.offer_duration_trip_sec != null && !numEq(t.offer_duration_trip_sec, patch.offer_duration_trip_sec, 30)) changes.push('tempo previsto');
   const { error: e2 } = await _SUPA.from('auto_trips').update(patch).eq('id', tripId);
   if (e2) return { ok:false, reason:'erro ao salvar' };
-  return { ok:true, valor: parsed.valor };
+  return { ok:true, valor: parsed.valor, changes };
 }
 async function refreshAutoTripFromLog(tripId, btnEl) {
   if (btnEl) btnEl.classList.add('spinning');
   try {
     const r = await _doRefreshAutoTrip(tripId);
     if (!r.ok) { showToast('Não achei: '+r.reason, 'error'); return; }
-    showToast('Reconferida — '+DB.fR(r.valor), 'success');
+    showToast(r.changes.length ? 'Corrigido: '+r.changes.join(', ') : 'Corrida atualizada com sucesso', 'success');
     S.autoTripsDate = null; S.autoTripsHomeRange = null;
     if (S.sec === 'jornada') renderJornada();
     if (S.sec === 'home') renderHomeGraphs();
@@ -3583,7 +3591,7 @@ async function _autoRefreshPendingTrips() {
       try { const r = await _doRefreshAutoTrip(row.id); if (r.ok) fixed++; } catch(e) {}
     }
     if (fixed > 0) {
-      showToast(fixed===1 ? '1 corrida atualizada sozinha' : fixed+' corridas atualizadas sozinhas', 'success');
+      showToast(fixed===1 ? '1 corrida corrigida sozinha' : fixed+' corridas corrigidas sozinhas', 'success');
       S.autoTripsDate = null; S.autoTripsHomeRange = null;
       if (S.sec === 'jornada') renderJornada();
       if (S.sec === 'home') renderHomeGraphs();
