@@ -3524,29 +3524,36 @@ async function fetchBestOfferTexts(t) {
   if (!best) return { texts: null, reason: `${data.length} linhas no log, nenhuma de oferta (plataforma ${plat})` };
   return { texts: best, reason: null };
 }
+// Lógica central, sem toast/spinner — usada tanto pelo botão manual quanto
+// pela rotina automática (24/07/2026). Retorna {ok, valor, reason}.
+async function _doRefreshAutoTrip(tripId) {
+  const { data: rows, error: e1 } = await _SUPA.from('auto_trips').select('*').eq('id', tripId).limit(1);
+  if (e1 || !rows || !rows.length) return { ok:false, reason:'corrida não encontrada' };
+  const t = rows[0];
+  const { texts, reason } = await fetchBestOfferTexts(t);
+  if (!texts) return { ok:false, reason };
+  const parsed = parseOfferJS(texts);
+  if (parsed.valor == null) return { ok:false, reason:'texto insuficiente pra reconferir' };
+  // Só os campos NUMÉRICOS — testado contra casos reais, o valor sai
+  // confiável em várias leituras diferentes da mesma oferta, mas o
+  // endereço às vezes sai lixo ("% LUCRO" etc) mesmo na leitura mais
+  // completa. Melhor não arriscar sobrescrever um endereço bom.
+  const patch = { offer_value: parsed.valor, status: 'confirmada' };
+  if (parsed.dinamico != null) patch.offer_dinamico = parsed.dinamico;
+  if (parsed.kmPickup != null) patch.offer_km_pickup = parsed.kmPickup;
+  if (parsed.kmTrip != null) patch.offer_km_trip = parsed.kmTrip;
+  if (parsed.minPickup != null) patch.offer_duration_pickup_sec = Math.round(parsed.minPickup*60);
+  if (parsed.minTrip != null) patch.offer_duration_trip_sec = Math.round(parsed.minTrip*60);
+  const { error: e2 } = await _SUPA.from('auto_trips').update(patch).eq('id', tripId);
+  if (e2) return { ok:false, reason:'erro ao salvar' };
+  return { ok:true, valor: parsed.valor };
+}
 async function refreshAutoTripFromLog(tripId, btnEl) {
   if (btnEl) btnEl.classList.add('spinning');
   try {
-    const { data: rows, error: e1 } = await _SUPA.from('auto_trips').select('*').eq('id', tripId).limit(1);
-    if (e1 || !rows || !rows.length) { showToast('Corrida não encontrada.', 'error'); return; }
-    const t = rows[0];
-    const { texts, reason } = await fetchBestOfferTexts(t);
-    if (!texts) { showToast('Não achei: '+reason, 'error'); return; }
-    const parsed = parseOfferJS(texts);
-    if (parsed.valor == null) { showToast('Não consegui reconferir — texto insuficiente.', 'error'); return; }
-    // Só os campos NUMÉRICOS — testado contra casos reais, o valor sai
-    // confiável em várias leituras diferentes da mesma oferta, mas o
-    // endereço às vezes sai lixo ("% LUCRO" etc) mesmo na leitura mais
-    // completa. Melhor não arriscar sobrescrever um endereço bom.
-    const patch = { offer_value: parsed.valor, status: 'confirmada' };
-    if (parsed.dinamico != null) patch.offer_dinamico = parsed.dinamico;
-    if (parsed.kmPickup != null) patch.offer_km_pickup = parsed.kmPickup;
-    if (parsed.kmTrip != null) patch.offer_km_trip = parsed.kmTrip;
-    if (parsed.minPickup != null) patch.offer_duration_pickup_sec = Math.round(parsed.minPickup*60);
-    if (parsed.minTrip != null) patch.offer_duration_trip_sec = Math.round(parsed.minTrip*60);
-    const { error: e2 } = await _SUPA.from('auto_trips').update(patch).eq('id', tripId);
-    if (e2) { showToast('Erro ao salvar.', 'error'); return; }
-    showToast('Reconferida — '+DB.fR(parsed.valor), 'success');
+    const r = await _doRefreshAutoTrip(tripId);
+    if (!r.ok) { showToast('Não achei: '+r.reason, 'error'); return; }
+    showToast('Reconferida — '+DB.fR(r.valor), 'success');
     S.autoTripsDate = null; S.autoTripsHomeRange = null;
     if (S.sec === 'jornada') renderJornada();
     if (S.sec === 'home') renderHomeGraphs();
@@ -3558,6 +3565,33 @@ async function refreshAutoTripFromLog(tripId, btnEl) {
     if (btnEl) btnEl.classList.remove('spinning');
   }
 }
+// Rotina automática (24/07/2026, pedido do Yuri) — a cada 5min, tenta
+// reconferir sozinho corridas "Aguardando revisão" (status='capturada')
+// das últimas 48h. Silenciosa por corrida (não interrompe com toast a
+// cada uma) — só avisa se corrigiu alguma, no total. Nunca mexe em
+// corrida já confirmada, só nas que ainda não têm valor nenhum.
+async function _autoRefreshPendingTrips() {
+  if (!_supaUser) return;
+  try {
+    const { data, error } = await _SUPA.from('auto_trips').select('id')
+      .eq('user_id', _supaUser.id).eq('status', 'capturada')
+      .gte('accepted_at', new Date(Date.now() - 48*60*60*1000).toISOString())
+      .limit(15);
+    if (error || !data || !data.length) return;
+    let fixed = 0;
+    for (const row of data) {
+      try { const r = await _doRefreshAutoTrip(row.id); if (r.ok) fixed++; } catch(e) {}
+    }
+    if (fixed > 0) {
+      showToast(fixed===1 ? '1 corrida atualizada sozinha' : fixed+' corridas atualizadas sozinhas', 'success');
+      S.autoTripsDate = null; S.autoTripsHomeRange = null;
+      if (S.sec === 'jornada') renderJornada();
+      if (S.sec === 'home') renderHomeGraphs();
+      if (S.sec === 'corridas') renderCorridasActive();
+    }
+  } catch (e) { console.error('_autoRefreshPendingTrips', e); }
+}
+setTimeout(()=>{ _autoRefreshPendingTrips(); setInterval(_autoRefreshPendingTrips, 5*60*1000); }, 6000);
 // Balãozinho discreto ao tocar num símbolo (dinâmico, vínculo à jornada,
 // dinheiro) — pedido do Yuri (24/07/2026). Some sozinho, não navega nem
 // abre nada.
