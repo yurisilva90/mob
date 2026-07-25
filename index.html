@@ -983,6 +983,74 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .hd-title,.auth-logo-title,.auth-hero,
 .hg-amount,.period-amount h1,.j-timer,
 h1.hd-title{font-family:var(--font-brand)!important}
+
+/* ── Feed social (Home) ─────────────────────────────────────── */
+.feed-kpis{display:flex;gap:8px;padding:10px 16px 4px}
+.feed-kpi{flex:1;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:9px 8px;text-align:center}
+.feed-kpi .v{font-family:var(--font-brand);font-weight:800;font-size:14px;color:var(--blue);line-height:1.1}
+.feed-kpi .v.g{color:var(--green2)}
+.feed-kpi .l{font-size:9px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:3px}
+.feed-filters{display:flex;gap:7px;padding:10px 16px;overflow-x:auto;scrollbar-width:none}
+.feed-filters::-webkit-scrollbar{display:none}
+.feed-chip{flex:0 0 auto;border-radius:99px;padding:6px 13px;font-size:12px;font-weight:700;border:1px solid var(--line);background:var(--card);color:var(--muted);white-space:nowrap;cursor:pointer}
+.feed-chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.feed-list{padding-bottom:90px}
+.feed-post{display:flex;gap:10px;padding:13px 16px 11px;border-bottom:1px solid var(--soft-line);cursor:pointer}
+.feed-av{width:38px;height:38px;border-radius:99px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-family:var(--font-brand);font-weight:700;font-size:13px;color:#fff}
+.feed-body{flex:1;min-width:0}
+.feed-head{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.feed-name{font-weight:800;font-size:13px;color:var(--text)}
+.feed-time{font-size:11.5px;color:var(--muted2);font-weight:500}
+.feed-type{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;border-radius:8px;padding:2.5px 8px;margin-top:4px}
+.feed-type svg{stroke:currentColor}
+.feed-text{font-size:13.5px;line-height:1.45;color:var(--text);margin-top:6px;white-space:pre-wrap;word-break:break-word}
+.feed-loc{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--muted);margin-top:7px}
+.feed-loc svg{stroke:var(--green2)}
+.feed-acts{display:flex;align-items:center;gap:22px;margin-top:9px}
+.feed-act{display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;color:var(--muted2);background:none;border:none;padding:0;font-family:var(--font-app);cursor:pointer}
+.feed-act svg{stroke:currentColor;fill:none}
+.feed-act.up-on{color:var(--green2)}
+.feed-act.dn-on{color:var(--red)}
+.feed-post.closed{opacity:.5}
+.feed-closed-badge{display:inline-block;font-size:10px;font-weight:800;color:var(--muted2);background:var(--bg);border-radius:6px;padding:2px 7px;margin-top:6px;text-transform:uppercase;letter-spacing:.04em}
+.feed-empty{padding:60px 16px;text-align:center;color:var(--muted)}
+.feed-fab-wrap{position:fixed;left:50%;transform:translateX(-50%);width:100%;max-width:430px;bottom:calc(var(--bottom) + var(--safe-bottom) + 12px);pointer-events:none;z-index:150}
+.feed-fab{position:absolute;right:16px;bottom:0;width:52px;height:52px;border:none;border-radius:18px;background:var(--green);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(34,197,94,.4);cursor:pointer;pointer-events:auto}
+.feed-fab svg{stroke:#fff}
+/* Composer */
+.feed-cp-body{display:flex;gap:10px;padding:14px 16px 4px}
+.feed-cp-input{flex:1;font-size:14.5px;line-height:1.5;padding-top:8px;border:none;background:none;outline:none;resize:none;color:var(--text);font-family:var(--font-app);min-height:70px}
+.feed-cp-input::placeholder{color:var(--muted2)}
+.feed-cp-types{display:flex;gap:7px;padding:10px 16px;overflow-x:auto;scrollbar-width:none}
+.feed-cp-types::-webkit-scrollbar{display:none}
+.feed-t-chip{flex:0 0 auto;display:flex;align-items:center;gap:6px;border-radius:12px;padding:8px 12px;font-size:11.5px;font-weight:800;border:1.5px solid var(--line);background:var(--card);color:var(--muted);white-space:nowrap;cursor:pointer;font-family:var(--font-app)}
+.feed-t-chip svg{stroke:currentColor}
+.feed-cp-loc{margin:6px 16px 0;border:1px solid var(--line);border-radius:14px;padding:11px 13px;display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;color:var(--text);cursor:pointer}
+.feed-cp-loc svg{stroke:var(--green2);flex:0 0 auto}
+.feed-cp-loc .sub{font-size:10.5px;font-weight:500;color:var(--muted2);margin-top:1px}
+.feed-cp-loc.off{opacity:.5}
+.feed-cp-tools{display:flex;align-items:center;gap:14px;padding:14px 18px 4px;border-top:1px solid var(--soft-line);margin-top:12px}
+.feed-mic{width:36px;height:36px;border-radius:99px;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--line);background:var(--card);cursor:pointer}
+.feed-mic svg{stroke:var(--blue)}
+.feed-mic.rec{background:var(--red);border-color:var(--red);position:relative}
+.feed-mic.rec svg{stroke:#fff}
+.feed-mic.rec::after{content:"";position:absolute;inset:-6px;border-radius:99px;border:2px solid rgba(239,68,68,.45);animation:feedPulse 1.4s ease-out infinite}
+@keyframes feedPulse{0%{transform:scale(.85);opacity:1}100%{transform:scale(1.35);opacity:0}}
+.feed-cp-count{margin-left:auto;font-size:11px;font-weight:700;color:var(--muted2)}
+.feed-rec-bar{display:flex;align-items:center;gap:10px;margin:8px 16px 0;background:var(--redBg);border:1px solid #FECACA;border-radius:14px;padding:9px 13px}
+.feed-rec-dot{width:8px;height:8px;border-radius:99px;background:var(--red);animation:feedBlink 1s ease-in-out infinite}
+@keyframes feedBlink{0%,100%{opacity:1}50%{opacity:.25}}
+.feed-rec-txt{font-size:11.5px;font-weight:800;color:#B91C1C}
+@media (prefers-reduced-motion: reduce){.feed-mic.rec::after,.feed-rec-dot{animation:none}}
+/* Comentários */
+.feed-cm-post{border-bottom:6px solid var(--bg)}
+.feed-cm-reply{display:flex;gap:10px;padding:12px 16px 10px 26px;border-bottom:1px solid var(--soft-line)}
+.feed-cm-reply .feed-av{width:30px;height:30px;font-size:11px}
+.feed-cm-bar{position:sticky;bottom:0;display:flex;align-items:center;gap:10px;padding:10px 12px;border-top:1px solid var(--line);background:var(--card)}
+.feed-cm-input{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:10px 15px;font-size:13px;color:var(--text);outline:none;font-family:var(--font-app)}
+.feed-cm-input::placeholder{color:var(--muted2)}
+.feed-cm-send{width:38px;height:38px;border-radius:99px;background:var(--green);display:flex;align-items:center;justify-content:center;flex:0 0 auto;border:none;cursor:pointer}
+.feed-cm-send svg{stroke:#fff}
 </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -1071,86 +1139,26 @@ h1.hd-title{font-family:var(--font-brand)!important}
 
 <!-- ══ TELA HOME ══════════════════════════════════════════════════════════ -->
 <div class="screen on" id="sc-home">
-  <div style="padding:0 16px">
-    <div class="ad-carousel" id="ad-carousel-0"></div>
+  <div class="feed-kpis" id="feed-kpis">
+    <div class="feed-kpi"><div class="v g" id="feed-k-rev">R$ 0</div><div class="l">Hoje</div></div>
+    <div class="feed-kpi"><div class="v" id="feed-k-trips">0</div><div class="l">Corridas</div></div>
+    <div class="feed-kpi"><div class="v" id="feed-k-rpkm">—</div><div class="l">R$/km</div></div>
+    <div class="feed-kpi"><div class="v" id="feed-k-online">—</div><div class="l">Online</div></div>
   </div>
-  <div class="hg-info-tip" id="hg-info-tip"></div>
-  <section class="hg-period-card" style="margin:12px 16px 0">
-    <div class="hg-period-top">
-      <div class="hg-period-tabs">
-        <button id="hg-tab-w" class="active" onclick="setHomePeriod('w')">Semana</button>
-        <button id="hg-tab-m" onclick="setHomePeriod('m')">Mês</button>
-        <button id="hg-tab-y" onclick="setHomePeriod('y')">Ano</button>
-      </div>
-      <button class="hg-filter-btn" onclick="openHgFilter()"><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/></svg></button>
-    </div>
-    <div class="hg-main-value">
-      <label>Faturamento</label>
-      <h1 id="hg-amount">R$ 0</h1>
-      <p id="hg-sub">0 corridas · 0,0 km</p>
-    </div>
-    <div class="hg-insight" id="hg-insight" style="display:none">
-      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:.5;margin-top:2px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <p id="hg-insight-txt"></p>
-    </div>
-    <div class="hg-metrics">
-      <div class="hg-metric"><strong id="hg-rpkm">—</strong><span>R$/Km</span></div>
-      <div class="hg-metric"><strong id="hg-rphr">—</strong><span>R$/Hora</span></div>
-      <div class="hg-metric"><strong id="hg-trips">0</strong><span>Corridas</span></div>
-      <div class="hg-metric"><strong id="hg-exp">R$ 0</strong><span>Despesas</span></div>
-      <div class="hg-metric"><strong id="hg-profit">R$ 0</strong><span>Lucro</span></div>
-      <div class="hg-metric"><strong id="hg-pct">0%</strong><span>% Lucro</span></div>
-    </div>
-    <div class="hg-goals" id="hg-goals"></div>
-  </section>
-
-  <section class="hg-chart-card" style="margin:14px 16px 0">
-    <div class="hg-chart-head"><div><h2>Dia/Semana <button class="hg-info-btn" onclick="showChartInfo(this,'Soma por dia da semana, dentro do período selecionado acima.')">?</button></h2></div>
-      <div class="hg-mini-tabs"><button class="active" id="hg-dia-d" onclick="setHgDiaMode('d')">Dia</button><button id="hg-dia-w" onclick="setHgDiaMode('w')">Semana</button></div>
-    </div>
-    <p class="hg-chart-highlight" id="hg-dia-insight"></p>
-    <div class="hg-bar-chart" id="hg-chart-dia"></div>
-  </section>
-
-  <section class="hg-chart-card" style="margin:14px 16px 0">
-    <div class="hg-chart-head"><div><h2>Hora/Turno <button class="hg-info-btn" onclick="showChartInfo(this,'Soma por horário, dentro do período selecionado acima.')">?</button></h2></div>
-      <div class="hg-mini-tabs"><button class="active" id="hg-hora-h" onclick="setHgHoraMode('h')">Hora</button><button id="hg-hora-t" onclick="setHgHoraMode('t')">Turno</button></div>
-    </div>
-    <p class="hg-chart-highlight" id="hg-hora-insight"></p>
-    <div class="hg-bar-chart hour" id="hg-chart-hora"></div>
-  </section>
-
-  <div class="ad-carousel" id="ad-carousel-1"></div>
-
-  <section class="hg-chart-card" style="margin:14px 16px 0">
-    <div class="hg-chart-head"><div><h2>Mês/Ano <button class="hg-info-btn" onclick="showChartInfo(this,'Soma por mês/ano, dentro do período selecionado acima — com Semana ou Mês escolhido aqui em cima, vira 1 barra só.')">?</button></h2></div>
-      <div class="hg-mini-tabs"><button class="active" id="hg-mes-m" onclick="setHgMesMode('m')">Mês</button><button id="hg-mes-y" onclick="setHgMesMode('y')">Ano</button></div>
-    </div>
-    <div class="hg-bar-chart month" id="hg-chart-mes"></div>
-  </section>
-
-  <section class="hg-chart-card" style="margin:14px 16px 0">
-    <div class="hg-chart-head"><div><h2>Plataformas <button class="hg-info-btn" onclick="showChartInfo(this,'Distribuição por app ou origem.')">?</button></h2></div></div>
-    <div class="hg-pie-wrap">
-      <div class="hg-pie" id="hg-pie-plat"></div>
-      <div class="hg-pie-list" id="hg-pie-plat-list"></div>
-    </div>
-  </section>
-
-  <section class="hg-chart-card" style="margin:14px 16px 0">
-    <div class="hg-chart-head"><div><h2>Receitas x Despesas <button class="hg-info-btn" onclick="showChartInfo(this,'Distribuição por categoria conforme o tipo selecionado.')">?</button></h2></div></div>
-    <div class="hg-category-tabs"><button class="active" id="hg-rd-receita" onclick="setHgRevDesp('receita')">Receitas</button><button id="hg-rd-despesa" onclick="setHgRevDesp('despesa')">Despesas</button></div>
-    <div class="hg-pie-wrap">
-      <div class="hg-pie" id="hg-pie-cat"></div>
-      <div class="hg-pie-list" id="hg-pie-cat-list"></div>
-    </div>
-    <div class="hg-category-panel" id="hg-cat-panel"></div>
-  </section>
-  <section class="entries" style="margin:14px 16px 0">
-    <div class="eheader"><h3>Últimos lançamentos</h3><button onclick="navTo('lancamentos')">Ver tudo</button></div>
-    <div id="home-entries"><div class="empty">Nenhum lançamento ainda</div></div>
-  </section>
-  <div style="height:8px"></div>
+  <div class="feed-filters" id="feed-filters">
+    <div class="feed-chip on" data-type="" onclick="feedSetFilter('',this)">Tudo</div>
+    <div class="feed-chip" data-type="blitz" onclick="feedSetFilter('blitz',this)">Blitz</div>
+    <div class="feed-chip" data-type="risco" onclick="feedSetFilter('risco',this)">Risco</div>
+    <div class="feed-chip" data-type="transito" onclick="feedSetFilter('transito',this)">Trânsito</div>
+    <div class="feed-chip" data-type="demanda" onclick="feedSetFilter('demanda',this)">Demanda</div>
+    <div class="feed-chip" data-type="fila" onclick="feedSetFilter('fila',this)">Fila</div>
+  </div>
+  <div class="feed-list" id="feed-list"><div class="feed-empty">Carregando alertas…</div></div>
+  <div class="feed-fab-wrap">
+    <button class="feed-fab" onclick="feedOpenComposer()" aria-label="Publicar alerta">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+    </button>
+  </div>
 </div>
 
 <!-- ══ TELA JORNADA ══════════════════════════════════════════════════════ -->
@@ -1315,9 +1323,86 @@ h1.hd-title{font-family:var(--font-brand)!important}
     <button onclick="navTo('financeiro')" style="width:32px;height:32px;border-radius:10px;background:#F1F5F9;border:0;display:flex;align-items:center;justify-content:center;color:#0F172A;cursor:pointer;flex-shrink:0"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
     <h2 style="font-size:17px;letter-spacing:-.02em;flex:1">Relatórios</h2>
   </div>
-  <div style="padding:60px 16px;text-align:center">
-    <div class="empty">Em construção — aqui vai entrar a visão geral com alertas, incluindo pagamentos vencidos.</div>
+  <div style="padding:0 16px">
+    <div class="ad-carousel" id="ad-carousel-0"></div>
   </div>
+  <div class="hg-info-tip" id="hg-info-tip"></div>
+  <section class="hg-period-card" style="margin:12px 16px 0">
+    <div class="hg-period-top">
+      <div class="hg-period-tabs">
+        <button id="hg-tab-w" class="active" onclick="setHomePeriod('w')">Semana</button>
+        <button id="hg-tab-m" onclick="setHomePeriod('m')">Mês</button>
+        <button id="hg-tab-y" onclick="setHomePeriod('y')">Ano</button>
+      </div>
+      <button class="hg-filter-btn" onclick="openHgFilter()"><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/></svg></button>
+    </div>
+    <div class="hg-main-value">
+      <label>Faturamento</label>
+      <h1 id="hg-amount">R$ 0</h1>
+      <p id="hg-sub">0 corridas · 0,0 km</p>
+    </div>
+    <div class="hg-insight" id="hg-insight" style="display:none">
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:.5;margin-top:2px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <p id="hg-insight-txt"></p>
+    </div>
+    <div class="hg-metrics">
+      <div class="hg-metric"><strong id="hg-rpkm">—</strong><span>R$/Km</span></div>
+      <div class="hg-metric"><strong id="hg-rphr">—</strong><span>R$/Hora</span></div>
+      <div class="hg-metric"><strong id="hg-trips">0</strong><span>Corridas</span></div>
+      <div class="hg-metric"><strong id="hg-exp">R$ 0</strong><span>Despesas</span></div>
+      <div class="hg-metric"><strong id="hg-profit">R$ 0</strong><span>Lucro</span></div>
+      <div class="hg-metric"><strong id="hg-pct">0%</strong><span>% Lucro</span></div>
+    </div>
+    <div class="hg-goals" id="hg-goals"></div>
+  </section>
+
+  <section class="hg-chart-card" style="margin:14px 16px 0">
+    <div class="hg-chart-head"><div><h2>Dia/Semana <button class="hg-info-btn" onclick="showChartInfo(this,'Soma por dia da semana, dentro do período selecionado acima.')">?</button></h2></div>
+      <div class="hg-mini-tabs"><button class="active" id="hg-dia-d" onclick="setHgDiaMode('d')">Dia</button><button id="hg-dia-w" onclick="setHgDiaMode('w')">Semana</button></div>
+    </div>
+    <p class="hg-chart-highlight" id="hg-dia-insight"></p>
+    <div class="hg-bar-chart" id="hg-chart-dia"></div>
+  </section>
+
+  <section class="hg-chart-card" style="margin:14px 16px 0">
+    <div class="hg-chart-head"><div><h2>Hora/Turno <button class="hg-info-btn" onclick="showChartInfo(this,'Soma por horário, dentro do período selecionado acima.')">?</button></h2></div>
+      <div class="hg-mini-tabs"><button class="active" id="hg-hora-h" onclick="setHgHoraMode('h')">Hora</button><button id="hg-hora-t" onclick="setHgHoraMode('t')">Turno</button></div>
+    </div>
+    <p class="hg-chart-highlight" id="hg-hora-insight"></p>
+    <div class="hg-bar-chart hour" id="hg-chart-hora"></div>
+  </section>
+
+  <div class="ad-carousel" id="ad-carousel-1"></div>
+
+  <section class="hg-chart-card" style="margin:14px 16px 0">
+    <div class="hg-chart-head"><div><h2>Mês/Ano <button class="hg-info-btn" onclick="showChartInfo(this,'Soma por mês/ano, dentro do período selecionado acima — com Semana ou Mês escolhido aqui em cima, vira 1 barra só.')">?</button></h2></div>
+      <div class="hg-mini-tabs"><button class="active" id="hg-mes-m" onclick="setHgMesMode('m')">Mês</button><button id="hg-mes-y" onclick="setHgMesMode('y')">Ano</button></div>
+    </div>
+    <div class="hg-bar-chart month" id="hg-chart-mes"></div>
+  </section>
+
+  <section class="hg-chart-card" style="margin:14px 16px 0">
+    <div class="hg-chart-head"><div><h2>Plataformas <button class="hg-info-btn" onclick="showChartInfo(this,'Distribuição por app ou origem.')">?</button></h2></div></div>
+    <div class="hg-pie-wrap">
+      <div class="hg-pie" id="hg-pie-plat"></div>
+      <div class="hg-pie-list" id="hg-pie-plat-list"></div>
+    </div>
+  </section>
+
+  <section class="hg-chart-card" style="margin:14px 16px 0">
+    <div class="hg-chart-head"><div><h2>Receitas x Despesas <button class="hg-info-btn" onclick="showChartInfo(this,'Distribuição por categoria conforme o tipo selecionado.')">?</button></h2></div></div>
+    <div class="hg-category-tabs"><button class="active" id="hg-rd-receita" onclick="setHgRevDesp('receita')">Receitas</button><button id="hg-rd-despesa" onclick="setHgRevDesp('despesa')">Despesas</button></div>
+    <div class="hg-pie-wrap">
+      <div class="hg-pie" id="hg-pie-cat"></div>
+      <div class="hg-pie-list" id="hg-pie-cat-list"></div>
+    </div>
+    <div class="hg-category-panel" id="hg-cat-panel"></div>
+  </section>
+  <section class="entries" style="margin:14px 16px 0">
+    <div class="eheader"><h3>Últimos lançamentos</h3><button onclick="navTo('lancamentos')">Ver tudo</button></div>
+    <div id="home-entries"><div class="empty">Nenhum lançamento ainda</div></div>
+  </section>
+  <div style="height:8px"></div>
 </div>
 
 <!-- ══ TELA LANÇAMENTOS ═══════════════════════════════════════════════════ -->
@@ -1706,6 +1791,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
   <div style="padding:16px 16px 8px"><div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Ferramentas</div></div>
   <div style="padding:0 16px;display:flex;flex-direction:column;gap:8px">
     <div class="mais-item" onclick="navTo('corridas')"><div class="mais-ico" style="background:#EFF6FF"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2563EB" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div><div><div class="mais-t">Corridas</div><div class="mais-s">Histórico e filtros de corridas</div></div><div class="mais-arr">›</div></div>
+    <div class="mais-item" onclick="navTo('relatorios')"><div class="mais-ico" style="background:#FFF7ED"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-4 4"/></svg></div><div><div class="mais-t">Relatório</div><div class="mais-s">Gráficos, metas e visão geral do período</div></div><div class="mais-arr">›</div></div>
     <div class="mais-item" onclick="navTo('agenda')"><div class="mais-ico blue"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><div><div class="mais-t">Agenda</div><div class="mais-s">Planejamento e horários de trabalho</div></div><div class="mais-arr">›</div></div>
     <div class="mais-item" onclick="openFlashConfig()"><div class="mais-ico" style="background:#F0FDF4"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#16A34A" stroke-width="2"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg></div><div><div class="mais-t">MōB Flash</div><div class="mais-s">Nota da oferta em tempo real</div></div><div class="mais-arr">›</div></div>
   </div>
@@ -1747,6 +1833,56 @@ h1.hd-title{font-family:var(--font-brand)!important}
 
 
 <!-- ════ MODAIS ════ -->
+
+<!-- Feed: Composer (publicar alerta) -->
+<div class="mo" id="mo-feed-composer">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head"><h2>Novo alerta</h2><button class="xbtn" onclick="feedCloseComposer()">&#x2715;</button></div>
+    <div class="feed-cp-body">
+      <textarea class="feed-cp-input" id="feed-cp-text" maxlength="180" placeholder="O que está acontecendo na rua? (opcional)" oninput="feedCpCount()"></textarea>
+    </div>
+    <div class="feed-cp-types" id="feed-cp-types">
+      <button class="feed-t-chip on" data-type="blitz" onclick="feedCpSelType('blitz',this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Blitz</button>
+      <button class="feed-t-chip" data-type="risco" onclick="feedCpSelType('risco',this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Risco</button>
+      <button class="feed-t-chip" data-type="transito" onclick="feedCpSelType('transito',this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Trânsito</button>
+      <button class="feed-t-chip" data-type="demanda" onclick="feedCpSelType('demanda',this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Demanda</button>
+      <button class="feed-t-chip" data-type="fila" onclick="feedCpSelType('fila',this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>Fila</button>
+    </div>
+    <div class="feed-cp-loc" id="feed-cp-loc" onclick="feedToggleCpLoc()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      <div><div class="main">Localizando…</div><div class="sub">toque pra publicar sem localização</div></div>
+    </div>
+    <div class="feed-rec-bar" id="feed-cp-recbar" style="display:none">
+      <span class="feed-rec-dot"></span><span class="feed-rec-txt">Ouvindo…</span>
+    </div>
+    <div class="feed-cp-tools">
+      <span class="feed-mic" id="feed-cp-mic" onclick="feedMicToggle()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      </span>
+      <span class="feed-cp-count" id="feed-cp-count">0/180</span>
+      <button id="feed-cp-post-btn" onclick="feedPublicar()" style="border:none;cursor:pointer;background:var(--green);color:#fff;font-weight:800;font-size:13px;padding:10px 18px;border-radius:99px;font-family:var(--font-app)">Publicar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Feed: Comentários -->
+<div class="mo" id="mo-feed-comments">
+  <div class="sheet" style="padding:0;display:flex;flex-direction:column;max-height:92dvh">
+    <div class="sheet-head" style="padding:16px 16px 10px;margin-bottom:0"><h2>Alerta</h2><button class="xbtn" onclick="feedFecharComentarios()">&#x2715;</button></div>
+    <div style="overflow-y:auto;flex:1">
+      <div id="feed-cm-post" class="feed-cm-post"></div>
+      <div id="feed-cm-list"></div>
+    </div>
+    <div class="feed-cm-bar">
+      <input class="feed-cm-input" id="feed-cm-input" maxlength="180" placeholder="Responder…" onkeydown="if(event.key==='Enter')feedEnviarComentario()">
+      <button class="feed-cm-send" onclick="feedEnviarComentario()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
 
 <!-- Lançamento (Receita / Despesa) -->
 
@@ -2554,7 +2690,8 @@ function navTo(sec) {
   try { localStorage.setItem('sm_last_screen', JSON.stringify({sec, ts: Date.now()})); } catch(e) {}
   const ms = document.getElementById('main-scroll');
   if (ms) ms.scrollTop = 0;
-  if (sec === 'home')       renderHome();
+  if (sec === 'home')       renderFeedHome();
+  if (sec === 'relatorios') renderHome();
   if (sec === 'jornada') {
     renderJornada(); // render imediato com dado local (nunca trava esperando rede)
     updateNetStatus();
@@ -2990,7 +3127,7 @@ function renderHomeGraphs() {
     loadAutoTripsIndexed(allDatesForRange[0], allDatesForRange[allDatesForRange.length-1]).then(map => {
       if (S.autoTripsHomeRange !== rangeKey) return; // período já mudou de novo
       S.autoTripsByDate = map;
-      if (S.sec === 'home') renderHomeGraphs();
+      if (S.sec === 'relatorios') renderHomeGraphs();
     });
   }
   const days = dates.map(d => {
@@ -3564,7 +3701,7 @@ async function refreshAutoTripFromLog(tripId, btnEl) {
     showToast(r.changes.length ? 'Corrigido: '+r.changes.join(', ') : 'Corrida atualizada com sucesso', 'success');
     S.autoTripsDate = null; S.autoTripsHomeRange = null;
     if (S.sec === 'jornada') renderJornada();
-    if (S.sec === 'home') renderHomeGraphs();
+    if (S.sec === 'relatorios') renderHomeGraphs();
     if (S.sec === 'corridas') renderCorridasActive();
   } catch (e) {
     console.error('refreshAutoTripFromLog', e);
@@ -3594,7 +3731,7 @@ async function _autoRefreshPendingTrips() {
       showToast(fixed===1 ? '1 corrida corrigida sozinha' : fixed+' corridas corrigidas sozinhas', 'success');
       S.autoTripsDate = null; S.autoTripsHomeRange = null;
       if (S.sec === 'jornada') renderJornada();
-      if (S.sec === 'home') renderHomeGraphs();
+      if (S.sec === 'relatorios') renderHomeGraphs();
       if (S.sec === 'corridas') renderCorridasActive();
     }
   } catch (e) { console.error('_autoRefreshPendingTrips', e); }
@@ -3964,7 +4101,7 @@ async function resyncCorridasFromCloud() {
       await SYNC.pullAll();
       renderCorridasActive();
       if (S.sec === 'jornada') renderJornada();
-      if (S.sec === 'home') renderHome();
+      if (S.sec === 'relatorios') renderHome();
       showToast('Sincronizado com a nuvem.');
     } catch (e) {
       console.error('resyncCorridasFromCloud', e);
@@ -4455,7 +4592,7 @@ function saveJss() {
 
   closeMo('mo-jss-edit');
   renderJornada();
-  if (S.sec === 'home') renderHome();
+  if (S.sec === 'relatorios') renderHome();
   showToast('Sessão atualizada');
 }
 
@@ -4474,7 +4611,7 @@ function deleteJss(dateStr, idx) {
     }
 
     renderJornada();
-    if (S.sec === 'home') renderHome();
+    if (S.sec === 'relatorios') renderHome();
     showToast('Sessão excluída');
   }, { confirmLabel: 'Excluir', danger: true, cancelLabel: 'Cancelar' });
 }
@@ -5822,7 +5959,7 @@ async function saveAutoTripValueEdit() {
     // agora re-renderiza na hora (mesmo padrão do refresh de 60s/25s).
     S.autoTripsDate = null; S.autoTripsHomeRange = null;
     if (S.sec === 'jornada') renderJornada();
-    if (S.sec === 'home') renderHomeGraphs();
+    if (S.sec === 'relatorios') renderHomeGraphs();
     if (S.sec === 'corridas') renderCorridasActive();
   } catch (e) {
     console.error('saveAutoTripValueEdit', e);
@@ -7404,7 +7541,7 @@ setTimeout(()=>{ _refreshCorridasIfOnScreen(); setInterval(_refreshCorridasIfOnS
 // dia nunca apareceria sozinha sem isso. 60s (não precisa ser tão rápido
 // quanto a Jornada, que é tempo real; Home é histórico/agregado).
 async function _refreshAutoTripsIfOnHome() {
-  if (!(S && S.sec === 'home')) return;
+  if (!(S && S.sec === 'relatorios')) return;
   S.autoTripsHomeRange = null; // força o próximo renderHomeGraphs a rebuscar
   try { renderHomeGraphs(); } catch(e) {}
 }
@@ -8716,7 +8853,7 @@ async function savePerfil() {
   DB.saveCfg(cfg);
   closeMo('mo-perfil');
   renderMais();
-  if (S.sec==='home') renderHome();
+  if (S.sec==='relatorios') renderHome();
   showToast('Perfil salvo!', 'success');
 }
 
@@ -11752,6 +11889,331 @@ document.addEventListener('click',e=>{
     const dd=document.getElementById('inf-search-dd');if(dd)dd.classList.remove('show');
   }
 });
+
+/* ══════════════════════════════════════════════════════════════
+   FEED SOCIAL (Home) — v1
+   Tabelas: feed_posts / feed_reactions / feed_comments (Supabase)
+   Contadores de voto/comentário e auto-encerramento por downvote
+   são calculados via trigger no banco — o client só insere/upserta
+   e depois relê o post pra pegar os números atualizados.
+   ══════════════════════════════════════════════════════════════ */
+
+const FEED_TYPES = {
+  blitz:    {label:'Blitz',        color:'#2563EB', expMin:60,
+    icon:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'},
+  risco:    {label:'Risco',        color:'#EF4444', expMin:90,
+    icon:'<path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'},
+  transito: {label:'Trânsito',     color:'#F97316', expMin:45,
+    icon:'<rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="3" y1="15" x2="21" y2="15"/>'},
+  demanda:  {label:'Demanda alta', color:'#16A34A', expMin:30,
+    icon:'<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>'},
+  fila:     {label:'Fila',         color:'#7C3AED', expMin:45,
+    icon:'<path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>'}
+};
+
+let _feedFilter = '';
+let _feedCoords = null;       // {lat,lng,address}
+let _feedPosts  = [];
+let _feedNames  = {};         // user_id -> nome
+let _feedChannel = null;
+let _feedCpType  = 'blitz';
+let _feedCpLocOn = true;
+let _feedMicActive = false;
+let _feedCommentsPostId = null;
+
+function feedHaversineKm(lat1,lng1,lat2,lng2){
+  const R=6371, toRad=d=>d*Math.PI/180;
+  const dLat=toRad(lat2-lat1), dLng=toRad(lng2-lng1);
+  const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function feedDistLabel(p){
+  if(!_feedCoords||p.lat==null||p.lng==null) return '';
+  const km=feedHaversineKm(_feedCoords.lat,_feedCoords.lng,p.lat,p.lng);
+  return km<1 ? Math.round(km*1000)+' m' : km.toFixed(1).replace('.',',')+' km';
+}
+function feedAgeLabel(iso){
+  const min=Math.max(0,Math.round((Date.now()-new Date(iso))/60000));
+  if(min<1) return 'agora';
+  if(min<60) return min+' min';
+  return Math.floor(min/60)+'h'+(min%60?p2(min%60)+'m':'');
+}
+function feedInitials(name){
+  const parts=(name||'').trim().split(/\s+/).filter(Boolean);
+  if(!parts.length) return 'MO';
+  return parts.length===1 ? parts[0].slice(0,2).toUpperCase() : (parts[0][0]+parts[parts.length-1][0]).toUpperCase();
+}
+function feedAvColor(uid){
+  return INF_AVC[Math.abs((uid||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0))%INF_AVC.length];
+}
+
+async function renderFeedHome(){
+  feedComputeKpis();
+  feedGetLocation();
+  await feedLoadPosts();
+  feedSubscribeRealtime();
+}
+
+function feedComputeKpis(){
+  const dstr=DB.today();
+  const day=DB.day(dstr);
+  const tripsRev=(day.trips||[]).reduce((s,t)=>s+(t.value||0),0);
+  const autoInfo=(typeof finAutoDay==='function')?finAutoDay(dstr):{sum:0,count:0};
+  const manRev=(day.revenues||[]).reduce((s,r)=>s+(r.amount||0),0);
+  const rev=tripsRev+autoInfo.sum+manRev;
+  const trips=(day.trips||[]).length+autoInfo.count;
+  const km=(day.sessions||[]).reduce((s,ss)=>s+(ss.km||0),0);
+  const onlineSecs=(day.sessions||[]).reduce((s,ss)=>s+(ss.elapsed_secs||0),0);
+  setText('feed-k-rev', DB.fRI(rev));
+  setText('feed-k-trips', trips);
+  setText('feed-k-rpkm', km>0 ? DB.fRI(rev/km) : '—');
+  setText('feed-k-online', onlineSecs>0 ? Math.floor(onlineSecs/3600)+'h'+p2(Math.floor(onlineSecs%3600/60))+'m' : '—');
+}
+
+function feedGetLocation(){
+  if(!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const {latitude:lat,longitude:lon}=pos.coords;
+    _feedCoords={lat,lng:lon,address:null};
+    try{
+      const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&zoom=17&format=json&accept-language=pt`,{headers:{'User-Agent':'MoB/1.0'}});
+      const j=await r.json();
+      const addr=j.address||{};
+      _feedCoords.address=addr.road||addr.pedestrian||addr.suburb||addr.neighbourhood||'';
+    }catch(e){console.warn('feed loc',e);}
+    feedUpdateComposerLoc();
+    feedRenderList(); // recalcula distâncias com a posição atual
+  },()=>{_feedCoords=null;},{timeout:10000,enableHighAccuracy:true});
+}
+
+async function feedLoadPosts(){
+  const el=document.getElementById('feed-list');
+  if(!_SUPA){ if(el) el.innerHTML='<div class="feed-empty">Sem conexão</div>'; return; }
+  try{
+    let q=_SUPA.from('feed_posts').select('*')
+      .eq('status','ativo').eq('audience','comunidade')
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at',{ascending:false}).limit(40);
+    if(_feedFilter) q=q.eq('type',_feedFilter);
+    const {data,error}=await q;
+    if(error) throw error;
+    _feedPosts=data||[];
+    const uids=[...new Set(_feedPosts.map(p=>p.user_id))];
+    if(uids.length){
+      const {data:names}=await _SUPA.rpc('get_profile_names',{uids});
+      _feedNames={}; (names||[]).forEach(n=>{_feedNames[n.id]=n.name;});
+    }
+    feedRenderList();
+  }catch(e){console.warn('feed load',e); if(el) el.innerHTML='<div class="feed-empty">Erro ao carregar o feed</div>';}
+}
+
+function feedRenderList(){
+  const el=document.getElementById('feed-list');if(!el)return;
+  if(!_feedPosts.length){el.innerHTML='<div class="feed-empty">Nenhum alerta ativo agora — seja o primeiro a avisar a comunidade.</div>';return;}
+  el.innerHTML=_feedPosts.map(feedPostCardHtml).join('');
+}
+
+function feedPostCardHtml(p){
+  const t=FEED_TYPES[p.type]||FEED_TYPES.blitz;
+  const isFriend=false; // amigos: v2
+  const myName=(_supaUser&&p.user_id===_supaUser.id) ? (DB.cfg().name||'Você') : (_feedNames[p.user_id]||'Motorista MōB');
+  const dist=feedDistLabel(p);
+  const closed=p.status==='encerrado';
+  const myVote=p._myVote; // preenchido depois de votar, só nesta sessão
+  return `<div class="feed-post${closed?' closed':''}" onclick="feedAbrirComentarios('${p.id}')">
+    <div class="feed-av" style="background:${feedAvColor(p.user_id)}">${esc(feedInitials(myName))}</div>
+    <div class="feed-body">
+      <div class="feed-head">
+        <span class="feed-name">${esc(myName)}</span>
+        <span class="feed-time">· ${feedAgeLabel(p.created_at)}</span>
+      </div>
+      <span class="feed-type" style="color:${t.color};background:color-mix(in srgb,${t.color} 10%,transparent);border:1px solid color-mix(in srgb,${t.color} 25%,transparent)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${t.icon}</svg>${t.label}</span>
+      ${p.body ? `<div class="feed-text">${esc(p.body)}</div>` : ''}
+      ${p.address ? `<div class="feed-loc"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${esc(p.address)}${dist?' · '+dist:''}</div>` : ''}
+      ${closed ? '<span class="feed-closed-badge">Encerrado pela comunidade</span>' : `
+      <div class="feed-acts">
+        <button class="feed-act${myVote==='up'?' up-on':''}" onclick="event.stopPropagation();feedVotar('${p.id}','up',this)">
+          <svg width="14" height="14" viewBox="0 0 24 24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.3a2 2 0 0 0 2-1.7l1.4-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+          ${p.votes_up||0}
+        </button>
+        <button class="feed-act${myVote==='down'?' dn-on':''}" onclick="event.stopPropagation();feedVotar('${p.id}','down',this)">
+          <svg width="14" height="14" viewBox="0 0 24 24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.7a2 2 0 0 0-2 1.7l-1.4 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"/></svg>
+          ${p.votes_dn||0}
+        </button>
+        <button class="feed-act" onclick="event.stopPropagation();feedAbrirComentarios('${p.id}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.3 8.6 8.6 0 0 1-3.9-.9L3 21l2.1-5.6a8.3 8.3 0 0 1-1-3.9A8.4 8.4 0 0 1 12.5 3.2 8.4 8.4 0 0 1 21 11.5z"/></svg>
+          ${p.comments_count||0}
+        </button>
+      </div>`}
+    </div>
+  </div>`;
+}
+
+function feedSetFilter(type,el){
+  _feedFilter=type;
+  document.querySelectorAll('#feed-filters .feed-chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  feedLoadPosts();
+}
+
+async function feedVotar(postId,vote,btn){
+  if(!_SUPA||!_supaUser)return;
+  try{
+    await _SUPA.from('feed_reactions').upsert({post_id:postId,user_id:_supaUser.id,vote},{onConflict:'post_id,user_id'});
+    const {data}=await _SUPA.from('feed_posts').select('votes_up,votes_dn,status').eq('id',postId).single();
+    const p=_feedPosts.find(x=>x.id===postId);
+    if(p&&data){p.votes_up=data.votes_up;p.votes_dn=data.votes_dn;p.status=data.status;p._myVote=vote;}
+    feedRenderList();
+  }catch(e){console.warn('feed voto',e);}
+}
+
+function feedSubscribeRealtime(){
+  feedUnsubscribeRealtime();
+  if(!_SUPA)return;
+  try{
+    _feedChannel=_SUPA.channel('feed-home')
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'feed_posts'},payload=>{
+        if(payload.new?.user_id!==_supaUser?.id) showToast('Novo alerta no feed!','info');
+        feedLoadPosts();
+      })
+      .subscribe();
+  }catch(e){console.warn('feed realtime',e);}
+}
+function feedUnsubscribeRealtime(){
+  if(_feedChannel){try{_SUPA?.removeChannel(_feedChannel);}catch(e){}}_feedChannel=null;
+}
+
+/* ── Composer ── */
+function feedOpenComposer(){
+  _feedCpType='blitz';_feedCpLocOn=true;_feedMicActive=false;
+  document.getElementById('feed-cp-text').value='';
+  feedCpCount();
+  document.querySelectorAll('.feed-t-chip').forEach(c=>c.classList.toggle('on',c.dataset.type==='blitz'));
+  document.getElementById('feed-cp-mic')?.classList.remove('rec');
+  const recBar=document.getElementById('feed-cp-recbar'); if(recBar) recBar.style.display='none';
+  feedUpdateComposerLoc();
+  openMo('mo-feed-composer');
+}
+function feedCloseComposer(){ closeMo('mo-feed-composer'); }
+
+function feedCpSelType(pid,btn){
+  _feedCpType=pid;
+  document.querySelectorAll('.feed-t-chip').forEach(c=>c.classList.remove('on'));
+  btn.classList.add('on');
+}
+function feedUpdateComposerLoc(){
+  const el=document.getElementById('feed-cp-loc');if(!el)return;
+  el.classList.toggle('off',!_feedCpLocOn);
+  const sub=el.querySelector('.sub');
+  if(!_feedCoords) el.querySelector('.main').textContent='Localizando…';
+  else el.querySelector('.main').textContent=_feedCpLocOn ? (_feedCoords.address||'Local atual') : 'Sem localização';
+  if(sub) sub.textContent=_feedCpLocOn ? 'toque pra publicar sem localização' : 'toque pra marcar sua localização';
+}
+function feedToggleCpLoc(){ _feedCpLocOn=!_feedCpLocOn; feedUpdateComposerLoc(); }
+
+function feedCpCount(){
+  const ta=document.getElementById('feed-cp-text');
+  const c=document.getElementById('feed-cp-count');
+  if(ta&&c) c.textContent=ta.value.length+'/180';
+}
+
+function feedMicToggle(){
+  const btn=document.getElementById('feed-cp-mic');
+  const bar=document.getElementById('feed-cp-recbar');
+  if(window.SmartMobiNative && typeof SmartMobiNative.startVoiceCapture==='function'){
+    _feedMicActive=!_feedMicActive;
+    btn?.classList.toggle('rec',_feedMicActive);
+    if(bar) bar.style.display=_feedMicActive?'flex':'none';
+    try{ _feedMicActive ? SmartMobiNative.startVoiceCapture() : SmartMobiNative.stopVoiceCapture?.(); }catch(e){}
+  }else{
+    showToast('Ditado por voz nativo ainda não disponível nesta versão — use o microfone do teclado pra falar direto no campo de texto.');
+  }
+}
+
+async function feedPublicar(){
+  if(!_SUPA||!_supaUser)return;
+  const body=(document.getElementById('feed-cp-text').value||'').trim().slice(0,180);
+  const btn=document.getElementById('feed-cp-post-btn');
+  if(btn){btn.disabled=true;btn.textContent='Publicando…';}
+  const t=FEED_TYPES[_feedCpType]||FEED_TYPES.blitz;
+  const expiresAt=new Date(Date.now()+t.expMin*60000).toISOString();
+  const row={
+    user_id:_supaUser.id, type:_feedCpType, body:body||null,
+    lat:(_feedCpLocOn&&_feedCoords)?_feedCoords.lat:null,
+    lng:(_feedCpLocOn&&_feedCoords)?_feedCoords.lng:null,
+    address:(_feedCpLocOn&&_feedCoords)?_feedCoords.address:null,
+    expires_at:expiresAt
+  };
+  try{
+    const {error}=await _SUPA.from('feed_posts').insert(row);
+    if(error){
+      if(error.code==='P0001'){
+        showToast('Você já postou isso recentemente. Aguarde alguns minutos.');
+      } else throw error;
+    } else {
+      showToast('Alerta publicado — obrigado por avisar a comunidade!');
+      feedCloseComposer();
+      feedLoadPosts();
+    }
+  }catch(e){console.warn('feed publicar',e);showToast('Erro ao publicar. Tente de novo.');}
+  if(btn){btn.disabled=false;btn.innerHTML='Publicar';}
+}
+
+/* ── Comentários ── */
+async function feedAbrirComentarios(postId){
+  _feedCommentsPostId=postId;
+  const p=_feedPosts.find(x=>x.id===postId);
+  const host=document.getElementById('feed-cm-post');
+  if(host && p) host.innerHTML=feedPostCardHtml(p);
+  document.getElementById('feed-cm-list').innerHTML='<div class="feed-empty">Carregando…</div>';
+  openMo('mo-feed-comments');
+  feedCarregarComentarios(postId);
+}
+function feedFecharComentarios(){ closeMo('mo-feed-comments'); _feedCommentsPostId=null; }
+
+async function feedCarregarComentarios(postId){
+  const el=document.getElementById('feed-cm-list');if(!el)return;
+  if(!_SUPA){el.innerHTML='<div class="feed-empty">Sem conexão</div>';return;}
+  try{
+    const {data,error}=await _SUPA.from('feed_comments').select('*').eq('post_id',postId).order('created_at',{ascending:true});
+    if(error) throw error;
+    const list=data||[];
+    if(!list.length){el.innerHTML='<div class="feed-empty">Nenhum comentário ainda</div>';return;}
+    const uids=[...new Set(list.map(c=>c.user_id))];
+    let names={};
+    if(uids.length){
+      const {data:ns}=await _SUPA.rpc('get_profile_names',{uids});
+      (ns||[]).forEach(n=>{names[n.id]=n.name;});
+    }
+    el.innerHTML=list.map(c=>{
+      const nm=(_supaUser&&c.user_id===_supaUser.id)?(DB.cfg().name||'Você'):(names[c.user_id]||'Motorista MōB');
+      return `<div class="feed-cm-reply">
+        <div class="feed-av" style="background:${feedAvColor(c.user_id)}">${esc(feedInitials(nm))}</div>
+        <div class="feed-body">
+          <div class="feed-head"><span class="feed-name">${esc(nm)}</span><span class="feed-time">· ${feedAgeLabel(c.created_at)}</span></div>
+          <div class="feed-text">${esc(c.body)}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){console.warn('feed comentarios',e);el.innerHTML='<div class="feed-empty">Erro ao carregar comentários</div>';}
+}
+
+async function feedEnviarComentario(){
+  if(!_SUPA||!_supaUser||!_feedCommentsPostId)return;
+  const input=document.getElementById('feed-cm-input');
+  const body=(input.value||'').trim().slice(0,180);
+  if(!body)return;
+  input.disabled=true;
+  try{
+    const {error}=await _SUPA.from('feed_comments').insert({post_id:_feedCommentsPostId,user_id:_supaUser.id,body});
+    if(error) throw error;
+    input.value='';
+    feedCarregarComentarios(_feedCommentsPostId);
+    const p=_feedPosts.find(x=>x.id===_feedCommentsPostId);
+    if(p) p.comments_count=(p.comments_count||0)+1;
+  }catch(e){console.warn('feed comentar',e);showToast('Erro ao comentar. Tente de novo.');}
+  input.disabled=false;input.focus();
+}
 
 </script>
 </body>
