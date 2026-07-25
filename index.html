@@ -254,9 +254,6 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .cmp-legend.g{background:#F0FDF4;border-color:#BBF7D0}
 .cmp-legend.r{background:#FEF2F2;border-color:#FECACA}
 /* ── Corridas: toggle Importadas / Automáticas (fonte dos dados) ── */
-.src-switch{display:flex;background:#EAF0F6;border:1px solid rgba(15,23,42,.06);padding:4px;border-radius:18px;margin:2px 16px 10px}
-.src-btn{flex:1;border:none;background:transparent;color:var(--muted);padding:10px 8px;border-radius:14px;font-size:13.5px;font-weight:900;cursor:pointer;font-family:var(--font-app)}
-.src-btn.active{background:#fff;color:var(--text);box-shadow:0 4px 12px rgba(15,23,42,.08)}
 .cor-subnote{padding:0 16px 10px;font-size:11.5px;color:var(--muted2);line-height:1.4}.li-row.open{border-radius:14px 14px 0 0;border-bottom:0!important}.trip-detail-panel{background:var(--card);border:1.5px solid var(--line);border-top:0;border-radius:0 0 12px 12px;padding:8px 12px 10px}.det-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);padding:4px 0;font-weight:500}.det-row:not(:last-child){border-bottom:1px solid var(--line)}.det-row strong{color:var(--text);font-weight:700}.det-del-btn{display:flex;align-items:center;gap:6px;width:100%;margin-top:8px;padding:8px 0 2px;background:none;border:none;border-top:1px solid var(--line);font-size:12px;font-weight:700;color:#EF4444;cursor:pointer;font-family:inherit}
 .det-refresh-btn{display:flex;align-items:center;gap:6px;width:100%;margin-top:8px;padding:8px 0 2px;background:none;border:none;border-top:1px solid var(--line);font-size:12px;font-weight:700;color:#0A2F6B;cursor:pointer;font-family:inherit}
 .det-refresh-btn svg{transition:transform .2s}
@@ -1359,17 +1356,10 @@ h1.hd-title{font-family:var(--font-brand)!important}
     <h2 style="font-size:17px;letter-spacing:-.02em;flex:1">Corridas</h2>
     <span id="cor-cnt" style="display:none"></span>
   </div>
-  <div class="src-switch">
-    <button class="src-btn active" id="cor-src-imp" onclick="setCorridasSource('imp')">Importadas</button>
-    <button class="src-btn" id="cor-src-auto" onclick="setCorridasSource('auto')">Automáticas</button>
-  </div>
-  <div class="cor-subnote" id="cor-subnote">Corridas que você importou por foto, vídeo ou zip.</div>
   <div style="padding:10px 16px 4px">
     <div class="type-switch" id="cor-plat-switch" style="margin-bottom:8px">
-      <button class="type-btn active" onclick="setCorridasPlat('all')">Todas</button>
-      <button class="type-btn" onclick="setCorridasPlat('uber')">Uber</button>
-      <button class="type-btn" onclick="setCorridasPlat('99')">99</button>
-      <button class="type-btn" id="cor-plat-particular" onclick="setCorridasPlat('particular')">Particular</button>
+      <button class="type-btn" id="cor-plat-uber" onclick="toggleCorridasPlat('uber')">Uber</button>
+      <button class="type-btn" id="cor-plat-99" onclick="toggleCorridasPlat('99')">99</button>
     </div>
     <div style="display:flex;gap:5px;align-items:center;padding-bottom:6px;position:relative" id="cor-per-row">
       <button class="pchip active" id="cpb-hoje" style="flex:1" onclick="setCorridasPeriod('hoje')">Hoje</button>
@@ -1388,7 +1378,6 @@ h1.hd-title{font-family:var(--font-brand)!important}
     <div style="flex:1;text-align:center;border-left:1px solid #F1F5F9"><span style="display:block;font-size:9px;color:#94A3B8;font-weight:800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">Corridas</span><strong id="cor-sum-n" style="font-size:14px;font-weight:800;color:#0F172A">0</strong></div>
   </div>
   <div style="padding:12px 16px 30px" id="cor-list"></div>
-  <div style="padding:12px 16px 30px;display:none" id="cor-list-auto"></div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
@@ -2581,8 +2570,10 @@ function navTo(sec) {
   if (sec === 'financeiro') renderFin();
   if (sec === 'lancamentos') renderLancamentos();
   if (sec === 'corridas') {
-    setCorridasSource('imp'); // reseta sempre pra aba Importadas
-    setCorridasPlat('all');   // reseta sempre plataforma para 'Todas'
+    S.corridasPlats = new Set(); // reseta sempre — nenhum filtro marcado = mostra tudo
+    document.getElementById('cor-plat-uber')?.classList.remove('active');
+    document.getElementById('cor-plat-99')?.classList.remove('active');
+    renderCorridasActive();
   }
   if (sec === 'mais')       renderMais();
   if (sec === 'categorias') renderCatsModal();
@@ -3330,12 +3321,15 @@ function setCorridasDate(d) {
   const db=document.getElementById('cor-date-btn'); if(db){db.style.background='#EFF6FF';db.style.borderColor='#2563EB';}
   renderCorridasActive();
 }
-function setCorridasPlat(p) {
-  S.corridasPlat = p;
-  document.querySelectorAll('#cor-plat-switch .type-btn').forEach(b => b.classList.remove('active'));
-  const idx = ['all','uber','99','particular'].indexOf(p);
-  const btn = document.querySelectorAll('#cor-plat-switch .type-btn')[idx];
-  if (btn) btn.classList.add('active');
+function toggleCorridasPlat(p) {
+  // Multi-select agora (pedido do Yuri, 24/07/2026): nenhum marcado = mostra
+  // tudo (padrão), marcar um filtra só aquele, marcar os dois volta a
+  // mostrar tudo — sem precisar de um botão "Todas" separado.
+  if (!S.corridasPlats) S.corridasPlats = new Set();
+  if (S.corridasPlats.has(p)) S.corridasPlats.delete(p); else S.corridasPlats.add(p);
+  const ub = document.getElementById('cor-plat-uber'), n99 = document.getElementById('cor-plat-99');
+  if (ub) ub.classList.toggle('active', S.corridasPlats.has('uber'));
+  if (n99) n99.classList.toggle('active', S.corridasPlats.has('99'));
   renderCorridasActive();
 }
 // ── Corridas: alterna entre Importadas (trips locais) e Automáticas (auto_trips no Supabase) ──
@@ -3704,55 +3698,79 @@ async function loadFinAutoTrips() {
   } catch(e) { _finAuto.loading = false; console.warn('[loadFinAutoTrips]', e); }
 }
 
-function renderCorridasActive() {
-  if ((S.corSource||'imp') === 'auto') loadAutoTrips(); else renderCorridas();
-}
-function setCorridasSource(src) {
-  S.corSource = src;
-  document.getElementById('cor-src-imp').classList.toggle('active', src==='imp');
-  document.getElementById('cor-src-auto').classList.toggle('active', src==='auto');
-  document.getElementById('cor-list').style.display = src==='imp' ? 'block' : 'none';
-  document.getElementById('cor-list-auto').style.display = src==='auto' ? 'block' : 'none';
-  const particularBtn = document.getElementById('cor-plat-particular');
-  if (particularBtn) particularBtn.style.display = src==='auto' ? 'none' : '';
-  if (src==='auto' && S.corridasPlat==='particular') setCorridasPlat('all');
-  setText('cor-subnote', src==='imp'
-    ? 'Corridas que você importou por foto, vídeo ou zip.'
-    : 'Corridas capturadas automaticamente pelo app enquanto você dirige. Não se mistura com as importadas.');
-  renderCorridasActive();
+// Corridas: mescla Importadas + Automáticas numa lista só, ordenadas por
+// horário — pedido do Yuri (24/07/2026). A tag "Captura automática" (já
+// existente) identifica a origem, então não precisa mais de aba pra isso.
+async function renderCorridasActive() {
+  const dates = getCorridasDays().slice().sort().reverse(); // mais recente primeiro
+  const plats = S.corridasPlats || new Set();
+  const platFilter = t => plats.size === 0 || plats.has(t.platform||'uber');
+
+  // Automáticas do mesmo intervalo — busca uma vez só, agrupa por data local.
+  let autoByDate = {};
+  if (_supaUser) {
+    const range = autoCorridasDateRange();
+    let q = _SUPA.from('auto_trips').select('*').eq('user_id', _supaUser.id).order('trip_started_at', {ascending:false});
+    if (range) q = q.gte('trip_started_at', range.from).lte('trip_started_at', range.to);
+    if (plats.size === 1) q = q.eq('platform', [...plats][0]);
+    const { data, error } = await q;
+    (error ? [] : (data||[])).forEach(t => {
+      const ts = autoTripTs(t);
+      if (!ts) return;
+      const d = new Date(ts);
+      const dateStr = d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+      (autoByDate[dateStr] = autoByDate[dateStr] || []).push(t);
+    });
+  }
+
+  let totalVal = 0, totalKm = 0, totalN = 0;
+  const groups = [];
+  dates.forEach(d => {
+    const day = DB.day(d);
+    const manual = (day.trips||[]).filter(platFilter)
+      .map(t => ({ kind:'manual', ts: t.ts || (t.time?new Date(d+'T'+t.time+':00').getTime():0), t }));
+    const auto = (autoByDate[d]||[]).filter(platFilter)
+      .map(t => ({ kind:'auto', ts: autoTripTs(t), t }));
+    const merged = [...manual, ...auto].sort((a,b)=>b.ts-a.ts);
+    if (!merged.length) return;
+    merged.forEach(x => {
+      if (x.kind==='manual') { totalVal += (x.t.value||0); totalKm += (x.t.km||0); }
+      else { totalVal += (x.t.offer_value||0); totalKm += (x.t.real_km_trip||0); }
+      totalN++;
+    });
+    groups.push({ date: d, items: merged });
+  });
+
+  setText('cor-sum-val', DB.fR(totalVal));
+  setText('cor-sum-km', totalKm.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}));
+  setText('cor-sum-n', totalN);
+
+  const listEl = document.getElementById('cor-list');
+  if (!listEl) return;
+  if (!groups.length) {
+    listEl.innerHTML = `<div class="empty" style="text-align:center;padding:50px 20px;color:#64748B">
+      <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.6" style="color:#94A3B8;margin-bottom:10px"><path d="M5 17h14M6 17l1-6 3-4h4l3 4 1 6"/><circle cx="9" cy="20" r="1.4" fill="currentColor"/><circle cx="17" cy="20" r="1.4" fill="currentColor"/></svg>
+      <div style="font-weight:700;font-size:14px;color:#0F172A;margin-bottom:4px">Nenhuma corrida encontrada</div>
+      <div style="font-size:12.5px">Tente mudar o período ou a plataforma do filtro</div>
+    </div>`;
+    reapplyOpenTripDetail();
+    return;
+  }
+  const todayStr = DB.today();
+  const fmtSep = d => {
+    if (d === todayStr) return 'Hoje · ' + d.split('-').reverse().slice(0,2).join('/');
+    return d.split('-').reverse().slice(0,2).join('/') + '/' + d.slice(0,4);
+  };
+  listEl.innerHTML = groups.map(g =>
+    `<div class="day-sep">${fmtSep(g.date)}</div>`
+    + g.items.map(x => x.kind==='manual' ? tripItem(x.t, g.date) : autoTripItem(x.t)).join('')
+  ).join('');
+  reapplyOpenTripDetail();
 }
 function autoCorridasDateRange() {
   const dates = getCorridasDays().slice().sort();
   if (!dates.length) return null;
   return { from: dates[0]+'T00:00:00', to: dates[dates.length-1]+'T23:59:59' };
-}
-async function loadAutoTrips() {
-  const listEl = document.getElementById('cor-list-auto');
-  if (!listEl || !_supaUser) return;
-  const range = autoCorridasDateRange();
-  let q = _SUPA.from('auto_trips').select('*').eq('user_id', _supaUser.id).order('trip_started_at', {ascending:false});
-  if (range) q = q.gte('trip_started_at', range.from).lte('trip_started_at', range.to);
-  if (S.corridasPlat && S.corridasPlat!=='all' && S.corridasPlat!=='particular') q = q.eq('platform', S.corridasPlat);
-  const { data, error } = await q;
-  renderAutoTrips(error ? [] : (data||[]));
-}
-function renderAutoTrips(list) {
-  const listEl = document.getElementById('cor-list-auto');
-  if (!listEl) return;
-  let totalVal = 0, totalKm = 0;
-  list.forEach(t => { totalVal += (t.offer_value||0); totalKm += (t.real_km_trip||0); });
-  setText('cor-sum-val', DB.fR(totalVal));
-  setText('cor-sum-km', totalKm.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}));
-  setText('cor-sum-n', list.length);
-  if (!list.length) {
-    listEl.innerHTML = `<div class="empty" style="text-align:center;padding:50px 20px;color:#64748B">
-      <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.6" style="color:#94A3B8;margin-bottom:10px"><path d="M5 17h14M6 17l1-6 3-4h4l3 4 1 6"/><circle cx="9" cy="20" r="1.4" fill="currentColor"/><circle cx="17" cy="20" r="1.4" fill="currentColor"/></svg>
-      <div style="font-weight:700;font-size:14px;color:#0F172A;margin-bottom:4px">Nenhuma corrida automática ainda</div>
-      <div style="font-size:12.5px">Elas aparecem aqui conforme o app detecta suas corridas em tempo real</div>
-    </div>`;
-    return;
-  }
-  listEl.innerHTML = list.map(autoTripItem).join('');
 }
 function fmtKmComp(real, offer) {
   if (real==null && offer==null) return '—';
@@ -3912,44 +3930,6 @@ async function resyncCorridasFromCloud() {
     }
   }, { confirmLabel: 'Recarregar' });
 }
-function renderCorridas() {
-  const dates = getCorridasDays().slice().sort().reverse(); // mais recente primeiro
-  const platFilter = t => S.corridasPlat === 'all' || (t.platform||'uber') === S.corridasPlat;
-  let totalVal = 0, totalKm = 0, totalN = 0;
-  const groups = [];
-  dates.forEach(d => {
-    const day = DB.day(d);
-    const trips = (day.trips||[]).filter(platFilter).slice().sort((a,b)=>(a.time||'').localeCompare(b.time||''));
-    if (!trips.length) return;
-    trips.forEach(t => { totalVal += (t.value||0); totalKm += (t.km||0); totalN++; });
-    groups.push({ date: d, trips });
-  });
-  // cor-cnt oculto (info está nos cards de summary)
-  setText('cor-sum-val', DB.fR(totalVal));
-  setText('cor-sum-km', totalKm.toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1}));
-  setText('cor-sum-n', totalN);
-
-  const listEl = document.getElementById('cor-list');
-  if (!listEl) return;
-  if (!groups.length) {
-    listEl.innerHTML = `<div class="empty" style="text-align:center;padding:50px 20px;color:#64748B">
-      <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.6" style="color:#94A3B8;margin-bottom:10px"><path d="M5 17h14M6 17l1-6 3-4h4l3 4 1 6"/><circle cx="9" cy="20" r="1.4" fill="currentColor"/><circle cx="17" cy="20" r="1.4" fill="currentColor"/></svg>
-      <div style="font-weight:700;font-size:14px;color:#0F172A;margin-bottom:4px">Nenhuma corrida encontrada</div>
-      <div style="font-size:12.5px">Tente mudar o período ou a plataforma do filtro</div>
-    </div>`;
-    return;
-  }
-  const todayStr = DB.today();
-  const fmtSep = d => {
-    if (d === todayStr) return 'Hoje · ' + d.split('-').reverse().slice(0,2).join('/');
-    return d.split('-').reverse().slice(0,2).join('/') + '/' + d.slice(0,4);
-  };
-  // Usa tripItem() → chips + detalhe ao tocar + botão excluir no painel
-  listEl.innerHTML = groups.map(g =>
-    `<div class="day-sep">${fmtSep(g.date)}</div>`
-    + g.trips.map(t => tripItem(t, g.date)).join('')
-  ).join('');
-}
 function confirmDeleteTrip(date, id) {
   const day = DB.day(date);
   const t = (day.trips||[]).find(x => x.id === id);
@@ -3959,7 +3939,7 @@ function confirmDeleteTrip(date, id) {
     day.trips = day.trips.filter(x => x.id !== id);
     DB.saveDay(day);
     SYNC.del('trips', { id });
-    renderCorridas();
+    renderCorridasActive();
     if (date === S.curDate) { renderJornada(); }
     showToast('Corrida excluída.');
   }, { confirmLabel: 'Excluir' });
@@ -4052,6 +4032,7 @@ function renderJornada() {
       lancToggleBtn.innerHTML = S.lancExpanded ? 'Ver menos' : 'Ver todas &#8250;';
     }
   }
+  reapplyOpenTripDetail();
 }
 
 function renderJourneyCard(day, isToday) {
@@ -4458,6 +4439,14 @@ function deleteJss(dateStr, idx) {
 
 
 function toggleJss(id){const el=document.getElementById(id);if(el)el.classList.toggle('open');}
+// CORRIGIDO (24/07/2026, relatado pelo Yuri): o painel de detalhe de uma
+// corrida é só um display:none/block num elemento — quando a tela
+// redesenha os cards (o refresh automático de 25s/60s da Jornada/Home,
+// por exemplo), os elementos são recriados do zero, sempre fechados por
+// padrão, perdendo o que estava aberto na hora errada (parecia fechar
+// sozinho, sem motivo). Guarda qual tid está aberto e reaplica depois de
+// qualquer redesenho.
+let _openTripDetailTid = null;
 function toggleTripDetail(tid) {
   const det = document.getElementById('td-'+tid);
   const row = document.getElementById('tr-'+tid);
@@ -4465,7 +4454,17 @@ function toggleTripDetail(tid) {
   const open = det.style.display!=='none';
   document.querySelectorAll('.trip-detail-panel').forEach(el=>el.style.display='none');
   document.querySelectorAll('.li-row[id^="tr-"]').forEach(el=>el.classList.remove('open'));
-  if (!open){det.style.display='block';row.classList.add('open');}
+  if (!open){det.style.display='block';row.classList.add('open');_openTripDetailTid=tid;}
+  else {_openTripDetailTid=null;}
+}
+// Chamar depois de qualquer redesenho que possa ter recriado os cards de
+// corrida (renderJornada, renderCorridasActive etc.) — reabre sozinho se
+// o mesmo tid ainda existir na tela.
+function reapplyOpenTripDetail() {
+  if (!_openTripDetailTid) return;
+  const det = document.getElementById('td-'+_openTripDetailTid);
+  const row = document.getElementById('tr-'+_openTripDetailTid);
+  if (det && row) { det.style.display='block'; row.classList.add('open'); }
 }
 
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
@@ -4559,7 +4558,7 @@ function custoFinish() {
   closeMo('mo-custo');
   showToast('Custo do veículo configurado! Suas corridas já mostram o líquido.');
   try { renderJornada(); } catch(e){}
-  try { if (typeof renderCorridas === 'function') renderCorridas(); } catch(e){}
+  try { if (typeof renderCorridasActive === 'function') renderCorridasActive(); } catch(e){}
   try { updateCustoBanner(); } catch(e){}
   try { renderMais(); } catch(e){}
 }
@@ -6886,18 +6885,18 @@ async function confirmImport() {
         try{renderJornada();}catch(e){}
         try{renderHome();}catch(e){}
         if (S.curDate !== DB.today()) S.corridasPeriod = 'tudo';
-        try{renderCorridas();}catch(e){}
+        try{renderCorridasActive();}catch(e){}
         showToast('Sessões ajustadas!', 'success');
       },
       { confirmLabel: 'Confirmar', cancelLabel: 'Manter como está',
-        onCancel: () => { try{renderJornada();}catch(e){} try{renderHome();}catch(e){} if(S.curDate!==DB.today())S.corridasPeriod='tudo'; try{renderCorridas();}catch(e){} } }
+        onCancel: () => { try{renderJornada();}catch(e){} try{renderHome();}catch(e){} if(S.curDate!==DB.today())S.corridasPeriod='tudo'; try{renderCorridasActive();}catch(e){} } }
     );
   } else {
     try{renderJornada();}catch(e){}
     try{renderHome();}catch(e){}
     // Garantir que Corridas mostra a data certa independente do filtro
     if (S.curDate !== DB.today()) S.corridasPeriod = 'tudo';
-    try{renderCorridas();}catch(e){}
+    try{renderCorridasActive();}catch(e){}
     showToast(baseMsg, skipped > 0 ? 'info' : 'success');
   }
 }
@@ -7294,7 +7293,7 @@ async function _pullTripsCorrections() {
       if (day.trips.length !== before) { DB.saveDay(day); changed = true; }
     }
     if (changed) {
-      try { if (S.sec==='corridas') renderCorridas(); } catch(e) {}
+      try { if (S.sec==='corridas') renderCorridasActive(); } catch(e) {}
       try { if (S.sec==='jornada') renderJornada(); } catch(e) {}
       try { renderHome(); } catch(e) {}
     }
@@ -7602,7 +7601,7 @@ async function _processGeoQueue() {
             _SUPA.from("trips").upsert({ id: t.id, user_id: _supaUser.id, km, km_estimado: true },
               { onConflict: "id" }).catch(()=>{});
           }
-          try { if (S.sec === "jornada") renderJornada(); if (S.sec === "corridas") renderCorridas(); } catch(e) {}
+          try { if (S.sec === "jornada") renderJornada(); if (S.sec === "corridas") renderCorridasActive(); } catch(e) {}
         }
       }
     } catch(e) { console.warn("[_processGeoQueue]", e); }
@@ -10658,7 +10657,7 @@ async function _bootPullBg() {
   try{renderJornada();}  catch(e){}
   try{renderFin();}      catch(e){}
   try{renderAgenda();} catch(e){}
-  try{ if (S.sec==='corridas') renderCorridas(); } catch(e){}
+  try{ if (S.sec==='corridas') renderCorridasActive(); } catch(e){}
   try{ if (S.sec==='lancamentos') renderLancamentos(); } catch(e){}
   _bootPullDone = true;
   _bootPullResolve();
