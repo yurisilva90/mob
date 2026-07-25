@@ -7344,6 +7344,18 @@ async function _refreshAutoTripsIfOnJornada() {
 }
 setTimeout(()=>{ _refreshAutoTripsIfOnJornada(); setInterval(_refreshAutoTripsIfOnJornada, 25*1000); }, 4000);
 
+// CORRIGIDO (24/07/2026, confirmado pelo Yuri: corridas terminadas até
+// 22:21 não apareciam numa tela aberta desde antes) — a tela Corridas
+// nunca tinha refresh automático como a Jornada já tem. Se ficasse parado
+// nela sem trocar filtro/período nem sair e voltar, ficava presa no que
+// carregou da última vez, mesmo com corridas novas terminando por trás.
+// Mesmo padrão de intervalo da Jornada.
+async function _refreshCorridasIfOnScreen() {
+  if (!(S && S.sec === 'corridas')) return;
+  try { await renderCorridasActive(); } catch(e) {}
+}
+setTimeout(()=>{ _refreshCorridasIfOnScreen(); setInterval(_refreshCorridasIfOnScreen, 25*1000); }, 4500);
+
 // Mesma lógica pra Home (pedido do Yuri, 23/07/2026) — a checagem de cache
 // em renderHomeGraphs() só refaz a busca quando o INTERVALO DE DATAS muda
 // (troca de semana/mês/etc), nunca por tempo — uma corrida nova no meio do
