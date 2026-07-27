@@ -255,6 +255,16 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .cmp-legend.r{background:#FEF2F2;border-color:#FECACA}
 /* ── Corridas: toggle Importadas / Automáticas (fonte dos dados) ── */
 .cor-subnote{padding:0 16px 10px;font-size:11.5px;color:var(--muted2);line-height:1.4}.li-row.open{border-radius:14px 14px 0 0;border-bottom:0!important}.trip-detail-panel{background:var(--card);border:1.5px solid var(--line);border-top:0;border-radius:0 0 12px 12px;padding:8px 12px 10px}.det-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);padding:4px 0;font-weight:500}.det-row:not(:last-child){border-bottom:1px solid var(--line)}.det-row strong{color:var(--text);font-weight:700}.det-del-btn{display:flex;align-items:center;gap:6px;width:100%;margin-top:8px;padding:8px 0 2px;background:none;border:none;border-top:1px solid var(--line);font-size:12px;font-weight:700;color:#EF4444;cursor:pointer;font-family:inherit}
+.perf-strip{display:grid;gap:7px;margin-bottom:10px}
+.perf-cell{border-radius:13px;padding:9px 6px;text-align:center;background:#F0FDF4;border:1px solid #BBF7D0}
+.perf-cell.o{background:#FFF7ED;border-color:#FED7AA}
+.perf-cell.r{background:#FEF2F2;border-color:#FECACA}
+.perf-cell strong{display:block;font-size:13.5px;font-weight:800;color:var(--text)}
+.perf-cell span{display:block;font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#15803D;margin-top:3px}
+.perf-cell.o span{color:#C2410C}
+.perf-cell.r span{color:#B91C1C}
+.cfg-note{display:flex;align-items:center;gap:8px;background:#F8FAFC;border:1px solid var(--line);border-radius:12px;padding:9px 11px;font-size:11px;color:var(--muted);margin-bottom:10px}
+.cfg-note a{color:#0A2F6B;font-weight:700;text-decoration:none;cursor:pointer}
 .decl-toggle{display:flex;align-items:center;gap:8px;padding:12px 16px;background:#fff;border-bottom:1px solid var(--line);cursor:pointer}
 .decl-toggle svg.chev{margin-left:auto;transition:transform .2s}
 .decl-toggle.open svg.chev{transform:rotate(180deg)}
@@ -4257,6 +4267,7 @@ function autoTripItem(t) {
   const linked = isAutoTripLinkedToSession(t);
   const linkSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 1 1 0 10h-2M8 12h8"/></svg>`;
   const linkTag = `<span class="tap-legend-wrap link-tag ${linked?'on':'off'}" onclick="showTapLegend(event,'${linked?'Vinculada a uma jornada':'Não está em nenhuma jornada'}')">${linkSvg}</span>`;
+  const perfStrip = perfStripHtml(t.offer_value, (kmPickupVal||0)+(kmDestVal||0), (durPickupVal||0)+(durDestVal||0));
   return `<div class="trip-item-wrap" id="tw-${tid}">
     <div class="li-row" id="tr-${tid}" onclick="toggleTripDetail('${tid}')">
       ${platIcon(t.platform)}
@@ -4269,7 +4280,7 @@ function autoTripItem(t) {
         <span class="auto-status ${statusCls}">${statusTxt}</span>
       </div>
     </div>
-    <div class="trip-detail-panel" id="td-${tid}" style="display:none">${detRows}</div>
+    <div class="trip-detail-panel" id="td-${tid}" style="display:none">${perfStrip}${detRows}</div>
   </div>`;
 }
 // Corrige o caso em que uma corrida foi apagada direto no Supabase (ex:
@@ -5042,6 +5053,36 @@ function dismissCustoBanner() {
   updateCustoBanner();
 }
 
+// Indicadores individuais por corrida (R$/km, R$/hora, Lucro) — mockup
+// aprovado (25/07/2026), pedido do Yuri: "bater o olho" no desempenho de
+// cada corrida específica, não só nos totais do dia. Reaproveita os MESMOS
+// limiares de cor (rateColorClass/FLASH_KPI_DEFS) já usados na régua do
+// MōB Flash — a mesma calibração que avalia a oferta ANTES de aceitar
+// passa a avaliar o resultado DEPOIS de rodar. km/hora somam
+// deslocamento+corrida (pra automáticas) ou usam o valor único já salvo
+// (pra importadas). Lucro só aparece com custo do veículo configurado —
+// sem isso, mostra o convite pra configurar em vez de inventar número.
+function perfStripHtml(value, km, durMin) {
+  if (!value || !km || km <= 0) return '';
+  const rkm = value / km;
+  const rhora = durMin > 0 ? value / (durMin/60) : null;
+  const cvCfg = DB.cfg().custoVeiculo;
+  const hasCusto = !!(cvCfg && cvCfg.configurado);
+  const lucro = hasCusto ? value - (cvCfg.custoPorKm||0) * km : null;
+  const n = hasCusto ? 3 : 2;
+  const rkmCls = rateColorClass('rkm', rkm);
+  const rhoraCls = rhora!=null ? rateColorClass('rhora', rhora) : '';
+  const lucroCls = lucro!=null ? rateColorClass('lucro', lucro) : '';
+  let html = `<div class="perf-strip" style="grid-template-columns:repeat(${n},1fr)">
+    <div class="perf-cell ${rkmCls}"><strong>${DB.fR(rkm)}</strong><span>por km</span></div>
+    ${rhora!=null?`<div class="perf-cell ${rhoraCls}"><strong>${DB.fR(rhora)}</strong><span>por hora</span></div>`:''}
+    ${hasCusto?`<div class="perf-cell ${lucroCls}"><strong>${DB.fR(lucro)}</strong><span>lucro</span></div>`:''}
+  </div>`;
+  if (!hasCusto) {
+    html += `<div class="cfg-note"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#64748B" stroke-width="2" style="flex:none"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><span>Configure o <a onclick="event.stopPropagation();openCustoVeiculo()">custo do veículo</a> pra ver o lucro real de cada corrida.</span></div>`;
+  }
+  return html;
+}
 function tripItem(t, tripDate) {
   const plat = {uber:'Uber','99':'99',particular:'Particular'}[t.platform||'uber'] || 'Uber';
   const dest = t.dest ? ' → '+esc(t.dest) : '';
@@ -5064,6 +5105,7 @@ function tripItem(t, tripDate) {
   if (t.pedagio)    extras.push(`<span class="chip-icon chip-toll"><svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><rect x="3" y="3" width="2" height="18" rx="1"/><rect x="19" y="3" width="2" height="18" rx="1"/><rect x="5" y="10" width="11" height="3" rx="1.5"/></svg></span>`);
   if (t.dinheiro)  extras.push(`<span class="chip-icon chip-cash">${cashSvg}</span>`);
   const extraRow = extras.length?`<div class="li-extra">${extras.join('')}</div>`:'';
+  const perfStrip = perfStripHtml(t.value, t.km, t.duration);
   const detRows = [
     `<div class="det-row"><span>Plataforma</span><strong>${plat}</strong></div>`,
     t.origin?`<div class="det-row"><span>Origem</span><strong>${esc(t.originFull||t.origin)}</strong></div>`:'',
@@ -5091,7 +5133,7 @@ function tripItem(t, tripDate) {
       <div class="li-info"><h3 class="trip-title">${t.origin?esc(t.origin):'—'}${dest}</h3><p>${plat} · ${t.kmEstimado?'~':''}${(t.km||0).toFixed(1)} km${t.kmEstimado?' (estim.)':''}${dur}</p>${extraRow}</div>
       <div class="li-val"><strong>${DB.fR(t.value)}</strong>${t.time?`<span class="li-time">${t.time}</span>`:''}${liqRow}</div>
     </div>
-    <div class="trip-detail-panel" id="td-${tid}" style="display:none">${detRows}</div>
+    <div class="trip-detail-panel" id="td-${tid}" style="display:none">${perfStrip}${detRows}</div>
   </div>`;
 }
 function lancItemJornada(it) {
