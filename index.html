@@ -4407,6 +4407,7 @@ function renderJornada() {
     }
   }
   reapplyOpenTripDetail();
+  reapplyOpenJss();
 }
 
 function renderJourneyCard(day, isToday) {
@@ -4812,7 +4813,25 @@ function deleteJss(dateStr, idx) {
 }
 
 
-function toggleJss(id){const el=document.getElementById(id);if(el)el.classList.toggle('open');}
+// CORRIGIDO (15/08/2026, relatado pelo Yuri): mesmo bug do toggleTripDetail
+// (comentário abaixo, 24/07) só que no card da jornada — toggleJss só
+// mexia numa classe CSS, sem guardar estado. O refresh automático de 25s
+// (_refreshAutoTripsIfOnJornada) recria os cards do zero sempre fechados,
+// então a expansão "voltava a fechar sozinha" em segundos. Mesmo padrão
+// de correção: guarda o id aberto, reaplica depois de qualquer redesenho.
+let _openJssId = null;
+function toggleJss(id){
+  const el=document.getElementById(id);
+  if(!el) return;
+  const willOpen = !el.classList.contains('open');
+  el.classList.toggle('open');
+  _openJssId = willOpen ? id : null;
+}
+function reapplyOpenJss(){
+  if (!_openJssId) return;
+  const el = document.getElementById(_openJssId);
+  if (el) el.classList.add('open');
+}
 // CORRIGIDO (24/07/2026, relatado pelo Yuri): o painel de detalhe de uma
 // corrida é só um display:none/block num elemento — quando a tela
 // redesenha os cards (o refresh automático de 25s/60s da Jornada/Home,
