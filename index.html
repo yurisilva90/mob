@@ -1049,7 +1049,17 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .jss-trips .li-row{padding:9px 14px;margin:0;border-radius:0;border-top:1px solid #F8FAFC}
 .jss-trips .li-row:first-of-type{border-top:0}
 .jss-trips-empty{padding:12px 14px;font-size:12px;color:var(--muted2);text-align:center}
-.jss-act{border:0;background:#F1F5F9;cursor:pointer;color:#64748B;padding:10px;display:flex;align-items:center;border-radius:10px;touch-action:manipulation}.jss-act.del{color:#EF4444;background:#FEF2F2}
+.jss-act{border:0;background:#F1F5F9;cursor:pointer;color:#64748B;padding:5px;display:flex;align-items:center;border-radius:8px;touch-action:manipulation;flex-shrink:0}.jss-act.del{color:#EF4444;background:#FEF2F2}
+.jss-ganhos{font-size:12px;font-weight:800;color:var(--green2)}
+.jss-rate-row{display:none;grid-template-columns:repeat(3,1fr);gap:8px;padding:2px 14px 12px}
+.jss-card.open .jss-rate-row{display:grid}
+.jss-rcard{border-radius:12px;padding:8px 4px;text-align:center;border:1.5px solid rgba(34,197,94,.35);background:rgba(34,197,94,.08)}
+.jss-rcard.o{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.08)}
+.jss-rcard.r{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08)}
+.jss-rcard strong{display:block;font-size:13px;font-weight:800;color:#15803D}
+.jss-rcard.o strong{color:#C2410C}
+.jss-rcard.r strong{color:#B91C1C}
+.jss-rcard span{display:block;font-size:8px;font-weight:800;color:inherit;opacity:.8;text-transform:uppercase;letter-spacing:.03em;margin-top:2px}
 /* ── Lançamentos — tabs pago / a pagar ── */
 .lanc-tabs{display:flex;background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:3px;gap:3px;margin-bottom:12px}
 .lanc-tab{flex:1;height:34px;border-radius:11px;border:0;background:transparent;font-family:inherit;font-size:11.5px;font-weight:800;color:var(--muted);cursor:pointer;transition:.15s}
@@ -4484,6 +4494,14 @@ function renderJornada() {
 function renderJourneyCard(day, isToday) {
   const jc = document.getElementById('journey-card');
   if (!jc) return;
+  // Card de sessão atual (timer/km/botão) só faz sentido em "hoje" — em dia
+  // passado não existe jornada "em andamento" possível, então esse card
+  // some por completo. O restante da função continua rodando igual: os
+  // valores que ela calcula (jc-trips, jc-total, jc-kmtotal, jc-kmativo,
+  // jc-kmdesl, jc-rsh, jc-rskm) agora moram no card "Total do dia" — que é
+  // um elemento IRMÃO de journey-card, não um filho, e precisa continuar
+  // sendo populado em qualquer dia, passado ou presente.
+  jc.style.display = isToday ? '' : 'none';
   const g = S.gps;
   const finished = day.sessions || [];
   const finishedElapsed = finished.reduce((s,x)=>s+(x.elapsed||0),0);
@@ -4753,29 +4771,39 @@ function sessionItem(label, sess, origIdx, dateStr, day, live) {
   const kmDesloc = Math.max(0, km - kmAtivo);
 
   const horasDecimal = elapsedSecs > 0 ? elapsedSecs/3600 : 0;
-  const rsPorHora = horasDecimal > 0 ? DB.fR(ganhos/horasDecimal) : '—';
-  const rsPorKm = km > 0 ? DB.fR(ganhos/km) : '—';
-  const editBtn = !live ? `<button class="jss-act" onclick="event.stopPropagation();editJss('${dateStr}',${origIdx})" title="Editar"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-        <button class="jss-act del" onclick="event.stopPropagation();deleteJss('${dateStr}',${origIdx})" title="Excluir"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>` : '';
+  const rshVal = horasDecimal > 0 ? ganhos/horasDecimal : null;
+  const rskmVal = km > 0 ? ganhos/km : null;
+  const rsPorHora = rshVal !== null ? DB.fR(rshVal) : '—';
+  const rsPorKm = rskmVal !== null ? DB.fR(rskmVal) : '—';
+  const rshCls = rshVal !== null ? rateColorClass('rhora', rshVal) : '';
+  const rskmCls = rskmVal !== null ? rateColorClass('rkm', rskmVal) : '';
+  // Lucro da sessão = soma do lucro de cada corrida (mesmo cálculo do
+  // perfStripHtml/detalhe de corrida: valor - custoPorKm*km), só quando o
+  // custo do veículo está configurado — igual já vale por corrida.
+  const cvCfg = DB.cfg().custoVeiculo;
+  const hasCusto = !!(cvCfg && cvCfg.configurado);
+  const lucroVal = hasCusto ? ganhos - (cvCfg.custoPorKm||0) * kmAtivo : null;
+  const lucroCls = lucroVal !== null ? rateColorClass('lucro', lucroVal) : '';
+  const editBtn = !live ? `<button class="jss-act" onclick="event.stopPropagation();editJss('${dateStr}',${origIdx})" title="Editar"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <button class="jss-act del" onclick="event.stopPropagation();deleteJss('${dateStr}',${origIdx})" title="Excluir"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>` : '';
 
   return `<div class="jss-card" id="${cardId}">
     <div class="jss-row" onclick="toggleJss('${cardId}')">
       <div class="jss-info">
-        <div class="jss-top"><span class="jss-name">${label}</span><span class="jss-badge ${badgeCls}">${status}</span></div>
+        <div class="jss-top"><span class="jss-name">${label}</span><span class="jss-badge ${badgeCls}">${status}</span>${editBtn}</div>
         <div class="jss-sub">${range} · ${dur}</div>
       </div>
-      <span style="font-size:14px;font-weight:800;color:var(--text);flex-shrink:0;margin-right:4px">${(sess.km||0).toFixed(1)} km</span>
+      <div style="text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+        <span style="font-size:14px;font-weight:800;color:var(--text)">${(sess.km||0).toFixed(1)} km</span>
+        <span class="jss-ganhos">${DB.fR(ganhos)}</span>
+      </div>
       <div class="jss-chev"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg></div>
     </div>
-    <div class="jss-kpi-row">
-      <div class="jss-kpi"><span class="jv">${kmAtivo.toFixed(1)}</span><span class="jl">Km ativo</span></div>
-      <div class="jss-kpi"><span class="jv">${kmDesloc.toFixed(1)}</span><span class="jl">Desloc.</span></div>
-      <div class="jss-kpi"><span class="jv">${corridas}</span><span class="jl">Corridas</span></div>
-      <div class="jss-kpi"><span class="jv g">${DB.fR(ganhos)}</span><span class="jl">Ganhos</span></div>
-      <div class="jss-kpi"><span class="jv b">${rsPorHora}</span><span class="jl">R$/h</span></div>
-      <div class="jss-kpi"><span class="jv b">${rsPorKm}</span><span class="jl">R$/km</span></div>
+    <div class="jss-rate-row">
+      <div class="jss-rcard ${rshCls}"><strong>${rsPorHora}</strong><span>R$/hora</span></div>
+      <div class="jss-rcard ${rskmCls}"><strong>${rsPorKm}</strong><span>R$/km</span></div>
+      ${hasCusto ? `<div class="jss-rcard ${lucroCls}"><strong>${DB.fR(lucroVal)}</strong><span>Lucro</span></div>` : `<div class="jss-rcard"><strong>—</strong><span>Lucro</span></div>`}
     </div>
-    ${editBtn ? `<div class="jss-acts">${editBtn}</div>` : ''}
     <div class="jss-trips">
       <div class="jss-trips-head">
         <h4>Corridas desta jornada</h4>
@@ -5202,7 +5230,7 @@ function tripItem(t, tripDate) {
     t.duration>0?`<div class="det-row"><span>Duração</span><strong>${fmtDur(t.duration)}</strong></div>`:'',
     t.dinamico>0?`<div class="det-row"><span>Preço dinâmico</span><strong style="color:#F59E0B">+ ${DB.fR(t.dinamico)}</strong></div>`:'',
     t.tip>0?`<div class="det-row"><span>Gorjeta</span><strong style="color:#7C3AED">+ ${DB.fR(t.tip)}</strong></div>`:'',
-    (_feePct!==null)?`<div class="det-row"><span>Taxa Uber</span><strong style="${_feePct==='0%'?'color:#15803D':''}">"${_feePct}</strong></div>`:'',
+    (_feePct!==null)?`<div class="det-row"><span>Taxa Uber</span><strong style="${_feePct==='0%'?'color:#15803D':''}">${_feePct}</strong></div>`:'',
     t.pedagio?`<div class="det-row"><span>Pedágio</span><strong>Sim</strong></div>`:'',
     t.dinheiro?`<div class="det-row"><span>Pagamento</span><strong>Dinheiro</strong></div>`:'',
     tripDate?`<button class="det-del-btn" onclick="event.stopPropagation();confirmDeleteTrip('${tripDate}','${t.id}')"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> Excluir corrida</button>`:'',
