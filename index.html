@@ -212,6 +212,39 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .j-btn.ghost{background:rgba(15,23,42,.22);border:1px solid rgba(255,255,255,.25);color:#fff}
 .j-btn.go{background:#fff;color:var(--green2);width:auto;display:inline-flex;padding:0 32px;font-size:15px}
 
+/* ── Total do dia (redesenho 15/08/2026) ── */
+.td-card{background:var(--blue);border-radius:22px;overflow:hidden;box-shadow:0 4px 18px rgba(15,23,42,.08)}
+.td-row{position:relative;overflow:hidden;padding:15px 16px;border-top:1px solid rgba(255,255,255,.14)}
+.td-row:first-child{border-top:0}
+.td-wm{position:absolute;color:#fff;opacity:.09;pointer-events:none;z-index:0;top:-18%;height:136%;aspect-ratio:1/1}
+.td-wm.left{left:-36px}
+.td-wm.right{right:-40px}
+.td-row>*:not(.td-wm){position:relative;z-index:1}
+.td-corridas{display:flex;align-items:baseline;gap:9px}
+.td-corridas strong{font-size:28px;font-weight:800;color:#fff;letter-spacing:-.03em;line-height:1}
+.td-corridas span{font-size:12px;font-weight:800;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.04em}
+.td-grid1{text-align:center}
+.td-grid1 strong{display:block;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.02em}
+.td-grid1 span{display:block;font-size:9.5px;font-weight:800;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.04em;margin-top:5px}
+.td-grid3{display:grid;grid-template-columns:repeat(3,1fr);padding-right:56px}
+.td-grid3 .cell{text-align:center}
+.td-grid3 .cell+.cell{border-left:1px solid rgba(255,255,255,.16)}
+.td-grid3 strong{display:block;font-size:18px;font-weight:800;color:#fff;letter-spacing:-.02em}
+.td-grid3 span{display:block;font-size:8.5px;font-weight:800;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.03em;margin-top:5px}
+.td-rates{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:11px}
+.td-rcard{border-radius:12px;padding:8px 6px;text-align:center;border:1.5px solid rgba(34,197,94,.4);background:rgba(34,197,94,.10)}
+.td-rcard.o{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.10)}
+.td-rcard.r{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.10)}
+.td-rcard strong{display:block;font-size:16px;font-weight:800;color:#fff}
+.td-rcard span{display:block;font-size:8.5px;font-weight:800;color:rgba(255,255,255,.85);text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+.td-fin-divider{border-top:1px dashed rgba(255,255,255,.22);margin:0 0 11px}
+.td-fin{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.td-fin .cell{text-align:center}
+.td-fin strong{display:block;font-size:15px;font-weight:800;letter-spacing:-.02em}
+.td-fin strong.g{color:#4ADE80}
+.td-fin strong.r{color:#F87171}
+.td-fin span{display:block;font-size:8.5px;font-weight:800;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.03em;margin-top:4px}
+
 /* ── Metas do dia ── */
 .gbar{height:10px;background:#eef2f7;border-radius:999px;overflow:hidden}
 .gbar i{display:block;height:100%;border-radius:999px}
@@ -219,6 +252,9 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .gbar.km i{background:linear-gradient(90deg,#22C55E,#0EA5E9)}
 .gbar.time i{background:linear-gradient(90deg,#F59E0B,#EF4444)}
 .goal-item{border-bottom:1px solid #edf1f6;padding-bottom:13px;margin-bottom:13px}
+.metas-wrap{position:relative;overflow:hidden;background:var(--card);border-radius:20px;padding:16px;box-shadow:0 4px 18px rgba(15,23,42,.07)}
+.metas-wm{position:absolute;width:230px;height:230px;top:50%;left:-86px;transform:translateY(-50%);color:#3B82F6;opacity:.12;pointer-events:none;z-index:0}
+.metas-wrap #metas-dia-stack{position:relative;z-index:1;padding-left:58px}
 .goal-item:last-child{border-bottom:0;padding-bottom:0;margin-bottom:0}
 .goal-top{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:650;color:#344054;margin-bottom:8px}
 .goal-top span:last-child{color:var(--muted);font-weight:600}
@@ -1264,41 +1300,62 @@ h1.hd-title{font-family:var(--font-brand)!important}
       </div>
       <div class="j-actions" id="jc-actions"></div>
     </div>
-    <div class="rate-strip" id="jc-rate-strip">
-      <div class="rate-cell" id="jc-rate-hora"><strong id="jc-rsh">R$0,00</strong><span>R$ / hora</span></div>
-      <div class="rate-cell" id="jc-rate-km"><strong id="jc-rskm">R$0,00</strong><span>R$ / km</span></div>
-    </div>
-    <div class="j-metrics">
-      <div class="j-mini">
-        <div style="display:flex;align-items:center;justify-content:center;gap:5px">
-          <strong id="jc-total">0h00</strong>
-          <button class="km-edit-btn" onclick="openTempoAdjust()" aria-label="Editar tempo total">
-            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
-          </button>
-        </div>
-        <span>Tempo total</span>
-      </div>
-      <div class="j-mini">
-        <div style="display:flex;align-items:center;justify-content:center;gap:5px">
-          <strong id="jc-kmtotal">0,0 km</strong>
-          <button class="km-edit-btn" onclick="openKmAdjust()" aria-label="Editar km total">
-            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
-          </button>
-        </div>
-        <span>Km total</span>
-      </div>
-    </div>
-    <div class="j-metrics2">
-      <div class="j-mini sm"><strong id="jc-trips">0</strong><span>Corridas</span></div>
-      <div class="j-mini sm"><strong id="jc-kmativo">0,0</strong><span>Km ativo</span></div>
-      <div class="j-mini sm"><strong id="jc-kmdesl">0,0</strong><span>Km deslc.</span></div>
-    </div>
   </div>
 
-  <div class="stats-cards" style="padding:0 16px 14px">
-    <div class="stat"><div class="v green" id="d-rev">R$0</div><div class="l">Receitas</div></div>
-    <div class="stat"><div class="v red" id="d-exp">R$0</div><div class="l">Despesas</div></div>
-    <div class="stat"><div class="v" id="d-net">R$0</div><div class="l">Resultado</div></div>
+  <div class="section" style="padding:16px 16px 8px"><h2>Total do dia</h2></div>
+  <div style="padding:0 16px 14px">
+    <div class="td-card">
+
+      <div class="td-row">
+        <svg class="td-wm right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l1.5-4.5A2 2 0 0 1 6.4 7h11.2a2 2 0 0 1 1.9 1.5L21 13"/><path d="M3 13h18v4a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4z"/><circle cx="7.5" cy="17" r="1.3"/><circle cx="16.5" cy="17" r="1.3"/></svg>
+        <div class="td-corridas"><strong id="jc-trips">0</strong><span>Corridas</span></div>
+      </div>
+
+      <div class="td-row">
+        <svg class="td-wm right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 6.5v5.5l4 2.3"/></svg>
+        <div class="td-grid1">
+          <div style="display:flex;align-items:center;justify-content:center;gap:6px">
+            <strong id="jc-total">0h00</strong>
+            <button class="km-edit-btn" onclick="openTempoAdjust()" aria-label="Editar tempo total">
+              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            </button>
+          </div>
+          <span>Tempo total</span>
+        </div>
+      </div>
+
+      <div class="td-row">
+        <svg class="td-wm right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 23L9 1M20 23L15 1"/><path d="M12 3.5v3M12 10v3M12 16.5v3"/></svg>
+        <div class="td-grid3">
+          <div class="cell">
+            <div style="display:flex;align-items:center;justify-content:center;gap:5px">
+              <strong id="jc-kmtotal">0,0 km</strong>
+              <button class="km-edit-btn" onclick="openKmAdjust()" aria-label="Editar km total">
+                <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+              </button>
+            </div>
+            <span>Km total</span>
+          </div>
+          <div class="cell"><strong id="jc-kmativo">0,0</strong><span>Km ativo</span></div>
+          <div class="cell"><strong id="jc-kmdesl">0,0</strong><span>Km deslc.</span></div>
+        </div>
+      </div>
+
+      <div class="td-row">
+        <svg class="td-wm left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22"/><path d="M17 5.5c0-2-2.2-3.3-5-3.3s-5 1.5-5 3.7c0 2.5 2.2 3.5 5 4.3c3.2.9 5.4 1.9 5.4 4.5c0 2.5-2.4 3.8-5.4 3.8s-5.4-1.4-5.4-3.8"/></svg>
+        <div class="td-rates">
+          <div class="td-rcard" id="jc-rate-hora"><strong id="jc-rsh">R$0,00</strong><span>R$ / hora</span></div>
+          <div class="td-rcard" id="jc-rate-km"><strong id="jc-rskm">R$0,00</strong><span>R$ / km</span></div>
+        </div>
+        <div class="td-fin-divider"></div>
+        <div class="td-fin">
+          <div class="cell"><strong class="g" id="d-rev">R$0</strong><span>Receitas</span></div>
+          <div class="cell"><strong class="r" id="d-exp">R$0</strong><span>Despesas</span></div>
+          <div class="cell"><strong id="d-net">R$0</strong><span>Resultado</span></div>
+        </div>
+      </div>
+
+    </div>
   </div>
 
   <!-- Metas do dia: pedido do Yuri (23/07/2026) — sai de dentro do card
@@ -1307,7 +1364,12 @@ h1.hd-title{font-family:var(--font-brand)!important}
        fundo da tela, sem balão/card branco por trás). renderMetasDoDia()
        não muda nada — só o container onde a mesma função escreve. -->
   <div class="section" style="padding:0 16px 8px"><h2>Metas do dia</h2><button class="add" onclick="openMetasHojeModal()">Editar &#8250;</button></div>
-  <div style="padding:0 16px 4px" id="metas-dia-stack"></div>
+  <div style="padding:0 16px 4px">
+    <div class="metas-wrap">
+      <svg class="metas-wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2.2"/></svg>
+      <div id="metas-dia-stack"></div>
+    </div>
+  </div>
 
   <div class="section" style="padding:0 16px 8px"><h2>Lançamentos</h2><div style="display:flex;gap:8px;align-items:center"><button class="add" onclick="toggleLancView()" id="lanc-toggle" style="display:none">Ver todas &#8250;</button><button class="add" onclick="openLanc('receita')">+ Adicionar</button></div></div>
   <div style="padding:0 16px"><div id="jorn-lanc-list"><div class="empty">Nenhum lançamento registrado</div></div></div>
@@ -4479,8 +4541,8 @@ function renderJourneyCard(day, isToday) {
   // neutro (verde), não faz sentido alarmar antes de ter dado de verdade.
   const rateEl = document.getElementById('jc-rate-hora');
   const kmEl   = document.getElementById('jc-rate-km');
-  if (rateEl) rateEl.className = 'rate-cell' + (rsh !== null ? ' ' + rateColorClass('rhora', rsh) : '');
-  if (kmEl)   kmEl.className   = 'rate-cell' + (rskm !== null ? ' ' + rateColorClass('rkm', rskm) : '');
+  if (rateEl) rateEl.className = 'td-rcard' + (rsh !== null ? ' ' + rateColorClass('rhora', rsh) : '');
+  if (kmEl)   kmEl.className   = 'td-rcard' + (rskm !== null ? ' ' + rateColorClass('rkm', rskm) : '');
 
   const actions = document.getElementById('jc-actions');
   if (!actions) return;
