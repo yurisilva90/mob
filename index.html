@@ -172,20 +172,21 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 
 /* ── Journey card (controles embutidos) ── */
 .journey{margin:0 16px 12px;border-radius:26px;padding:16px;color:#fff;box-shadow:0 18px 42px rgba(34,197,94,.18);transition:background .25s;min-height:300px;box-sizing:border-box}
-.journey.idle{background:linear-gradient(150deg,#0A2F6B 0%,#153e8c 55%,#1a4ba3 100%)}
-.journey.ended{background:linear-gradient(135deg,#0c4a6e 0%,#0ea5e9 75%)}
-.journey.running{background:radial-gradient(circle at 18% 0%,rgba(255,255,255,.18),transparent 34%),linear-gradient(135deg,#15803d 0%,#22c55e 58%,#63e18b 100%)}
+.journey.idle{background:var(--blue)}
+.journey.ended{background:var(--blue)}
+.journey.running{background:#15803D}
 /* .journey.paused removido */
 .j-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px}
-.j-status{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:7px 10px;font-size:11px;font-weight:760;text-transform:uppercase;letter-spacing:.06em;flex:0 0 auto}
+.j-status{display:none}
 .j-status i{width:8px;height:8px;border-radius:50%;background:#fff;flex-shrink:0}
 .journey.running .j-status i{animation:pulse2 2s infinite}
 @keyframes pulse2{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.5)}50%{box-shadow:0 0 0 5px rgba(255,255,255,0)}}
-.j-import{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:6px 11px;font-size:11px;font-weight:760;color:#fff;display:inline-flex;align-items:center;gap:5px;cursor:pointer;border:0;touch-action:manipulation}
+.j-import{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:6px 11px;font-size:11px;font-weight:760;color:#fff;display:inline-flex;align-items:center;gap:5px;cursor:pointer;border:0;touch-action:manipulation;margin-left:auto}
 .j-import svg{width:13px;height:13px}
-.j-current{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+.j-toprow{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.j-current{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex:1;min-width:0}
 .j-current h2{font-family:'Inter',system-ui,sans-serif;font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1}
-.j-current p{font-size:12px;font-weight:520;opacity:.88;margin-top:5px;min-height:15px}
+.j-current p{font-size:12px;font-weight:520;opacity:.88;margin-top:5px;min-height:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .j-km{font-size:12px;font-weight:620;text-align:right}
 .j-km strong{display:block;font-family:'Inter',system-ui,sans-serif;font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1}
 .j-km span{display:block;margin-top:5px;opacity:.88}
@@ -199,9 +200,11 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .j-mini.sm span{font-size:8.5px}
 .km-edit-btn{width:18px;height:18px;border-radius:50%;border:0;background:rgba(255,255,255,.22);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;flex-shrink:0;padding:0}
 .val-edit-btn{width:20px;height:20px;border-radius:7px;border:0;background:#F1F5F9;color:#0A2F6B;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;flex-shrink:0;padding:0}
-.j-actions{display:grid;gap:10px;margin-top:6px}
-.j-actions.two{grid-template-columns:1fr 1fr}
-.j-actions.single{display:flex;justify-content:center}
+.j-actions{flex-shrink:0}
+.j-round-btn{width:64px;height:64px;border-radius:50%;background:#fff;border:0;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+.j-round-btn svg{width:50px;height:50px}
+.j-round-btn.play svg{color:#22C55E}
+.j-round-btn.stop svg{color:#EF4444}
 .j-btn{height:52px;border:0;border-radius:16px;font-size:14px;font-weight:780;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;touch-action:manipulation;width:100%;position:relative;z-index:2}
 .j-btn svg{width:17px;height:17px}
 .j-btn.solid-light{background:#fff;color:var(--green2)}
@@ -1033,6 +1036,10 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .li-sub-j{font-size:11px;color:var(--muted2);font-weight:500}
 .li-val-j{font-size:14px;font-weight:800;flex-shrink:0;margin-left:4px}
 .li-val-j.neg{color:var(--red)}.li-val-j.pos{color:var(--green)}
+.st-badge{display:inline-block;font-size:9.5px;font-weight:800;padding:2.5px 8px;border-radius:99px;white-space:nowrap}
+.st-badge.st-pago{background:#DCFCE7;color:#15803D}
+.st-badge.st-apagar{background:#FEF9C3;color:#854D0E}
+.st-badge.st-vencido{background:#FEE2E2;color:#B91C1C}
 .lanc-detail-panel{background:var(--card);border:1.5px solid var(--line);border-top:0;border-radius:0 0 14px 14px;padding:10px 12px 12px}
 .lanc-detail-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);padding:5px 0;font-weight:500}
 .lanc-detail-row:not(:last-of-type){border-bottom:1px solid var(--line)}
@@ -1250,9 +1257,12 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <div class="j-status"><i></i><span id="jc-status-text">Iniciar</span></div>
       <button class="j-import" onclick="openImportPrecheck()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Importar corridas</button>
     </div>
-    <div class="j-current">
-      <div><h2 id="jc-timer">00:00:00</h2><p id="jc-sub">Nenhuma sessão iniciada</p></div>
-      <div class="j-km"><strong id="jc-km">0,0</strong><span>Km</span></div>
+    <div class="j-toprow">
+      <div class="j-current">
+        <div><h2 id="jc-timer">00:00:00</h2><p id="jc-sub">Nenhuma sessão iniciada</p></div>
+        <div class="j-km"><strong id="jc-km">0,0</strong><span>Km</span></div>
+      </div>
+      <div class="j-actions" id="jc-actions"></div>
     </div>
     <div class="rate-strip" id="jc-rate-strip">
       <div class="rate-cell" id="jc-rate-hora"><strong id="jc-rsh">R$0,00</strong><span>R$ / hora</span></div>
@@ -1283,7 +1293,6 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <div class="j-mini sm"><strong id="jc-kmativo">0,0</strong><span>Km ativo</span></div>
       <div class="j-mini sm"><strong id="jc-kmdesl">0,0</strong><span>Km deslc.</span></div>
     </div>
-    <div class="j-actions" id="jc-actions"></div>
   </div>
 
   <div class="stats-cards" style="padding:0 16px 14px">
@@ -4476,14 +4485,11 @@ function renderJourneyCard(day, isToday) {
   const actions = document.getElementById('jc-actions');
   if (!actions) return;
   if (!isToday) {
-    actions.className = 'j-actions'; actions.innerHTML = '';
+    actions.innerHTML = '';
   } else if (state === 'idle') {
-    const label = 'Iniciar jornada';
-    actions.className = 'j-actions single';
-    actions.innerHTML = `<button class="j-btn solid-light" onclick="gpsStart()"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>${label}</button>`;
+    actions.innerHTML = `<button class="j-round-btn play" onclick="gpsStart()" aria-label="Iniciar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>`;
   } else if (state === 'running') {
-    actions.className = 'j-actions single';
-    actions.innerHTML = '<button class="j-btn solid-light danger" onclick="confirmStop()"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>Encerrar jornada</button>';
+    actions.innerHTML = '<button class="j-round-btn stop" onclick="confirmStop()" aria-label="Encerrar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"/></svg></button>';
   }
 }
 
