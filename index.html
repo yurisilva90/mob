@@ -4744,13 +4744,20 @@ function renderJourneyCard(day, isToday) {
   const autoTripsHoje = day.autoTrips || [];
 
   // Barra Online/Buscando passageiro/Em corrida — real, vinda da máquina de
-  // estados do APK (ver computeStatusBreakdown). Só aparece depois que a
-  // jornada é iniciada (elapsed > 0); antes disso não tem o que contar.
+  // estados do APK (ver computeStatusBreakdown). No card da jornada ATUAL
+  // só faz sentido enquanto a sessão está rodando (é o que está sendo
+  // contado agora); ao encerrar, o dado sai daqui e já está consolidado no
+  // "Total do dia" logo abaixo — pedido do Yuri (16/08/2026), evita
+  // duplicar/deixar a mesma barra "grudada" depois de já ter encerrado.
   const jcBd = document.getElementById('jc-breakdown');
   if (jcBd) {
-    if (totalElapsed > 0) {
+    if (live && liveElapsed > 0) {
       jcBd.style.display = '';
-      const bd = computeStatusBreakdown(totalElapsed, totalKm, autoTripsHoje);
+      const liveAutoTrips = autoTripsHoje.filter(t => {
+        const ts = autoTripTs(t);
+        return ts && ts >= g.start;
+      });
+      const bd = computeStatusBreakdown(liveElapsed, liveKm, liveAutoTrips);
       setHTML('jc-bar', buildSbarHtml(bd));
       setHTML('jc-blist', buildSrowsHtml(bd));
     } else {
