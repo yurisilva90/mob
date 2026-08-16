@@ -210,7 +210,8 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .j-km{font-size:12px;font-weight:620}
 .j-km strong{display:block;font-family:'Inter',system-ui,sans-serif;font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1}
 .j-km span{display:block;margin-top:4px;opacity:.85;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
-.j-rates2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.j-rates2{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;min-width:0}
+.j-bottomrow{display:flex;align-items:center;gap:10px}
 .j-metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px}
 .j-mini{background:transparent;border:none;border-radius:0;padding:6px 4px;text-align:center}
 .j-mini strong{display:block;font-family:'Inter',system-ui,sans-serif;font-size:22px;font-weight:800;text-align:center}
@@ -1372,16 +1373,18 @@ h1.hd-title{font-family:var(--font-brand)!important}
   <div class="journey idle" id="journey-card">
     <div class="j-status" style="display:none"><i></i><span id="jc-status-text">Iniciar</span></div>
     <div class="j-toprow">
-      <div class="j-current">
+      <div class="j-current" style="grid-template-columns:1.3fr 1fr 1fr;flex:1">
         <div><h2 id="jc-timer">00:00:00</h2><p id="jc-sub">Nenhuma sessão iniciada</p></div>
         <div class="j-km"><strong id="jc-km">0,0</strong><span>Km</span></div>
         <div class="j-km"><strong id="jc-trips2">0</strong><span>Corridas</span></div>
       </div>
-      <div class="j-actions" id="jc-actions"></div>
     </div>
-    <div class="j-rates2">
-      <div class="rate-cell" id="jc-rate-hora2"><strong id="jc-rsh2">R$0,00</strong><span>R$ / hora</span></div>
-      <div class="rate-cell" id="jc-rate-km2"><strong id="jc-rskm2">R$0,00</strong><span>R$ / km</span></div>
+    <div class="j-bottomrow">
+      <div class="j-rates2">
+        <div class="rate-cell" id="jc-rate-hora2"><strong id="jc-rsh2">R$0,00</strong><span>R$ / hora</span></div>
+        <div class="rate-cell" id="jc-rate-km2"><strong id="jc-rskm2">R$0,00</strong><span>R$ / km</span></div>
+      </div>
+      <div class="j-actions" id="jc-actions"></div>
     </div>
   </div>
   <div class="journey-breakdown" id="jc-breakdown" style="display:none">
@@ -1445,8 +1448,8 @@ h1.hd-title{font-family:var(--font-brand)!important}
       </div>
 
       <div class="td-row bd" id="td-bd-row" style="display:none">
-        <div class="sbar-wrap" onclick="toggleBar('td-bd-list')"><div class="sbar" id="td-bd-bar"></div></div>
-        <div class="sbar-list" id="td-bd-list"></div>
+        <div class="sbar" id="td-bd-bar"></div>
+        <div class="sbar-list open" id="td-bd-list"></div>
       </div>
 
     </div>
