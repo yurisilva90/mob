@@ -298,6 +298,21 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .cmp-legend .row b{color:#0F172A}
 .cmp-legend.g{background:#F0FDF4;border-color:#BBF7D0}
 .cmp-legend.r{background:#FEF2F2;border-color:#FECACA}
+/* ── Rota de 3 pontos (Aceite/Embarque/Destino) — corridas automáticas ── */
+.route-block{position:relative;padding-left:22px;margin:6px 0 2px}
+.route-line{position:absolute;left:5.5px;top:9px;bottom:9px;width:2px;background:var(--line)}
+.route-row{position:relative;display:flex;align-items:flex-start;padding:8px 0}
+.route-row:first-child{padding-top:0}
+.route-row:last-child{padding-bottom:0}
+.route-mark{position:absolute;left:-22px;top:1px;display:flex;align-items:center;justify-content:center;width:12px;height:20px}
+.mk-accept{width:11px;height:11px;border-radius:50%;background:#fff;border:2.5px solid #0EA5E9}
+.mk-pickup{width:11px;height:11px;border-radius:50%;background:#22C55E;border:2px solid #fff;box-shadow:0 0 0 1.5px #22C55E}
+.mk-dest{width:18px;height:18px;color:var(--muted2)}
+.route-body{flex:1;min-width:0;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.route-label{font-size:9px;font-weight:800;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+.route-addr{font-size:11.5px;font-weight:700;color:var(--text);line-height:1.4}
+.route-time{font-size:10.5px;font-weight:700;color:var(--muted);white-space:nowrap;flex-shrink:0;padding-top:1px}
+.route-block .cmp-legend{margin:5px 0 0 22px}
 /* ── Corridas: toggle Importadas / Automáticas (fonte dos dados) ── */
 .cor-subnote{padding:0 16px 10px;font-size:11.5px;color:var(--muted2);line-height:1.4}.li-row.open{border-radius:14px 14px 0 0;border-bottom:0!important}.trip-detail-panel{background:var(--card);border:1.5px solid var(--line);border-top:0;border-radius:0 0 12px 12px;padding:8px 12px 10px}.det-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);padding:4px 0;font-weight:500}.det-row:not(:last-child){border-bottom:1px solid var(--line)}.det-row strong{color:var(--text);font-weight:700}.det-del-btn{display:flex;align-items:center;gap:6px;width:100%;margin-top:8px;padding:8px 0 2px;background:none;border:none;border-top:1px solid var(--line);font-size:12px;font-weight:700;color:#EF4444;cursor:pointer;font-family:inherit}
 .perf-strip{display:grid;gap:7px;margin-bottom:10px}
@@ -4286,7 +4301,6 @@ function extractBairro(addr) {
   return parts[parts.length - 1] || s;
 }
 function autoTripItem(t) {
-  const plat = {uber:'Uber','99':'99'}[t.platform] || t.platform;
   const dest = t.dest_address ? ' → '+esc(extractBairro(t.dest_address)) : '';
   const tid = 'ta'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
   const cashSvg = `<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M2 10h20" stroke="white" stroke-width="1.2" fill="none"/><path d="M2 17h20" stroke="white" stroke-width="1.2" fill="none"/><circle cx="12" cy="13" r="2.5" fill="white"/></svg>`;
@@ -4342,27 +4356,53 @@ function autoTripItem(t) {
     if (kmBetter || minBetter) return 'g';
     return null;
   }
-  function cmpRow(label, realKm, offerKm, realMin, offerMin, txt, rowId) {
+  function routeRow(realKm, offerKm, realMin, offerMin, txt, rowId) {
     const cls = cmpColor(realKm, offerKm, realMin, offerMin);
-    if (!cls) return `<div class="det-row"><span>${label}</span><strong>${txt}</strong></div>`;
+    if (!cls) return { cls: '', timeHtml: `<span class="route-time">${txt}</span>` };
     const previstoTxt = (+offerKm).toFixed(1)+' km · '+fmtDur(offerMin);
     const realTxt = (+realKm).toFixed(1)+' km · '+fmtDur(realMin);
-    return `<div class="det-row"><span>${label}</span><strong class="cmp ${cls}" onclick="toggleCmpLegend(event,'${rowId}')">${txt}</strong></div>
+    return { cls, timeHtml: `<span class="route-time cmp ${cls}" onclick="toggleCmpLegend(event,'${rowId}')">${txt}</span>
       <div class="cmp-legend ${cls}" id="${rowId}" style="display:none">
         <div class="row"><span>Previsto na oferta</span><b>${previstoTxt}</b></div>
         <div class="row"><span>Real (GPS)</span><b>${realTxt}</b></div>
-      </div>`;
+      </div>` };
   }
-  const deslocRow = cmpRow('Deslocamento', t.real_km_pickup, t.offer_km_pickup, realDurPickup, offerDurPickupMin, deslocTxt, 'cmp-'+tid+'-d');
-  const corridaRow = cmpRow('Corrida', t.real_km_trip, t.offer_km_trip, realDurTrip, offerDurTripMin, corridaTxt, 'cmp-'+tid+'-c');
+  const embarque = routeRow(t.real_km_pickup, t.offer_km_pickup, realDurPickup, offerDurPickupMin, deslocTxt, 'cmp-'+tid+'-d');
+  const destino  = routeRow(t.real_km_trip, t.offer_km_trip, realDurTrip, offerDurTripMin, corridaTxt, 'cmp-'+tid+'-c');
+  // 3 pontos: Aceite (só horário — é o único momento sem endereço próprio,
+  // reaproveita o de origem, que é o que a oferta já mostra ao aceitar),
+  // Embarque (chegada no ponto de origem) e Destino (fim da corrida) —
+  // pedido do Yuri (15/08/2026, mockup aprovado). Só monta a rota quando
+  // tem pelo menos o endereço de origem — sem isso não tem o que desenhar.
+  const hhmmAccept = hhmm(t.accepted_at);
+  const routeBlock = t.origin_address ? `<div class="route-block">
+    <div class="route-line"></div>
+    <div class="route-row">
+      <div class="route-mark"><div class="mk-accept"></div></div>
+      <div class="route-body">
+        <div><div class="route-label">Aceite</div><span class="route-addr">${esc(t.origin_address)}</span></div>
+        ${hhmmAccept?`<span class="route-time">${hhmmAccept}</span>`:''}
+      </div>
+    </div>
+    <div class="route-row">
+      <div class="route-mark"><div class="mk-pickup"></div></div>
+      <div class="route-body">
+        <div><div class="route-label">Embarque</div><span class="route-addr">${esc(t.origin_address)}</span></div>
+        ${embarque.timeHtml}
+      </div>
+    </div>
+    ${t.dest_address ? `<div class="route-row">
+      <div class="route-mark"><svg class="mk-dest" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.6 7-12a7 7 0 1 0-14 0c0 5.4 7 12 7 12z"/><circle cx="12" cy="9" r="2.4"/></svg></div>
+      <div class="route-body">
+        <div><div class="route-label">Destino</div><span class="route-addr">${esc(t.dest_address)}</span></div>
+        ${destino.timeHtml}
+      </div>
+    </div>` : ''}
+  </div>` : '';
   const refreshSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>`;
   const detRows = [
-    `<div class="det-row"><span>Plataforma</span><strong>${plat}</strong></div>`,
     t.passenger_name?`<div class="det-row"><span>Passageiro</span><strong>${esc(t.passenger_name)}</strong></div>`:'',
-    t.origin_address?`<div class="det-row"><span>Origem</span><strong>${esc(t.origin_address)}</strong></div>`:'',
-    t.dest_address?`<div class="det-row"><span>Destino</span><strong>${esc(t.dest_address)}</strong></div>`:'',
-    deslocRow,
-    corridaRow,
+    routeBlock,
     // Reconferir com o log — pedido do Yuri (24/07/2026): reaplica a
     // leitura corrigida em cima do texto original da tela daquele
     // instante, em vez de tentar adivinhar o valor certo.
