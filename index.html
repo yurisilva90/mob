@@ -189,6 +189,11 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .sbar-list .srow .pct{font-size:10px;font-weight:800;color:var(--muted);width:28px;text-align:right}
 .sbar-list .srow .stempo{font-size:10.5px;font-weight:800;color:var(--text);width:48px;text-align:right}
 .sbar-list .srow .skm{font-size:10.5px;font-weight:700;color:var(--muted);width:56px;text-align:right}
+.td-row.bd .sbar{background:rgba(255,255,255,.10)}
+.td-row.bd .sbar-list.open{margin-top:12px}
+.td-row.bd .sbar-list .srow{border-top:1px solid rgba(255,255,255,.14)}
+.td-row.bd .sbar-list .srow b,.td-row.bd .sbar-list .srow .stempo{color:#fff}
+.td-row.bd .sbar-list .srow .pct,.td-row.bd .sbar-list .srow .skm{color:rgba(255,255,255,.6)}
 .jss-statusbar{padding:2px 14px 12px}
 /* .journey.paused removido */
 .j-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px}
@@ -1437,6 +1442,11 @@ h1.hd-title{font-family:var(--font-brand)!important}
           <div class="cell"><strong class="r" id="d-exp">R$0</strong><span>Despesas</span></div>
           <div class="cell"><strong id="d-net">R$0</strong><span>Resultado</span></div>
         </div>
+      </div>
+
+      <div class="td-row bd" id="td-bd-row" style="display:none">
+        <div class="sbar-wrap" onclick="toggleBar('td-bd-list')"><div class="sbar" id="td-bd-bar"></div></div>
+        <div class="sbar-list" id="td-bd-list"></div>
       </div>
 
     </div>
@@ -4742,6 +4752,21 @@ function renderJourneyCard(day, isToday) {
       setHTML('jc-blist', buildSrowsHtml(bd));
     } else {
       jcBd.style.display = 'none';
+    }
+  }
+
+  // Mesma barra, agora no card "Total do dia" — soma o dia inteiro
+  // (sessões encerradas + sessão ao vivo), então funciona em qualquer
+  // data, passada ou de hoje, não só enquanto a jornada está rodando.
+  const tdBdRow = document.getElementById('td-bd-row');
+  if (tdBdRow) {
+    if (totalElapsed > 0) {
+      tdBdRow.style.display = '';
+      const tdBd = computeStatusBreakdown(totalElapsed, totalKm, autoTripsHoje);
+      setHTML('td-bd-bar', buildSbarHtml(tdBd));
+      setHTML('td-bd-list', buildSrowsHtml(tdBd));
+    } else {
+      tdBdRow.style.display = 'none';
     }
   }
 
@@ -8856,14 +8881,7 @@ function gpsUpdate() {
   // Se navegar para outro dia, o timer continua rodando internamente mas
   // não sobrescreve o card que está mostrando dados daquele dia.
   if (S.curDate !== DB.today()) return;
-  const el = getElapsed(), h=Math.floor(el/3600), m=Math.floor(el%3600/60), s=el%60;
-  setText('jc-timer', p2(h)+':'+p2(m)+':'+p2(s));
-  const day = DB.day(S.curDate);
-  // Recalcular ao vivo a partir das sessões atuais (reflete exclusões/edições)
-  const finishedElapsed = (day.sessions||[]).reduce((a,x)=>a+(x.elapsed||0),0);
-  const total = Math.max(0, finishedElapsed + el + (day.tempoAdjust || 0));
-  const th=Math.floor(total/3600), tm=Math.floor(total%3600/60);
-  setText('jc-total', th+'h'+p2(tm)+'m');
+  renderJourneyCard(DB.day(S.curDate), true);
 }
 
 // ── PERSISTÊNCIA DA SESSÃO GPS (sobrevive a reload do WebView) ─────────────
