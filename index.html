@@ -232,6 +232,14 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .td-grid1{text-align:center}
 .td-grid1 strong{display:block;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.02em}
 .td-grid1 span{display:block;font-size:9.5px;font-weight:800;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.04em;margin-top:5px}
+.tk-split{display:flex;align-items:stretch}
+.tk-half{flex:1;position:relative;overflow:hidden;min-width:0;text-align:center;padding:2px 0}
+.tk-half.left{padding-left:8px}
+.tk-half.right{padding-right:8px}
+.tk-divider{width:1px;background:rgba(255,255,255,.18);align-self:stretch;margin:0 4px}
+.tk-half strong{display:block;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1;position:relative;z-index:1}
+.tk-half span{display:block;font-size:9.5px;font-weight:800;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.04em;margin-top:6px;position:relative;z-index:1}
+.tk-half .td-wm{top:50%;transform:translateY(-50%);height:150px;width:150px}
 .td-grid3{display:grid;grid-template-columns:repeat(3,1fr);padding-right:56px}
 .td-grid3 .cell{text-align:center}
 .td-grid3 .cell+.cell{border-left:1px solid rgba(255,255,255,.16)}
@@ -301,8 +309,8 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
    assume o resto (mesmo fundo/bordas laterais, arredondado embaixo quando
    fechada). Evita :has() de propósito — pode não ter suporte no WebView
    do APK (Android mais antigo), então uso classe explícita no HTML. */
-.li-row.has-body{border-radius:20px 20px 0 0;border-bottom:0}
-.li-body-auto{background:#fff;border-left:1px solid var(--line);border-right:1px solid var(--line);border-radius:0 0 20px 20px;padding:2px 12px 11px 62px;margin-top:-1px}
+.li-row.has-body{border-radius:20px 20px 0 0;border-bottom:0;align-items:flex-start;padding-bottom:0}
+.li-body-auto{background:#fff;border-left:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);border-radius:0 0 20px 20px;padding:2px 12px 11px 62px;margin-top:-1px;box-shadow:0 3px 14px rgba(15,23,42,.06)}
 .li-row.has-body.open{border-radius:14px 14px 0 0}
 .li-row.has-body.open + .li-body-auto{border-radius:0;border-bottom:0}
 .link-tag{width:15px;height:15px;flex-shrink:0;display:inline-flex;cursor:pointer}
@@ -1339,10 +1347,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
   </div>
 
   <div class="journey idle" id="journey-card">
-    <div class="j-head">
-      <div class="j-status"><i></i><span id="jc-status-text">Iniciar</span></div>
-      <button class="j-import" onclick="openImportPrecheck()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Importar corridas</button>
-    </div>
+    <div class="j-status" style="display:none"><i></i><span id="jc-status-text">Iniciar</span></div>
     <div class="j-toprow">
       <div class="j-current">
         <div><h2 id="jc-timer">00:00:00</h2><p id="jc-sub">Nenhuma sessão iniciada</p></div>
@@ -1357,7 +1362,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
     </div>
   </div>
 
-  <div class="section" style="padding:16px 16px 8px"><h2>Total do dia</h2></div>
+  <div class="section" style="padding:16px 16px 8px"><h2>Total do dia</h2><button class="add" onclick="openImportPrecheck()"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="vertical-align:-1px;margin-right:3px"><path d="M12 5v14M5 12h14"/></svg>Importar corridas</button></div>
   <div style="padding:0 16px 14px">
     <div class="td-card">
 
@@ -1372,23 +1377,21 @@ h1.hd-title{font-family:var(--font-brand)!important}
       </div>
 
       <div class="td-row">
-        <svg class="td-wm right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 6.5v5.5l4 2.3"/></svg>
-        <div class="td-grid1">
-          <div style="display:flex;align-items:center;justify-content:center;gap:6px">
-            <strong id="jc-total">0h00</strong>
-            <button class="km-edit-btn" onclick="openTempoAdjust()" aria-label="Editar tempo total">
-              <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
-            </button>
+        <div class="tk-split">
+          <div class="tk-half left">
+            <svg class="td-wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 6.5v5.5l4 2.3"/></svg>
+            <div style="display:flex;align-items:center;justify-content:center;gap:6px;position:relative;z-index:1">
+              <strong id="jc-total">0h00</strong>
+              <button class="km-edit-btn" onclick="openTempoAdjust()" aria-label="Editar tempo total">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+              </button>
+            </div>
+            <span>Tempo total</span>
           </div>
-          <span>Tempo total</span>
-        </div>
-      </div>
-
-      <div class="td-row">
-        <svg class="td-wm right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 23L9 1M20 23L15 1"/><path d="M12 3.5v3M12 10v3M12 16.5v3"/></svg>
-        <div class="td-grid3">
-          <div class="cell">
-            <div style="display:flex;align-items:center;justify-content:center;gap:5px">
+          <div class="tk-divider"></div>
+          <div class="tk-half right">
+            <svg class="td-wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 23L9 1M20 23L15 1"/><path d="M12 3.5v3M12 10v3M12 16.5v3"/></svg>
+            <div style="display:flex;align-items:center;justify-content:center;gap:5px;position:relative;z-index:1">
               <strong id="jc-kmtotal">0,0 km</strong>
               <button class="km-edit-btn" onclick="openKmAdjust()" aria-label="Editar km total">
                 <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
@@ -1396,8 +1399,6 @@ h1.hd-title{font-family:var(--font-brand)!important}
             </div>
             <span>Km total</span>
           </div>
-          <div class="cell"><strong id="jc-kmativo">0,0</strong><span>Km ativo</span></div>
-          <div class="cell"><strong id="jc-kmdesl">0,0</strong><span>Km deslc.</span></div>
         </div>
       </div>
 
@@ -8320,7 +8321,7 @@ async function _closeOrphanSessions() {
 // assistente de graça só por causa dessa troca aqui.
 function gpsStart() {
   if (S.gps.st === 'running' || S.gps.st === 'paused') return;
-  openFlashWizardForJourney(() => { _gpsStartCore(); });
+  _gpsStartCore();
 }
 
 async function _gpsStartCore() {
