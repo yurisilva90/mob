@@ -309,6 +309,9 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 
 /* ── Listas (sessões / corridas / lançamentos) ── */
 .li-row{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:20px;padding:12px;box-shadow:0 3px 14px rgba(15,23,42,.06)}
+.li-row.trip-top{border-left:3px solid var(--line)}
+.li-row.trip-top.conf{border-left-color:#22C55E}
+.li-row.trip-top.pend{border-left-color:#F59E0B}
 .li-row+.li-row{margin-top:9px}
 .li-ico{width:38px;height:38px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex:0 0 38px;overflow:hidden}
 .li-ico svg{width:18px;height:18px;stroke-width:2;fill:none;stroke:currentColor}
@@ -1092,7 +1095,9 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .inf-empty{padding:28px 0;text-align:center;color:var(--muted);font-size:13px;font-weight:600}
 
 /* ── Sessão card expansível ── */
-.jss-card{background:var(--card);border:1px solid var(--line);border-radius:18px;margin-bottom:9px;overflow:hidden;box-shadow:0 3px 14px rgba(15,23,42,.05)}
+.jss-card{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--line);border-radius:18px;margin-bottom:9px;overflow:hidden;box-shadow:0 3px 14px rgba(15,23,42,.05)}
+.jss-card.live{border-left-color:#22C55E}
+.jss-card.end{border-left-color:#0EA5E9}
 .jss-row{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer}
 .jss-info{flex:1;min-width:0}
 .jss-top{display:flex;align-items:center;gap:7px;margin-bottom:3px}
@@ -1144,8 +1149,10 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .lanc-act-btn.cancelar{background:#FEE2E2;color:#991B1B}
 /* ── Lançamentos Jornada: card compacto + detalhe inline ── */
 .lanc-item-wrap{margin-bottom:8px}
-.li-row-j{display:flex;gap:10px;align-items:center;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:10px 12px;cursor:pointer;touch-action:manipulation}
-.li-row-j.vencido{border-color:#FECACA}
+.li-row-j{display:flex;gap:10px;align-items:center;background:var(--card);border:1.5px solid var(--line);border-left:3px solid var(--line);border-radius:14px;padding:10px 12px;cursor:pointer;touch-action:manipulation}
+.li-row-j.pago{border-left-color:#22C55E}
+.li-row-j.vencido{border-color:#FECACA;border-left-color:#DC2626}
+.li-row-j.apagar{border-left-color:#F59E0B}
 .li-row-j.open{border-radius:14px 14px 0 0;border-bottom:0}
 .li-line1{display:flex;align-items:center;gap:6px;margin-bottom:2px}
 .li-title-j{font-size:13px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -4545,7 +4552,7 @@ function autoTripItem(t) {
   const linkTag = `<span class="tap-legend-wrap link-tag ${linked?'on':'off'}" onclick="showTapLegend(event,'${linked?'Vinculada a uma jornada':'Não está em nenhuma jornada'}')">${linkSvg}</span>`;
   const perfStrip = perfStripHtml(t.offer_value, (kmPickupVal||0)+(kmDestVal||0), (durPickupVal||0)+(durDestVal||0));
   return `<div class="trip-item-wrap" id="tw-${tid}">
-    <div class="li-row trip-top" id="tr-${tid}" onclick="toggleTripDetail('${tid}')">
+    <div class="li-row trip-top ${statusCls}" id="tr-${tid}" onclick="toggleTripDetail('${tid}')">
       <div class="li-ico-col">${hhmmTrip?`<span class="li-ico-time">${hhmmTrip}</span>`:''}${platIcon(t.platform)}</div>
       <div class="trip-content-col">
         <div class="trip-title-line"><h3 class="trip-title" style="white-space:normal">${t.origin_address?esc(extractBairro(t.origin_address)):'—'}${dest}</h3>${linkTag}</div>
@@ -5061,7 +5068,7 @@ function sessionItem(label, sess, origIdx, dateStr, day, live) {
   const editBtn = !live ? `<button class="jss-act" onclick="event.stopPropagation();editJss('${dateStr}',${origIdx})" title="Editar"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
         <button class="jss-act del" onclick="event.stopPropagation();deleteJss('${dateStr}',${origIdx})" title="Excluir"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>` : '';
 
-  return `<div class="jss-card" id="${cardId}">
+  return `<div class="jss-card ${badgeCls}" id="${cardId}">
     <div class="jss-row" onclick="toggleJss('${cardId}')">
       <div class="jss-info">
         <div class="jss-top"><span class="jss-name">${label}</span><span class="jss-badge ${badgeCls}">${status}</span>${editBtn}</div>
@@ -5569,7 +5576,7 @@ function lancItemJornada(it) {
   const vencido = status === 'a_pagar' && it.date && it.date < today;
   const badgeCls = status==='pago' ? 'st-badge st-pago' : vencido ? 'st-badge st-vencido' : 'st-badge st-apagar';
   const badgeTxt = status==='pago' ? (isRec?'Recebido':'Pago') : vencido ? 'Vencido' : 'A pagar';
-  const rowCls = 'li-row-j' + (vencido ? ' vencido' : '');
+  const rowCls = 'li-row-j ' + (status==='pago' ? 'pago' : vencido ? 'vencido' : 'apagar');
   const fmtD = d => d ? d.split('-').slice(1).reverse().join('/') : '';
   const subTxt = (it.scope==='pessoal'?'Pessoal':'Operacional') + (it.date?' · '+fmtD(it.date):'');
 
