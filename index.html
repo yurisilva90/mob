@@ -4426,7 +4426,18 @@ function autoTripItem(t) {
   // Mesmo chip/ícone já usado nas corridas manuais (raio laranja + valor) —
   // pedido do Yuri (24/07/2026): dinâmico da 99 (base + espera longa, já
   // somados no app) e da Uber aparecerem na listagem, não só no detalhe.
-  if (t.offer_dinamico > 0) extras.push(`<span class="tap-legend-wrap chip chip-d" onclick="showTapLegend(event,'Tarifa dinâmica: +${DB.fR(t.offer_dinamico).replace(/'/g,"")}')"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><strong>${DB.fR(t.offer_dinamico)}</strong></span>`);
+  // Chip do dinâmico — pedido do Yuri (16/08/2026, confirmado em dado real
+  // do trip_reader_log): só o 99 mostra multiplicador na tela (ex "1,1x",
+  // colado no valor da oferta), a Uber nunca mostra esse número, só o
+  // valor em R$ incluído. Corridas do 99 capturadas antes dessa versão do
+  // APK (ou sem tarifa dinâmica ativa naquele momento) não têm
+  // offer_multiplicador — cai pro valor em R$ como já era antes.
+  if (t.platform === '99' && t.offer_multiplicador > 0) {
+    const multTxt = (+t.offer_multiplicador).toFixed(1).replace('.', ',') + 'x';
+    extras.push(`<span class="tap-legend-wrap chip chip-d" onclick="showTapLegend(event,'Multiplicador de tarifa dinâmica: ${multTxt}')"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><strong>${multTxt}</strong></span>`);
+  } else if (t.offer_dinamico > 0) {
+    extras.push(`<span class="tap-legend-wrap chip chip-d" onclick="showTapLegend(event,'Tarifa dinâmica: +${DB.fR(t.offer_dinamico).replace(/'/g,"")}')"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><strong>${DB.fR(t.offer_dinamico)}</strong></span>`);
+  }
   const statusCls = t.status==='confirmada' ? 'conf' : 'pend';
   const statusTxt = t.status==='confirmada' ? 'Confirmada' : 'Aguardando revisão';
   const realDurTrip = (t.trip_started_at && t.trip_ended_at) ? (new Date(t.trip_ended_at)-new Date(t.trip_started_at))/60000 : null;
