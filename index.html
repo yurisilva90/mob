@@ -321,19 +321,19 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .li-val{text-align:right;font-size:11px;color:var(--muted);font-weight:600;flex:0 0 auto}.li-val strong{display:block;color:var(--text);font-size:13.5px;font-weight:760;font-family:'Inter',system-ui,sans-serif}.li-time{display:block;color:var(--muted2);font-size:10.5px;font-weight:600;margin-top:2px}
 .li-liq{display:block;color:#16A34A;font-size:11px;font-weight:800;margin-top:2px}
 .li-extra{display:flex;gap:6px;margin-top:5px}.chip{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px;font-family:'Inter',system-ui,sans-serif;letter-spacing:-.01em}.chip svg{flex-shrink:0}.chip-d{background:#FFF7ED;color:#F59E0B}.chip-g{background:#F5F3FF;color:#7C3AED}.chip-taxa{background:#FEF9C3;color:#854D0E;display:inline-flex;align-items:center;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px}.chip-toll{background:#F1F5F9;color:#475569;display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;border-radius:7px;flex-shrink:0}.chip-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;border-radius:7px;flex-shrink:0}.chip-cash{background:#DCFCE7;color:#15803D}.chip-auto{background:#EFF6FF;color:#0EA5E9}.auto-status{display:inline-block;font-size:9.5px;font-weight:800;padding:2.5px 7px;border-radius:99px;margin-top:4px;white-space:nowrap}.auto-status.pend{background:#FEF3C7;color:#92400E}.auto-status.conf{background:#DCFCE7;color:#15803D}.trip-item-wrap{margin-bottom:9px}
-.li-title-row{display:flex;align-items:center;gap:5px}
-.li-top-row{display:flex;align-items:center;gap:12px}
 .li-ico-col{display:flex;flex-direction:column;align-items:center;gap:4px;flex:0 0 38px}
-.li-ico-time{font-size:10.5px;font-weight:800;color:var(--blue);white-space:nowrap;line-height:1}
-/* corrida automática: li-row (topo) + li-body-auto (categoria/chips) formam
-   UM card contínuo — li-row perde o arredondado/borda de baixo, li-body-auto
-   assume o resto (mesmo fundo/bordas laterais, arredondado embaixo quando
-   fechada). Evita :has() de propósito — pode não ter suporte no WebView
-   do APK (Android mais antigo), então uso classe explícita no HTML. */
-.li-row.has-body{border-radius:20px 20px 0 0;border-bottom:0;align-items:flex-start;padding-bottom:0}
-.li-body-auto{background:#fff;border-left:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);border-radius:0 0 20px 20px;padding:2px 12px 11px 62px;margin-top:-1px;box-shadow:0 3px 14px rgba(15,23,42,.06)}
-.li-row.has-body.open{border-radius:14px 14px 0 0}
-.li-row.has-body.open + .li-body-auto{border-radius:0;border-bottom:0}
+.li-ico-time{font-size:10.5px;font-weight:800;color:var(--blue);white-space:nowrap;line-height:1.3}
+/* corrida automática: card único (li-row de sempre), ícone+horário à
+   esquerda, e título/km-tempo/tags empilhados juntos numa coluna central —
+   pedido do Yuri (16/08/2026, mockup "Opção 1" aprovado): antes o card
+   tinha 3 recuos diferentes (cabeçalho, categoria com margin-left:62px, e
+   painel de detalhe sem recuo), o que fazia o card parecer "encolher" de
+   largura ao abrir o detalhe. Agora é tudo uma coluna só, mesmo recuo. */
+.li-row.trip-top{align-items:flex-start}
+.trip-content-col{flex:1;min-width:0}
+.trip-title-line{display:flex;align-items:flex-start;gap:6px}
+.trip-subline{font-size:11px;color:var(--muted);margin:4px 0 0;font-weight:600}
+.trip-top .li-extra{margin-top:5px}
 .link-tag{width:15px;height:15px;flex-shrink:0;display:inline-flex;cursor:pointer}
 .link-tag.on{color:#16A34A}
 .link-tag.off{color:#CBD5E1}
@@ -4534,10 +4534,12 @@ function autoTripItem(t) {
   const linkTag = `<span class="tap-legend-wrap link-tag ${linked?'on':'off'}" onclick="showTapLegend(event,'${linked?'Vinculada a uma jornada':'Não está em nenhuma jornada'}')">${linkSvg}</span>`;
   const perfStrip = perfStripHtml(t.offer_value, (kmPickupVal||0)+(kmDestVal||0), (durPickupVal||0)+(durDestVal||0));
   return `<div class="trip-item-wrap" id="tw-${tid}">
-    <div class="li-row has-body" id="tr-${tid}" onclick="toggleTripDetail('${tid}')">
-      <div class="li-top-row" style="flex:1;min-width:0">
-        <div class="li-ico-col">${hhmmTrip?`<span class="li-ico-time">${hhmmTrip}</span>`:''}${platIcon(t.platform)}</div>
-        <div class="li-title-row" style="flex:1;min-width:0"><h3 class="trip-title" style="white-space:normal">${t.origin_address?esc(extractBairro(t.origin_address)):'—'}${dest}</h3>${linkTag}</div>
+    <div class="li-row trip-top" id="tr-${tid}" onclick="toggleTripDetail('${tid}')">
+      <div class="li-ico-col">${hhmmTrip?`<span class="li-ico-time">${hhmmTrip}</span>`:''}${platIcon(t.platform)}</div>
+      <div class="trip-content-col">
+        <div class="trip-title-line"><h3 class="trip-title" style="white-space:normal">${t.origin_address?esc(extractBairro(t.origin_address)):'—'}${dest}</h3>${linkTag}</div>
+        <p class="trip-subline">${subLine}</p>
+        <div class="li-extra">${extras.join('')}</div>
       </div>
       <div class="li-val">
         <div style="display:flex;align-items:center;gap:5px;justify-content:flex-end">
@@ -4546,10 +4548,6 @@ function autoTripItem(t) {
         </div>
         <span class="auto-status ${statusCls}">${statusTxt}</span>
       </div>
-    </div>
-    <div class="li-body-auto" onclick="toggleTripDetail('${tid}')" style="cursor:pointer">
-      <p style="font-size:11.5px;color:var(--muted);margin:0;font-weight:600">${subLine}</p>
-      <div class="li-extra">${extras.join('')}</div>
     </div>
     <div class="trip-detail-panel" id="td-${tid}" style="display:none">${perfStrip}${detRows}</div>
   </div>`;
