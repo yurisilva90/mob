@@ -257,14 +257,23 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .gbar.money i{background:linear-gradient(90deg,#8b5cf6,#0ea5e9)}
 .gbar.km i{background:linear-gradient(90deg,#22C55E,#0EA5E9)}
 .gbar.time i{background:linear-gradient(90deg,#F59E0B,#EF4444)}
-.goal-item{border-bottom:1px solid #edf1f6;padding-bottom:13px;margin-bottom:13px}
+.goal-item{display:flex;align-items:center;gap:10px;padding:10px 0}
+.goal-item:first-child{padding-top:0}
+.goal-item:last-child{padding-bottom:0}
+.obj-goal-item{border-bottom:1px solid #edf1f6;padding-bottom:13px;margin-bottom:13px}
+.obj-goal-item:last-child{border-bottom:0;padding-bottom:0;margin-bottom:0}
+.g-ico{width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.g-ico svg{width:20px;height:20px}
+.g-ico.money{color:#8b5cf6}
+.g-ico.km{color:#0EA5E9}
+.g-ico.time{color:#F59E0B}
+.goal-body{flex:1;min-width:0}
 .metas-wrap{position:relative;overflow:hidden;background:var(--card);border-radius:20px;padding:16px;box-shadow:0 4px 18px rgba(15,23,42,.07)}
 .metas-wm{position:absolute;width:230px;height:230px;top:50%;left:-86px;transform:translateY(-50%);color:#3B82F6;opacity:.12;pointer-events:none;z-index:0}
 .metas-wrap #metas-dia-stack{position:relative;z-index:1;padding-left:58px}
-.goal-item:last-child{border-bottom:0;padding-bottom:0;margin-bottom:0}
 .goal-top{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:650;color:#344054;margin-bottom:8px}
 .goal-top span:last-child{color:var(--muted);font-weight:600}
-.goal-locked{display:flex;align-items:center;justify-content:space-between;background:#F8FAFC;border:1px dashed #D8E0EA;border-radius:14px;padding:10px 12px;cursor:pointer;touch-action:manipulation}
+.goal-locked{display:flex;align-items:center;justify-content:space-between;background:#F8FAFC;border:1px dashed #D8E0EA;border-radius:14px;padding:10px 12px;cursor:pointer;touch-action:manipulation;flex:1;min-width:0}
 .goal-locked span{font-size:12px;color:var(--muted);font-weight:600}
 .goal-edit-link{display:block;width:100%;border:0;background:transparent;color:var(--muted);font-size:11.5px;font-weight:700;text-align:center;margin-top:12px;padding-top:12px;border-top:1px solid #edf1f6;cursor:pointer;touch-action:manipulation}
 .goal-locked b{font-size:12px;color:#0A2F6B;font-weight:800}
@@ -507,7 +516,7 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .obj-btn,.type-btn2{flex:1;border:none;background:transparent;color:var(--muted);padding:10px 8px;border-radius:14px;font-size:13.5px;font-weight:900;cursor:pointer;font-family:var(--font-app)}
 .obj-btn.active,.type-btn2.active{background:#fff;color:var(--text);box-shadow:0 4px 12px rgba(15,23,42,.08)}
 .gbar.rec i{background:linear-gradient(90deg,#22C55E,#0EA5E9)}.gbar.exp i{background:linear-gradient(90deg,#F59E0B,#F59E0B)}.gbar.exp.over i,.gbar.rec.over i{background:linear-gradient(90deg,#EF4444,#EF4444)}
-.goal-locked{display:flex;align-items:center;justify-content:space-between;background:#F8FAFC;border:1px dashed #D8E0EA;border-radius:14px;padding:10px 12px;cursor:pointer}.goal-locked span{font-size:12px;color:var(--muted);font-weight:600}.goal-locked b{font-size:12px;color:#0A2F6B;font-weight:800}
+.goal-locked{display:flex;align-items:center;justify-content:space-between;background:#F8FAFC;border:1px dashed #D8E0EA;border-radius:14px;padding:10px 12px;cursor:pointer;flex:1;min-width:0}.goal-locked span{font-size:12px;color:var(--muted);font-weight:600}.goal-locked b{font-size:12px;color:#0A2F6B;font-weight:800}
 .cfg-link{display:block;text-align:center;font-size:12.5px;font-weight:700;color:#0A2F6B;background:#F8FAFC;border:1px solid var(--line);border-radius:14px;padding:11px;margin-top:4px;cursor:pointer;font-family:var(--font-app)}
 .cat-row2{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #edf1f6}.cat-row2:last-child{border-bottom:0}.cat-lbl2{flex:1;font-size:14px;font-weight:650}
 .cat-inp-wrap2{position:relative;width:118px}.cat-inp-wrap2 span{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--muted);font-weight:700}
@@ -1422,11 +1431,11 @@ h1.hd-title{font-family:var(--font-brand)!important}
     </div>
   </div>
 
-  <div class="section" style="padding:0 16px 8px"><h2>Lançamentos</h2><div style="display:flex;gap:8px;align-items:center"><button class="add" onclick="toggleLancView()" id="lanc-toggle" style="display:none">Ver todas &#8250;</button><button class="add" onclick="openLanc('receita')">+ Adicionar</button></div></div>
-  <div style="padding:0 16px"><div id="jorn-lanc-list"><div class="empty">Nenhum lançamento registrado</div></div></div>
-
   <div class="section" style="padding:16px 16px 8px"><h2>Jornadas do dia</h2><button class="add" onclick="toggleSessionsView()" id="sessions-toggle" style="display:none">Ver todas &#8250;</button></div>
   <div style="padding:0 16px"><div id="sessions-list"><div class="empty">Nenhuma sessão registrada</div></div></div>
+
+  <div class="section" style="padding:16px 16px 8px"><h2>Lançamentos</h2><div style="display:flex;gap:8px;align-items:center"><button class="add" onclick="toggleLancView()" id="lanc-toggle" style="display:none">Ver todas &#8250;</button><button class="add" onclick="openLanc('receita')">+ Adicionar</button></div></div>
+  <div style="padding:0 16px"><div id="jorn-lanc-list"><div class="empty">Nenhum lançamento registrado</div></div></div>
 
   <div style="height:8px"></div>
 </div>
@@ -4738,27 +4747,31 @@ function renderMetasDoDia(day) {
   const dimMes = new Date(new Date(day.date+'T12:00').getFullYear(), new Date(day.date+'T12:00').getMonth()+1, 0).getDate();
   const moneyGoal = (ov && ov.money) ? ov.money : ((plan && plan.moneyGoal) ? plan.moneyGoal : (meta.general ? meta.general/dimMes : 0));
 
+  const ICO_MONEY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>';
+  const ICO_KM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>';
+  const ICO_TIME = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+
   let html = '';
   if (moneyGoal) {
     const pct = Math.min(100, Math.round(rev/moneyGoal*100));
-    html += `<div class="goal-item"><div class="goal-top"><strong>Financeira</strong><span>${DB.fRI(rev)} de ${DB.fRI(moneyGoal)} · ${pct}%</span></div><div class="gbar money"><i style="width:${pct}%"></i></div></div>`;
+    html += `<div class="goal-item"><div class="g-ico money">${ICO_MONEY}</div><div class="goal-body"><div class="goal-top"><strong>Financeira</strong><span>${DB.fRI(rev)} de ${DB.fRI(moneyGoal)} · ${pct}%</span></div><div class="gbar money"><i style="width:${pct}%"></i></div></div></div>`;
   } else {
-    html += `<div class="goal-item"><div class="goal-locked" onclick="openPlanJornada()"><span>Financeira — meta não definida</span><b>Planejar</b></div></div>`;
+    html += `<div class="goal-item"><div class="g-ico money">${ICO_MONEY}</div><div class="goal-locked" onclick="openPlanJornada()"><span>Financeira — meta não definida</span><b>Planejar</b></div></div>`;
   }
   const kmGoal = (ov && ov.km) ? ov.km : (plan && plan.kmGoal ? plan.kmGoal : 0);
   if (kmGoal) {
     const pct = Math.min(100, Math.round(totalKm/kmGoal*100));
-    html += `<div class="goal-item"><div class="goal-top"><strong>Km</strong><span>${totalKm.toFixed(1)} de ${kmGoal} km · ${pct}%</span></div><div class="gbar km"><i style="width:${pct}%"></i></div></div>`;
+    html += `<div class="goal-item"><div class="g-ico km">${ICO_KM}</div><div class="goal-body"><div class="goal-top"><strong>Km</strong><span>${totalKm.toFixed(1)} de ${kmGoal} km · ${pct}%</span></div><div class="gbar km"><i style="width:${pct}%"></i></div></div></div>`;
   } else {
-    html += `<div class="goal-item"><div class="goal-locked" onclick="openPlanJornada()"><span>Km — meta não definida</span><b>Planejar</b></div></div>`;
+    html += `<div class="goal-item"><div class="g-ico km">${ICO_KM}</div><div class="goal-locked" onclick="openPlanJornada()"><span>Km — meta não definida</span><b>Planejar</b></div></div>`;
   }
   const schedMin = (ov && ov.hours) ? ov.hours*60 : (plan ? (plan.schedules||[]).reduce((s,b)=>s+agMinutesBetween(b.start,b.end),0) : 0);
   if (schedMin > 0) {
     const liveMin = Math.round(totalElapsed/60);
     const pct = Math.min(100, Math.round(liveMin/schedMin*100));
-    html += `<div class="goal-item" style="border-bottom:0;margin-bottom:0"><div class="goal-top"><strong>Tempo online</strong><span>${Math.floor(liveMin/60)}h${p2(liveMin%60)} de ${Math.floor(schedMin/60)}h${p2(schedMin%60)} · ${pct}%</span></div><div class="gbar time"><i style="width:${pct}%"></i></div></div>`;
+    html += `<div class="goal-item"><div class="g-ico time">${ICO_TIME}</div><div class="goal-body"><div class="goal-top"><strong>Tempo online</strong><span>${Math.floor(liveMin/60)}h${p2(liveMin%60)} de ${Math.floor(schedMin/60)}h${p2(schedMin%60)} · ${pct}%</span></div><div class="gbar time"><i style="width:${pct}%"></i></div></div></div>`;
   } else {
-    html += `<div class="goal-item" style="border-bottom:0;margin-bottom:0"><div class="goal-locked" onclick="openPlanJornada()"><span>Tempo online — meta não definida</span><b>Planejar</b></div></div>`;
+    html += `<div class="goal-item"><div class="g-ico time">${ICO_TIME}</div><div class="goal-locked" onclick="openPlanJornada()"><span>Tempo online — meta não definida</span><b>Planejar</b></div></div>`;
   }
   stack.innerHTML = html;
 }
@@ -5727,7 +5740,7 @@ function renderObjetivos() {
     const { rows } = build(kind);
     const barClass = tab === 'rec' ? 'rec' : 'exp';
     const tagHtml = `<span class="obj-tag ${tab}">${tab === 'rec' ? 'Receita' : 'Despesa'}</span>`;
-    let html = rows.map(r => `<div class="goal-item"><div class="goal-top"><strong>${tagHtml}${r.label}</strong><span${r.over?' style="color:#EF4444"':''}>${DB.fRI(r.spent)} de ${DB.fRI(r.goal)} · ${r.pct}%</span></div><div class="gbar ${barClass}${r.over?' over':''}"><i style="width:${Math.min(100,r.pct)}%"></i></div></div>`).join('');
+    let html = rows.map(r => `<div class="obj-goal-item"><div class="goal-top"><strong>${tagHtml}${r.label}</strong><span${r.over?' style="color:#EF4444"':''}>${DB.fRI(r.spent)} de ${DB.fRI(r.goal)} · ${r.pct}%</span></div><div class="gbar ${barClass}${r.over?' over':''}"><i style="width:${Math.min(100,r.pct)}%"></i></div></div>`).join('');
     if (!rows.length) html = '<div class="empty">Nenhum objetivo configurado ainda</div>';
     const listEl = document.getElementById('obj-'+tab+'-list');
     if (listEl) listEl.innerHTML = html;
