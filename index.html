@@ -183,13 +183,14 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 @keyframes pulse2{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.5)}50%{box-shadow:0 0 0 5px rgba(255,255,255,0)}}
 .j-import{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:6px 11px;font-size:11px;font-weight:760;color:#fff;display:inline-flex;align-items:center;gap:5px;cursor:pointer;border:0;touch-action:manipulation;margin-left:auto}
 .j-import svg{width:13px;height:13px}
-.j-toprow{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-.j-current{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex:1;min-width:0}
-.j-current h2{font-family:'Inter',system-ui,sans-serif;font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1}
-.j-current p{font-size:12px;font-weight:520;opacity:.88;margin-top:5px;min-height:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.j-km{font-size:12px;font-weight:620;text-align:right}
-.j-km strong{display:block;font-family:'Inter',system-ui,sans-serif;font-size:30px;font-weight:700;letter-spacing:-.03em;line-height:1}
-.j-km span{display:block;margin-top:5px;opacity:.88}
+.j-toprow{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.j-current{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;flex:1;min-width:0}
+.j-current h2{font-family:'Inter',system-ui,sans-serif;font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.j-current p{font-size:10.5px;font-weight:600;opacity:.85;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.j-km{font-size:12px;font-weight:620}
+.j-km strong{display:block;font-family:'Inter',system-ui,sans-serif;font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.j-km span{display:block;margin-top:4px;opacity:.85;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+.j-rates2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
 .j-metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px}
 .j-mini{background:transparent;border:none;border-radius:0;padding:6px 4px;text-align:center}
 .j-mini strong{display:block;font-family:'Inter',system-ui,sans-serif;font-size:22px;font-weight:800;text-align:center}
@@ -223,6 +224,11 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .td-corridas{display:flex;align-items:baseline;gap:9px}
 .td-corridas strong{font-size:28px;font-weight:800;color:#fff;letter-spacing:-.03em;line-height:1}
 .td-corridas span{font-size:12px;font-weight:800;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.04em}
+.td-sub{display:flex;align-items:center;gap:8px;margin-top:8px}
+.td-chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800}
+.td-chip.ok{color:#4ADE80}
+.td-chip.no{color:#F87171}
+.td-vline{width:1px;height:12px;background:rgba(255,255,255,.2)}
 .td-grid1{text-align:center}
 .td-grid1 strong{display:block;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.02em}
 .td-grid1 span{display:block;font-size:9.5px;font-weight:800;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.04em;margin-top:5px}
@@ -1307,8 +1313,13 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <div class="j-current">
         <div><h2 id="jc-timer">00:00:00</h2><p id="jc-sub">Nenhuma sessão iniciada</p></div>
         <div class="j-km"><strong id="jc-km">0,0</strong><span>Km</span></div>
+        <div class="j-km"><strong id="jc-trips2">0</strong><span>Corridas</span></div>
       </div>
       <div class="j-actions" id="jc-actions"></div>
+    </div>
+    <div class="j-rates2">
+      <div class="rate-cell" id="jc-rate-hora2"><strong id="jc-rsh2">R$0,00</strong><span>R$ / hora</span></div>
+      <div class="rate-cell" id="jc-rate-km2"><strong id="jc-rskm2">R$0,00</strong><span>R$ / km</span></div>
     </div>
   </div>
 
@@ -1319,6 +1330,11 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <div class="td-row">
         <svg class="td-wm right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l1.5-4.5A2 2 0 0 1 6.4 7h11.2a2 2 0 0 1 1.9 1.5L21 13"/><path d="M3 13h18v4a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4z"/><circle cx="7.5" cy="17" r="1.3"/><circle cx="16.5" cy="17" r="1.3"/></svg>
         <div class="td-corridas"><strong id="jc-trips">0</strong><span>Corridas</span></div>
+        <div class="td-sub" id="jc-corridas-sub" style="display:none">
+          <span class="td-chip ok"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span id="jc-aceitas">0</span> aceitas</span>
+          <span class="td-vline"></span>
+          <span class="td-chip no"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg><span id="jc-recusadas">0</span> recusadas</span>
+        </div>
       </div>
 
       <div class="td-row">
@@ -3961,6 +3977,18 @@ async function loadAutoTripsForDay(dateStr) {
     .order('trip_started_at', {ascending:true});
   return error ? [] : (data||[]);
 }
+// Recusadas do dia — mesmo padrão de loadAutoTripsForDay, pra alimentar o
+// contador "X aceitas / Y recusadas" do Total do dia. Tabela já existe e já
+// é usada na tela Corridas (seção expansível); aqui só reaproveita pro
+// recorte de UM dia em vez do período todo.
+async function loadDeclinedOffersForDay(dateStr) {
+  if (!_supaUser) return [];
+  const from = dateStr+'T00:00:00', to = dateStr+'T23:59:59';
+  const { data, error } = await _SUPA.from('declined_offers').select('id')
+    .eq('user_id', _supaUser.id)
+    .gte('seen_at', from).lte('seen_at', to);
+  return error ? [] : (data||[]);
+}
 
 // ── Corridas automáticas → alimentam a Home (pedido do Yuri, 23/07/2026) ──
 // Mesmo gap da Jornada, só que espalhado pela Home inteira: valor, km,
@@ -4432,6 +4460,18 @@ function renderJornada() {
     });
   }
   day.autoTrips = S.autoTrips || [];
+  // Recusadas do dia — mesmo padrão de cache do autoTrips acima. Lida aqui
+  // (S.declined) e usada dentro de renderJourneyCard(), que roda logo a
+  // seguir e populate o card "Total do dia".
+  if (S.declinedDate !== d) {
+    S.declinedDate = d;
+    S.declined = [];
+    loadDeclinedOffersForDay(d).then(list => {
+      if (S.declinedDate !== d) return;
+      S.declined = list;
+      renderJornada();
+    });
+  }
   const rev = day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0)
             + day.autoTrips.reduce((s,t)=>s+(t.offer_value||0),0);
   const exp = day.expenses.reduce((s,e)=>s+(e.amount||0),0);
@@ -4540,6 +4580,13 @@ function renderJourneyCard(day, isToday) {
   // tinha sido feita em rev/sessionItem/renderMetasDoDia, faltava aqui.
   const autoTripsHoje = day.autoTrips || [];
   setText('jc-trips', day.trips.length + autoTripsHoje.length);
+  setText('jc-trips2', day.trips.length + autoTripsHoje.length);
+  const aceitasCount = day.trips.length + autoTripsHoje.length;
+  const declinedCount = (S.declined || []).length;
+  setText('jc-aceitas', aceitasCount);
+  setText('jc-recusadas', declinedCount);
+  const corridasSubEl = document.getElementById('jc-corridas-sub');
+  if (corridasSubEl) corridasSubEl.style.display = (aceitasCount>0 || declinedCount>0) ? 'flex' : 'none';
   const kmAtivo = day.trips.reduce((s,t)=>s+(t.km||0),0)
                 + autoTripsHoje.reduce((s,t)=>s+(parseFloat(t.real_km_trip ?? t.offer_km_trip)||0),0);
   const kmDesl = Math.max(0, totalKm - kmAtivo);
@@ -4552,6 +4599,8 @@ function renderJourneyCard(day, isToday) {
   const rskm = totalKm > 0 ? ganhosDia/totalKm : null;
   setText('jc-rsh', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
   setText('jc-rskm', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
+  setText('jc-rsh2', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
+  setText('jc-rskm2', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
   // Cor por indicador — pedido do Yuri (23/07/2026, mockup aprovado):
   // mesmos limiares vermelho/verde que o motorista já ajusta na régua do
   // MōB Flash (Indicadores → R$/km e R$/hora), cada indicador troca de cor
@@ -4559,8 +4608,14 @@ function renderJourneyCard(day, isToday) {
   // neutro (verde), não faz sentido alarmar antes de ter dado de verdade.
   const rateEl = document.getElementById('jc-rate-hora');
   const kmEl   = document.getElementById('jc-rate-km');
-  if (rateEl) rateEl.className = 'td-rcard' + (rsh !== null ? ' ' + rateColorClass('rhora', rsh) : '');
-  if (kmEl)   kmEl.className   = 'td-rcard' + (rskm !== null ? ' ' + rateColorClass('rkm', rskm) : '');
+  const rateEl2 = document.getElementById('jc-rate-hora2');
+  const kmEl2   = document.getElementById('jc-rate-km2');
+  const rateCls = rsh !== null ? rateColorClass('rhora', rsh) : '';
+  const kmCls   = rskm !== null ? rateColorClass('rkm', rskm) : '';
+  if (rateEl)  rateEl.className  = 'td-rcard ' + rateCls;
+  if (kmEl)    kmEl.className    = 'td-rcard ' + kmCls;
+  if (rateEl2) rateEl2.className = 'rate-cell ' + rateCls;
+  if (kmEl2)   kmEl2.className   = 'rate-cell ' + kmCls;
 
   const actions = document.getElementById('jc-actions');
   if (!actions) return;
