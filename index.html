@@ -171,10 +171,25 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px 8px;text-align:center;box-shadow:0 3px 14px rgba(15,23,42,.06)}.stat .v{font-family:'Inter',system-ui,sans-serif;font-size:15px;font-weight:700;white-space:nowrap}.stat .l{font-size:9px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-top:5px}.green{color:var(--green2)}.red{color:var(--red)}.blue{color:#0A2F6B}
 
 /* ── Journey card (controles embutidos) ── */
-.journey{margin:0 16px 12px;border-radius:26px;padding:16px;color:#fff;box-shadow:0 10px 30px rgba(15,23,42,.10);transition:background .25s;box-sizing:border-box}
+.journey-wrap{margin:0 16px 12px;border-radius:26px;overflow:hidden;box-shadow:0 10px 30px rgba(15,23,42,.10)}
+.journey{padding:16px;color:#fff;transition:background .25s;box-sizing:border-box}
 .journey.idle{background:var(--blue)}
 .journey.ended{background:var(--blue)}
 .journey.running{background:#15803D}
+.journey-breakdown{background:#fff;padding:14px}
+.sbar-wrap{cursor:pointer;touch-action:manipulation}
+.sbar{height:22px;border-radius:8px;overflow:hidden;display:flex;background:#F1F5F9;margin:0;pointer-events:none}
+.sbar i{display:flex;align-items:center;justify-content:center;height:100%;font-size:9.5px;font-weight:800;color:#fff}
+.sbar-list{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.sbar-list.open{max-height:220px;margin-top:10px}
+.sbar-list .srow{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line)}
+.sbar-list .srow:first-child{border-top:0}
+.sbar-list .sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sbar-list .srow b{flex:1;font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.03em}
+.sbar-list .srow .pct{font-size:10px;font-weight:800;color:var(--muted);width:28px;text-align:right}
+.sbar-list .srow .stempo{font-size:10.5px;font-weight:800;color:var(--text);width:48px;text-align:right}
+.sbar-list .srow .skm{font-size:10.5px;font-weight:700;color:var(--muted);width:56px;text-align:right}
+.jss-statusbar{padding:2px 14px 12px}
 /* .journey.paused removido */
 .j-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px}
 .j-status{display:none}
@@ -1101,6 +1116,8 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .jss-ganhos{font-size:12px;font-weight:800;color:var(--green2)}
 .jss-rate-row{display:none;grid-template-columns:repeat(3,1fr);gap:8px;padding:2px 14px 12px}
 .jss-card.open .jss-rate-row{display:grid}
+.jss-statusbar{display:none}
+.jss-card.open .jss-statusbar{display:block}
 .jss-rcard{border-radius:12px;padding:8px 4px;text-align:center;border:1.5px solid rgba(34,197,94,.35);background:rgba(34,197,94,.08)}
 .jss-rcard.o{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.08)}
 .jss-rcard.r{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.08)}
@@ -1346,6 +1363,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
     </div>
   </div>
 
+  <div class="journey-wrap" id="journey-wrap">
   <div class="journey idle" id="journey-card">
     <div class="j-status" style="display:none"><i></i><span id="jc-status-text">Iniciar</span></div>
     <div class="j-toprow">
@@ -1360,6 +1378,11 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <div class="rate-cell" id="jc-rate-hora2"><strong id="jc-rsh2">R$0,00</strong><span>R$ / hora</span></div>
       <div class="rate-cell" id="jc-rate-km2"><strong id="jc-rskm2">R$0,00</strong><span>R$ / km</span></div>
     </div>
+  </div>
+  <div class="journey-breakdown" id="jc-breakdown" style="display:none">
+    <div class="sbar-wrap" onclick="toggleBar('jc-blist')"><div class="sbar" id="jc-bar"></div></div>
+    <div class="sbar-list" id="jc-blist"></div>
+  </div>
   </div>
 
   <div class="section" style="padding:16px 16px 8px"><h2>Total do dia</h2><button class="add" onclick="openImportPrecheck()"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="vertical-align:-1px;margin-right:3px"><path d="M12 5v14M5 12h14"/></svg>Importar corridas</button></div>
@@ -2825,6 +2848,67 @@ function fmtDur(totalMin) {
   const min = Math.max(0, Math.round(totalMin || 0));
   const h = Math.floor(min / 60), m = min % 60;
   return (h > 0 ? h + 'h' + p2(m) : String(m)) + 'm';
+}
+
+// Detalhamento Online/Buscando passageiro/Em corrida — puxado direto da
+// máquina de estados do APK (accepted_at/pickup_started_at/trip_started_at/
+// trip_ended_at, gravados em auto_trips a cada transição real de tela).
+// BUSCANDO = trip_started_at - pickup_started_at (deslocamento até o
+// passageiro); EM CORRIDA = trip_ended_at - trip_started_at; ONLINE = todo
+// o resto do tempo da sessão (esperando oferta / avaliando oferta). Só usa
+// corridas automáticas (autoTrips) — corridas importadas manualmente não
+// têm esses timestamps porque não vieram da leitura de tela em tempo real.
+function computeStatusBreakdown(elapsedSec, kmTotal, autoTrips) {
+  let corridaSec = 0, buscandoSec = 0, corridaKm = 0, buscandoKm = 0;
+  (autoTrips || []).forEach(t => {
+    if (t.trip_started_at && t.trip_ended_at) {
+      const s = (new Date(t.trip_ended_at) - new Date(t.trip_started_at)) / 1000;
+      if (s > 0) corridaSec += s;
+      corridaKm += parseFloat(t.real_km_trip ?? t.offer_km_trip) || 0;
+    }
+    if (t.pickup_started_at && t.trip_started_at) {
+      const s = (new Date(t.trip_started_at) - new Date(t.pickup_started_at)) / 1000;
+      if (s > 0) buscandoSec += s;
+      buscandoKm += parseFloat(t.real_km_pickup ?? t.offer_km_pickup) || 0;
+    }
+  });
+  const total = Math.max(0, elapsedSec || 0);
+  const onlineSec = Math.max(0, total - corridaSec - buscandoSec);
+  const onlineKm = Math.max(0, (kmTotal || 0) - corridaKm - buscandoKm);
+  const pct = s => total > 0 ? Math.round(s / total * 100) : 0;
+  return {
+    total,
+    online:   { sec: onlineSec,   km: onlineKm,   pct: pct(onlineSec) },
+    buscando: { sec: buscandoSec, km: buscandoKm, pct: pct(buscandoSec) },
+    corrida:  { sec: corridaSec,  km: corridaKm,  pct: pct(corridaSec) },
+  };
+}
+
+const STATUS_SEGMENTS = [
+  { key: 'online',   label: 'ONLINE',              color: '#22C55E' },
+  { key: 'buscando', label: 'BUSCANDO PASSAGEIRO',  color: '#F97316' },
+  { key: 'corrida',  label: 'EM CORRIDA',           color: '#3B82F6' },
+];
+
+function buildSbarHtml(bd) {
+  return STATUS_SEGMENTS.map(s => {
+    const pct = bd[s.key].pct;
+    if (pct <= 0) return '';
+    const showText = pct >= 12;
+    return `<i style="width:${pct}%;background:${s.color}">${showText ? pct+'%' : ''}</i>`;
+  }).join('');
+}
+
+function buildSrowsHtml(bd) {
+  return STATUS_SEGMENTS.map(s => {
+    const seg = bd[s.key];
+    return `<div class="srow"><span class="sdot" style="background:${s.color}"></span><b>${s.label}</b><span class="pct">${seg.pct}%</span><span class="stempo">${fmtDur(seg.sec/60)}</span><span class="skm">${seg.km.toFixed(1)} km</span></div>`;
+  }).join('');
+}
+
+function toggleBar(listId) {
+  const el = document.getElementById(listId);
+  if (el) el.classList.toggle('open');
 }
 
 // ── DEFAULT CATEGORIES ────────────────────────────────────────
@@ -4606,7 +4690,8 @@ function renderJourneyCard(day, isToday) {
   // jc-kmdesl, jc-rsh, jc-rskm) agora moram no card "Total do dia" — que é
   // um elemento IRMÃO de journey-card, não um filho, e precisa continuar
   // sendo populado em qualquer dia, passado ou presente.
-  jc.style.display = isToday ? '' : 'none';
+  const jcWrap = document.getElementById('journey-wrap');
+  if (jcWrap) jcWrap.style.display = isToday ? '' : 'none';
   const g = S.gps;
   const finished = day.sessions || [];
   const finishedElapsed = finished.reduce((s,x)=>s+(x.elapsed||0),0);
@@ -4644,6 +4729,22 @@ function renderJourneyCard(day, isToday) {
   // zerado mesmo com corridas de verdade rodando. Mesma correção que já
   // tinha sido feita em rev/sessionItem/renderMetasDoDia, faltava aqui.
   const autoTripsHoje = day.autoTrips || [];
+
+  // Barra Online/Buscando passageiro/Em corrida — real, vinda da máquina de
+  // estados do APK (ver computeStatusBreakdown). Só aparece depois que a
+  // jornada é iniciada (elapsed > 0); antes disso não tem o que contar.
+  const jcBd = document.getElementById('jc-breakdown');
+  if (jcBd) {
+    if (totalElapsed > 0) {
+      jcBd.style.display = '';
+      const bd = computeStatusBreakdown(totalElapsed, totalKm, autoTripsHoje);
+      setHTML('jc-bar', buildSbarHtml(bd));
+      setHTML('jc-blist', buildSrowsHtml(bd));
+    } else {
+      jcBd.style.display = 'none';
+    }
+  }
+
   setText('jc-trips', day.trips.length + autoTripsHoje.length);
   setText('jc-trips2', day.trips.length + autoTripsHoje.length);
   const aceitasCount = day.trips.length + autoTripsHoje.length;
@@ -4908,6 +5009,11 @@ function sessionItem(label, sess, origIdx, dateStr, day, live) {
   const hasCusto = !!(cvCfg && cvCfg.configurado);
   const lucroVal = hasCusto ? ganhos - (cvCfg.custoPorKm||0) * kmAtivo : null;
   const lucroCls = lucroVal !== null ? rateColorClass('lucro', lucroVal) : '';
+  // Barra Online/Buscando passageiro/Em corrida desta sessão — mesma fonte
+  // real da máquina de estados do APK, agora escopada só às autoTrips que
+  // caem dentro do horário desta sessão (já filtradas acima).
+  const sessBd = computeStatusBreakdown(elapsedSecs, km, autoTrips);
+  const bdListId = 'bl-' + cardId;
   const editBtn = !live ? `<button class="jss-act" onclick="event.stopPropagation();editJss('${dateStr}',${origIdx})" title="Editar"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
         <button class="jss-act del" onclick="event.stopPropagation();deleteJss('${dateStr}',${origIdx})" title="Excluir"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>` : '';
 
@@ -4928,6 +5034,10 @@ function sessionItem(label, sess, origIdx, dateStr, day, live) {
       <div class="jss-rcard ${rskmCls}"><strong>${rsPorKm}</strong><span>R$/km</span></div>
       ${hasCusto ? `<div class="jss-rcard ${lucroCls}"><strong>${DB.fR(lucroVal)}</strong><span>Lucro</span></div>` : `<div class="jss-rcard"><strong>—</strong><span>Lucro</span></div>`}
     </div>
+    ${elapsedSecs > 0 ? `<div class="jss-statusbar">
+      <div class="sbar-wrap" onclick="event.stopPropagation();toggleBar('${bdListId}')"><div class="sbar">${buildSbarHtml(sessBd)}</div></div>
+      <div class="sbar-list" id="${bdListId}">${buildSrowsHtml(sessBd)}</div>
+    </div>` : ''}
     <div class="jss-trips">
       <div class="jss-trips-head">
         <h4>Corridas desta jornada</h4>
@@ -9535,6 +9645,7 @@ function saveVeiculoPicker() {
 
 // ── UTILS ─────────────────────────────────────────────────────
 function setText(id, text) { const el=document.getElementById(id); if(el) el.textContent=text; }
+function setHTML(id, html) { const el=document.getElementById(id); if(el) el.innerHTML=html; }
 function setStyle(id, prop, val) { const el=document.getElementById(id); if(el) el.style[prop]=val; }
 
 // ============================================================
