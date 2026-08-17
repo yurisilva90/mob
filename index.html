@@ -3950,7 +3950,7 @@ function parseOfferJS(texts) {
     // positiva de endereço real (palavra de logradouro OU "Nome, Número"),
     // não só a ausência de padrões de lixo conhecidos.
     const hasStreetWord = /\b(rua|av\.?|avenida|estrada|travessa|alameda|rodovia|pra[çc]a|largo|ladeira|rod\.?|via\b)/i.test(sl);
-    const hasNumberPattern = /,\s*\d{1,5}\b/.test(sl);
+    const hasNumberPattern = /[^\d],\s*\d{1,5}\b/.test(sl);
     if (!hasStreetWord && !hasNumberPattern) return false;
     return true;
   }
