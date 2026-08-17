@@ -320,7 +320,7 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .trip-title{font-size:12.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .li-val{text-align:right;font-size:11px;color:var(--muted);font-weight:600;flex:0 0 auto}.li-val strong{display:block;color:var(--text);font-size:13.5px;font-weight:760;font-family:'Inter',system-ui,sans-serif}.li-time{display:block;color:var(--muted2);font-size:10.5px;font-weight:600;margin-top:2px}
 .li-liq{display:block;color:#16A34A;font-size:11px;font-weight:800;margin-top:2px}
-.li-extra{display:flex;gap:6px;margin-top:5px}.chip{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px;font-family:'Inter',system-ui,sans-serif;letter-spacing:-.01em}.chip svg{flex-shrink:0}.chip-d{background:#FFF7ED;color:#F59E0B}.chip-g{background:#F5F3FF;color:#7C3AED}.chip-taxa{background:#FEF9C3;color:#854D0E;display:inline-flex;align-items:center;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px}.chip-toll{background:#F1F5F9;color:#475569;display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;border-radius:7px;flex-shrink:0}.chip-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;border-radius:7px;flex-shrink:0}.chip-cash{background:#DCFCE7;color:#15803D}.chip-auto{background:#EFF6FF;color:#0EA5E9}.auto-status{display:inline-block;font-size:9.5px;font-weight:800;padding:2.5px 7px;border-radius:99px;margin-top:4px;white-space:nowrap}.auto-status.pend{background:#FEF3C7;color:#92400E}.auto-status.conf{background:#DCFCE7;color:#15803D}.trip-item-wrap{margin-bottom:9px}
+.li-extra{display:flex;gap:6px;margin-top:5px}.chip{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px;font-family:'Inter',system-ui,sans-serif;letter-spacing:-.01em}.chip svg{flex-shrink:0}.chip-d{background:#FFF7ED;color:#F59E0B}.chip-g{background:#F5F3FF;color:#7C3AED}.chip-taxa{background:#FEF9C3;color:#854D0E;display:inline-flex;align-items:center;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px}.chip-toll{background:#F1F5F9;color:#475569;display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;border-radius:7px;flex-shrink:0}.chip-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;border-radius:7px;flex-shrink:0}.chip-cash{background:#DCFCE7;color:#15803D}.chip-auto{background:#EFF6FF;color:#0EA5E9}.auto-status{display:inline-block;font-size:9.5px;font-weight:800;padding:2.5px 7px;border-radius:99px;margin-top:4px;white-space:nowrap}.auto-status.pend{background:#FEF3C7;color:#92400E}.auto-status.conf{background:#DCFCE7;color:#15803D}.auto-status.susp{background:#FEE2E2;color:#B91C1C}.trip-item-wrap{margin-bottom:9px}
 .li-ico-col{display:flex;flex-direction:column;align-items:center;gap:4px;flex:0 0 38px}
 .li-ico-time{font-size:10.5px;font-weight:800;color:var(--blue);white-space:nowrap;line-height:1.3}
 /* corrida automática: card único (li-row de sempre), ícone+horário à
@@ -4149,6 +4149,7 @@ async function loadAutoTripsForDay(dateStr) {
   const from = dateStr+'T00:00:00', to = dateStr+'T23:59:59';
   const { data, error } = await _SUPA.from('auto_trips').select('*')
     .eq('user_id', _supaUser.id)
+    .is('data_quality_flag', null)
     .gte('trip_started_at', from).lte('trip_started_at', to)
     .order('trip_started_at', {ascending:true});
   return error ? [] : (data||[]);
@@ -4181,6 +4182,7 @@ async function loadAutoTripsIndexed(fromDate, toDate) {
   const from = fromDate+'T00:00:00', to = toDate+'T23:59:59';
   const { data, error } = await _SUPA.from('auto_trips').select('*')
     .eq('user_id', _supaUser.id)
+    .is('data_quality_flag', null)
     .gte('trip_started_at', from).lte('trip_started_at', to)
     .order('trip_started_at', {ascending:true});
   if (error || !data) return {};
@@ -4482,8 +4484,8 @@ function autoTripItem(t) {
   } else if (t.offer_dinamico > 0) {
     extras.push(`<span class="tap-legend-wrap chip chip-d" onclick="showTapLegend(event,'Tarifa dinâmica: +${DB.fR(t.offer_dinamico).replace(/'/g,"")}')"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><strong>${DB.fR(t.offer_dinamico)}</strong></span>`);
   }
-  const statusCls = t.status==='confirmada' ? 'conf' : 'pend';
-  const statusTxt = t.status==='confirmada' ? 'Confirmada' : 'Aguardando revisão';
+  const statusCls = t.data_quality_flag ? 'susp' : (t.status==='confirmada' ? 'conf' : 'pend');
+  const statusTxt = t.data_quality_flag ? 'Suspeita — revisar' : (t.status==='confirmada' ? 'Confirmada' : 'Aguardando revisão');
   const realDurTrip = (t.trip_started_at && t.trip_ended_at) ? (new Date(t.trip_ended_at)-new Date(t.trip_started_at))/60000 : null;
   const realDurPickup = (t.pickup_started_at && t.trip_started_at) ? (new Date(t.trip_started_at)-new Date(t.pickup_started_at))/60000 : null;
   const offerDurPickupMin = t.offer_duration_pickup_sec!=null ? t.offer_duration_pickup_sec/60 : null;
