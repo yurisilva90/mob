@@ -1224,9 +1224,22 @@ h1.hd-title{font-family:var(--font-brand)!important}
 .feed-cp-types::-webkit-scrollbar{display:none}
 .feed-t-chip{flex:0 0 auto;display:flex;align-items:center;gap:6px;border-radius:12px;padding:8px 12px;font-size:11.5px;font-weight:800;border:1.5px solid var(--line);background:var(--card);color:var(--muted);white-space:nowrap;cursor:pointer;font-family:var(--font-app)}
 .qr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.qr-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 4px;border-radius:14px;border:1.5px solid var(--line);background:var(--soft);cursor:pointer;touch-action:manipulation}
-.qr-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff}
-.qr-label{font-size:10.5px;font-weight:700;color:var(--text)}
+.qr-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:20px 6px;border-radius:18px;border:0;cursor:pointer;touch-action:manipulation;color:#fff}
+.qr-btn svg{width:30px;height:30px}
+.qr-label{font-size:12px;font-weight:800;color:#fff}
+.back-link{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--muted);margin:-6px 0 12px;cursor:pointer;touch-action:manipulation}
+.inf-tile-grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.inf-tile-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.inf-combo-lbl{font-size:11px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px}
+.inf-combo-row{margin-bottom:16px}
+.inf-tile{min-height:56px;border-radius:15px;border:1.5px solid var(--line);background:var(--soft);font-size:13px;font-weight:800;text-align:center;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center;padding:8px;touch-action:manipulation;font-family:inherit}
+.inf-tile.picked{background:var(--navy);border-color:var(--navy);color:#fff}
+.inf-tile-strong{min-height:64px;border-radius:15px;border:0;font-size:13.5px;font-weight:800;text-align:center;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;padding:8px;touch-action:manipulation;font-family:inherit}
+.inf-strong-red{background:#DC2626}
+.inf-strong-orange{background:#EA580C}
+.inf-tbar{display:flex;gap:4px;margin:8px 0 10px}
+.inf-tbar-seg{flex:1;height:52px;border-radius:11px;border:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#fff;cursor:pointer;touch-action:manipulation;font-family:inherit}
+.inf-tbar-labels{display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted);font-weight:700;padding:0 2px}
 .feed-t-chip svg{stroke:currentColor}
 .feed-cp-loc{margin:6px 16px 0;border:1px solid var(--line);border-radius:14px;padding:11px 13px;display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;color:var(--text);cursor:pointer}
 .feed-cp-loc svg{stroke:var(--green2);flex:0 0 auto}
@@ -2105,14 +2118,20 @@ h1.hd-title{font-family:var(--font-brand)!important}
 <!-- ════ MODAIS ════ -->
 
 <!-- Informes: Relatar (seleção de tipo — sem texto livre, pedido do Yuri
-     16/08/2026. Passo de detalhe por tipo (intensidade/quantidade) ainda
-     não entrou — mockup aprovado, aguardando essa parte específica) -->
+     16/08/2026. Fluxo com etapas de detalhe por tipo, aprovado.) -->
 <div class="mo" id="mo-inf-relatar">
   <div class="sheet">
     <div class="sheet-handle"></div>
-    <div class="sheet-head"><h2>O que você tá vendo?</h2><button class="xbtn" onclick="closeMo('mo-inf-relatar')">&#x2715;</button></div>
-    <div style="font-size:11.5px;color:var(--muted);margin:-6px 0 14px">Um toque publica — localização atual entra sozinha</div>
-    <div class="qr-grid" id="inf-relatar-body"></div>
+    <div class="sheet-head">
+      <h2 id="inf-relatar-title">Informe</h2>
+      <button class="xbtn" onclick="closeMo('mo-inf-relatar')">&#x2715;</button>
+    </div>
+    <div id="inf-relatar-back" class="back-link" style="display:none" onclick="infRelatarBack()">
+      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      <span id="inf-relatar-back-lbl"></span>
+    </div>
+    <div id="inf-relatar-loc" style="font-size:11px;color:var(--muted);margin:0 0 14px">📍 localizando…</div>
+    <div id="inf-relatar-body"></div>
   </div>
 </div>
 
@@ -12841,27 +12860,170 @@ function infToggleSearch(){
   }
 }
 // Botão "Relatar agora" (barra fixa embaixo, Opção B aprovada) — abre o
-// seletor de tipo. Reaproveita FEED_TYPES (mesmos ícones/cores do Início)
-// pra não duplicar SVG numa terceira cópia no arquivo.
+// seletor de tipo. Reaproveita ícone/expMin do FEED_TYPES (blitz/risco/
+// transito), só troca label/cor pro contexto do Informes (Policiamento/
+// Alerta/Trânsito) — mesma chave de type no banco, então o composer do
+// Início (que ainda usa os nomes antigos) continua compatível com o
+// mesmo dado. Construído dentro da função (não como const no topo do
+// arquivo) porque FEED_TYPES só existe mais abaixo — na hora que essa
+// função É CHAMADA (clique do usuário) o resto do script já rodou, mas
+// declarar como const aqui em cima quebraria (referência antes de existir).
+let _infRelState = {};
 function infOpenRelatar(){
-  const body = document.getElementById('inf-relatar-body');
-  if(body){
-    body.innerHTML = Object.entries(FEED_TYPES).map(([key,t]) =>
-      `<div class="qr-btn" onclick="infRelatarPick('${key}')">
-        <div class="qr-ic" style="background:${t.color}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2">${t.icon}</svg></div>
+  _infRelState = {};
+  const types = {
+    transito: {label:'Trânsito',     color:'#F97316', icon:FEED_TYPES.transito.icon, expMin:FEED_TYPES.transito.expMin},
+    risco:    {label:'Alerta',       color:'#DC2626', icon:FEED_TYPES.risco.icon,    expMin:FEED_TYPES.risco.expMin},
+    blitz:    {label:'Policiamento', color:'#2563EB', icon:FEED_TYPES.blitz.icon,    expMin:FEED_TYPES.blitz.expMin}
+  };
+  _infRelState.types = types;
+  document.getElementById('inf-relatar-title').textContent = 'Informe';
+  document.getElementById('inf-relatar-back').style.display = 'none';
+  document.getElementById('inf-relatar-body').innerHTML = `<div class="qr-grid">` +
+    Object.entries(types).map(([key,t]) =>
+      `<div class="qr-btn" style="background:${t.color}" onclick="infRelatarSelType('${key}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">${t.icon}</svg>
         <span class="qr-label">${t.label}</span>
       </div>`
-    ).join('');
-  }
+    ).join('') + `</div>`;
+  const locEl = document.getElementById('inf-relatar-loc');
+  locEl.textContent = '📍 localizando…';
   openMo('mo-inf-relatar');
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(async pos=>{
+      _infRelState.lat = pos.coords.latitude; _infRelState.lng = pos.coords.longitude;
+      try{
+        const revR = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&zoom=16&format=json&accept-language=pt`,{headers:{'User-Agent':'MoB/1.0'}});
+        const rev = await revR.json();
+        _infRelState.address = rev.address?.road || rev.address?.suburb || rev.address?.neighbourhood || null;
+      }catch(e){ _infRelState.address = null; }
+      const el = document.getElementById('inf-relatar-loc');
+      if (el) el.textContent = '📍 ' + (_infRelState.address || 'localização atual');
+    }, ()=>{ const el=document.getElementById('inf-relatar-loc'); if(el) el.textContent='📍 localização indisponível'; },
+    {timeout:7000, maximumAge:60000});
+  } else { locEl.textContent = '📍 GPS indisponível'; }
 }
-// Passo de detalhe por tipo (intensidade/quantidade — Blitz tem 2 passos)
-// ainda não entrou: mockup aprovado em 16/08/2026, aguardando essa parte
-// específica ser implementada. Até lá, avisa que tá vindo em vez de
-// publicar sem o detalhe (que seria pior — dado incompleto).
-function infRelatarPick(typeKey){
-  closeMo('mo-inf-relatar');
-  showToast('Em breve — a etapa de detalhe desse tipo entra na próxima atualização.', 'info');
+function infRelatarShowBack(label, fn){
+  _infRelState.backFn = fn;
+  const back = document.getElementById('inf-relatar-back');
+  back.style.display = 'flex';
+  document.getElementById('inf-relatar-back-lbl').textContent = label;
+}
+function infRelatarBack(){ if (_infRelState.backFn) _infRelState.backFn(); }
+
+function infRelatarSelType(key){
+  _infRelState.type = key;
+  if (key === 'transito') return infRelatarShowTransito();
+  if (key === 'blitz') return infRelatarShowPoliciamento();
+  if (key === 'risco') return infRelatarShowAlertaStep1();
+}
+
+// Trânsito — barra 0 a 5, 1 toque publica.
+function infRelatarShowTransito(){
+  document.getElementById('inf-relatar-title').textContent = 'Como tá o trânsito?';
+  infRelatarShowBack('Trânsito', infOpenRelatar);
+  const cores = ['#DC2626','#EF4444','#F59E0B','#EAB308','#84CC16','#22C55E'];
+  document.getElementById('inf-relatar-body').innerHTML =
+    `<div class="inf-tbar">${cores.map((c,i)=>`<button class="inf-tbar-seg" style="background:${c}" onclick="infRelatarPublish({nivel:${i}})">${i}</button>`).join('')}</div>
+     <div class="inf-tbar-labels"><span>Parado</span><span>Livre</span></div>`;
+}
+
+// Policiamento — "quem" (2 col) + "fazendo o quê" (3 col) na mesma tela;
+// publica sozinho assim que os dois têm uma opção marcada.
+function infRelatarShowPoliciamento(){
+  document.getElementById('inf-relatar-title').textContent = 'Policiamento';
+  infRelatarShowBack('Policiamento', infOpenRelatar);
+  _infRelState.orgao = null; _infRelState.acao = null;
+  infRelatarRenderPoliciamento();
+}
+function infRelatarRenderPoliciamento(){
+  const orgaos = [['Polícia Militar','pm'],['Guarda Municipal','gm'],['Lei Seca','leiseca'],['Detro','detro']];
+  const acoes = [['Multando','multando'],['Abordando','abordando'],['Posicionado','posicionado']];
+  document.getElementById('inf-relatar-body').innerHTML = `
+    <div class="inf-combo-row">
+      <div class="inf-combo-lbl">Quem</div>
+      <div class="inf-tile-grid2">${orgaos.map(([lbl,v])=>`<div class="inf-tile ${_infRelState.orgao===v?'picked':''}" onclick="infRelatarPickOrgao('${v}',${JSON.stringify(lbl)})">${lbl}</div>`).join('')}</div>
+    </div>
+    <div class="inf-combo-row" style="margin-bottom:4px">
+      <div class="inf-combo-lbl">Fazendo o quê</div>
+      <div class="inf-tile-grid3">${acoes.map(([lbl,v])=>`<div class="inf-tile ${_infRelState.acao===v?'picked':''}" onclick="infRelatarPickAcao('${v}',${JSON.stringify(lbl)})">${lbl}</div>`).join('')}</div>
+    </div>`;
+}
+function infRelatarPickOrgao(v,lbl){ _infRelState.orgao=v; _infRelState.orgaoLbl=lbl; infRelatarRenderPoliciamento(); infRelatarMaybePublishPoliciamento(); }
+function infRelatarPickAcao(v,lbl){ _infRelState.acao=v; _infRelState.acaoLbl=lbl; infRelatarRenderPoliciamento(); infRelatarMaybePublishPoliciamento(); }
+function infRelatarMaybePublishPoliciamento(){
+  if (_infRelState.orgao && _infRelState.acao) {
+    // Pequena pausa só pra pessoa ver a segunda opção marcada antes de
+    // sumir a tela — publica sozinho, sem precisar de botão confirmar.
+    setTimeout(()=>infRelatarPublish({param_value:_infRelState.orgaoLbl, param_detail:_infRelState.acaoLbl}), 350);
+  }
+}
+
+// Alerta — 2 etapas de verdade, a segunda pergunta depende da primeira
+// resposta. Cores fortes (não pastel) — pedido do Yuri: Acidente=laranja,
+// Área de risco=vermelho (invertido do que eu tinha proposto antes).
+function infRelatarShowAlertaStep1(){
+  document.getElementById('inf-relatar-title').textContent = 'Qual alerta?';
+  infRelatarShowBack('Alerta', infOpenRelatar);
+  document.getElementById('inf-relatar-body').innerHTML = `
+    <div class="inf-tile-grid2">
+      <div class="inf-tile-strong inf-strong-orange" onclick="infRelatarShowAcidenteStep2()">Acidente</div>
+      <div class="inf-tile-strong inf-strong-red" onclick="infRelatarShowAreaRiscoStep2()">Área de risco</div>
+    </div>`;
+}
+function infRelatarShowAcidenteStep2(){
+  document.getElementById('inf-relatar-title').textContent = 'Onde exatamente?';
+  infRelatarShowBack('Acidente', infRelatarShowAlertaStep1);
+  document.getElementById('inf-relatar-body').innerHTML = `
+    <div class="inf-tile-grid2">
+      <div class="inf-tile-strong inf-strong-red" onclick="infRelatarPublish({param_value:'Acidente', param_detail:'Na via'})">Na via</div>
+      <div class="inf-tile-strong inf-strong-orange" onclick="infRelatarPublish({param_value:'Acidente', param_detail:'No acostamento'})">No acostamento</div>
+    </div>`;
+}
+function infRelatarShowAreaRiscoStep2(){
+  document.getElementById('inf-relatar-title').textContent = 'Área de Risco?';
+  infRelatarShowBack('Área de risco', infRelatarShowAlertaStep1);
+  document.getElementById('inf-relatar-body').innerHTML = `
+    <div class="inf-tile-grid2">
+      <div class="inf-tile-strong inf-strong-orange" onclick="infRelatarPublish({param_value:'Área de risco', param_detail:'Via de acesso'})">Via de acesso</div>
+      <div class="inf-tile-strong inf-strong-orange" onclick="infRelatarPublish({param_value:'Área de risco', param_detail:'Área de abordagem'})">Área de abordagem</div>
+      <div class="inf-tile-strong inf-strong-red" onclick="infRelatarPublish({param_value:'Área de risco', param_detail:'Proibido a entrada'})">Proibido a entrada</div>
+      <div class="inf-tile-strong inf-strong-red" onclick="infRelatarPublish({param_value:'Área de risco', param_detail:'Barricada'})">Barricada</div>
+    </div>`;
+}
+
+// Publica de verdade em feed_posts — usa a localização já detectada
+// quando o modal abriu (mais rápido que pedir de novo agora).
+function infRelatarPublish(extra){
+  document.getElementById('inf-relatar-title').textContent = 'Publicando…';
+  document.getElementById('inf-relatar-back').style.display = 'none';
+  document.getElementById('inf-relatar-body').innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;padding:24px 10px 8px;text-align:center">
+      <div style="width:40px;height:40px;border-radius:50%;border:3.5px solid #DBEAFE;border-top-color:#2563EB;animation:spin .8s linear infinite;margin-bottom:14px"></div>
+      <div style="font-size:12.5px;color:var(--muted)">Confirmando localização</div>
+    </div>`;
+  infRelatarDoPublish(extra);
+}
+async function infRelatarDoPublish(extra){
+  if (!_supaUser) { closeMo('mo-inf-relatar'); showToast('Faça login pra relatar.', 'error'); return; }
+  const t = (_infRelState.types||{})[_infRelState.type];
+  const expMin = t?.expMin || 30;
+  const row = {
+    user_id:_supaUser.id, type:_infRelState.type, audience:'comunidade', source:'user',
+    lat:_infRelState.lat ?? null, lng:_infRelState.lng ?? null,
+    address:_infRelState.address || null, city:'rio',
+    param_value:extra.param_value ?? null, param_detail:extra.param_detail ?? null,
+    nivel: extra.nivel ?? null,
+    expires_at:new Date(Date.now()+expMin*60000).toISOString(),
+    votes_up:1, votes_dn:0, comments_count:0, status:'ativo'
+  };
+  const { error } = await _SUPA.from('feed_posts').insert(row);
+  setTimeout(()=>{
+    closeMo('mo-inf-relatar');
+    if (error) { console.error('infRelatarDoPublish', error); showToast('Erro ao publicar. Tenta de novo.', 'error'); return; }
+    showToast('Publicado!', 'success');
+    if (_infLoc) infCarregarInformes(_infLoc, _infTipoKey);
+  }, 500);
 }
 function infSetTime(btn,min){
   document.querySelectorAll('.inf-tp').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
