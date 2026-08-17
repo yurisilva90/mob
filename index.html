@@ -4059,7 +4059,7 @@ async function _computeAutoTripRefresh(tripId) {
   return { ok:true, tripId, patch, changes, oldVal, newVal, valueBigChange };
 }
 async function _applyAutoTripRefresh(tripId, patch) {
-  const { error } = await _SUPA.from('auto_trips').update(patch).eq('id', tripId);
+  const { error } = await _SUPA.from('auto_trips').update({ ...patch, value_needs_review: false }).eq('id', tripId);
   return !error;
 }
 async function refreshAutoTripFromLog(tripId, btnEl) {
@@ -4123,6 +4123,54 @@ async function _autoRefreshPendingTrips() {
   } catch (e) { console.error('_autoRefreshPendingTrips', e); }
 }
 setTimeout(()=>{ _autoRefreshPendingTrips(); setInterval(_autoRefreshPendingTrips, 5*60*1000); }, 6000);
+
+// Rotina automática nº2 (16/08/2026, pedido do Yuri: "não quero usuário
+// editando, tem que partir da gente interno... a cada X min confere o
+// que tá no registro e corrige"). Diferente da rotina acima (que só olha
+// corridas AINDA sem valor confirmado), essa reconfere corridas que JÁ
+// estão 'confirmada' — pra pegar o caso real que aconteceu (valor errado
+// que já tinha virado card normal na tela). Roda a cada 10min, olha só as
+// últimas 24h (corrida mais velha que isso já foi conferida o suficiente
+// de vezes). REGRA DE OURO: só aplica sozinha quando a mudança é pequena/
+// confiável — mudança grande NUNCA aplica sem humano olhar (mesmo critério
+// do botão manual), só marca value_needs_review pra aparecer sinalizada,
+// sem sumir da tela nem dos totais (não é "fantasma", é corrida real que
+// só precisa de confirmação do valor).
+async function _autoReconcileConfirmedTrips() {
+  if (!_supaUser) return;
+  try {
+    const { data, error } = await _SUPA.from('auto_trips').select('id')
+      .eq('user_id', _supaUser.id).eq('status', 'confirmada')
+      .is('data_quality_flag', null)
+      .gte('accepted_at', new Date(Date.now() - 24*60*60*1000).toISOString())
+      .limit(15);
+    if (error || !data || !data.length) return;
+    let fixedQuiet = 0, flaggedForReview = 0;
+    for (const row of data) {
+      try {
+        const r = await _computeAutoTripRefresh(row.id);
+        if (!r.ok || !r.changes.length) continue;
+        if (r.valueBigChange) {
+          await _SUPA.from('auto_trips').update({ value_needs_review: true }).eq('id', row.id);
+          flaggedForReview++;
+        } else {
+          await _applyAutoTripRefresh(r.tripId, r.patch);
+          fixedQuiet++;
+        }
+      } catch(e) {}
+    }
+    if (fixedQuiet > 0 || flaggedForReview > 0) {
+      S.autoTripsDate = null; S.autoTripsHomeRange = null;
+      if (S.sec === 'jornada') renderJornada();
+      if (S.sec === 'relatorios') renderHomeGraphs();
+      if (S.sec === 'corridas') renderCorridasActive();
+    }
+    // Silenciosa de propósito — mudança pequena não precisa de aviso, e
+    // mudança grande já fica visível pelo badge "Valor a confirmar" na
+    // tela Corridas, sem precisar interromper com toast.
+  } catch (e) { console.error('_autoReconcileConfirmedTrips', e); }
+}
+setTimeout(()=>{ _autoReconcileConfirmedTrips(); setInterval(_autoReconcileConfirmedTrips, 10*60*1000); }, 9000);
 // Balãozinho discreto ao tocar num símbolo (dinâmico, vínculo à jornada,
 // dinheiro) — pedido do Yuri (24/07/2026). Some sozinho, não navega nem
 // abre nada.
@@ -4484,8 +4532,8 @@ function autoTripItem(t) {
   } else if (t.offer_dinamico > 0) {
     extras.push(`<span class="tap-legend-wrap chip chip-d" onclick="showTapLegend(event,'Tarifa dinâmica: +${DB.fR(t.offer_dinamico).replace(/'/g,"")}')"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><strong>${DB.fR(t.offer_dinamico)}</strong></span>`);
   }
-  const statusCls = t.data_quality_flag ? 'susp' : (t.status==='confirmada' ? 'conf' : 'pend');
-  const statusTxt = t.data_quality_flag ? 'Suspeita — revisar' : (t.status==='confirmada' ? 'Confirmada' : 'Aguardando revisão');
+  const statusCls = t.data_quality_flag ? 'susp' : (t.value_needs_review ? 'susp' : (t.status==='confirmada' ? 'conf' : 'pend'));
+  const statusTxt = t.data_quality_flag ? 'Suspeita — revisar' : (t.value_needs_review ? 'Valor a confirmar' : (t.status==='confirmada' ? 'Confirmada' : 'Aguardando revisão'));
   const realDurTrip = (t.trip_started_at && t.trip_ended_at) ? (new Date(t.trip_ended_at)-new Date(t.trip_started_at))/60000 : null;
   const realDurPickup = (t.pickup_started_at && t.trip_started_at) ? (new Date(t.trip_started_at)-new Date(t.pickup_started_at))/60000 : null;
   const offerDurPickupMin = t.offer_duration_pickup_sec!=null ? t.offer_duration_pickup_sec/60 : null;
