@@ -3946,6 +3946,12 @@ function parseOfferJS(texts) {
     if (sl.includes('pgto. no app') || sl === 'dinheiro' || sl === 'negocia' || sl === 'qr code') return false;
     if (/[1-5][.,]\d{2}.{0,15}corrid/.test(sl)) return false;
     if (sl.includes('verif.') || sl.includes('cpf e cart')) return false;
+    // CORRIGIDO (16/08/2026, mesmo fix do Kotlin) — exige evidência
+    // positiva de endereço real (palavra de logradouro OU "Nome, Número"),
+    // não só a ausência de padrões de lixo conhecidos.
+    const hasStreetWord = /\b(rua|av\.?|avenida|estrada|travessa|alameda|rodovia|pra[çc]a|largo|ladeira|rod\.?|via\b)/i.test(sl);
+    const hasNumberPattern = /,\s*\d{1,5}\b/.test(sl);
+    if (!hasStreetWord && !hasNumberPattern) return false;
     return true;
   }
   const legLineRe = /^\(?\s*\d{1,3}\s*min(?:utos)?/i;
@@ -4008,8 +4014,11 @@ async function fetchBestOfferTexts(t) {
   return { texts: best, reason: null };
 }
 // Lógica central, sem toast/spinner — usada tanto pelo botão manual quanto
-// pela rotina automática (24/07/2026). Retorna {ok, valor, reason}.
-async function _doRefreshAutoTrip(tripId) {
+// pela rotina automática (24/07/2026). Só CALCULA, não salva — quem chama
+// decide se aplica direto ou pede confirmação primeiro (ver
+// refreshAutoTripFromLog, 16/08/2026: mudança de valor grande demais pra
+// aplicar sem avisar).
+async function _computeAutoTripRefresh(tripId) {
   const { data: rows, error: e1 } = await _SUPA.from('auto_trips').select('*').eq('id', tripId).limit(1);
   if (e1 || !rows || !rows.length) return { ok:false, reason:'corrida não encontrada' };
   const t = rows[0];
@@ -4035,20 +4044,48 @@ async function _doRefreshAutoTrip(tripId) {
   if (patch.offer_dinamico != null && !numEq(t.offer_dinamico, patch.offer_dinamico, 0.005)) changes.push('dinâmico '+DB.fR(patch.offer_dinamico));
   if (patch.offer_km_trip != null && !numEq(t.offer_km_trip, patch.offer_km_trip, 0.05)) changes.push('km previsto');
   if (patch.offer_duration_trip_sec != null && !numEq(t.offer_duration_trip_sec, patch.offer_duration_trip_sec, 30)) changes.push('tempo previsto');
-  const { error: e2 } = await _SUPA.from('auto_trips').update(patch).eq('id', tripId);
-  if (e2) return { ok:false, reason:'erro ao salvar' };
-  return { ok:true, valor: parsed.valor, changes };
+  // Diferença grande de valor (>15%, ou >R$5 pra valores pequenos) — pede
+  // confirmação em vez de aplicar direto. Pedido do Yuri (16/08/2026):
+  // caso real onde o valor pulou de R$42 pra R$26,20 sem aviso nenhum —
+  // pode ser a correção certa (leitura mais completa) ou pode ser a nova
+  // leitura que tá errada; sem ver as duas, não dá pra saber qual confiar.
+  const oldVal = t.offer_value != null ? Number(t.offer_value) : null;
+  const newVal = patch.offer_value;
+  let valueBigChange = false;
+  if (oldVal != null && oldVal > 0) {
+    const diff = Math.abs(newVal - oldVal);
+    valueBigChange = diff > 5 && (diff / oldVal) > 0.15;
+  }
+  return { ok:true, tripId, patch, changes, oldVal, newVal, valueBigChange };
+}
+async function _applyAutoTripRefresh(tripId, patch) {
+  const { error } = await _SUPA.from('auto_trips').update(patch).eq('id', tripId);
+  return !error;
 }
 async function refreshAutoTripFromLog(tripId, btnEl) {
   if (btnEl) btnEl.classList.add('spinning');
   try {
-    const r = await _doRefreshAutoTrip(tripId);
+    const r = await _computeAutoTripRefresh(tripId);
     if (!r.ok) { showToast('Não achei: '+r.reason, 'error'); return; }
-    showToast(r.changes.length ? 'Corrigido: '+r.changes.join(', ') : 'Corrida atualizada com sucesso', 'success');
-    S.autoTripsDate = null; S.autoTripsHomeRange = null;
-    if (S.sec === 'jornada') renderJornada();
-    if (S.sec === 'relatorios') renderHomeGraphs();
-    if (S.sec === 'corridas') renderCorridasActive();
+    if (!r.changes.length) { showToast('Corrida atualizada com sucesso', 'success'); return; }
+    const finish = async () => {
+      const saved = await _applyAutoTripRefresh(r.tripId, r.patch);
+      if (!saved) { showToast('Erro ao salvar.', 'error'); return; }
+      showToast('Corrigido: '+r.changes.join(', '), 'success');
+      S.autoTripsDate = null; S.autoTripsHomeRange = null;
+      if (S.sec === 'jornada') renderJornada();
+      if (S.sec === 'relatorios') renderHomeGraphs();
+      if (S.sec === 'corridas') renderCorridasActive();
+    };
+    if (r.valueBigChange) {
+      showConfirm(
+        `O valor dessa corrida vai mudar de ${DB.fR(r.oldVal)} para ${DB.fR(r.newVal)} — uma diferença grande.\n\nConfirma que ${DB.fR(r.newVal)} é o valor certo?`,
+        finish,
+        { danger: false, confirmLabel: 'Sim, corrigir', cancelLabel: 'Cancelar' }
+      );
+    } else {
+      await finish();
+    }
   } catch (e) {
     console.error('refreshAutoTripFromLog', e);
     showToast('Erro ao reconferir.', 'error');
@@ -4071,7 +4108,10 @@ async function _autoRefreshPendingTrips() {
     if (error || !data || !data.length) return;
     let fixed = 0;
     for (const row of data) {
-      try { const r = await _doRefreshAutoTrip(row.id); if (r.ok) fixed++; } catch(e) {}
+      try {
+        const r = await _computeAutoTripRefresh(row.id);
+        if (r.ok && r.changes.length) { await _applyAutoTripRefresh(r.tripId, r.patch); fixed++; }
+      } catch(e) {}
     }
     if (fixed > 0) {
       showToast(fixed===1 ? '1 corrida corrigida sozinha' : fixed+' corridas corrigidas sozinhas', 'success');
