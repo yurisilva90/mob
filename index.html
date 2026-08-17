@@ -929,10 +929,14 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .inf-search-fixed input{font-size:15px!important}
 .inf-city{padding:8px 14px!important;font-size:13px!important;border-width:1.5px!important;gap:6px!important}
 .inf-city-dot{width:8px!important;height:8px!important}
-.inf-time-pill{padding:3px!important;gap:2px!important;border-width:1.5px!important}
-.inf-tp{font-size:12.5px!important;font-weight:800!important;padding:7px 14px!important}
+.inf-search-toggle{width:38px;height:38px;border-radius:11px;background:var(--card);border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;flex-shrink:0;touch-action:manipulation}
 .inf-tabs-wrap{position:sticky;top:74px;background:var(--bg);z-index:9;border-bottom:1px solid var(--line);padding-bottom:2px;margin-bottom:2px}
 .inf-tabs{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 14px 9px}
+/* Barra "Relatar agora" — fixa acima da nav inferior, pedido do Yuri
+   (16/08/2026): motorista dirigindo precisa alcançar rápido com o
+   polegar, sem procurar/rolar — Opção B do mockup, aprovada. */
+.inf-relatar-bar{position:fixed;left:50%;bottom:calc(var(--bottom) + var(--safe-bottom));transform:translateX(-50%);width:min(430px,100vw);padding:10px 16px;background:var(--card);border-top:1px solid var(--line);z-index:90;box-sizing:border-box}
+.inf-relatar-bar button{width:100%;height:52px;border-radius:14px;border:0;background:linear-gradient(135deg,#EF4444,#DC2626);color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-shadow:0 6px 16px rgba(220,38,38,.3);font-family:inherit;touch-action:manipulation}
 .inf-tabs::-webkit-scrollbar{display:none}
 .inf-tab{flex-shrink:0;border:1.5px solid var(--line);background:var(--card);color:var(--muted);font-size:12px;font-weight:700;font-family:inherit;padding:7px 13px;border-radius:99px;white-space:nowrap;cursor:pointer}
 .inf-tab.active{background:#0A2F6B;border-color:#0A2F6B;color:#fff}
@@ -1219,6 +1223,10 @@ h1.hd-title{font-family:var(--font-brand)!important}
 .feed-cp-types{display:flex;gap:7px;padding:10px 16px;overflow-x:auto;scrollbar-width:none}
 .feed-cp-types::-webkit-scrollbar{display:none}
 .feed-t-chip{flex:0 0 auto;display:flex;align-items:center;gap:6px;border-radius:12px;padding:8px 12px;font-size:11.5px;font-weight:800;border:1.5px solid var(--line);background:var(--card);color:var(--muted);white-space:nowrap;cursor:pointer;font-family:var(--font-app)}
+.qr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.qr-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 4px;border-radius:14px;border:1.5px solid var(--line);background:var(--soft);cursor:pointer;touch-action:manipulation}
+.qr-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff}
+.qr-label{font-size:10.5px;font-weight:700;color:var(--text)}
 .feed-t-chip svg{stroke:currentColor}
 .feed-cp-loc{margin:6px 16px 0;border:1px solid var(--line);border-radius:14px;padding:11px 13px;display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;color:var(--text);cursor:pointer}
 .feed-cp-loc svg{stroke:var(--green2);flex:0 0 auto}
@@ -1857,17 +1865,15 @@ h1.hd-title{font-family:var(--font-brand)!important}
 
 <!-- ══ TELA MAIS ══════════════════════════════════════════════════════════ -->
 <div class="screen" id="sc-informes">
-  <!-- topbar: linha 1 = filtro de tempo + cidade | linha 2 = busca -->
+  <!-- topbar: linha 1 = lupa (colapsa/expande) + cidade | linha 2 = busca (só quando aberta) -->
   <div class="inf-topbar" id="inf-topbar">
     <div class="inf-topbar-row1">
-      <div class="inf-time-pill">
-        <button class="inf-tp" onclick="infSetTime(this,'30')">30m</button>
-        <button class="inf-tp active" id="inf-tp-active" onclick="infSetTime(this,'60')">1h</button>
-        <button class="inf-tp" onclick="infSetTime(this,'240')">4h</button>
-      </div>
+      <button class="inf-search-toggle" id="inf-search-toggle" onclick="infToggleSearch()" aria-label="Buscar local">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
       <div class="inf-city"><div class="inf-city-dot"></div><span>Rio de Janeiro</span></div>
     </div>
-    <div class="inf-search-fixed">
+    <div class="inf-search-fixed" id="inf-search-fixed" style="display:none">
       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input id="inf-search-bar" type="text" placeholder="Buscar local…" oninput="infBuscarGlobal(this.value)">
     </div>
@@ -1887,6 +1893,13 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <button class="inf-tab" data-tab="eventos" onclick="infTab('eventos')">Eventos</button>
       <button class="inf-tab" data-tab="tur" onclick="infTab('tur')">Turístico</button>
     </div>
+  </div>
+
+  <div class="inf-relatar-bar">
+    <button onclick="infOpenRelatar()">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.3"><path d="M12 5v14M5 12h14"/></svg>
+      Relatar agora
+    </button>
   </div>
 
   <div id="inf-scroll-content">
@@ -2090,6 +2103,18 @@ h1.hd-title{font-family:var(--font-brand)!important}
 
 
 <!-- ════ MODAIS ════ -->
+
+<!-- Informes: Relatar (seleção de tipo — sem texto livre, pedido do Yuri
+     16/08/2026. Passo de detalhe por tipo (intensidade/quantidade) ainda
+     não entrou — mockup aprovado, aguardando essa parte específica) -->
+<div class="mo" id="mo-inf-relatar">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head"><h2>O que você tá vendo?</h2><button class="xbtn" onclick="closeMo('mo-inf-relatar')">&#x2715;</button></div>
+    <div style="font-size:11.5px;color:var(--muted);margin:-6px 0 14px">Um toque publica — localização atual entra sozinha</div>
+    <div class="qr-grid" id="inf-relatar-body"></div>
+  </div>
+</div>
 
 <!-- Feed: Composer (publicar alerta) -->
 <div class="mo" id="mo-feed-composer">
@@ -12313,7 +12338,7 @@ const INF_SDBDB = [
   {n:'Copacabana Palace',t:'hotel'},{n:'Fairmont Rio',t:'hotel'},{n:'Intercontinental',t:'hotel'},
   {n:'Windsor Barra',t:'hotel'},{n:'Sheraton Grand',t:'hotel'},{n:'Ibis Copacabana',t:'hotel'},
 ];
-let _infLoc=null,_infTipoKey=null,_infMinutos=15,_infRepTipo=null,_infRepValor=null,_infRepDetalhe=null;
+let _infLoc=null,_infTipoKey=null,_infMinutos=60,_infRepTipo=null,_infRepValor=null,_infRepDetalhe=null;
 let _infFavs=JSON.parse(localStorage.getItem('sm_inf_favs')||'[]');
 const INF_AVC=['#6D28D9','#0369A1','#B45309','#0F766E','#15803D','#BE123C','#7C3AED','#0284C7'];
 const INF_BADGE={dinamico:'infbd',transito:'infbt',fiscalizacao:'infbf',fila:'infbfi',demanda:'infbde',lotacao:'infblo',acidente:'infbac'};
@@ -12784,19 +12809,6 @@ async function infEnviarReporte(){
   btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Enviar informe';
 }
 
-let _infSrchOpen=false;
-function infToggleSearch(){ return; // campo fixo — sem toggle
-  // legado:
-  _infSrchOpen=!_infSrchOpen;
-  // Lupa isolada ↔ caixa de busca com lupa integrada
-  const btn=document.getElementById('inf-search-btn');
-  const wrap=document.getElementById('inf-search-wrap');
-  if (btn) btn.style.display=_infSrchOpen?'none':'flex';
-  if (wrap) wrap.classList.toggle('show',_infSrchOpen);
-  const sb=document.getElementById('inf-search-bar');
-  if(_infSrchOpen){sb.value='';sb.focus();}
-  else{sb.value='';document.getElementById('inf-search-dd').classList.remove('show');}
-}
 function infBuscarGlobal(q){
   const dd=document.getElementById('inf-search-dd');
   if(!q.trim()){dd.classList.remove('show');return;}
@@ -12812,6 +12824,44 @@ function infBuscarGlobal(q){
   const _seen=new Set(); res=res.filter(x=>{if(_seen.has(x.n))return false;_seen.add(x.n);return true;}).slice(0,8);
   dd.innerHTML=res.length?res.map(x=>{const t=INF_TIPOS[x.t]||INF_TIPOS.bairro;return`<div class="inf-sd-item" onclick="infToggleSearch();infAbrirLocal(null,'${x.n}','${x.t}')"><div class="inf-sd-ic" style="background:${t.bg}">${infIconSvg(x.t,t.cor,14)}</div><div><div class="inf-sd-name">${x.n}</div><div class="inf-sd-sub">${t.label}</div></div></div>`;}).join(''):'<div class="inf-sd-empty">Nenhum resultado</div>';
   dd.classList.add('show');
+}
+// Busca colapsável (16/08/2026, pedido do Yuri) — vira ícone, só expande
+// quando toca, no lugar do campo fixo que ocupava uma linha inteira.
+function infToggleSearch(){
+  const el = document.getElementById('inf-search-fixed');
+  const btn = document.getElementById('inf-search-toggle');
+  if(!el) return;
+  const show = el.style.display === 'none';
+  el.style.display = show ? 'flex' : 'none';
+  if(btn){ btn.style.background = show ? '#0A2F6B' : ''; btn.style.color = show ? '#fff' : ''; }
+  if(show){ document.getElementById('inf-search-bar')?.focus(); }
+  else {
+    const inp = document.getElementById('inf-search-bar'); if(inp) inp.value='';
+    const dd = document.getElementById('inf-search-dd'); if(dd) dd.classList.remove('show');
+  }
+}
+// Botão "Relatar agora" (barra fixa embaixo, Opção B aprovada) — abre o
+// seletor de tipo. Reaproveita FEED_TYPES (mesmos ícones/cores do Início)
+// pra não duplicar SVG numa terceira cópia no arquivo.
+function infOpenRelatar(){
+  const body = document.getElementById('inf-relatar-body');
+  if(body){
+    body.innerHTML = Object.entries(FEED_TYPES).map(([key,t]) =>
+      `<div class="qr-btn" onclick="infRelatarPick('${key}')">
+        <div class="qr-ic" style="background:${t.color}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2">${t.icon}</svg></div>
+        <span class="qr-label">${t.label}</span>
+      </div>`
+    ).join('');
+  }
+  openMo('mo-inf-relatar');
+}
+// Passo de detalhe por tipo (intensidade/quantidade — Blitz tem 2 passos)
+// ainda não entrou: mockup aprovado em 16/08/2026, aguardando essa parte
+// específica ser implementada. Até lá, avisa que tá vindo em vez de
+// publicar sem o detalhe (que seria pior — dado incompleto).
+function infRelatarPick(typeKey){
+  closeMo('mo-inf-relatar');
+  showToast('Em breve — a etapa de detalhe desse tipo entra na próxima atualização.', 'info');
 }
 function infSetTime(btn,min){
   document.querySelectorAll('.inf-tp').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
