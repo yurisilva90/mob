@@ -3879,6 +3879,31 @@ function extractMoneyJS(s) {
   while ((m = re.exec(s))) if (!out.includes(m[0])) out.push(m[0]);
   return out;
 }
+// Validação de endereço — GLOBAL (promovida de dentro de parseOfferJS em
+// 16/08/2026 pra ser reutilizável também na importação de vídeo, onde
+// endereço de corrida nova nunca pode ser aceito sem essa checagem —
+// pedido explícito do Yuri: "nunca endereço, a não ser que garanta que
+// não vai vir lixo ou inventado"). Mesma lógica usada no Kotlin.
+function looksLikeAddress(s) {
+  const sl = s.toLowerCase().trim();
+  if (sl.length < 6) return false;
+  if (sl.includes('parada')) return false;
+  if (sl.includes('não afeta') || sl.includes('nao afeta')) return false;
+  if (/^\(?\d{1,3}([.,]\d+)?\s*(min|km|m)\b/.test(sl)) return false;
+  if (/^[x%\d.,\s]+$/.test(sl)) return false;
+  if (sl.includes('r$')) return false;
+  if (sl.includes('tarifa') || sl.includes('incl.') || sl.includes('incluído') || sl.includes('incluido')) return false;
+  if (sl.includes('taxa de espera') || sl.includes('espera longa')) return false;
+  if (sl === 'online' || sl === 'buscando' || sl === 'offline' || sl === 'conectar') return false;
+  if (sl.includes('perfil essencial') || sl.includes('perfil premium') || sl.includes('perfil prata')) return false;
+  if (sl.includes('pgto. no app') || sl === 'dinheiro' || sl === 'negocia' || sl === 'qr code') return false;
+  if (/[1-5][.,]\d{2}.{0,15}corrid/.test(sl)) return false;
+  if (sl.includes('verif.') || sl.includes('cpf e cart')) return false;
+  const hasStreetWord = /\b(rua|av\.?|avenida|estrada|travessa|alameda|rodovia|pra[çc]a|largo|ladeira|rod\.?|via\b)/i.test(sl);
+  const hasNumberPattern = /[^\d],\s*\d{1,5}\b/.test(sl);
+  if (!hasStreetWord && !hasNumberPattern) return false;
+  return true;
+}
 function parseOfferJS(texts) {
   const joinedRaw = texts.join('  ');
   const low = joinedRaw.toLowerCase()
@@ -3944,29 +3969,6 @@ function parseOfferJS(texts) {
   }
   if (km === null && valor !== null && rkmDirect !== null && rkmDirect > 0) km = valor / rkmDirect;
 
-  function looksLikeAddress(s) {
-    const sl = s.toLowerCase().trim();
-    if (sl.length < 6) return false;
-    if (sl.includes('parada')) return false;
-    if (sl.includes('não afeta') || sl.includes('nao afeta')) return false;
-    if (/^\(?\d{1,3}([.,]\d+)?\s*(min|km|m)\b/.test(sl)) return false;
-    if (/^[x%\d.,\s]+$/.test(sl)) return false;
-    if (sl.includes('r$')) return false;
-    if (sl.includes('tarifa') || sl.includes('incl.') || sl.includes('incluído') || sl.includes('incluido')) return false;
-    if (sl.includes('taxa de espera') || sl.includes('espera longa')) return false;
-    if (sl === 'online' || sl === 'buscando' || sl === 'offline' || sl === 'conectar') return false;
-    if (sl.includes('perfil essencial') || sl.includes('perfil premium') || sl.includes('perfil prata')) return false;
-    if (sl.includes('pgto. no app') || sl === 'dinheiro' || sl === 'negocia' || sl === 'qr code') return false;
-    if (/[1-5][.,]\d{2}.{0,15}corrid/.test(sl)) return false;
-    if (sl.includes('verif.') || sl.includes('cpf e cart')) return false;
-    // CORRIGIDO (16/08/2026, mesmo fix do Kotlin) — exige evidência
-    // positiva de endereço real (palavra de logradouro OU "Nome, Número"),
-    // não só a ausência de padrões de lixo conhecidos.
-    const hasStreetWord = /\b(rua|av\.?|avenida|estrada|travessa|alameda|rodovia|pra[çc]a|largo|ladeira|rod\.?|via\b)/i.test(sl);
-    const hasNumberPattern = /[^\d],\s*\d{1,5}\b/.test(sl);
-    if (!hasStreetWord && !hasNumberPattern) return false;
-    return true;
-  }
   const legLineRe = /^\(?\s*\d{1,3}\s*min(?:utos)?/i;
   const addrCandidates = [];
   for (let i = 0; i < texts.length; i++) {
@@ -7101,10 +7103,39 @@ async function processImportBatch(images, videos, plat) {
   });
 
   const day = DB.day(S.curDate);
-  window._pendingTrips = unique.map((t,i) => ({...t, _sel:true, _idx:i,
-    platform: t.platform === '99' ? '99' : 'uber',
-    _exists: isTripDuplicate(t, day.trips)
-  }));
+
+  // Casa cada corrida do vídeo com auto_trips do dia ANTES de mostrar a
+  // tela (pedido do Yuri, 16/08/2026) — permite separar "vai só corrigir
+  // valor" de "é corrida nova" já na seleção, e esconder o que não muda
+  // nada em vez de mostrar tudo misturado.
+  const autoTripsPool = (S.autoTripsDate === S.curDate) ? (S.autoTrips||[]).slice() : await loadAutoTripsForDay(S.curDate);
+  const numEq = (a,b,tol) => Math.abs((a||0)-(b||0)) <= (tol||0.02);
+  const annotated = unique.map((t,i) => {
+    const matched = matchAutoTrip(t, autoTripsPool);
+    if (matched) autoTripsPool.splice(autoTripsPool.indexOf(matched), 1); // consumido — nunca casa duas vezes
+    const base = {...t, _sel:true, _idx:i,
+      platform: t.platform === '99' ? '99' : 'uber',
+      _exists: isTripDuplicate(t, day.trips)};
+    if (matched) {
+      const newVal = parseFloat(t.value)||0;
+      return {...base, _matchedAutoTripId: matched.id, _isNew: false,
+        _oldValue: matched.offer_value, _changed: !numEq(matched.offer_value, newVal, 0.02)};
+    }
+    return {...base, _matchedAutoTripId: null, _isNew: true, _changed: true};
+  });
+  // Só mostra o que de fato vai mudar algo — casada sem diferença de valor
+  // não aparece (nada a fazer), nova sem valor legível também não aparece
+  // (sem valor não dá pra confirmar que é corrida de verdade).
+  window._pendingTrips = annotated.filter(t => t._isNew ? (parseFloat(t.value)||0) > 0 : t._changed);
+  // Corrida NOVA nunca confia no endereço do vídeo sem validar — mesma
+  // regra do Kotlin (looksLikeAddress). Sem validação, fica sem endereço
+  // em vez de arriscar lixo/mensagem de chat virando corrida (pedido
+  // explícito do Yuri: "nunca endereço, a não ser que garanta").
+  window._pendingTrips.forEach(t => {
+    if (!t._isNew) return;
+    if (t.originFull && !looksLikeAddress(t.originFull)) { t.originFull = ''; t.origin = ''; }
+    if (t.destFull && !looksLikeAddress(t.destFull)) { t.destFull = ''; t.dest = ''; }
+  });
 
   // Se algo foi declarado no pre-check, mostra a conferencia antes da lista.
   // Se pulou (tudo null), vai direto pra lista de confirmacao de sempre.
@@ -7532,35 +7563,77 @@ function updateImportSummary() {
   const el = document.getElementById('ic-summary');
   if (el) el.outerHTML = '<div id="ic-summary">' + importSummaryHtml() + '</div>';
 }
+function updateImportButtonLabel() {
+  const trips = window._pendingTrips || [];
+  const sel = trips.filter(t=>t._sel);
+  const changedSel = sel.filter(t=>!t._isNew).length;
+  const newSel = sel.filter(t=>t._isNew).length;
+  const btn = document.getElementById('ic-btn');
+  if (!btn) return;
+  let sub = '';
+  if (changedSel || newSel) {
+    const parts = [];
+    if (changedSel) parts.push(changedSel + (changedSel>1?' corrigem':' corrige') + ' valor');
+    if (newSel) parts.push(newSel + (newSel>1?' criam':' cria') + ' corrida nova');
+    sub = `<small style="display:block;font-size:10.5px;font-weight:600;opacity:.8;margin-top:1px">${parts.join(' · ')}</small>`;
+  }
+  btn.innerHTML = 'Importar ('+sel.length+')' + sub;
+}
+// Linha de uma corrida — cor do checkbox e do valor muda por grupo:
+// verde = corrige valor de uma auto_trip já existente; âmbar = corrida
+// nova (não foi vista na captura ao vivo, vira status "importada").
+function importRowHtml(t, i) {
+  const ex = [];
+  if (t.dinamico > 0) ex.push(`<span class="chip chip-d"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg> ${DB.fR(t.dinamico)}</span>`);
+  if (t.tip > 0) ex.push(`<span class="chip chip-g"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.5 4.05 3 5.5l7 7Z"/></svg> ${DB.fR(t.tip)}</span>`);
+  const exRow = ex.length ? `<div class="li-extra" style="margin-top:4px">${ex.join('')}</div>` : '';
+  const platColor = t.platform === '99' ? '#F59E0B' : '#0EA5E9';
+  const platLabel = t.platform === '99' ? '99' : 'Uber';
+  const platTag = `<span style="display:inline-flex;align-items:center;gap:3px;font-weight:800;color:${platColor}"><i style="width:5px;height:5px;border-radius:50%;display:inline-block;background:${platColor}"></i>${platLabel}</span>`;
+  const newBadge = t._isNew ? '<span style="display:inline-block;font-size:8.5px;font-weight:800;padding:1.5px 6px;border-radius:99px;background:#FEF3C7;color:#92400E;margin-left:5px">Nova</span>' : '';
+  const chkColor = t._isNew ? '#F59E0B' : '#22C55E';
+  const valHtml = t._isNew
+    ? `R$${(t.value||0).toFixed(2)}`
+    : `R$${(t.value||0).toFixed(2)}<small style="display:block;font-size:9px;color:#64748B;font-weight:700">era ${DB.fR(t._oldValue||0)}</small>`;
+  return `<div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid #E2E8F0;cursor:pointer" onclick="toggleImportTrip(${i})">
+    <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${t._sel?chkColor:'#E2E8F0'};background:${t._sel?chkColor:'transparent'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0" id="ict-${i}">${t._sel?'✓':''}</div>
+    <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.origin||'—'} → ${t.dest||'—'}${newBadge}</div><div style="font-size:10px;color:#64748B;margin-top:2px">${platTag} · ${t.time||'—'} · ${t.duration||0}min${t.km?' · '+t.km+'km':''}</div>${exRow}</div>
+    <div style="font-family:'Inter',system-ui,sans-serif;font-weight:700;font-size:14px;color:${t._isNew?'#16A34A':'#0F172A'};flex-shrink:0;text-align:right">${valHtml}</div>
+  </div>`;
+}
 function showImportConfirm() {
   const trips = window._pendingTrips || [];
-  if (!trips.length) { closeMo('mo-import-confirm'); showToast('Nenhuma corrida detectada.', 'info'); return; }
-  document.getElementById('ic-title').textContent = 'Corridas detectadas ('+trips.length+')';
-  document.getElementById('ic-btn').style.display = ''; document.getElementById('ic-btn').textContent = 'Importar ('+trips.filter(t=>t._sel).length+')';
+  if (!trips.length) { closeMo('mo-import-confirm'); showToast('Nada pra atualizar — nenhuma corrida com valor diferente ou nova.', 'info'); return; }
+  document.getElementById('ic-title').textContent = 'Corridas pra importar ('+trips.length+')';
+  document.getElementById('ic-btn').style.display = '';
+  updateImportButtonLabel();
+
+  // Dois grupos, na ordem do mockup aprovado (16/08/2026): primeiro o que
+  // já existia e só corrige valor (verde), depois o que é novo — nunca
+  // visto na captura ao vivo, vira "importada" (âmbar).
+  const changedRows = [], newRows = [];
+  trips.forEach((t,i) => { (t._isNew ? newRows : changedRows).push(importRowHtml(t,i)); });
+
+  let groupsHtml = '';
+  if (changedRows.length) {
+    groupsHtml += `<div style="display:flex;align-items:center;gap:8px;margin:14px 4px 8px"><span style="width:8px;height:8px;border-radius:50%;background:#22C55E"></span><span style="font-size:12.5px;font-weight:800">Valor vai mudar</span><span style="font-size:11px;font-weight:700;color:#64748B;margin-left:auto">${changedRows.length}</span></div>` +
+      `<div style="background:#fff;border-radius:16px;overflow:hidden;border:1px solid #E2E8F0;margin-bottom:${newRows.length?'10px':'0'}">${changedRows.join('')}</div>`;
+  }
+  if (newRows.length) {
+    groupsHtml += `<div style="display:flex;align-items:center;gap:8px;margin:14px 4px 8px"><span style="width:8px;height:8px;border-radius:50%;background:#F59E0B"></span><span style="font-size:12.5px;font-weight:800">Novas</span><span style="font-size:11px;font-weight:700;color:#64748B;margin-left:auto">${newRows.length}</span></div>` +
+      `<div style="background:#fff;border-radius:16px;overflow:hidden;border:1px solid #E2E8F0">${newRows.join('')}</div>`;
+  }
+
   document.getElementById('ic-body').innerHTML = '<div id="ic-declared">' + importDeclaredHtml() + '</div>' +
-    '<div id="ic-summary">' + importSummaryHtml() + '</div>' +
-    '<div style="background:#fff;border-radius:16px;overflow:hidden;border:1px solid #E2E8F0">' + trips.map((t,i) => {
-    const ex = [];
-    if (t.dinamico > 0) ex.push(`<span class="chip chip-d"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg> ${DB.fR(t.dinamico)}</span>`);
-    if (t.tip > 0) ex.push(`<span class="chip chip-g"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.5 4.05 3 5.5l7 7Z"/></svg> ${DB.fR(t.tip)}</span>`);
-    const exRow = ex.length ? `<div class="li-extra" style="margin-top:4px">${ex.join('')}</div>` : '';
-    const platColor = t.platform === '99' ? '#F59E0B' : '#0EA5E9';
-    const platLabel = t.platform === '99' ? '99' : 'Uber';
-    const platTag = `<span style="display:inline-flex;align-items:center;gap:3px;font-weight:800;color:${platColor}"><i style="width:5px;height:5px;border-radius:50%;display:inline-block;background:${platColor}"></i>${platLabel}</span>`;
-    return `<div style="display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid #E2E8F0;cursor:pointer" onclick="toggleImportTrip(${i})">
-      <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${t._sel?'#22C55E':'#E2E8F0'};background:${t._sel?'#22C55E':'transparent'};display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0" id="ict-${i}">${t._sel?'✓':''}</div>
-      <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.origin||'—'} → ${t.dest||'—'}</div><div style="font-size:10px;color:#64748B;margin-top:2px">${platTag} · ${t.time||'—'} · ${t.duration||0}min${t.km?' · '+t.km+'km':''}</div>${exRow}</div>
-      <div style="font-family:'Inter',system-ui,sans-serif;font-weight:700;font-size:14px;color:#16A34A;flex-shrink:0">R$${(t.value||0).toFixed(2)}</div>
-    </div>`;
-  }).join('') + '</div>';
+    '<div id="ic-summary">' + importSummaryHtml() + '</div>' + groupsHtml;
 }
 function toggleImportTrip(i) {
   const t = (window._pendingTrips||[])[i]; if (!t) return;
   t._sel = !t._sel;
+  const chkColor = t._isNew ? '#F59E0B' : '#22C55E';
   const el = document.getElementById('ict-'+i);
-  if (el) { el.style.background=t._sel?'#22C55E':'transparent'; el.style.borderColor=t._sel?'#22C55E':'#E2E8F0'; el.textContent=t._sel?'✓':''; }
-  const sel = (window._pendingTrips||[]).filter(x=>x._sel).length;
-  document.getElementById('ic-btn').textContent = 'Importar ('+sel+')';
+  if (el) { el.style.background=t._sel?chkColor:'transparent'; el.style.borderColor=t._sel?chkColor:'#E2E8F0'; el.textContent=t._sel?'✓':''; }
+  updateImportButtonLabel();
   updateImportSummary();
 }
 
@@ -7765,44 +7838,43 @@ async function confirmImport() {
   const selected = (window._pendingTrips||[]).filter(t=>t._sel);
   if (!selected.length) { closeMo('mo-import-confirm'); return; }
   const day = DB.day(S.curDate);
-  // Corridas automáticas do dia — usa cache se já carregado pra essa data
-  // (normalmente já está, quem importa costuma estar na Jornada/Corridas),
-  // senão busca na hora. Pool vai sendo consumido conforme casa, pra uma
-  // automática nunca ser vinculada a duas importadas do mesmo lote.
-  const autoTripsPool = (S.autoTripsDate === S.curDate)
-    ? (S.autoTrips||[]).slice() : await loadAutoTripsForDay(S.curDate);
   let added=0, skipped=0, updated=0;
-  const toPush = [];
   const toUpdateAuto = [];
+  const toPushAuto = [];
+  const videoId = (window._pendingImportVideoIds||[])[0] || null;
   selected.forEach(t => {
-    // Rejeita corridas claramente inválidas (0min E 0km E sem endereço)
-    // NOTA: 99 não reporta km nem duration — mas tem origin/dest. Não bloquear.
-    const hasValue = parseFloat(t.value) > 0;
-    const isGhost  = (t.duration||0) === 0 && (parseFloat(t.km)||0) < 0.1
-                     && hasValue && !t.origin && !t.dest;
-    if (isGhost) { skipped++; return; }
-    if (isTripDuplicate(t, day.trips)) { skipped++; return; }
-    // Já capturada automaticamente? Atualiza ela com o valor real (vindo da
-    // tela de histórico da plataforma, mais confiável que a oferta
-    // estimada) em vez de criar uma corrida manual duplicada.
-    const matched = matchAutoTrip(t, autoTripsPool);
-    if (matched) {
-      autoTripsPool.splice(autoTripsPool.indexOf(matched), 1);
-      toUpdateAuto.push({ id: matched.id, value: parseFloat(t.value)||0, km: parseFloat(t.km)||0,
+    // Já casada com uma auto_trip existente (matching já feito em
+    // processImportBatch, antes da tela abrir) — só atualiza o valor,
+    // nunca o endereço (esse já veio validado pela captura ao vivo/GPS).
+    if (t._matchedAutoTripId) {
+      toUpdateAuto.push({ id: t._matchedAutoTripId, value: parseFloat(t.value)||0, km: parseFloat(t.km)||0,
         dinheiro: !!t.dinheiro });
       updated++;
       return;
     }
-    const trip = {id:DB.uid(), platform:t.platform||'uber', time:t.time||'',
-      duration:t.duration||0, origin:_cleanBairro(t.origin||''), dest:_cleanBairro(t.dest||''),
-      originFull:t.originFull||t.origin||'', destFull:t.destFull||t.dest||'',
-      value:parseFloat(t.value)||0, km:parseFloat(t.km)||0,
-      category:'', surge:t.surge||false, airport:t.airport||false,
-      dinamico:parseFloat(t.dinamico)||0, tip:parseFloat(t.tip)||0,
-      dinheiro:!!t.dinheiro, pedagio:!!t.pedagio, pedagioValor:parseFloat(t.pedagioValor)||0,
-      serviceFee:t.serviceFee??null, taxaZero:!!t.taxaZero};
-    day.trips.push(trip);
-    toPush.push(trip);
+    // Nova — nunca vista na captura ao vivo. Vira auto_trips com status
+    // 'importada' (pedido do Yuri, 16/08/2026) — unifica com o resto dos
+    // dados em vez de virar corrida "manual" separada. Endereço já
+    // passou pela validação looksLikeAddress lá em processImportBatch
+    // (se não passou, já veio vazio aqui — nunca inventa).
+    let startMs;
+    try { startMs = new Date(S.curDate + 'T' + (t.time||'00:00') + ':00').getTime(); } catch(e) { startMs = NaN; }
+    if (!startMs || isNaN(startMs)) startMs = Date.now();
+    const endMs = t.duration > 0 ? startMs + t.duration*60000 : null;
+    toPushAuto.push({
+      user_id: _supaUser.id,
+      platform: t.platform === '99' ? '99' : 'uber',
+      accepted_at: new Date(startMs).toISOString(),
+      trip_started_at: new Date(startMs).toISOString(),
+      trip_ended_at: endMs ? new Date(endMs).toISOString() : null,
+      offer_value: parseFloat(t.value)||0,
+      real_km_trip: parseFloat(t.km)||0,
+      origin_address: t.originFull || null,
+      dest_address: t.destFull || null,
+      dinheiro: !!t.dinheiro,
+      status: 'importada',
+      import_video_id: videoId
+    });
     added++;
   });
   // Aplica as atualizações nas automáticas casadas — valor real por cima do
@@ -7814,78 +7886,36 @@ async function confirmImport() {
       real_km_trip: u.km > 0 ? u.km : undefined,
       dinheiro: u.dinheiro,
       status: 'confirmada',
-      import_video_id: (window._pendingImportVideoIds||[])[0] || undefined
+      import_video_id: videoId || undefined
     }).eq('id', u.id).then(() => {}).catch(() => {});
   });
-  // Atualiza a contagem de corridas confirmadas por esse vídeo — só
-  // informativo, útil pra revisão manual depois ("esse vídeo confirmou 6
-  // corridas").
-  (window._pendingImportVideoIds||[]).forEach(vid => {
-    _SUPA.from('import_videos').update({ trip_count: toUpdateAuto.length }).eq('id', vid).then(()=>{}).catch(()=>{});
-  });
+  // Corridas novas — insere de uma vez em auto_trips.
+  if (toPushAuto.length) {
+    _SUPA.from('auto_trips').insert(toPushAuto).then(() => {}).catch((e) => console.warn('insert importada falhou', e));
+  }
+  // Atualiza a contagem de corridas confirmadas/criadas por esse vídeo —
+  // só informativo, útil pra revisão manual depois.
+  if (videoId) {
+    _SUPA.from('import_videos').update({ trip_count: toUpdateAuto.length + toPushAuto.length }).eq('id', videoId).then(()=>{}).catch(()=>{});
+  }
   window._pendingImportVideoIds = null;
-  if (toUpdateAuto.length) { S.autoTripsDate = null; } // força recarregar no próximo renderJornada
+  if (toUpdateAuto.length || toPushAuto.length) { S.autoTripsDate = null; } // força recarregar no próximo renderJornada
   DB.saveDay(day); closeMo('mo-import-confirm'); window._pendingTrips=null;
-  // Corridas sem km (comum na 99, que não mostra km na tela) — estima via
-  // endereço em segundo plano, não bloqueia a UI
-  toPush.forEach(trip => {
-    // Usar endereço COMPLETO (com cidade/UF) pra geocodificar — só o bairro
-    // sozinho (ex: 'Tijuca') é ambíguo e pode resolver pra qualquer lugar
-    // do Brasil, gerando distâncias absurdas.
-    const oFull = trip.originFull || trip.origin;
-    const dFull = trip.destFull || trip.dest;
-    if ((!trip.km || trip.km === 0) && oFull && dFull) {
-      _queueKmEstimate(S.curDate, trip.id, oFull, dFull);
-    }
-  });
-  toPush.forEach(trip => SYNC.push('trips', { id: trip.id, date: S.curDate, platform: trip.platform,
-    time: trip.time || null, duration: trip.duration, origin: trip.origin, dest: trip.dest,
-    origin_full: trip.originFull || trip.origin, dest_full: trip.destFull || trip.dest,
-    value: trip.value, km: trip.km, category: trip.category, surge: trip.surge, airport: trip.airport,
-    dinamico: trip.dinamico, tip: trip.tip, source: 'import_ai',
-    dinheiro: !!trip.dinheiro, pedagio: !!trip.pedagio, pedagio_valor: trip.pedagioValor||0,
-    service_fee: trip.serviceFee ?? null, taxa_zero: !!trip.taxaZero,
-    km_estimado: !!trip.kmEstimado }));
-
-  // Reconciliação de sessões — dry run para saber o que vai acontecer
-  const recon = reconcileSessionsForDay(S.curDate, true);
-  const hasChanges = recon.grouped > 0 || recon.created > 0;
 
   const dateHint = S.curDate !== DB.today()
     ? ` (data: ${S.curDate.split('-').reverse().slice(0,2).join('/')})` : '';
   const parts = [];
-  if (added > 0) parts.push(`${added} corrida${added!==1?'s':''} importada${added!==1?'s':''}${dateHint}`);
-  if (updated > 0) parts.push(`${updated} já capturada${updated!==1?'s':''} automaticamente, valor atualizado`);
+  if (added > 0) parts.push(`${added} corrida${added!==1?'s':''} nova${added!==1?'s':''} importada${added!==1?'s':''}${dateHint}`);
+  if (updated > 0) parts.push(`${updated} já capturada${updated!==1?'s':''} automaticamente, valor confirmado`);
   if (skipped > 0) parts.push(`${skipped} ignorada${skipped!==1?'s':''} (já existente${skipped!==1?'s':''})`);
   const baseMsg = parts.length ? parts.join('. ')+'.' : 'Nenhuma corrida nova.';
 
-  if (hasChanges) {
-    const reconMsg = [
-      recon.grouped > 0 ? `${recon.grouped} agrupada${recon.grouped!==1?'s':''} em sessão existente` : '',
-      recon.created > 0 ? `${recon.created} sessão${recon.created!==1?'es':''} nova${recon.created!==1?'s':''} criada${recon.created!==1?'s':''}` : ''
-    ].filter(Boolean).join(' e ');
-
-    showConfirm(
-      baseMsg + `\n\nAlgumas corridas ficaram fora de sessões GPS: ${reconMsg}. Confirmar ajuste automático?`,
-      () => {
-        reconcileSessionsForDay(S.curDate);
-        try{renderJornada();}catch(e){}
-        try{renderHome();}catch(e){}
-        if (S.curDate !== DB.today()) S.corridasPeriod = 'tudo';
-        try{renderCorridasActive();}catch(e){}
-        showToast('Sessões ajustadas!', 'success');
-      },
-      { confirmLabel: 'Confirmar', cancelLabel: 'Manter como está',
-        onCancel: () => { try{renderJornada();}catch(e){} try{renderHome();}catch(e){} if(S.curDate!==DB.today())S.corridasPeriod='tudo'; try{renderCorridasActive();}catch(e){} } }
-    );
-  } else {
-    try{renderJornada();}catch(e){}
-    try{renderHome();}catch(e){}
-    // Garantir que Corridas mostra a data certa independente do filtro
-    if (S.curDate !== DB.today()) S.corridasPeriod = 'tudo';
-    try{renderCorridasActive();}catch(e){}
-    showToast(baseMsg, skipped > 0 ? 'info' : 'success');
-  }
+  try{renderJornada();}catch(e){}
+  try{renderHome();}catch(e){}
+  // Garantir que Corridas mostra a data certa independente do filtro
+  if (S.curDate !== DB.today()) S.corridasPeriod = 'tudo';
+  try{renderCorridasActive();}catch(e){}
+  showToast(baseMsg, skipped > 0 ? 'info' : 'success');
 }
 
 // ══════════════════════════════════════════════
