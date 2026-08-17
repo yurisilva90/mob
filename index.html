@@ -12874,7 +12874,7 @@ function infOpenRelatar(){
   const types = {
     transito: {label:'Trânsito',     color:'#F97316', icon:FEED_TYPES.transito.icon, expMin:FEED_TYPES.transito.expMin},
     risco:    {label:'Alerta',       color:'#DC2626', icon:FEED_TYPES.risco.icon,    expMin:FEED_TYPES.risco.expMin},
-    blitz:    {label:'Policiamento', color:'#2563EB', icon:FEED_TYPES.blitz.icon,    expMin:FEED_TYPES.blitz.expMin}
+    blitz:    {label:'Fiscalização', color:'#2563EB', icon:FEED_TYPES.blitz.icon,    expMin:FEED_TYPES.blitz.expMin}
   };
   _infRelState.types = types;
   document.getElementById('inf-relatar-title').textContent = 'Informe';
@@ -12931,8 +12931,8 @@ function infRelatarShowTransito(){
 // Policiamento — "quem" (2 col) + "fazendo o quê" (3 col) na mesma tela;
 // publica sozinho assim que os dois têm uma opção marcada.
 function infRelatarShowPoliciamento(){
-  document.getElementById('inf-relatar-title').textContent = 'Policiamento';
-  infRelatarShowBack('Policiamento', infOpenRelatar);
+  document.getElementById('inf-relatar-title').textContent = 'Fiscalização';
+  infRelatarShowBack('Fiscalização', infOpenRelatar);
   _infRelState.orgao = null; _infRelState.acao = null;
   infRelatarRenderPoliciamento();
 }
