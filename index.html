@@ -1224,6 +1224,10 @@ h1.hd-title{font-family:var(--font-brand)!important}
 .feed-cp-types::-webkit-scrollbar{display:none}
 .feed-t-chip{flex:0 0 auto;display:flex;align-items:center;gap:6px;border-radius:12px;padding:8px 12px;font-size:11.5px;font-weight:800;border:1.5px solid var(--line);background:var(--card);color:var(--muted);white-space:nowrap;cursor:pointer;font-family:var(--font-app)}
 .qr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.inf-relatar-loc-chip{display:flex;align-items:center;gap:9px;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:14px;padding:12px 12px 12px 13px;margin:0 0 14px}
+.inf-relatar-loc-ic{width:30px;height:30px;border-radius:9px;background:#DBEAFE;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-relatar-loc-txt{flex:1;min-width:0;font-size:13.5px;font-weight:800;color:#1E40AF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inf-relatar-loc-btn{flex-shrink:0;border:0;background:#2563EB;color:#fff;font-size:11px;font-weight:800;padding:7px 12px;border-radius:9px;cursor:pointer;touch-action:manipulation}
 .qr-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:20px 6px;border-radius:18px;border:0;cursor:pointer;touch-action:manipulation;color:#fff}
 .qr-btn svg{width:30px;height:30px}
 .qr-label{font-size:12px;font-weight:800;color:#fff}
@@ -2133,7 +2137,11 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
       <span id="inf-relatar-back-lbl"></span>
     </div>
-    <div id="inf-relatar-loc" style="font-size:11px;color:var(--muted);margin:0 0 14px">📍 localizando…</div>
+    <div id="inf-relatar-loc" class="inf-relatar-loc-chip">
+      <div class="inf-relatar-loc-ic"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#2563EB" stroke-width="2.3"><path d="M3 20h18M5 20V9l7-5 7 5v11M9 20v-6h6v6"/></svg></div>
+      <span id="inf-relatar-loc-txt" class="inf-relatar-loc-txt">Localizando…</span>
+      <button class="inf-relatar-loc-btn" onclick="infRelatarAlterarLocal()">Alterar</button>
+    </div>
     <div id="inf-relatar-body"></div>
   </div>
 </div>
@@ -12689,7 +12697,8 @@ function infVoltarZonas(){
   document.getElementById('inf-bairros-inline').style.display='none';
 }
 
-function infAbrirGps(){
+function infAbrirGps(mode){
+  mode = mode || 'browse';
   document.getElementById('inf-gps-list').innerHTML='<div class="inf-empty">Obtendo localização…</div>';
   document.getElementById('inf-ov-gps').classList.add('open');
   if(!navigator.geolocation){document.getElementById('inf-gps-list').innerHTML='<div class="inf-empty">GPS não disponível</div>';return;}
@@ -12707,8 +12716,11 @@ function infAbrirGps(){
       const priority=['primary','secondary','tertiary','residential'];
       const ruas=[];const seen=new Set([ruaAtual]);
       [...oD.elements].sort((a,b)=>{const pa=priority.indexOf(a.tags.highway);const pb=priority.indexOf(b.tags.highway);return(pa<0?99:pa)-(pb<0?99:pb);}).forEach(el=>{const n=el.tags.name;if(n&&!seen.has(n)){seen.add(n);ruas.push(n);}});
-      let html=`<div class="inf-loc-item" onclick="infFecharOv('inf-ov-gps');infAbrirLocal(null,'${ruaAtual.replace(/'/g,"\\'")}','rua')"><div class="inf-loc-ic" style="background:#CCFBF1"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#14B8A6" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg></div><div class="inf-loc-body"><div class="inf-loc-name" style="color:#14B8A6">${ruaAtual}</div><div class="inf-loc-sub">Você está aqui · ${bairro}</div></div></div>`;
-      ruas.slice(0,10).forEach(r=>{html+=`<div class="inf-loc-item" onclick="infFecharOv('inf-ov-gps');infAbrirLocal(null,'${r.replace(/'/g,"\\'")}','rua')"><div class="inf-loc-ic" style="background:#CCFBF1"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#14B8A6" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/></svg></div><div class="inf-loc-body"><div class="inf-loc-name">${r}</div><div class="inf-loc-sub">Próxima · ≈300m</div></div></div>`;});
+      const onTap = (nome) => mode === 'relatar'
+        ? `infRelatarPickLocal('${nome.replace(/'/g,"\\'")}')`
+        : `infFecharOv('inf-ov-gps');infAbrirLocal(null,'${nome.replace(/'/g,"\\'")}','rua')`;
+      let html=`<div class="inf-loc-item" onclick="${onTap(ruaAtual)}"><div class="inf-loc-ic" style="background:#CCFBF1"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#14B8A6" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg></div><div class="inf-loc-body"><div class="inf-loc-name" style="color:#14B8A6">${ruaAtual}</div><div class="inf-loc-sub">Você está aqui · ${bairro}</div></div></div>`;
+      ruas.slice(0,10).forEach(r=>{html+=`<div class="inf-loc-item" onclick="${onTap(r)}"><div class="inf-loc-ic" style="background:#CCFBF1"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#14B8A6" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/></svg></div><div class="inf-loc-body"><div class="inf-loc-name">${r}</div><div class="inf-loc-sub">Próxima · ≈300m</div></div></div>`;});
       document.getElementById('inf-gps-list').innerHTML=html;
     }catch(e){document.getElementById('inf-gps-list').innerHTML='<div class="inf-empty">Erro ao buscar. Tente novamente.</div>';}
   },()=>{document.getElementById('inf-gps-list').innerHTML='<div class="inf-empty">Permissão negada</div>';},{timeout:10000,enableHighAccuracy:true});
@@ -12908,22 +12920,43 @@ function infOpenRelatar(){
         <span class="qr-label">${t.label}</span>
       </div>`
     ).join('') + `</div>`;
-  const locEl = document.getElementById('inf-relatar-loc');
-  locEl.textContent = '📍 localizando…';
+  const locTxt = document.getElementById('inf-relatar-loc-txt');
+  locTxt.textContent = 'Localizando…';
   openMo('mo-inf-relatar');
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(async pos=>{
-      _infRelState.lat = pos.coords.latitude; _infRelState.lng = pos.coords.longitude;
-      try{
-        const revR = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&zoom=16&format=json&accept-language=pt`,{headers:{'User-Agent':'MoB/1.0'}});
-        const rev = await revR.json();
-        _infRelState.address = rev.address?.road || rev.address?.suburb || rev.address?.neighbourhood || null;
-      }catch(e){ _infRelState.address = null; }
-      const el = document.getElementById('inf-relatar-loc');
-      if (el) el.textContent = '📍 ' + (_infRelState.address || 'localização atual');
-    }, ()=>{ const el=document.getElementById('inf-relatar-loc'); if(el) el.textContent='📍 localização indisponível'; },
-    {timeout:7000, maximumAge:60000});
-  } else { locEl.textContent = '📍 GPS indisponível'; }
+  infRelatarBuscarLocalizacao();
+}
+// Pede o GPS e preenche o chip de endereço — separado do resto pra poder
+// ser chamado de novo depois que a pessoa toca "Alterar" e volta.
+function infRelatarBuscarLocalizacao(){
+  const locTxt = document.getElementById('inf-relatar-loc-txt');
+  if (!navigator.geolocation) { if (locTxt) locTxt.textContent = 'GPS indisponível'; return; }
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    _infRelState.lat = pos.coords.latitude; _infRelState.lng = pos.coords.longitude;
+    try{
+      const revR = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&zoom=16&format=json&accept-language=pt`,{headers:{'User-Agent':'MoB/1.0'}});
+      const rev = await revR.json();
+      _infRelState.address = rev.address?.road || rev.address?.suburb || rev.address?.neighbourhood || null;
+    }catch(e){ _infRelState.address = null; }
+    const el = document.getElementById('inf-relatar-loc-txt');
+    if (el) el.textContent = _infRelState.address || 'Localização atual';
+  }, ()=>{ const el=document.getElementById('inf-relatar-loc-txt'); if(el) el.textContent='Localização indisponível'; },
+  {timeout:7000, maximumAge:60000});
+}
+// "Alterar" (16/08/2026, pedido do Yuri) — reaproveita a MESMA busca de
+// rua próxima que "Minha área" já usa (infAbrirGps), só que em vez de
+// abrir o painel de navegação, seta o endereço da corrida atual e volta
+// pro Informe. Motorista pode não estar exatamente onde o GPS achou, ou
+// o GPS errou — dá pra corrigir manualmente antes de publicar.
+function infRelatarAlterarLocal(){
+  closeMo('mo-inf-relatar');
+  infAbrirGps('relatar');
+}
+function infRelatarPickLocal(nome){
+  _infRelState.address = nome;
+  infFecharOv('inf-ov-gps');
+  openMo('mo-inf-relatar');
+  const el = document.getElementById('inf-relatar-loc-txt');
+  if (el) el.textContent = nome;
 }
 function infRelatarShowBack(label, fn){
   _infRelState.backFn = fn;
