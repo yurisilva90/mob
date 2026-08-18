@@ -2013,6 +2013,9 @@ h1.hd-title{font-family:var(--font-brand)!important}
         <div class="inf-panel-loc" id="inf-panel-loc">—</div>
         <div class="inf-panel-meta" id="inf-panel-meta"></div>
       </div>
+      <button class="inf-panel-fav" id="inf-panel-map" onclick="infAbrirNoMapa()" style="display:none" aria-label="Abrir no mapa">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#0EA5E9" stroke-width="2.2"><path d="M9 20l-5.5 2V6L9 4l6 2 5.5-2v16L15 22l-6-2z"/><line x1="9" y1="4" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="20"/></svg>
+      </button>
       <button class="inf-panel-fav" id="inf-panel-fav" onclick="infToggleFav()">
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#F59E0B" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
       </button>
@@ -12357,7 +12360,7 @@ const INF_SDBDB = [
   {n:'Copacabana Palace',t:'hotel'},{n:'Fairmont Rio',t:'hotel'},{n:'Intercontinental',t:'hotel'},
   {n:'Windsor Barra',t:'hotel'},{n:'Sheraton Grand',t:'hotel'},{n:'Ibis Copacabana',t:'hotel'},
 ];
-let _infLoc=null,_infTipoKey=null,_infMinutos=60,_infRepTipo=null,_infRepValor=null,_infRepDetalhe=null;
+let _infLoc=null,_infTipoKey=null,_infMinutos=60,_infRepTipo=null,_infRepValor=null,_infRepDetalhe=null,_infPanelVenue=null;
 let _infFavs=JSON.parse(localStorage.getItem('sm_inf_favs')||'[]');
 const INF_AVC=['#6D28D9','#0369A1','#B45309','#0F766E','#15803D','#BE123C','#7C3AED','#0284C7'];
 const INF_BADGE={dinamico:'infbd',transito:'infbt',fiscalizacao:'infbf',fila:'infbfi',demanda:'infbde',lotacao:'infblo',acidente:'infbac'};
@@ -12520,6 +12523,25 @@ function infAbrirLocal(el,nome,tipoKey){
   infCarregarInformes(nome,tipoKey);
   // Realtime: assina novos informes para esse local
   infSubscribeRealtime(nome,tipoKey);
+  // Botão "Abrir no mapa" (16/08/2026, Fase 1 — pedido do Yuri) — busca a
+  // coordenada no venue_cache (fonte OpenStreetMap). Some se não achar em
+  // vez de abrir um mapa sem endereço nenhum.
+  _infPanelVenue = null;
+  const mapBtn = document.getElementById('inf-panel-map');
+  if (mapBtn) mapBtn.style.display = 'none';
+  if (_SUPA) {
+    _SUPA.from('venue_cache').select('lat,lng').ilike('name', nome).limit(1).then(({data}) => {
+      if (data && data.length) {
+        _infPanelVenue = data[0];
+        if (mapBtn) mapBtn.style.display = 'flex';
+      }
+    });
+  }
+}
+function infAbrirNoMapa(){
+  if (!_infPanelVenue) return;
+  const url = `https://www.google.com/maps/search/?api=1&query=${_infPanelVenue.lat},${_infPanelVenue.lng}`;
+  window.open(url, '_blank');
 }
 
 async function infCarregarInformes(nome,tipoKey){
