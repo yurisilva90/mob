@@ -930,7 +930,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .inf-city{padding:8px 14px!important;font-size:13px!important;border-width:1.5px!important;gap:6px!important}
 .inf-city-dot{width:8px!important;height:8px!important}
 .inf-search-toggle{width:38px;height:38px;border-radius:11px;background:var(--card);border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;flex-shrink:0;touch-action:manipulation}
-.inf-tabs-wrap{position:sticky;top:74px;background:var(--bg);z-index:9;border-bottom:1px solid var(--line);padding-bottom:2px;margin-bottom:2px}
+.inf-tabs-wrap{position:sticky;top:var(--inf-topbar-h, 58px);background:var(--bg);z-index:9;border-bottom:1px solid var(--line);padding-bottom:2px;margin-bottom:2px}
 .inf-tabs{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 14px 9px}
 /* Barra "Relatar agora" — fixa acima da nav inferior, pedido do Yuri
    (16/08/2026): motorista dirigindo precisa alcançar rápido com o
@@ -1225,7 +1225,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
 .feed-t-chip{flex:0 0 auto;display:flex;align-items:center;gap:6px;border-radius:12px;padding:8px 12px;font-size:11.5px;font-weight:800;border:1.5px solid var(--line);background:var(--card);color:var(--muted);white-space:nowrap;cursor:pointer;font-family:var(--font-app)}
 .qr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .inf-relatar-loc-chip{display:flex;align-items:center;gap:9px;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:14px;padding:12px 12px 12px 13px;margin:0 0 14px}
-.inf-relatar-loc-ic{width:30px;height:30px;border-radius:9px;background:#DBEAFE;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-relatar-loc-ic{width:30px;height:30px;border-radius:9px;background:#CCFBF1;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .inf-relatar-loc-txt{flex:1;min-width:0;font-size:13.5px;font-weight:800;color:#1E40AF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .inf-relatar-loc-btn{flex-shrink:0;border:0;background:#2563EB;color:#fff;font-size:11px;font-weight:800;padding:7px 12px;border-radius:9px;cursor:pointer;touch-action:manipulation}
 .qr-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:20px 6px;border-radius:18px;border:0;cursor:pointer;touch-action:manipulation;color:#fff}
@@ -2138,7 +2138,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <span id="inf-relatar-back-lbl"></span>
     </div>
     <div id="inf-relatar-loc" class="inf-relatar-loc-chip">
-      <div class="inf-relatar-loc-ic"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#2563EB" stroke-width="2.3"><path d="M3 20h18M5 20V9l7-5 7 5v11M9 20v-6h6v6"/></svg></div>
+      <div class="inf-relatar-loc-ic" id="inf-relatar-loc-ic"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#14B8A6" stroke-width="2.3"><circle cx="12" cy="12" r="4"/></svg></div>
       <span id="inf-relatar-loc-txt" class="inf-relatar-loc-txt">Localizando…</span>
       <button class="inf-relatar-loc-btn" onclick="infRelatarAlterarLocal()">Alterar</button>
     </div>
@@ -12880,6 +12880,18 @@ function infBuscarGlobal(q){
 }
 // Busca colapsável (16/08/2026, pedido do Yuri) — vira ícone, só expande
 // quando toca, no lugar do campo fixo que ocupava uma linha inteira.
+// Mantém a barra de abas do Informes grudada certinho embaixo do topbar,
+// medindo a altura real em vez de chutar um valor fixo (16/08/2026 —
+// bug real: header colapsável mudou de altura, valor fixo antigo (74px)
+// cortava a primeira lista). ResizeObserver corrige sozinho pra sempre,
+// não importa o que mude na altura do topbar no futuro.
+(function infWatchTopbarHeight(){
+  const el = document.getElementById('inf-topbar');
+  if (!el || typeof ResizeObserver === 'undefined') return;
+  const apply = () => document.documentElement.style.setProperty('--inf-topbar-h', el.offsetHeight + 'px');
+  new ResizeObserver(apply).observe(el);
+  apply();
+})();
 function infToggleSearch(){
   const el = document.getElementById('inf-search-fixed');
   const btn = document.getElementById('inf-search-toggle');
