@@ -1064,7 +1064,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .inf-comment-txt b{font-weight:800}
 .inf-comment-input-row{display:flex;gap:8px;align-items:center;margin-top:4px}
 .inf-comment-input{flex:1;border:1.5px solid var(--line);border-radius:10px;padding:8px 11px;font-size:11px;font-family:inherit;outline:none}
-.inf-comment-send{width:32px;height:32px;border-radius:10px;background:var(--navy);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:0;cursor:pointer;touch-action:manipulation}
+.inf-comment-send{width:32px;height:32px;border-radius:10px;background:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:0;cursor:pointer;touch-action:manipulation}
 /* reportar botão */
 .inf-rep-wrap{padding:9px 14px 14px;flex-shrink:0}
 .inf-rep-btn{width:100%;height:48px;border-radius:14px;border:0;background:#F59E0B;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px}
@@ -12701,7 +12701,7 @@ async function infPostCommentsLoad(postId){
       ${items || '<div style="font-size:11px;color:var(--muted);margin-bottom:8px">Nenhum comentário ainda</div>'}
       <div class="inf-comment-input-row">
         <input class="inf-comment-input" id="ipr-cinput-${postId}" placeholder="Escrever um comentário…">
-        <button class="inf-comment-send" onclick="infPostCommentSend('${postId}')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+        <button class="inf-comment-send" onclick="infPostCommentSend('${postId}')"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--blue)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
       </div>
     </div>`;
   }catch(e){ panel.innerHTML = '<div class="inf-post-comments"><div style="font-size:11px;color:var(--muted)">Erro ao carregar</div></div>'; }
