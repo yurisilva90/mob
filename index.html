@@ -842,23 +842,17 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 /* ── Favoritos ── */
 .inf-favs{padding:4px 14px 6px;display:none}
 .inf-favs.has-favs{display:block}
-.inf-favs-lbl{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
-.inf-favs-lbl span{font-size:9.5px;font-weight:800;color:var(--muted2);text-transform:uppercase;letter-spacing:.07em}
-.inf-favs-lbl a{font-size:11px;font-weight:700;color:#0A2F6B;cursor:pointer;text-decoration:none}
-.inf-favs-row{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
-.inf-fav-chip{background:var(--card);border:2px solid var(--line);border-radius:13px;
-  padding:9px 5px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;
-  gap:4px;position:relative;transition:border-color .15s,transform .1s;min-height:60px}
-.inf-fav-chip:active{transform:scale(.96)}
-.inf-fav-chip.active{border-color:#0A2F6B}
-.inf-fav-chip.empty{border-style:dashed;background:transparent}
-.inf-fav-ic{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center}
-.inf-fav-name{font-size:9.5px;font-weight:700;text-align:center;line-height:1.2;
-  overflow:hidden;white-space:nowrap;width:100%;text-overflow:ellipsis;padding:0 2px}
-.inf-fav-ct{position:absolute;top:4px;right:4px;font-size:7.5px;font-weight:800;
-  background:var(--red);color:#fff;border-radius:99px;padding:1px 4px}
-.inf-fav-empty-ic{opacity:.3}
-.inf-fav-empty-lbl{font-size:9px;color:var(--muted2);font-weight:600}
+.inf-favs-scroll{display:flex;gap:10px;overflow-x:auto;padding:0 14px 10px}
+.inf-fav-chip{flex:0 0 auto;max-width:230px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:10px}
+.inf-fav-chip:active{transform:scale(.97)}
+.inf-fav-ic{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-fav-name{font-size:12.5px;font-weight:800;white-space:nowrap}
+.inf-fav-sub{font-size:10px;color:var(--muted);margin-top:1px;white-space:nowrap}
+.inf-fav-tags{display:flex;gap:5px;margin-top:6px}
+.inf-fav-tag{font-size:9px;font-weight:800;color:#B45309;background:#FFFBEB;padding:2px 7px;border-radius:99px;white-space:nowrap}
+.inf-fav-chip.empty{border-style:dashed;justify-content:center;min-width:110px}
+.inf-fav-empty-ic{opacity:.35}
+.inf-fav-empty-lbl{font-size:10px;color:var(--muted2);font-weight:700}
 
 .inf-search-dd{position:fixed;left:14px;right:14px;top:88px;background:var(--card);border:1.5px solid var(--line);border-radius:16px;box-shadow:0 8px 28px rgba(15,23,42,.13);z-index:35;overflow:hidden;display:none;max-height:55vh;overflow-y:auto}
 .inf-search-dd.show{display:block}
@@ -871,7 +865,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .inf-sd-dist{margin-left:auto;font-size:10px;font-weight:700;color:var(--muted2);flex-shrink:0}
 .inf-sd-empty{padding:16px;text-align:center;color:var(--muted);font-size:13px;font-weight:600}
 /* destaques 2x2 */
-.inf-sec-lbl{font-size:10px;font-weight:800;color:var(--muted2);text-transform:uppercase;letter-spacing:.07em;padding:7px 14px 4px}
+.inf-sec-lbl{font-size:9.5px;font-weight:800;color:var(--muted2);text-transform:uppercase;letter-spacing:.07em;padding:7px 14px 4px}
 .inf-feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:0 14px}
 .inf-feat{background:var(--card);border:2px solid var(--line);border-radius:17px;padding:10px 10px 8px;cursor:pointer;transition:border-color .15s,transform .1s;position:relative;min-height:70px}
 .inf-feat:active{transform:scale(.97)}
@@ -1036,26 +1030,41 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 /* lista de informes */
 .inf-sep{height:1px;background:var(--line);margin:4px 14px 0;flex-shrink:0}
 .inf-list-wrap{flex:1;overflow-y:auto;padding:0 14px}
-.inf-item{display:flex;align-items:flex-start;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}
-.inf-item:last-child{border-bottom:0}
-.inf-ibadge{border-radius:7px;padding:3px 7px;font-size:9.5px;font-weight:800;flex-shrink:0;margin-top:1px;white-space:nowrap}
-.infbd{background:#EDE9FE;color:#5B21B6}.infbt{background:#FEF3C7;color:#92400E}
-.infbf{background:#FEE2E2;color:#991B1B}.infbfi{background:#DBEAFE;color:#1E40AF}
-.infbde{background:#DCFCE7;color:#15803D}.infblo{background:#F0FDF4;color:#166534}
-.infbac{background:#FFF7ED;color:#92400E}
-.inf-ibody{flex:1;min-width:0}
-.inf-idesc{font-size:12.5px;font-weight:600;line-height:1.3}
-.inf-iage{font-size:10px;color:var(--muted);margin-top:2px}
-.inf-iage .iago{color:#22C55E;font-weight:700}
-.inf-conf1{color:var(--muted2)}.inf-conf2{color:#F59E0B}.inf-conf3{color:#22C55E}
-.inf-votes{display:flex;gap:6px;margin-top:5px}
-.inf-vbtn{display:flex;align-items:center;gap:3px;border:1.5px solid var(--line);border-radius:99px;padding:3px 9px;background:var(--soft);cursor:pointer;font-size:10.5px;font-weight:700;color:var(--muted);font-family:inherit;transition:all .15s}
-.inf-vbtn.up.on{border-color:#22C55E;color:#22C55E;background:rgba(34,197,94,.07)}
-.inf-vbtn.dn.on{border-color:var(--red);color:var(--red);background:rgba(239,68,68,.07)}
-/* avatares sobrepostos */
-.inf-avs{display:flex;align-items:center;flex-shrink:0;flex-direction:row-reverse}
-.inf-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:800;color:#fff;border:2.5px solid var(--card);box-shadow:0 1px 3px rgba(15,23,42,.16);margin-left:-9px}
-.inf-avs .inf-av:last-child{margin-left:0}
+/* Card de informe — versão final aprovada (16/08/2026) */
+.inf-post-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:2px 14px}
+.inf-post-row{padding:12px 0;border-bottom:1px solid #F1F5F9}
+.inf-post-row:last-child{border-bottom:0}
+.inf-post-top{display:flex;align-items:flex-start;gap:11px}
+.inf-post-typecol{display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;width:44px}
+.inf-post-time{font-size:9px;font-weight:800;color:var(--muted)}
+.inf-post-ic{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+.inf-post-typelbl{font-size:7.5px;font-weight:800;text-align:center;line-height:1.1}
+.inf-post-body{flex:1;min-width:0;padding-top:1px}
+.inf-post-txt{font-size:13px;font-weight:800}
+.inf-post-locchip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#1E40AF;background:#EFF6FF;padding:3px 9px;border-radius:8px;margin-top:5px;max-width:100%}
+.inf-post-locchip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.inf-post-actions{display:flex;align-items:center;gap:14px;margin-top:8px}
+.inf-post-act{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;background:none;border:0;font-family:inherit;padding:0;touch-action:manipulation}
+.inf-post-act.on-like{color:#22C55E}
+.inf-post-act.on-dislike{color:var(--red)}
+.inf-post-avs{display:flex;align-items:center;flex-direction:row-reverse;flex-shrink:0;margin-top:2px}
+.inf-post-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:800;color:#fff;border:2.5px solid var(--card);box-shadow:0 1px 3px rgba(15,23,42,.16);margin-left:-10px}
+.inf-post-av.more{background:#94A3B8}
+.inf-post-av:last-child{margin-left:0}
+/* Expansão: motivo do "não curtir" */
+.inf-post-dislike-panel{margin-top:11px;margin-left:55px;padding:12px;background:#FEF2F2;border:1.5px solid #FECACA;border-radius:13px}
+.inf-post-dislike-q{font-size:11.5px;font-weight:800;color:#991B1B;margin-bottom:9px}
+.inf-post-dislike-opts{display:flex;gap:8px}
+.inf-post-dislike-opt{flex:1;padding:9px 6px;border-radius:10px;border:1.5px solid #FECACA;background:#fff;font-size:11px;font-weight:700;color:#B91C1C;text-align:center;cursor:pointer;font-family:inherit;touch-action:manipulation}
+/* Expansão: comentários */
+.inf-post-comments{margin-top:11px;margin-left:55px;padding-top:11px;border-top:1px solid #F1F5F9}
+.inf-comment-item{display:flex;gap:8px;margin-bottom:9px}
+.inf-comment-av{width:22px;height:22px;border-radius:50%;background:#DBEAFE;color:#2563EB;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-comment-txt{font-size:11px;line-height:1.4}
+.inf-comment-txt b{font-weight:800}
+.inf-comment-input-row{display:flex;gap:8px;align-items:center;margin-top:4px}
+.inf-comment-input{flex:1;border:1.5px solid var(--line);border-radius:10px;padding:8px 11px;font-size:11px;font-family:inherit;outline:none}
+.inf-comment-send{width:32px;height:32px;border-radius:10px;background:var(--navy);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:0;cursor:pointer;touch-action:manipulation}
 /* reportar botão */
 .inf-rep-wrap{padding:9px 14px 14px;flex-shrink:0}
 .inf-rep-btn{width:100%;height:48px;border-radius:14px;border:0;background:#F59E0B;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px}
@@ -1225,6 +1234,17 @@ h1.hd-title{font-family:var(--font-brand)!important}
 .feed-t-chip{flex:0 0 auto;display:flex;align-items:center;gap:6px;border-radius:12px;padding:8px 12px;font-size:11.5px;font-weight:800;border:1.5px solid var(--line);background:var(--card);color:var(--muted);white-space:nowrap;cursor:pointer;font-family:var(--font-app)}
 .qr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .inf-relatar-loc-chip{display:flex;align-items:center;gap:9px;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:14px;padding:12px 12px 12px 13px;margin:0 0 14px}
+.inf-city{cursor:pointer;touch-action:manipulation}
+.inf-city-search-box{display:flex;align-items:center;gap:8px;background:var(--soft);border-radius:12px;padding:11px 13px;margin-bottom:14px}
+.inf-city-search-box input{border:0;background:transparent;outline:none;font-size:13px;flex:1;font-family:inherit;color:var(--text)}
+.inf-city-item{display:flex;align-items:center;gap:11px;padding:11px 4px;border-bottom:1px solid #F1F5F9;cursor:pointer;touch-action:manipulation}
+.inf-city-item:last-child{border-bottom:0}
+.inf-city-item-ic{width:32px;height:32px;border-radius:9px;background:var(--soft);display:flex;align-items:center;justify-content:center;color:var(--muted);flex-shrink:0}
+.inf-city-item-name{font-size:12.5px;font-weight:700}
+.inf-city-item-uf{font-size:10px;color:var(--muted)}
+.inf-city-item.active{background:#EFF6FF;margin:0 -8px;padding:11px 8px;border-radius:10px}
+.inf-city-item.active .inf-city-item-name{color:#1E40AF}
+.inf-city-item-check{margin-left:auto;color:#2563EB;flex-shrink:0}
 .inf-relatar-loc-ic{width:30px;height:30px;border-radius:9px;background:#CCFBF1;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .inf-relatar-loc-txt{flex:1;min-width:0;font-size:13.5px;font-weight:800;color:#1E40AF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .inf-relatar-loc-btn{flex-shrink:0;border:0;background:#2563EB;color:#fff;font-size:11px;font-weight:800;padding:7px 12px;border-radius:9px;cursor:pointer;touch-action:manipulation}
@@ -1888,7 +1908,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <button class="inf-search-toggle" id="inf-search-toggle" onclick="infToggleSearch()" aria-label="Buscar local">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       </button>
-      <div class="inf-city"><div class="inf-city-dot"></div><span>Rio de Janeiro</span></div>
+      <div class="inf-city" id="inf-city-btn" onclick="infAbrirCidade()"><div class="inf-city-dot"></div><span id="inf-city-name">Rio de Janeiro</span><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#94A3B8;margin-left:1px"><path d="M6 9l6 6 6-6"/></svg></div>
     </div>
     <div class="inf-search-fixed" id="inf-search-fixed" style="display:none">
       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -1923,23 +1943,11 @@ h1.hd-title{font-family:var(--font-brand)!important}
 
     <!-- ═══ ABA: AGORA ═══ -->
     <div class="inf-panelbody inf-fill" id="inf-tab-agora">
-      <div class="inf-sec-lbl">Minha área</div>
-      <div class="inf-featF" id="inf-minha-card" style="background:linear-gradient(135deg,#0EA5E9,#0284C7);border-color:transparent;padding:20px 18px 19px" onclick="infAbrirGps()">
-        <div class="inf-featF-top">
-          <div class="inf-featF-id">
-            <div class="inf-featF-ic" style="background:rgba(255,255,255,.2);width:44px;height:44px;border-radius:12px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div>
-            <div><div class="inf-featF-name" style="color:#fff;font-size:18px">Minha área</div><div class="inf-featF-sub" id="inf-minha-sub" style="color:rgba(255,255,255,.75)">Raio de 300m · toque para ver ruas</div></div>
-          </div>
-          <div class="inf-featF-ct" id="inf-minha-ct" style="display:none">0</div>
-        </div>
-        <div class="inf-featF-mini" id="inf-minha-mini" style="background:rgba(255,255,255,.16);display:none"></div>
-      </div>
+      <div class="inf-sec-lbl" id="inf-favs-section" style="display:none">Seus favoritos</div>
+      <div class="inf-favs-scroll" id="inf-favs-row"></div>
 
-      <div class="inf-sec-lbl">Informe da área</div>
-      <div class="inf-feed-list" id="inf-feed-area" style="margin-bottom:2px"><div class="inf-empty-feed">Ative o GPS pra ver os informes perto de você</div></div>
-
-      <div class="inf-sec-lbl">Últimos informes</div>
-      <div class="inf-feed-list inf-feed-fill" id="inf-feed-city"><div class="inf-empty-feed">Carregando…</div></div>
+      <div class="inf-sec-lbl">Informes perto de você</div>
+      <div id="inf-feed-agora"><div class="inf-empty-feed">Carregando…</div></div>
     </div>
 
     <!-- ═══ ABA: AEROPORTOS ═══ -->
@@ -2123,6 +2131,19 @@ h1.hd-title{font-family:var(--font-brand)!important}
 
 
 <!-- ════ MODAIS ════ -->
+
+<!-- Informes: trocar cidade (16/08/2026, pedido do Yuri) -->
+<div class="mo" id="mo-inf-cidade">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head"><h2>Escolher cidade</h2><button class="xbtn" onclick="closeMo('mo-inf-cidade')">&#x2715;</button></div>
+    <div class="inf-city-search-box">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#94A3B8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="inf-city-search-input" placeholder="Buscar cidade…" oninput="infBuscarCidade(this.value)">
+    </div>
+    <div id="inf-city-list"></div>
+  </div>
+</div>
 
 <!-- Informes: Relatar (seleção de tipo — sem texto livre, pedido do Yuri
      16/08/2026. Fluxo com etapas de detalhe por tipo, aprovado.) -->
@@ -12194,27 +12215,17 @@ authInit();
 initAds();
 function infRenderFavs(){
   const row=document.getElementById('inf-favs-row');if(!row)return;
-  // 4 slots: 3 favoritados + 1 vazio, ou menos se tiver menos
-  const slots=[];
-  for(let i=0;i<4;i++){
-    if(_infFavs[i]) slots.push(_infFavs[i]);
-    else slots.push(null);
-  }
+  const sec=document.getElementById('inf-favs-section');
+  if(!_infFavs.length){ row.innerHTML=''; if(sec) sec.style.display='none'; return; }
+  if(sec) sec.style.display='block';
   const t_fn=k=>INF_TIPOS[k]||INF_TIPOS.bairro;
-  row.innerHTML=slots.map((f,i)=>{
-    if(!f) return`<div class="inf-fav-chip empty" onclick="showToast('Toque na ★ dentro de qualquer local')">
-      <div class="inf-fav-empty-ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
-      <div class="inf-fav-empty-lbl">Adicionar</div>
-    </div>`;
+  row.innerHTML=_infFavs.map(f=>{
     const t=t_fn(f.t);
-    return`<div class="inf-fav-chip" onclick="infAbrirLocal(this,'${f.n}','${f.t}')">
-      <div class="inf-fav-ic" style="background:${t.bg}">${infIconSvg(f.t,t.cor,12)}</div>
-      <div class="inf-fav-name">${f.n}</div>
+    return`<div class="inf-fav-chip" onclick="infAbrirLocal(this,'${f.n.replace(/'/g,"\\'")}','${f.t}')">
+      <div class="inf-fav-ic" style="background:${t.bg}">${infIconSvg(f.t,t.cor,17)}</div>
+      <div><div class="inf-fav-name">${esc(f.n)}</div><div class="inf-fav-sub">${t.label}</div></div>
     </div>`;
   }).join('');
-  // Ocultar seção se não tiver nenhum favorito
-  const sec=document.getElementById('inf-favs-section');
-  if(sec) sec.style.display=_infFavs.length===0?'none':'block';
 }
 
 function infEditarFavs(){
@@ -12369,6 +12380,9 @@ const INF_SDBDB = [
   {n:'Windsor Barra',t:'hotel'},{n:'Sheraton Grand',t:'hotel'},{n:'Ibis Copacabana',t:'hotel'},
 ];
 let _infLoc=null,_infTipoKey=null,_infMinutos=60,_infRepTipo=null,_infRepValor=null,_infRepDetalhe=null,_infPanelVenue=null;
+// Cidade do Informes (16/08/2026, pedido do Yuri) — antes fixa "Rio de
+// Janeiro" no HTML, agora clicável e persistida.
+let _infCity = JSON.parse(localStorage.getItem('sm_inf_city') || '{"name":"Rio de Janeiro","uf":"RJ"}');
 let _infFavs=JSON.parse(localStorage.getItem('sm_inf_favs')||'[]');
 const INF_AVC=['#6D28D9','#0369A1','#B45309','#0F766E','#15803D','#BE123C','#7C3AED','#0284C7'];
 const INF_BADGE={dinamico:'infbd',transito:'infbt',fiscalizacao:'infbf',fila:'infbfi',demanda:'infbde',lotacao:'infblo',acidente:'infbac'};
@@ -12377,8 +12391,7 @@ function renderInformes(){
   infCarregarContagens();
   infRenderBairrosTab();
   infRenderVenueLists();
-  infCarregarFeedCidade();
-  infCarregarMinhaArea();
+  infCarregarFeedAgora();
 }
 
 function infTab(id){
@@ -12436,47 +12449,36 @@ function infRenderFeedList(elId,informes,vazioMsg){
   }).join('');
 }
 
-async function infCarregarFeedCidade(){
-  if(!_SUPA){infRenderFeedList('inf-feed-city',[],'Sem conexão');return;}
-  try{
-    const{data}=await _SUPA.from('informes')
-      .select('*').eq('is_active',true)
-      .gt('expires_at',new Date().toISOString())
-      .order('created_at',{ascending:false}).limit(20);
-    infRenderFeedList('inf-feed-city',data,'Nenhum informe recente · seja o primeiro a reportar!');
-  }catch(e){console.warn('feed cidade',e);infRenderFeedList('inf-feed-city',[],'Erro ao carregar');}
+function infHaversineM(lat1,lon1,lat2,lon2){
+  const R=6371000, toRad=x=>x*Math.PI/180;
+  const dLat=toRad(lat2-lat1), dLon=toRad(lon2-lon1);
+  const a=Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
-
-// ── Minha área: geolocaliza, acha o bairro mais próximo e carrega stats + feed local ──
-async function infCarregarMinhaArea(){
-  const subEl=document.getElementById('inf-minha-sub');
-  const ctEl=document.getElementById('inf-minha-ct');
-  const miniEl=document.getElementById('inf-minha-mini');
-  if(!navigator.geolocation){infRenderFeedList('inf-feed-area',[],'GPS não disponível');return;}
+// Feed unificado da aba "Agora" (16/08/2026) — substitui os antigos
+// "Informe da área" + "Últimos informes" (2 listas separadas, tabela
+// informes) por 1 lista só, ordenada por proximidade real via GPS,
+// direto de feed_posts.
+async function infCarregarFeedAgora(){
+  infRenderFavs();
+  const wrap=document.getElementById('inf-feed-agora');
+  if(!wrap)return;
+  if(!navigator.geolocation){wrap.innerHTML='<div class="inf-empty-feed">GPS não disponível</div>';return;}
   navigator.geolocation.getCurrentPosition(async pos=>{
     try{
       const{latitude:lat,longitude:lon}=pos.coords;
-      const revR=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&zoom=16&format=json&accept-language=pt`,{headers:{'User-Agent':'MoB/1.0'}});
-      const rev=await revR.json();
-      const bairro=rev.address?.suburb||rev.address?.neighbourhood||rev.address?.city_district||'';
-      if(subEl)subEl.textContent=(bairro?bairro+' · ':'')+'raio de 300m';
-      if(!_SUPA||!bairro)return;
-      const{data}=await _SUPA.from('informes')
-        .select('*').eq('location_name',bairro).eq('is_active',true)
-        .gt('expires_at',new Date().toISOString())
-        .order('created_at',{ascending:false}).limit(10);
-      const n=data?data.length:0;
-      if(ctEl){ctEl.style.display=n>0?'flex':'none';ctEl.textContent=n;}
-      if(miniEl && n>0){
-        const pp={};(data||[]).forEach(r=>{if(!pp[r.param_type])pp[r.param_type]=r;});
-        const stat=(pid)=>{const inf=pp[pid];if(!inf)return'';
-          return`<div class="inf-featF-mstat"><span class="inf-featF-mstat-ic" style="color:#fff">${INF_PICONS[pid]||''}</span><span class="inf-featF-mstat-val" style="color:#fff">${inf.param_value}</span></div>`;};
-        const html=Object.keys(pp).slice(0,6).map(stat).join('');
-        if(html){miniEl.innerHTML=html;miniEl.style.display='grid';}
-      }
-      infRenderFeedList('inf-feed-area',(data||[]).slice(0,3),'Nenhum informe recente na sua área');
-    }catch(e){console.warn('minha area',e);infRenderFeedList('inf-feed-area',[],'Erro ao carregar');}
-  },()=>{if(subEl)subEl.textContent='Permissão de GPS negada';infRenderFeedList('inf-feed-area',[],'Ative o GPS pra ver os informes perto de você');},{timeout:10000,enableHighAccuracy:true});
+      if(!_SUPA){wrap.innerHTML='<div class="inf-empty-feed">Sem conexão</div>';return;}
+      const d=0.02; // ~2km — feed geral da região, mais largo que o painel de 1 local
+      const{data}=await _SUPA.from('feed_posts').select('*')
+        .eq('status','ativo').gt('expires_at',new Date().toISOString())
+        .gte('lat',lat-d).lte('lat',lat+d)
+        .gte('lng',lon-d).lte('lng',lon+d)
+        .order('created_at',{ascending:false}).limit(30);
+      const posts=(data||[]).map(p=>{p._distM=infHaversineM(lat,lon,p.lat,p.lng);return p;})
+        .sort((a,b)=>a._distM-b._distM);
+      wrap.innerHTML = posts.length ? await infBuildPostCardsHtml(posts) : '<div class="inf-empty-feed">Nenhum informe recente por perto · seja o primeiro a reportar!</div>';
+    }catch(e){console.warn('feed agora',e);wrap.innerHTML='<div class="inf-empty-feed">Erro ao carregar</div>';}
+  },()=>{wrap.innerHTML='<div class="inf-empty-feed">Ative o GPS pra ver os informes perto de você</div>';},{timeout:10000,enableHighAccuracy:true});
 }
 
 async function infCarregarContagens(){
@@ -12515,7 +12517,7 @@ async function infCarregarContagens(){
   }catch(e){console.warn('inf cnt',e);}
 }
 
-function infAbrirLocal(el,nome,tipoKey){
+async function infAbrirLocal(el,nome,tipoKey){
   document.querySelectorAll('.inf-feat,.inf-featF,.inf-bchip,.inf-zcard,.inf-vitem').forEach(b=>b.classList.remove('active'));
   if(el)el.classList.add('active');
   _infLoc=nome;_infTipoKey=tipoKey;
@@ -12528,23 +12530,25 @@ function infAbrirLocal(el,nome,tipoKey){
   document.getElementById('inf-panel-meta').textContent='Carregando…';
   document.getElementById('inf-panel-fav').classList.toggle('on',_infFavs.some(f=>f.n===nome));
   document.getElementById('inf-panel').classList.add('open');
-  infCarregarInformes(nome,tipoKey);
-  // Realtime: assina novos informes para esse local
-  infSubscribeRealtime(nome,tipoKey);
-  // Botão "Abrir no mapa" (16/08/2026, Fase 1 — pedido do Yuri) — busca a
-  // coordenada no venue_cache (fonte OpenStreetMap). Some se não achar em
-  // vez de abrir um mapa sem endereço nenhum.
+  // Botão "Abrir no mapa" — busca a coordenada no venue_cache (fonte
+  // OpenStreetMap) ANTES de carregar os informes, porque agora o feed
+  // "Últimos informes" filtra por proximidade real (lat/lng), não mais
+  // por texto exato do nome do local.
   _infPanelVenue = null;
   const mapBtn = document.getElementById('inf-panel-map');
   if (mapBtn) mapBtn.style.display = 'none';
   if (_SUPA) {
-    _SUPA.from('venue_cache').select('lat,lng').ilike('name', nome).limit(1).then(({data}) => {
+    try {
+      const { data } = await _SUPA.from('venue_cache').select('id,lat,lng').ilike('name', nome).limit(1);
       if (data && data.length) {
         _infPanelVenue = data[0];
         if (mapBtn) mapBtn.style.display = 'flex';
       }
-    });
+    } catch(e) { console.warn('venue_cache lookup', e); }
   }
+  infCarregarInformes(nome,tipoKey);
+  // Realtime: assina novos informes para esse local
+  infSubscribeRealtime(nome,tipoKey);
 }
 function infAbrirNoMapa(){
   if (!_infPanelVenue) return;
@@ -12552,74 +12556,188 @@ function infAbrirNoMapa(){
   window.open(url, '_blank');
 }
 
-async function infCarregarInformes(nome,tipoKey){
-  const t=INF_TIPOS[tipoKey]||INF_TIPOS.bairro;
-  let informes=[];
-  try{
-    if(_SUPA){
-      // Busca lista de informes (para exibir na lista com avatares)
-      const{data:lista}=await _SUPA.from('informes')
-        .select('*').eq('location_name',nome).eq('is_active',true)
-        .gt('expires_at',new Date().toISOString())
-        .order('votes_up',{ascending:false}).limit(30);
-      informes=lista||[];
-      // Busca status consolidado (moda por param_type) para os chips
-      const{data:status}=await _SUPA.from('informes_status')
-        .select('*').eq('location_name',nome).limit(20);
-      if(status&&status.length){
-        // Sobrescreve pp (por param) com o valor mais votado de cada tipo
-        status.forEach(r=>{
-          if(!pp[r.param_type]||r.total_up>=(pp[r.param_type]?.votes_up||0)){
-            pp[r.param_type]={param_value:r.param_value,param_detail:r.param_detail,
-              votes_up:r.total_up,confianca:r.confianca};
-          }
-        });
-      }
-    }
-  }catch(e){console.warn('inf load',e);}
-  document.getElementById('inf-panel-meta').textContent=informes.length+' informe'+(informes.length!==1?'s':'')+' · últimos '+_infMinutos+'min';
-  // status
-  const pp={};informes.forEach(r=>{if(!pp[r.param_type])pp[r.param_type]=r;});
-  const chipH=(pid,big)=>{
-    const lbl=INF_PLBL[pid]||pid;const inf=pp[pid];
-    const val=inf?(inf.param_value+(inf.param_detail?' · '+inf.param_detail:'')):'–';
-    const cls=inf?infChipClass(pid,val):'neu';
-    return`<div class="inf-chip ${big?'big':'sm'} ${cls}"><span class="inf-chip-lbl">${lbl}</span><span class="inf-chip-val">${val}</span></div>`;
+// ── Metadados dos 4 tipos de informe manual (Fiscalização/Trânsito/
+// Alerta/Lotação — Demanda e Dinâmico são automáticos, não aparecem
+// aqui como relato de usuário) ──────────────────────────────────────
+const INF_POST_META = {
+  blitz:    {label:'Fiscalização', color:'#2563EB', bg:'#DBEAFE'},
+  transito: {label:'Trânsito',     color:'#EA580C', bg:'#FFEDD5'},
+  risco:    {label:'Alerta',       color:'#DC2626', bg:'#FEF2F2'},
+  lotacao:  {label:'Lotação',      color:'#7C3AED', bg:'#F5F3FF'}
+};
+const INF_TRANSITO_LBL = ['Parado','Muito lento','Lento','Moderado','Fluindo','Livre'];
+const INF_DISLIKE_REASONS = {
+  blitz:    ['Não existe','Já saiu'],
+  transito: ['Mudou','Não é assim'],
+  lotacao:  ['Mudou','Não é assim'],
+  risco:    ['Não existe','Já foi liberado']
+};
+function infPostIconSvg(type){
+  const icons = {
+    blitz: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+    transito: '<rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/>',
+    risco: '<path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/>',
+    lotacao: '<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>'
   };
-  const cols2=t.r2.length>=4?4:t.r2.length>=3?3:t.r2.length||1;
-  document.getElementById('inf-status').innerHTML=
-    `<div class="inf-st-r1">${t.r1.map(p=>chipH(p,true)).join('')}</div>`+
-    (t.r2.length?`<div class="inf-st-r2" style="grid-template-columns:repeat(${cols2},1fr)">${t.r2.map(p=>chipH(p,false)).join('')}</div>`:'');
-  // lista
-  if(!informes.length){document.getElementById('inf-list-wrap').innerHTML='<div class="inf-empty">Nenhum informe recente · seja o primeiro a reportar!</div>';return;}
-  document.getElementById('inf-list-wrap').innerHTML=informes.map((inf,i)=>{
-    const badge=INF_BADGE[inf.param_type]||'infbt';
-    const lbl=esc(INF_PLBL[inf.param_type]||inf.param_type);
-    const desc=esc(inf.param_value)+(inf.param_detail?' · '+esc(inf.param_detail):'');
-    const ageMin=Math.max(0,Math.round((Date.now()-new Date(inf.created_at))/60000));
-    const ageStr=ageMin<1?'agora':ageMin+'min';
-    const conf=inf.votes_up>=10?3:inf.votes_up>=5?2:1;
-    const confLbl=['','fraco','confiável','confirmado'][conf];
-    const confCls=['','inf-conf1','inf-conf2','inf-conf3'][conf];
-    const avN=Math.min(3,1+Math.floor(inf.votes_up/3));
-    const avs=Array.from({length:avN},(_,ai)=>{
-      const c=INF_AVC[(i+ai)%INF_AVC.length];
-      const ltr=(inf.user_id||'MO').slice(ai*2,ai*2+2).toUpperCase();
-      return`<div class="inf-av" style="background:${c};z-index:${avN-ai}">${ltr||'MO'}</div>`;
-    }).join('');
-    return`<div class="inf-item">
-      <div class="inf-ibadge ${badge}">${lbl}</div>
-      <div class="inf-ibody">
-        <div class="inf-idesc">${desc}</div>
-        <div class="inf-iage"><span class="iago">${ageStr}</span> · <span class="${confCls}">${confLbl}</span></div>
-        <div class="inf-votes">
-          <button class="inf-vbtn up" onclick="infVotar('${inf.id}','up',this)"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>${inf.votes_up}</button>
-          <button class="inf-vbtn dn" onclick="infVotar('${inf.id}','dn',this)"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>${inf.votes_dn}</button>
+  return icons[type] || icons.blitz;
+}
+function infPostTitle(p){
+  if (p.type === 'transito') { const n = p.nivel ?? 0; return `${n} · ${INF_TRANSITO_LBL[n]||''}`; }
+  if (p.param_value && p.param_detail) return `${esc(p.param_value)} · ${esc(p.param_detail)}`;
+  if (p.param_value) return esc(p.param_value);
+  return INF_POST_META[p.type]?.label || p.type;
+}
+// Busca em lote quem deu "curtir" em vários posts de uma vez (evita 1
+// query por linha da lista).
+async function infFetchReactorsMap(postIds){
+  if (!postIds.length || !_SUPA) return {};
+  try{
+    const { data } = await _SUPA.from('feed_reactions').select('post_id,user_id')
+      .in('post_id', postIds).eq('vote','up').order('created_at',{ascending:true});
+    const map = {};
+    (data||[]).forEach(r => { (map[r.post_id] = map[r.post_id]||[]).push(r.user_id); });
+    return map;
+  }catch(e){ return {}; }
+}
+function infAvatarsHtml(p, reactorsMap){
+  const ids = [p.user_id, ...(reactorsMap[p.id]||[])].filter((v,i,a)=>v && a.indexOf(v)===i);
+  const shown = ids.slice(0,4);
+  const extra = ids.length - shown.length;
+  let html = extra > 0 ? `<div class="inf-post-av more">+${extra}</div>` : '';
+  html += shown.map(uid => {
+    const c = INF_AVC[Math.abs((uid||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0))%INF_AVC.length];
+    const ltr = (uid||'MO').replace(/-/g,'').slice(0,2).toUpperCase();
+    return `<div class="inf-post-av" style="background:${c}">${ltr}</div>`;
+  }).join('');
+  return html;
+}
+function infPostRowHtml(p, reactorsMap){
+  const meta = INF_POST_META[p.type] || INF_POST_META.blitz;
+  const ageMin = Math.max(0, Math.round((Date.now()-new Date(p.created_at))/60000));
+  const ageStr = ageMin<1 ? 'agora' : ageMin+'min';
+  const distTxt = p._distM!=null ? Math.round(p._distM)+'m · ' : '';
+  const locTxt = distTxt + (p.address || '');
+  return `<div class="inf-post-row" id="ipr-${p.id}">
+    <div class="inf-post-top">
+      <div class="inf-post-typecol">
+        <div class="inf-post-time">${ageStr}</div>
+        <div class="inf-post-ic" style="background:${meta.bg}"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="${meta.color}" stroke-width="2">${infPostIconSvg(p.type)}</svg></div>
+        <div class="inf-post-typelbl" style="color:${meta.color}">${meta.label}</div>
+      </div>
+      <div class="inf-post-body">
+        <div class="inf-post-txt">${infPostTitle(p)}</div>
+        ${locTxt ? `<div class="inf-post-locchip"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span>${esc(locTxt)}</span></div>` : ''}
+        <div class="inf-post-actions">
+          <button class="inf-post-act" onclick="infPostLike('${p.id}',this)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/></svg><span>${p.votes_up||0}</span></button>
+          <button class="inf-post-act" onclick="infPostDislikeToggle('${p.id}','${p.type}')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/></svg></button>
+          <button class="inf-post-act" onclick="infPostCommentsToggle('${p.id}')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>${p.comments_count||0}</span></button>
         </div>
       </div>
-      <div class="inf-avs">${avs}</div>
+      <div class="inf-post-avs">${infAvatarsHtml(p, reactorsMap)}</div>
+    </div>
+    <div id="ipr-dislike-${p.id}"></div>
+    <div id="ipr-comments-${p.id}"></div>
+  </div>`;
+}
+async function infBuildPostCardsHtml(posts){
+  if (!posts.length) return '';
+  const reactorsMap = await infFetchReactorsMap(posts.map(p=>p.id));
+  return `<div class="inf-post-card">${posts.map(p=>infPostRowHtml(p,reactorsMap)).join('')}</div>`;
+}
+// Curtir — sempre soma (sem alternar "descurtir"), atualiza contador na hora.
+async function infPostLike(postId, btn){
+  if (!_supaUser) { showToast('Faça login pra curtir.'); return; }
+  btn.classList.add('on-like');
+  try{
+    await _SUPA.from('feed_reactions').upsert({post_id:postId, user_id:_supaUser.id, vote:'up', reason:null}, {onConflict:'post_id,user_id'});
+    const { data } = await _SUPA.from('feed_posts').select('votes_up').eq('id',postId).single();
+    if (data) { const span = btn.querySelector('span'); if(span) span.textContent = data.votes_up; }
+  }catch(e){ console.warn('like', e); }
+}
+// Não curtir — abre painel perguntando o motivo (texto muda por tipo de
+// informe), pedido do Yuri (16/08/2026). O auto-encerramento por
+// downvote já existe no banco (feed_reactions_apply) — o motivo aqui é
+// só contexto, não precisa mudar essa lógica.
+function infPostDislikeToggle(postId, type){
+  const panel = document.getElementById('ipr-dislike-'+postId);
+  if (!panel) return;
+  if (panel.innerHTML) { panel.innerHTML=''; return; }
+  const reasons = INF_DISLIKE_REASONS[type] || ['Não existe','Já acabou'];
+  panel.innerHTML = `<div class="inf-post-dislike-panel">
+    <div class="inf-post-dislike-q">Por que você não confirma?</div>
+    <div class="inf-post-dislike-opts">
+      ${reasons.map(r=>`<div class="inf-post-dislike-opt" onclick="infPostDislikeSend('${postId}',${JSON.stringify(r)})">${r}</div>`).join('')}
+    </div>
+  </div>`;
+}
+async function infPostDislikeSend(postId, reason){
+  if (!_supaUser) { showToast('Faça login.'); return; }
+  try{
+    await _SUPA.from('feed_reactions').upsert({post_id:postId, user_id:_supaUser.id, vote:'down', reason}, {onConflict:'post_id,user_id'});
+    const row = document.getElementById('ipr-'+postId);
+    if (row) { const btns = row.querySelectorAll('.inf-post-act'); if(btns[1]) btns[1].classList.add('on-dislike'); }
+    document.getElementById('ipr-dislike-'+postId).innerHTML = '';
+    showToast('Obrigado pelo feedback!');
+  }catch(e){ console.warn('dislike', e); showToast('Erro ao enviar.'); }
+}
+// Comentar — expande inline, sem sair da linha (pedido do Yuri).
+function infPostCommentsToggle(postId){
+  const panel = document.getElementById('ipr-comments-'+postId);
+  if (!panel) return;
+  if (panel.innerHTML) { panel.innerHTML=''; return; }
+  infPostCommentsLoad(postId);
+}
+async function infPostCommentsLoad(postId){
+  const panel = document.getElementById('ipr-comments-'+postId);
+  if (!panel) return;
+  panel.innerHTML = '<div class="inf-post-comments"><div style="font-size:11px;color:var(--muted)">Carregando…</div></div>';
+  try{
+    const { data } = await _SUPA.from('feed_comments').select('*').eq('post_id',postId).order('created_at',{ascending:true}).limit(50);
+    const items = (data||[]).map(c => {
+      const ltr = (c.user_id||'MO').replace(/-/g,'').slice(0,2).toUpperCase();
+      return `<div class="inf-comment-item"><div class="inf-comment-av">${ltr}</div><div class="inf-comment-txt">${esc(c.body)}</div></div>`;
+    }).join('');
+    panel.innerHTML = `<div class="inf-post-comments">
+      ${items || '<div style="font-size:11px;color:var(--muted);margin-bottom:8px">Nenhum comentário ainda</div>'}
+      <div class="inf-comment-input-row">
+        <input class="inf-comment-input" id="ipr-cinput-${postId}" placeholder="Escrever um comentário…">
+        <button class="inf-comment-send" onclick="infPostCommentSend('${postId}')"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+      </div>
     </div>`;
-  }).join('');
+  }catch(e){ panel.innerHTML = '<div class="inf-post-comments"><div style="font-size:11px;color:var(--muted)">Erro ao carregar</div></div>'; }
+}
+async function infPostCommentSend(postId){
+  if (!_supaUser) { showToast('Faça login pra comentar.'); return; }
+  const inp = document.getElementById('ipr-cinput-'+postId);
+  const body = (inp?.value||'').trim();
+  if (!body) return;
+  try{
+    await _SUPA.from('feed_comments').insert({post_id:postId, user_id:_supaUser.id, body});
+    await infPostCommentsLoad(postId);
+    // Atualiza o contador visível na linha, sem recarregar a lista toda.
+    const row = document.getElementById('ipr-'+postId);
+    if (row) { const span = row.querySelector('.inf-post-actions .inf-post-act:last-child span'); if (span) span.textContent = (parseInt(span.textContent)||0)+1; }
+  }catch(e){ showToast('Erro ao comentar.'); }
+}
+
+// venue_cache.id já resolvido em _infPanelVenue (infAbrirLocal, roda antes)
+async function infCarregarInformes(nome,tipoKey){
+  let posts=[];
+  try{
+    if(_SUPA && _infPanelVenue){
+      const d=0.003; // ~300m
+      const{data}=await _SUPA.from('feed_posts').select('*')
+        .eq('status','ativo').gt('expires_at',new Date().toISOString())
+        .gte('lat',_infPanelVenue.lat-d).lte('lat',_infPanelVenue.lat+d)
+        .gte('lng',_infPanelVenue.lng-d).lte('lng',_infPanelVenue.lng+d)
+        .order('created_at',{ascending:false}).limit(30);
+      posts=data||[];
+    }
+  }catch(e){console.warn('inf load',e);}
+  document.getElementById('inf-panel-meta').textContent=posts.length+' informe'+(posts.length!==1?'s':'')+' recente'+(posts.length!==1?'s':'');
+  const listEl=document.getElementById('inf-list-wrap');
+  if(!posts.length){listEl.innerHTML='<div class="inf-empty">Nenhum informe recente · seja o primeiro a reportar!</div>';return;}
+  listEl.innerHTML = await infBuildPostCardsHtml(posts);
 }
 
 function infChipClass(pid,val){
@@ -12892,6 +13010,57 @@ function infBuscarGlobal(q){
   new ResizeObserver(apply).observe(el);
   apply();
 })();
+// Trocar cidade (16/08/2026) — abre com a atual marcada + algumas
+// sugestões próximas; busca de verdade via Nominatim (mesma fonte já
+// usada em todo o resto do app pra geocodificação).
+function infAbrirCidade(){
+  document.getElementById('inf-city-search-input').value = '';
+  infRenderCidadeDefaults();
+  openMo('mo-inf-cidade');
+}
+function infRenderCidadeDefaults(){
+  const sugestoes = [
+    {name:'Rio de Janeiro', uf:'RJ'}, {name:'Teresópolis', uf:'RJ'},
+    {name:'Niterói', uf:'RJ'}, {name:'São Paulo', uf:'SP'}
+  ];
+  document.getElementById('inf-city-list').innerHTML = sugestoes.map(infCidadeItemHtml).join('');
+}
+function infCidadeItemHtml(c){
+  const isActive = c.name === _infCity.name && c.uf === _infCity.uf;
+  return `<div class="inf-city-item ${isActive?'active':''}" onclick="infEscolherCidade('${c.name.replace(/'/g,"\\'")}','${c.uf}')">
+    <div class="inf-city-item-ic"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div>
+    <div><div class="inf-city-item-name">${c.name}</div><div class="inf-city-item-uf">${c.uf}</div></div>
+    ${isActive ? '<svg class="inf-city-item-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+  </div>`;
+}
+let _infCitySearchDebounce = null;
+function infBuscarCidade(q){
+  clearTimeout(_infCitySearchDebounce);
+  if (!q || q.trim().length < 2) { infRenderCidadeDefaults(); return; }
+  _infCitySearchDebounce = setTimeout(async () => {
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(q)}&country=Brazil&format=json&addressdetails=1&limit=8`, {headers:{'User-Agent':'MoB/1.0'}});
+      const data = await r.json();
+      const cidades = data
+        .filter(d => d.address && (d.address.city || d.address.town || d.address.municipality))
+        .map(d => ({name: d.address.city || d.address.town || d.address.municipality, uf: d.address.state_code || (d.address['ISO3166-2-lvl4']||'').split('-')[1] || ''}));
+      const vistos = new Set();
+      const unicos = cidades.filter(c => { const k = c.name+c.uf; if (vistos.has(k)) return false; vistos.add(k); return true; });
+      document.getElementById('inf-city-list').innerHTML = unicos.length
+        ? unicos.map(infCidadeItemHtml).join('')
+        : '<div class="inf-empty">Nenhuma cidade encontrada</div>';
+    } catch(e) { console.warn('busca cidade', e); }
+  }, 400);
+}
+function infEscolherCidade(name, uf){
+  _infCity = {name, uf};
+  localStorage.setItem('sm_inf_city', JSON.stringify(_infCity));
+  document.getElementById('inf-city-name').textContent = name;
+  closeMo('mo-inf-cidade');
+  showToast('Cidade alterada para '+name);
+  // Recarrega o que depender da cidade — feed "Agora" e listas de venue.
+  try { infCarregarFeedAgora?.(); } catch(e){}
+}
 function infToggleSearch(){
   const el = document.getElementById('inf-search-fixed');
   const btn = document.getElementById('inf-search-toggle');
