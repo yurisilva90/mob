@@ -12422,33 +12422,6 @@ function infRenderVenueLists(){
   infCarregarContagens();
 }
 
-// ── Feed genérico: renderiza uma lista de informes com avatar + votos ──
-function infRenderFeedList(elId,informes,vazioMsg){
-  const el=document.getElementById(elId);if(!el)return;
-  if(!informes||!informes.length){el.innerHTML=`<div class="inf-empty-feed">${vazioMsg}</div>`;return;}
-  el.innerHTML=informes.map(inf=>{
-    const badge=INF_BADGE[inf.param_type]||'infbt';
-    const t=INF_TIPOS.bairro; // ícone de fallback visual, cor vem do badge
-    const lbl=INF_PLBL[inf.param_type]||inf.param_type;
-    const desc=esc(lbl)+' · '+esc(inf.param_value||'')+(inf.param_detail?' · '+esc(inf.param_detail):'');
-    const ageMin=Math.max(0,Math.round((Date.now()-new Date(inf.created_at))/60000));
-    const ageStr=ageMin<1?'agora':'há '+ageMin+' min';
-    const av=INF_AVC[Math.abs((inf.user_id||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0))%INF_AVC.length];
-    const ltr=(inf.user_id||'MO').slice(0,2).toUpperCase();
-    return`<div class="inf-feed-row" onclick="infAbrirLocal(null,'${(inf.location_name||'').replace(/'/g,"\\'")}','bairro')">
-      <div class="inf-feed-ic ${badge}">${INF_PICONS[inf.param_type]||''}</div>
-      <div class="inf-feed-body"><div class="inf-feed-txt">${desc}</div><div class="inf-feed-loc">${esc(inf.location_name||'')} · ${ageStr}</div></div>
-      <div class="inf-feed-right">
-        <div class="inf-feed-av" style="background:${av}">${ltr}</div>
-        <div class="inf-feed-votes inf-votes">
-          <button class="inf-vbtn up" onclick="event.stopPropagation();infVotar('${inf.id}','up',this)"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>${inf.votes_up||0}</button>
-          <button class="inf-vbtn dn" onclick="event.stopPropagation();infVotar('${inf.id}','dn',this)"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>${inf.votes_dn||0}</button>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
 function infHaversineM(lat1,lon1,lat2,lon2){
   const R=6371000, toRad=x=>x*Math.PI/180;
   const dLat=toRad(lat2-lat1), dLon=toRad(lon2-lon1);
