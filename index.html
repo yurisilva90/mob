@@ -12574,34 +12574,48 @@ async function infCarregarFeedAgora(){
 async function infCarregarContagens(){
   if(!_SUPA)return;
   try{
-    const{data}=await _SUPA.from('informes')
-      .select('location_name')
-      .eq('is_active',true)
-      .gt('expires_at',new Date().toISOString());
+    // Migrado de 'informes' (tabela legada, sem post novo desde a
+    // reformulação de 16/08/2026 — segue existindo só pro cron de
+    // expiração antigo) pra feed_posts. feed_posts não tem location_name
+    // (é geolocalizado, não por local nomeado), então a contagem vira
+    // match textual no endereço geocodificado — aproximado, não é mais
+    // igualdade exata como era com location_name. Efeito prático: alguns
+    // locais podem subcontar se o endereço reverso não citar o nome
+    // exatamente (ex.: aeroporto que geocodifica só como rua) — degrada
+    // pra "–" nesse caso, nunca quebra a tela.
+    const{data}=await _SUPA.from('feed_posts')
+      .select('address')
+      .eq('status','ativo')
+      .gt('expires_at',new Date().toISOString())
+      .not('address','is',null);
     if(!data)return;
-    const cnt={};data.forEach(r=>{cnt[r.location_name]=(cnt[r.location_name]||0)+1;});
+    const countFor=(nome)=>{
+      const needle=(nome||'').toLowerCase().trim();
+      if(!needle) return 0;
+      return data.filter(r=>(r.address||'').toLowerCase().includes(needle)).length;
+    };
     // Atualiza contagem individual dos bairros quando inline
     document.querySelectorAll('.inf-bchip-ct').forEach(el=>{
       const nome=el.closest('.inf-bchip')?.querySelector('.inf-bchip-name')?.textContent||'';
-      const n=cnt[nome]||0;
+      const n=countFor(nome);
       el.textContent=n;el.className='inf-bchip-ct'+(n===0?' z':'');
     });
     [['gig','Galeão (GIG)'],['sdu','Santos Dumont (SDU)'],['rod','Rodoviária Novo Rio']].forEach(([id,n])=>{
-      const el=document.getElementById('inf-ct-'+id);if(el)el.textContent=cnt[n]||0;
+      const el=document.getElementById('inf-ct-'+id);if(el)el.textContent=countFor(n);
     });
     Object.entries({sul:INF_BAIRROS.sul,norte:INF_BAIRROS.norte,oeste:INF_BAIRROS.oeste,centro:INF_BAIRROS.centro}).forEach(([z,bs])=>{
-      const total=bs.reduce((s,b)=>s+(cnt[b]||0),0);
+      const total=bs.reduce((s,b)=>s+countFor(b),0);
       const el=document.getElementById('inf-zct-'+z);
       if(el){el.textContent=total;el.className='inf-zcard-ct'+(total===0?' z':'');}
     });
     Object.entries({bares:INF_VENUES.bares.itens,hoteis:INF_VENUES.hoteis.itens,eventos:INF_VENUES.eventos.itens,turistico:INF_VENUES.turistico.itens}).forEach(([cat,itens])=>{
-      const total=itens.reduce((s,i)=>s+(cnt[i.n]||0),0);
+      const total=itens.reduce((s,i)=>s+countFor(i.n),0);
       const el=document.getElementById('inf-cct-'+cat);if(el)el.textContent=total||'–';
     });
     // Badges individuais nas listas de venues das abas (bares/hotéis/eventos/turístico/shoppings)
     document.querySelectorAll('.inf-vitem-ct').forEach(el=>{
       const nome=el.closest('.inf-vitem')?.querySelector('.inf-vitem-name')?.textContent||'';
-      const n=cnt[nome]||0;
+      const n=countFor(nome);
       el.textContent=n||'–';el.className='inf-vitem-ct'+(n===0?' z':'');
     });
   }catch(e){console.warn('inf cnt',e);}
