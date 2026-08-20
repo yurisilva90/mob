@@ -1065,6 +1065,72 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .inf-comment-input-row{display:flex;gap:8px;align-items:center;margin-top:4px}
 .inf-comment-input{flex:1;border:1.5px solid var(--line);border-radius:10px;padding:8px 11px;font-size:11px;font-family:inherit;outline:none}
 .inf-comment-send{width:32px;height:32px;border-radius:10px;background:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:0;cursor:pointer;touch-action:manipulation}
+/* ── Badges Alta demanda / Tarifa dinâmica — header e listagem
+   compartilham o MESMO visual (ícone grande + texto embaixo) ── */
+.inf-badge-btn{width:44px;height:44px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;flex-shrink:0}
+.inf-badge-btn span{font-size:6.5px;font-weight:800;color:#fff;line-height:1;text-align:center}
+.inf-badge-btn.peak{background:linear-gradient(135deg,#F59E0B,#EA580C)}
+.inf-badge-btn.dyn{background:linear-gradient(135deg,#FBBF24,#F59E0B)}
+.inf-vitem-badges{display:flex;gap:5px;flex-shrink:0;margin-left:auto}
+.inf-vitem-badges .inf-badge-btn{width:32px;height:32px;border-radius:9px}
+.inf-vitem-badges .inf-badge-btn span{font-size:4.6px;margin-top:1px}
+/* ── Painel Agora — 5 indicadores ao vivo ── */
+.inf-agora-hd{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.05em;margin:2px 0 8px}
+.inf-live-dot{width:6px;height:6px;border-radius:50%;background:#22C55E;animation:infPulseLive 1.2s infinite}
+@keyframes infPulseLive{0%,100%{opacity:1}50%{opacity:.3}}
+.inf-live-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.inf-live-tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 12px}
+.inf-live-tile-lbl{font-size:9.5px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.04em}
+.inf-live-tile-val{font-size:14px;font-weight:800;margin-top:4px;color:var(--text);line-height:1.2}
+.inf-live-tile-val.empty{color:#CBD5E1;font-weight:700}
+.inf-live-tile-age{font-size:9.5px;color:var(--muted);margin-top:2px;font-weight:600}
+/* Dinâmico — 2 cards, Uber e 99, com logo real de cada plataforma */
+.inf-dyn-grid{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.inf-dyn-tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;align-items:center;gap:8px}
+.inf-dyn-tile img{display:block;flex-shrink:0}
+.inf-dyn-info{flex:1;min-width:0}
+.inf-dyn-val{font-size:13px;font-weight:800;color:var(--text)}
+.inf-dyn-val.empty{color:#CBD5E1}
+.inf-dyn-age{font-size:8.5px;color:var(--muted);font-weight:600}
+/* ── Dicas do local ── */
+.inf-tips-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:6px 14px;margin-bottom:16px}
+.inf-tip-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F1F5F9}
+.inf-tip-row:last-child{border-bottom:0}
+.inf-tip-ic{width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-tip-txt{font-size:12.5px;font-weight:700}
+/* ── Horário de alta demanda ── */
+.inf-peak-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:16px}
+.inf-peak-bars{display:flex;align-items:flex-end;gap:5px;height:60px;margin-top:6px}
+.inf-peak-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.inf-peak-bar{width:100%;border-radius:5px 5px 0 0;background:var(--line);min-height:2px}
+.inf-peak-bar.now{background:linear-gradient(180deg,#F59E0B,#EA580C);box-shadow:0 0 0 2px #FDBA74}
+.inf-peak-lbl-row{display:flex;gap:5px;margin-top:4px}
+.inf-peak-lbl{flex:1;font-size:7.5px;color:var(--muted);font-weight:700;text-align:center}
+.inf-peak-now-row{display:flex;gap:5px;margin-top:2px}
+.inf-peak-now-cell{flex:1;text-align:center}
+.inf-peak-now-mark{font-size:7.5px;color:#EA580C;font-weight:800}
+/* ── Colabore com a comunidade ── */
+.inf-collab-banner{display:flex;align-items:center;gap:11px;background:linear-gradient(135deg,#0A2F6B,#0D3A7D);border-radius:16px;padding:13px 14px;color:#fff;margin-bottom:16px;cursor:pointer;border:0;width:100%;font-family:inherit;text-align:left}
+.inf-collab-ic{width:36px;height:36px;border-radius:11px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-collab-txt b{display:block;font-size:12.5px;font-weight:800}
+.inf-collab-txt span{font-size:10.5px;color:rgba(255,255,255,.7)}
+/* Modal do formulário */
+.inf-qblock{margin-bottom:20px}
+.inf-qnum{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--blue);color:#fff;font-size:9.5px;font-weight:800;margin-right:6px;flex-shrink:0}
+.inf-qtitle{font-size:13px;font-weight:800}
+.inf-qopts2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.inf-qopt{padding:13px 8px;border-radius:13px;border:1.5px solid var(--line);background:var(--soft);font-size:12.5px;font-weight:700;text-align:center;color:var(--text);cursor:pointer;touch-action:manipulation}
+.inf-qopt.picked{background:var(--blue);border-color:var(--blue);color:#fff}
+.inf-qsub-lbl{font-size:10.5px;color:#94A3B8;font-weight:700;margin:12px 0 8px;padding-left:2px}
+.inf-qsub-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.inf-qsub-opt{padding:13px 8px;border-radius:13px;border:1.5px solid var(--line);background:var(--soft);font-size:12.5px;font-weight:700;text-align:center;color:var(--text);cursor:pointer;touch-action:manipulation}
+.inf-qsub-opt.picked{background:#EFF6FF;border-color:#2563EB;color:#1E40AF}
+.inf-qtime-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
+.inf-qtime-chip{padding:10px 6px;border-radius:11px;border:1.5px solid var(--line);background:var(--soft);font-size:12px;font-weight:700;text-align:center;color:var(--text);cursor:pointer;touch-action:manipulation}
+.inf-qtime-chip.picked{background:var(--blue);border-color:var(--blue);color:#fff}
+.inf-qtextarea{width:100%;border:1.5px solid var(--line);border-radius:13px;padding:11px 12px;font-size:12.5px;font-family:inherit;color:var(--text);min-height:64px;resize:none;margin-top:10px}
+.inf-qnote{display:flex;align-items:center;gap:5px;font-size:9.5px;color:#94A3B8;margin-top:6px}
+.inf-qsend{width:100%;height:50px;border-radius:14px;background:var(--blue);color:#fff;border:0;font-size:14px;font-weight:800;margin-top:6px;cursor:pointer;font-family:inherit}
 /* reportar botão */
 .inf-rep-wrap{padding:9px 14px 14px;flex-shrink:0}
 .inf-rep-btn{width:100%;height:48px;border-radius:14px;border:0;background:#F59E0B;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px}
@@ -2025,6 +2091,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
         <div class="inf-panel-loc" id="inf-panel-loc">—</div>
         <div class="inf-panel-meta" id="inf-panel-meta"></div>
       </div>
+      <div class="inf-head-badges" id="inf-head-badges" style="display:flex;gap:6px;flex-shrink:0"></div>
       <button class="inf-panel-fav" id="inf-panel-map" onclick="infAbrirNoMapa()" style="display:none" aria-label="Abrir no mapa">
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#0EA5E9" stroke-width="2.2"><path d="M9 20l-5.5 2V6L9 4l6 2 5.5-2v16L15 22l-6-2z"/><line x1="9" y1="4" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="20"/></svg>
       </button>
@@ -2164,6 +2231,18 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <button class="inf-relatar-loc-btn" onclick="infRelatarAlterarLocal()">Alterar</button>
     </div>
     <div id="inf-relatar-body"></div>
+  </div>
+</div>
+
+<div class="mo" id="mo-inf-colaborar">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h2>Colabore com a comunidade</h2>
+      <button class="xbtn" onclick="closeMo('mo-inf-colaborar')">&#x2715;</button>
+    </div>
+    <div style="font-size:11.5px;color:var(--muted);margin:-6px 0 4px;line-height:1.5" id="inf-colab-sub"></div>
+    <div id="inf-colab-body"></div>
   </div>
 </div>
 
@@ -12416,10 +12495,48 @@ function infRenderVenueLists(){
     el.innerHTML=v.itens.map(item=>`<div class="inf-vitem" onclick="infAbrirLocal(this,'${item.n.replace(/'/g,"\\'")}','${v.tipo}')">
       <div class="inf-vitem-ic" style="background:${t.bg}">${infIconSvg(v.tipo,t.cor,15)}</div>
       <div><div class="inf-vitem-name">${item.n}</div><div class="inf-vitem-sub">${item.sub||''}</div></div>
+      <div class="inf-vitem-badges" data-vname="${esc(item.n)}"></div>
       <div class="inf-vitem-ct z">–</div>
     </div>`).join('');
   });
   infCarregarContagens();
+  infCarregarBadgesListagem();
+}
+
+// Badges "Alta demanda"/"Tarifa dinâmica" nos itens da listagem —
+// mesmo visual do header (ícone+texto), some quando não há dado.
+// Reaproveita venue_cache (já resolvido em lote pela infCarregarContagens
+// não; aqui cada item pede seu próprio lat/lng, mas em paralelo/Promise.all
+// pra não travar a UI — listas são pequenas, 6-7 itens por aba).
+async function infCarregarBadgesListagem(){
+  if(!_SUPA) return;
+  const els=[...document.querySelectorAll('.inf-vitem-badges[data-vname]')];
+  if(!els.length) return;
+  await Promise.all(els.map(async el=>{
+    const nome=el.getAttribute('data-vname');
+    try{
+      const {data:vc}=await _SUPA.from('venue_cache').select('id,lat,lng').ilike('name',nome).limit(1);
+      if(!vc||!vc.length) return;
+      const venue=vc[0];
+      const d=0.003;
+      const [{data:stats},{data:posts}]=await Promise.all([
+        _SUPA.rpc('venue_collab_stats',{p_venue_id:venue.id}),
+        _SUPA.from('feed_posts').select('param_value,param_detail,created_at')
+          .eq('type','dinamico').eq('status','ativo').gt('expires_at',new Date().toISOString())
+          .gte('lat',venue.lat-d).lte('lat',venue.lat+d).gte('lng',venue.lng-d).lte('lng',venue.lng+d)
+          .order('created_at',{ascending:false}).limit(10)
+      ]);
+      let html='';
+      if(stats && stats.alta_demanda_agora){
+        html+=`<div class="inf-badge-btn peak"><svg viewBox="0 0 24 24" width="14" height="14" fill="#fff" stroke="none"><path d="M12 2c1 3-2 4-2 7a4 4 0 0 0 8 0c0-1-.5-2-1-2 1 3-1 4-2 4a2 2 0 0 1-2-2c0-2 2-3 2-5-2 0-4 1-5 3-1 2-1 4 0 6a6 6 0 0 0 12-2c0-4-3-6-4-9-1 1-3 3-3 5-1-2-1-3-1-5-2 1-2 3-2 5z"/></svg><span>ALTA</span></div>`;
+      }
+      const dyn99=(posts||[]).find(p=>p.param_value==='99');
+      if(dyn99){
+        html+=`<div class="inf-badge-btn dyn"><svg viewBox="0 0 24 24" width="14" height="14" fill="#fff" stroke="none"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><span>99: ${esc(dyn99.param_detail||'ativo')}</span></div>`;
+      }
+      el.innerHTML=html;
+    }catch(e){ /* silencioso — badge é acessório, não pode travar a lista */ }
+  }));
 }
 
 function infHaversineM(lat1,lon1,lat2,lon2){
@@ -12694,6 +12811,11 @@ async function infPostCommentSend(postId){
 }
 
 // venue_cache.id já resolvido em _infPanelVenue (infAbrirLocal, roda antes)
+// Logos reais Uber/99 (Regra #2 — nunca recriar em SVG, usar exatamente
+// a imagem fornecida). Uber 112x40 (proporção original 2,8:1), 99 56x56.
+const INF_LOGO_UBER = 'data:image/png;base64,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';
+const INF_LOGO_99 = 'data:image/png;base64,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';
+
 async function infCarregarInformes(nome,tipoKey){
   let posts=[];
   try{
@@ -12708,9 +12830,193 @@ async function infCarregarInformes(nome,tipoKey){
     }
   }catch(e){console.warn('inf load',e);}
   document.getElementById('inf-panel-meta').textContent=posts.length+' informe'+(posts.length!==1?'s':'')+' recente'+(posts.length!==1?'s':'');
+
+  // Painel "Agora" (5 indicadores) — reaproveita o MESMO posts já
+  // buscado acima (mesma janela de proximidade/expiração), sem query extra.
+  infRenderAgoraGrid(posts);
+
+  // Dicas do local + horário de pico + "alta demanda agora" — agregação
+  // pública SEM % (venue_collab_stats) + histórico de Fiscalização
+  // (venue_fiscalizacao_comum). Roda em paralelo com o resto.
+  let stats=null, fiscComum=false;
+  if(_SUPA && _infPanelVenue){
+    try{
+      const [{data:s},{data:fc}]=await Promise.all([
+        _SUPA.rpc('venue_collab_stats',{p_venue_id:_infPanelVenue.id}),
+        _SUPA.rpc('venue_fiscalizacao_comum',{p_lat:_infPanelVenue.lat,p_lng:_infPanelVenue.lng})
+      ]);
+      stats=s; fiscComum=!!fc;
+    }catch(e){console.warn('inf stats',e);}
+  }
+  infRenderHeaderBadges(stats, posts);
+
   const listEl=document.getElementById('inf-list-wrap');
-  if(!posts.length){listEl.innerHTML='<div class="inf-empty">Nenhum informe recente · seja o primeiro a reportar!</div>';return;}
-  listEl.innerHTML = await infBuildPostCardsHtml(posts);
+  const postsHtml = posts.length ? await infBuildPostCardsHtml(posts) : '<div class="inf-empty">Nenhum informe recente · seja o primeiro a reportar!</div>';
+  listEl.innerHTML = postsHtml + infDicasHtml(stats, fiscComum) + infPeakHtml(stats) + infCollabBannerHtml();
+}
+
+// ── Painel "Agora" — 5 indicadores ao vivo (Demanda/Lotação/Trânsito/
+// Fiscalização/Dinâmico). Dinâmico vira 2 cards (Uber/99) com logo real.
+// IMPORTANTE: 'blitz' e 'fiscalizacao' coexistem em feed_posts.type pro
+// mesmo conceito (a barra "Relatar agora" grava 'blitz', o resto do
+// sistema usa 'fiscalizacao') — cobre os dois aqui pra não perder relato.
+function infRenderAgoraGrid(posts){
+  const el=document.getElementById('inf-status'); if(!el) return;
+  const mostRecent=(types)=>{
+    const list=posts.filter(p=>types.includes(p.type)).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+    return list[0]||null;
+  };
+  const ageStr=(p)=>{
+    const min=Math.max(0,Math.round((Date.now()-new Date(p.created_at))/60000));
+    return min<1?'agora':'há '+min+' min';
+  };
+  const tile=(lbl,post,valGetter)=>{
+    if(!post) return `<div class="inf-live-tile"><div class="inf-live-tile-lbl">${lbl}</div><div class="inf-live-tile-val empty">—</div><div class="inf-live-tile-age">Sem relato recente</div></div>`;
+    return `<div class="inf-live-tile"><div class="inf-live-tile-lbl">${lbl}</div><div class="inf-live-tile-val">${esc(valGetter(post))}</div><div class="inf-live-tile-age">${ageStr(post)}</div></div>`;
+  };
+
+  const demanda=mostRecent(['demanda']);
+  const lotacao=mostRecent(['lotacao']);
+  const transito=mostRecent(['transito']);
+  const fiscal=mostRecent(['blitz','fiscalizacao']);
+
+  let html = tile('Demanda', demanda, p=>p.param_value||'Tocando')
+    + tile('Lotação', lotacao, p=>p.param_value||'Relatado')
+    + tile('Trânsito', transito, p=>p.nivel!=null ? (INF_TRANSITO_LBL[p.nivel]||'Relatado') : (p.param_value||'Relatado'))
+    + tile('Fiscalização', fiscal, p=>p.param_value ? (p.param_value+(p.param_detail?' · '+p.param_detail:'')) : 'Relatada');
+
+  const dinamicoPosts=posts.filter(p=>p.type==='dinamico').sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  const uberP=dinamicoPosts.find(p=>p.param_value==='uber');
+  const n99P=dinamicoPosts.find(p=>p.param_value==='99');
+  const dynTile=(logo,alt,w,hh,post,valFn)=>{
+    const img=`<img src="${logo}" alt="${alt}" width="${w}" height="${hh}">`;
+    if(!post) return `<div class="inf-dyn-tile">${img}<div class="inf-dyn-info"><div class="inf-dyn-val empty">—</div><div class="inf-dyn-age">Sem dado agora</div></div></div>`;
+    return `<div class="inf-dyn-tile">${img}<div class="inf-dyn-info"><div class="inf-dyn-val">${esc(valFn(post))}</div><div class="inf-dyn-age">${ageStr(post)}</div></div></div>`;
+  };
+  html += `<div class="inf-dyn-grid">`
+    + dynTile(INF_LOGO_UBER,'Uber',36,13,uberP, p=>p.body?p.body.replace('Dinâmico ','').trim():'Ativo')
+    + dynTile(INF_LOGO_99,'99',24,24,n99P, p=>p.param_detail || (p.body?p.body.replace('Dinâmico ','').trim():'Ativo'))
+    + `</div>`;
+
+  el.innerHTML=`<div class="inf-agora-hd"><span class="inf-live-dot"></span>Agora</div><div class="inf-live-grid">${html}</div>`;
+}
+
+// Badges "Alta demanda"/"Tarifa dinâmica" no header do painel — mesmo
+// visual usado na listagem (infCarregarBadgesListagem). Só aparece
+// quando o dado é real; sem os dois, a linha de badges some inteira.
+function infRenderHeaderBadges(stats, posts){
+  const el=document.getElementById('inf-head-badges'); if(!el) return;
+  let html='';
+  if(stats && stats.alta_demanda_agora){
+    html+=`<div class="inf-badge-btn peak"><svg viewBox="0 0 24 24" width="18" height="18" fill="#fff" stroke="none"><path d="M12 2c1 3-2 4-2 7a4 4 0 0 0 8 0c0-1-.5-2-1-2 1 3-1 4-2 4a2 2 0 0 1-2-2c0-2 2-3 2-5-2 0-4 1-5 3-1 2-1 4 0 6a6 6 0 0 0 12-2c0-4-3-6-4-9-1 1-3 3-3 5-1-2-1-3-1-5-2 1-2 3-2 5z"/></svg><span>ALTA<br>DEMANDA</span></div>`;
+  }
+  if(posts.some(p=>p.type==='dinamico')){
+    html+=`<div class="inf-badge-btn dyn"><svg viewBox="0 0 24 24" width="18" height="18" fill="#fff" stroke="none"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><span>TARIFA<br>DINÂMICA</span></div>`;
+  }
+  el.innerHTML=html;
+}
+
+// "Dicas do local" — fatos simples, SEM % pública (pedido explícito do
+// Yuri). Some a seção inteira se não há nenhum fato disponível ainda.
+function infDicasHtml(stats, fiscComum){
+  const tips=[];
+  if(stats && stats.embarque==='facil') tips.push({bg:'#F0FDF4',color:'#16A34A',sw:'2.5',svg:'<polyline points="20 6 9 17 4 12"/>',txt:'Fácil de embarque'});
+  else if(stats && stats.embarque==='dificil') tips.push({bg:'#FEF2F2',color:'#DC2626',sw:'2.2',svg:'<circle cx="12" cy="12" r="9"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',txt:'Difícil de embarque'});
+  if(stats && stats.embarque_area==='definida') tips.push({bg:'#EFF6FF',color:'#2563EB',sw:'2.2',svg:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',txt:'Área de embarque definida'});
+  else if(stats && stats.embarque_area==='livre') tips.push({bg:'#EFF6FF',color:'#2563EB',sw:'2.2',svg:'<path d="M3 12h18M3 6h18M3 18h18"/>',txt:'Área de embarque livre'});
+  if(fiscComum) tips.push({bg:'#EFF6FF',color:'#2563EB',sw:'2',svg:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',txt:'Fiscalização é comum aqui'});
+  if(!tips.length) return '';
+  const rows=tips.map(t=>`<div class="inf-tip-row"><div class="inf-tip-ic" style="background:${t.bg}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="${t.color}" stroke-width="${t.sw}" stroke-linecap="round" stroke-linejoin="round">${t.svg}</svg></div><div class="inf-tip-txt">${esc(t.txt)}</div></div>`).join('');
+  return `<div class="inf-agora-hd" style="margin-top:16px">Dicas do local</div><div class="inf-tips-card">${rows}</div>`;
+}
+
+// Gráfico de horário de pico — 8 blocos de 3h, bloco atual destacado.
+// Some se ninguém colaborou ainda (sem inventar dado).
+function infPeakHtml(stats){
+  if(!stats || !stats.peak_hist || !stats.peak_hist.some(n=>n>0)) return '';
+  const hist=stats.peak_hist;
+  const max=Math.max(...hist,1);
+  const curBlk=Math.floor(new Date().getHours()/3);
+  const labels=['0-3h','3-6h','6-9h','9-12h','12-15h','15-18h','18-21h','21-24h'];
+  const bars=hist.map((n,i)=>{
+    const hpct=Math.max(6,Math.round(n/max*100));
+    const cls=i===curBlk?'inf-peak-bar now':'inf-peak-bar';
+    return `<div class="inf-peak-bar-wrap"><div class="${cls}" style="height:${hpct}%"></div></div>`;
+  }).join('');
+  const lbls=labels.map(l=>`<div class="inf-peak-lbl">${l}</div>`).join('');
+  const nowRow=labels.map((_,i)=>`<div class="inf-peak-now-cell">${i===curBlk?'<div class="inf-peak-now-mark">AGORA</div>':''}</div>`).join('');
+  return `<div class="inf-agora-hd" style="margin-top:16px">Horários de alta demanda</div><div class="inf-peak-card"><div class="inf-peak-bars">${bars}</div><div class="inf-peak-lbl-row">${lbls}</div><div class="inf-peak-now-row">${nowRow}</div></div>`;
+}
+
+function infCollabBannerHtml(){
+  return `<button class="inf-collab-banner" onclick="infOpenColaborar()">
+    <div class="inf-collab-ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+    <div class="inf-collab-txt"><b>Colabore com a comunidade</b><span>Ajude outros motoristas com dados desse local</span></div>
+  </button>`;
+}
+
+// ── Formulário "Colabore com a comunidade" (3 perguntas aprovadas) ──
+let _infColabState={embarque:null,area:null,horas:new Set(),texto:''};
+function infOpenColaborar(){
+  if(!_supaUser){ showToast('Faça login pra colaborar.'); return; }
+  if(!_infPanelVenue){ showToast('Não consegui identificar esse local ainda.'); return; }
+  _infColabState={embarque:null,area:null,horas:new Set(),texto:''};
+  document.getElementById('inf-colab-sub').textContent=`Nos envie informações sobre o ${_infLoc||'local'} — ajuda outros motoristas a decidir se vale a pena vir pra cá.`;
+  infRenderColabForm();
+  openMo('mo-inf-colaborar');
+}
+function infRenderColabForm(){
+  const s=_infColabState;
+  const horas=['0h–3h','3h–6h','6h–9h','9h–12h','12h–15h','15h–18h','18h–21h','21h–24h'];
+  document.getElementById('inf-colab-body').innerHTML=`
+    <div class="inf-qblock">
+      <span class="inf-qnum">1</span><span class="inf-qtitle">Como é o embarque no local?</span>
+      <div class="inf-qopts2">
+        <div class="inf-qopt ${s.embarque==='facil'?'picked':''}" onclick="infColabPick('embarque','facil')">Fácil</div>
+        <div class="inf-qopt ${s.embarque==='dificil'?'picked':''}" onclick="infColabPick('embarque','dificil')">Difícil</div>
+      </div>
+      ${s.embarque?`<div class="inf-qsub-lbl">Área de embarque:</div>
+      <div class="inf-qsub-opts">
+        <div class="inf-qsub-opt ${s.area==='livre'?'picked':''}" onclick="infColabPick('area','livre')">Livre</div>
+        <div class="inf-qsub-opt ${s.area==='definida'?'picked':''}" onclick="infColabPick('area','definida')">Definida</div>
+      </div>`:''}
+    </div>
+    <div class="inf-qblock">
+      <span class="inf-qnum">2</span><span class="inf-qtitle">Horários de mais movimento</span>
+      <div style="font-size:10px;color:#94A3B8;margin:2px 0 0 24px">Pode marcar mais de um</div>
+      <div class="inf-qtime-grid">${horas.map((h,i)=>`<div class="inf-qtime-chip ${s.horas.has(i)?'picked':''}" onclick="infColabToggleHora(${i})">${h}</div>`).join('')}</div>
+    </div>
+    <div class="inf-qblock" style="margin-bottom:6px">
+      <span class="inf-qnum">3</span><span class="inf-qtitle">Alguma outra observação sobre esse local?</span>
+      <textarea class="inf-qtextarea" id="inf-colab-texto" placeholder="Opcional — conta pra gente algo que ache importante...">${esc(s.texto||'')}</textarea>
+      <div class="inf-qnote"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Não aparece publicamente — usamos internamente</div>
+    </div>
+    <button class="inf-qsend" onclick="infColabEnviar()">Enviar colaboração</button>`;
+}
+function infColabPick(field,val){
+  _infColabState[field]=_infColabState[field]===val?null:val;
+  if(field==='embarque' && _infColabState.embarque===null) _infColabState.area=null;
+  infRenderColabForm();
+}
+function infColabToggleHora(i){
+  if(_infColabState.horas.has(i)) _infColabState.horas.delete(i); else _infColabState.horas.add(i);
+  infRenderColabForm();
+}
+async function infColabEnviar(){
+  if(!_supaUser||!_infPanelVenue||!_SUPA) return;
+  _infColabState.texto=document.getElementById('inf-colab-texto')?.value||'';
+  const row={
+    user_id:_supaUser.id, venue_id:_infPanelVenue.id,
+    embarque:_infColabState.embarque, embarque_area:_infColabState.area,
+    peak_hours:[..._infColabState.horas], free_text:_infColabState.texto||null
+  };
+  try{
+    const {error}=await _SUPA.from('venue_collab_survey').upsert(row,{onConflict:'user_id,venue_id'});
+    closeMo('mo-inf-colaborar');
+    if(error){ console.error('colab',error); showToast('Erro ao enviar. Tenta de novo.','error'); return; }
+    showToast('Obrigado! Colaboração enviada.','success');
+    if(_infLoc) infCarregarInformes(_infLoc,_infTipoKey);
+  }catch(e){ console.error('colab',e); showToast('Erro ao enviar.','error'); }
 }
 
 function infChipClass(pid,val){
