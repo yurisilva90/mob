@@ -843,23 +843,17 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 /* ── Favoritos ── */
 .inf-favs{padding:4px 14px 6px;display:none}
 .inf-favs.has-favs{display:block}
-.inf-favs-lbl{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
-.inf-favs-lbl span{font-size:9.5px;font-weight:800;color:var(--muted2);text-transform:uppercase;letter-spacing:.07em}
-.inf-favs-lbl a{font-size:11px;font-weight:700;color:#0A2F6B;cursor:pointer;text-decoration:none}
-.inf-favs-row{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
-.inf-fav-chip{background:var(--card);border:2px solid var(--line);border-radius:13px;
-  padding:9px 5px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;
-  gap:4px;position:relative;transition:border-color .15s,transform .1s;min-height:60px}
-.inf-fav-chip:active{transform:scale(.96)}
-.inf-fav-chip.active{border-color:#0A2F6B}
-.inf-fav-chip.empty{border-style:dashed;background:transparent}
-.inf-fav-ic{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center}
-.inf-fav-name{font-size:9.5px;font-weight:700;text-align:center;line-height:1.2;
-  overflow:hidden;white-space:nowrap;width:100%;text-overflow:ellipsis;padding:0 2px}
-.inf-fav-ct{position:absolute;top:4px;right:4px;font-size:7.5px;font-weight:800;
-  background:var(--red);color:#fff;border-radius:99px;padding:1px 4px}
-.inf-fav-empty-ic{opacity:.3}
-.inf-fav-empty-lbl{font-size:9px;color:var(--muted2);font-weight:600}
+.inf-favs-scroll{display:flex;gap:10px;overflow-x:auto;padding:0 14px 10px}
+.inf-fav-chip{flex:0 0 auto;max-width:230px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:10px}
+.inf-fav-chip:active{transform:scale(.97)}
+.inf-fav-ic{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-fav-name{font-size:12.5px;font-weight:800;white-space:nowrap}
+.inf-fav-sub{font-size:10px;color:var(--muted);margin-top:1px;white-space:nowrap}
+.inf-fav-tags{display:flex;gap:5px;margin-top:6px}
+.inf-fav-tag{font-size:9px;font-weight:800;color:#B45309;background:#FFFBEB;padding:2px 7px;border-radius:99px;white-space:nowrap}
+.inf-fav-chip.empty{border-style:dashed;justify-content:center;min-width:110px}
+.inf-fav-empty-ic{opacity:.35}
+.inf-fav-empty-lbl{font-size:10px;color:var(--muted2);font-weight:700}
 
 .inf-search-dd{position:fixed;left:14px;right:14px;top:88px;background:var(--card);border:1.5px solid var(--line);border-radius:16px;box-shadow:0 8px 28px rgba(15,23,42,.13);z-index:35;overflow:hidden;display:none;max-height:55vh;overflow-y:auto}
 .inf-search-dd.show{display:block}
@@ -872,7 +866,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .inf-sd-dist{margin-left:auto;font-size:10px;font-weight:700;color:var(--muted2);flex-shrink:0}
 .inf-sd-empty{padding:16px;text-align:center;color:var(--muted);font-size:13px;font-weight:600}
 /* destaques 2x2 */
-.inf-sec-lbl{font-size:10px;font-weight:800;color:var(--muted2);text-transform:uppercase;letter-spacing:.07em;padding:7px 14px 4px}
+.inf-sec-lbl{font-size:9.5px;font-weight:800;color:var(--muted2);text-transform:uppercase;letter-spacing:.07em;padding:7px 14px 4px}
 .inf-feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:0 14px}
 .inf-feat{background:var(--card);border:2px solid var(--line);border-radius:17px;padding:10px 10px 8px;cursor:pointer;transition:border-color .15s,transform .1s;position:relative;min-height:70px}
 .inf-feat:active{transform:scale(.97)}
@@ -931,7 +925,7 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .inf-city{padding:8px 14px!important;font-size:13px!important;border-width:1.5px!important;gap:6px!important}
 .inf-city-dot{width:8px!important;height:8px!important}
 .inf-search-toggle{width:38px;height:38px;border-radius:11px;background:var(--card);border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;flex-shrink:0;touch-action:manipulation}
-.inf-tabs-wrap{position:sticky;top:74px;background:var(--bg);z-index:9;border-bottom:1px solid var(--line);padding-bottom:2px;margin-bottom:2px}
+.inf-tabs-wrap{position:sticky;top:var(--inf-topbar-h, 58px);background:var(--bg);z-index:9;border-bottom:1px solid var(--line);padding-bottom:2px;margin-bottom:2px}
 .inf-tabs{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 14px 9px}
 /* Barra "Relatar agora" — fixa acima da nav inferior, pedido do Yuri
    (16/08/2026): motorista dirigindo precisa alcançar rápido com o
@@ -1037,26 +1031,107 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 /* lista de informes */
 .inf-sep{height:1px;background:var(--line);margin:4px 14px 0;flex-shrink:0}
 .inf-list-wrap{flex:1;overflow-y:auto;padding:0 14px}
-.inf-item{display:flex;align-items:flex-start;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}
-.inf-item:last-child{border-bottom:0}
-.inf-ibadge{border-radius:7px;padding:3px 7px;font-size:9.5px;font-weight:800;flex-shrink:0;margin-top:1px;white-space:nowrap}
-.infbd{background:#EDE9FE;color:#5B21B6}.infbt{background:#FEF3C7;color:#92400E}
-.infbf{background:#FEE2E2;color:#991B1B}.infbfi{background:#DBEAFE;color:#1E40AF}
-.infbde{background:#DCFCE7;color:#15803D}.infblo{background:#F0FDF4;color:#166534}
-.infbac{background:#FFF7ED;color:#92400E}
-.inf-ibody{flex:1;min-width:0}
-.inf-idesc{font-size:12.5px;font-weight:600;line-height:1.3}
-.inf-iage{font-size:10px;color:var(--muted);margin-top:2px}
-.inf-iage .iago{color:#22C55E;font-weight:700}
-.inf-conf1{color:var(--muted2)}.inf-conf2{color:#F59E0B}.inf-conf3{color:#22C55E}
-.inf-votes{display:flex;gap:6px;margin-top:5px}
-.inf-vbtn{display:flex;align-items:center;gap:3px;border:1.5px solid var(--line);border-radius:99px;padding:3px 9px;background:var(--soft);cursor:pointer;font-size:10.5px;font-weight:700;color:var(--muted);font-family:inherit;transition:all .15s}
-.inf-vbtn.up.on{border-color:#22C55E;color:#22C55E;background:rgba(34,197,94,.07)}
-.inf-vbtn.dn.on{border-color:var(--red);color:var(--red);background:rgba(239,68,68,.07)}
-/* avatares sobrepostos */
-.inf-avs{display:flex;align-items:center;flex-shrink:0;flex-direction:row-reverse}
-.inf-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:800;color:#fff;border:2.5px solid var(--card);box-shadow:0 1px 3px rgba(15,23,42,.16);margin-left:-9px}
-.inf-avs .inf-av:last-child{margin-left:0}
+/* Card de informe — versão final aprovada (16/08/2026) */
+.inf-post-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:2px 14px}
+.inf-post-row{padding:12px 0;border-bottom:1px solid #F1F5F9}
+.inf-post-row:last-child{border-bottom:0}
+.inf-post-top{display:flex;align-items:flex-start;gap:11px}
+.inf-post-typecol{display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;width:44px}
+.inf-post-time{font-size:9px;font-weight:800;color:var(--muted)}
+.inf-post-ic{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+.inf-post-typelbl{font-size:7.5px;font-weight:800;text-align:center;line-height:1.1}
+.inf-post-body{flex:1;min-width:0;padding-top:1px}
+.inf-post-txt{font-size:13px;font-weight:800}
+.inf-post-locchip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#1E40AF;background:#EFF6FF;padding:3px 9px;border-radius:8px;margin-top:5px;max-width:100%}
+.inf-post-locchip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.inf-post-actions{display:flex;align-items:center;gap:14px;margin-top:8px}
+.inf-post-act{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;background:none;border:0;font-family:inherit;padding:0;touch-action:manipulation}
+.inf-post-act.on-like{color:#22C55E}
+.inf-post-act.on-dislike{color:var(--red)}
+.inf-post-avs{display:flex;align-items:center;flex-direction:row-reverse;flex-shrink:0;margin-top:2px}
+.inf-post-av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:800;color:#fff;border:2.5px solid var(--card);box-shadow:0 1px 3px rgba(15,23,42,.16);margin-left:-10px}
+.inf-post-av.more{background:#94A3B8}
+.inf-post-av:last-child{margin-left:0}
+/* Expansão: motivo do "não curtir" */
+.inf-post-dislike-panel{margin-top:11px;margin-left:55px;padding:12px;background:#FEF2F2;border:1.5px solid #FECACA;border-radius:13px}
+.inf-post-dislike-q{font-size:11.5px;font-weight:800;color:#991B1B;margin-bottom:9px}
+.inf-post-dislike-opts{display:flex;gap:8px}
+.inf-post-dislike-opt{flex:1;padding:9px 6px;border-radius:10px;border:1.5px solid #FECACA;background:#fff;font-size:11px;font-weight:700;color:#B91C1C;text-align:center;cursor:pointer;font-family:inherit;touch-action:manipulation}
+/* Expansão: comentários */
+.inf-post-comments{margin-top:11px;margin-left:55px;padding-top:11px;border-top:1px solid #F1F5F9}
+.inf-comment-item{display:flex;gap:8px;margin-bottom:9px}
+.inf-comment-av{width:22px;height:22px;border-radius:50%;background:#DBEAFE;color:#2563EB;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-comment-txt{font-size:11px;line-height:1.4}
+.inf-comment-txt b{font-weight:800}
+.inf-comment-input-row{display:flex;gap:8px;align-items:center;margin-top:4px}
+.inf-comment-input{flex:1;border:1.5px solid var(--line);border-radius:10px;padding:8px 11px;font-size:11px;font-family:inherit;outline:none}
+.inf-comment-send{width:32px;height:32px;border-radius:10px;background:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:0;cursor:pointer;touch-action:manipulation}
+/* ── Badges Alta demanda / Tarifa dinâmica — header e listagem
+   compartilham o MESMO visual (ícone grande + texto embaixo) ── */
+.inf-badge-btn{width:44px;height:44px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;flex-shrink:0}
+.inf-badge-btn span{font-size:6.5px;font-weight:800;color:#fff;line-height:1;text-align:center}
+.inf-badge-btn.peak{background:linear-gradient(135deg,#F59E0B,#EA580C)}
+.inf-badge-btn.dyn{background:linear-gradient(135deg,#FBBF24,#F59E0B)}
+.inf-vitem-badges{display:flex;gap:5px;flex-shrink:0;margin-left:auto}
+.inf-vitem-badges .inf-badge-btn{width:32px;height:32px;border-radius:9px}
+.inf-vitem-badges .inf-badge-btn span{font-size:4.6px;margin-top:1px}
+/* ── Painel Agora — 5 indicadores ao vivo ── */
+.inf-agora-hd{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.05em;margin:2px 0 8px}
+.inf-live-dot{width:6px;height:6px;border-radius:50%;background:#22C55E;animation:infPulseLive 1.2s infinite}
+@keyframes infPulseLive{0%,100%{opacity:1}50%{opacity:.3}}
+.inf-live-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.inf-live-tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 12px}
+.inf-live-tile-lbl{font-size:9.5px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.04em}
+.inf-live-tile-val{font-size:14px;font-weight:800;margin-top:4px;color:var(--text);line-height:1.2}
+.inf-live-tile-val.empty{color:#CBD5E1;font-weight:700}
+.inf-live-tile-age{font-size:9.5px;color:var(--muted);margin-top:2px;font-weight:600}
+/* Dinâmico — 2 cards, Uber e 99, com logo real de cada plataforma */
+.inf-dyn-grid{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.inf-dyn-tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;align-items:center;gap:8px}
+.inf-dyn-tile img{display:block;flex-shrink:0}
+.inf-dyn-info{flex:1;min-width:0}
+.inf-dyn-val{font-size:13px;font-weight:800;color:var(--text)}
+.inf-dyn-val.empty{color:#CBD5E1}
+.inf-dyn-age{font-size:8.5px;color:var(--muted);font-weight:600}
+/* ── Dicas do local ── */
+.inf-tips-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:6px 14px;margin-bottom:16px}
+.inf-tip-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F1F5F9}
+.inf-tip-row:last-child{border-bottom:0}
+.inf-tip-ic{width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-tip-txt{font-size:12.5px;font-weight:700}
+/* ── Horário de alta demanda ── */
+.inf-peak-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:16px}
+.inf-peak-bars{display:flex;align-items:flex-end;gap:5px;height:60px;margin-top:6px}
+.inf-peak-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.inf-peak-bar{width:100%;border-radius:5px 5px 0 0;background:var(--line);min-height:2px}
+.inf-peak-bar.now{background:linear-gradient(180deg,#F59E0B,#EA580C);box-shadow:0 0 0 2px #FDBA74}
+.inf-peak-lbl-row{display:flex;gap:5px;margin-top:4px}
+.inf-peak-lbl{flex:1;font-size:7.5px;color:var(--muted);font-weight:700;text-align:center}
+.inf-peak-now-row{display:flex;gap:5px;margin-top:2px}
+.inf-peak-now-cell{flex:1;text-align:center}
+.inf-peak-now-mark{font-size:7.5px;color:#EA580C;font-weight:800}
+/* ── Colabore com a comunidade ── */
+.inf-collab-banner{display:flex;align-items:center;gap:11px;background:linear-gradient(135deg,#0A2F6B,#0D3A7D);border-radius:16px;padding:13px 14px;color:#fff;margin-bottom:16px;cursor:pointer;border:0;width:100%;font-family:inherit;text-align:left}
+.inf-collab-ic{width:36px;height:36px;border-radius:11px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-collab-txt b{display:block;font-size:12.5px;font-weight:800}
+.inf-collab-txt span{font-size:10.5px;color:rgba(255,255,255,.7)}
+/* Modal do formulário */
+.inf-qblock{margin-bottom:20px}
+.inf-qnum{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--blue);color:#fff;font-size:9.5px;font-weight:800;margin-right:6px;flex-shrink:0}
+.inf-qtitle{font-size:13px;font-weight:800}
+.inf-qopts2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.inf-qopt{padding:13px 8px;border-radius:13px;border:1.5px solid var(--line);background:var(--soft);font-size:12.5px;font-weight:700;text-align:center;color:var(--text);cursor:pointer;touch-action:manipulation}
+.inf-qopt.picked{background:var(--blue);border-color:var(--blue);color:#fff}
+.inf-qsub-lbl{font-size:10.5px;color:#94A3B8;font-weight:700;margin:12px 0 8px;padding-left:2px}
+.inf-qsub-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.inf-qsub-opt{padding:13px 8px;border-radius:13px;border:1.5px solid var(--line);background:var(--soft);font-size:12.5px;font-weight:700;text-align:center;color:var(--text);cursor:pointer;touch-action:manipulation}
+.inf-qsub-opt.picked{background:#EFF6FF;border-color:#2563EB;color:#1E40AF}
+.inf-qtime-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}
+.inf-qtime-chip{padding:10px 6px;border-radius:11px;border:1.5px solid var(--line);background:var(--soft);font-size:12px;font-weight:700;text-align:center;color:var(--text);cursor:pointer;touch-action:manipulation}
+.inf-qtime-chip.picked{background:var(--blue);border-color:var(--blue);color:#fff}
+.inf-qtextarea{width:100%;border:1.5px solid var(--line);border-radius:13px;padding:11px 12px;font-size:12.5px;font-family:inherit;color:var(--text);min-height:64px;resize:none;margin-top:10px}
+.inf-qnote{display:flex;align-items:center;gap:5px;font-size:9.5px;color:#94A3B8;margin-top:6px}
+.inf-qsend{width:100%;height:50px;border-radius:14px;background:var(--blue);color:#fff;border:0;font-size:14px;font-weight:800;margin-top:6px;cursor:pointer;font-family:inherit}
 /* reportar botão */
 .inf-rep-wrap{padding:9px 14px 14px;flex-shrink:0}
 .inf-rep-btn{width:100%;height:48px;border-radius:14px;border:0;background:#F59E0B;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px}
@@ -1225,6 +1300,21 @@ h1.hd-title{font-family:var(--font-brand)!important}
 .feed-cp-types::-webkit-scrollbar{display:none}
 .feed-t-chip{flex:0 0 auto;display:flex;align-items:center;gap:6px;border-radius:12px;padding:8px 12px;font-size:11.5px;font-weight:800;border:1.5px solid var(--line);background:var(--card);color:var(--muted);white-space:nowrap;cursor:pointer;font-family:var(--font-app)}
 .qr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.inf-relatar-loc-chip{display:flex;align-items:center;gap:9px;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:14px;padding:12px 12px 12px 13px;margin:0 0 14px}
+.inf-city{cursor:pointer;touch-action:manipulation}
+.inf-city-search-box{display:flex;align-items:center;gap:8px;background:var(--soft);border-radius:12px;padding:11px 13px;margin-bottom:14px}
+.inf-city-search-box input{border:0;background:transparent;outline:none;font-size:13px;flex:1;font-family:inherit;color:var(--text)}
+.inf-city-item{display:flex;align-items:center;gap:11px;padding:11px 4px;border-bottom:1px solid #F1F5F9;cursor:pointer;touch-action:manipulation}
+.inf-city-item:last-child{border-bottom:0}
+.inf-city-item-ic{width:32px;height:32px;border-radius:9px;background:var(--soft);display:flex;align-items:center;justify-content:center;color:var(--muted);flex-shrink:0}
+.inf-city-item-name{font-size:12.5px;font-weight:700}
+.inf-city-item-uf{font-size:10px;color:var(--muted)}
+.inf-city-item.active{background:#EFF6FF;margin:0 -8px;padding:11px 8px;border-radius:10px}
+.inf-city-item.active .inf-city-item-name{color:#1E40AF}
+.inf-city-item-check{margin-left:auto;color:#2563EB;flex-shrink:0}
+.inf-relatar-loc-ic{width:30px;height:30px;border-radius:9px;background:#CCFBF1;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-relatar-loc-txt{flex:1;min-width:0;font-size:13.5px;font-weight:800;color:#1E40AF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inf-relatar-loc-btn{flex-shrink:0;border:0;background:#2563EB;color:#fff;font-size:11px;font-weight:800;padding:7px 12px;border-radius:9px;cursor:pointer;touch-action:manipulation}
 .qr-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;padding:20px 6px;border-radius:18px;border:0;cursor:pointer;touch-action:manipulation;color:#fff}
 .qr-btn svg{width:30px;height:30px}
 .qr-label{font-size:12px;font-weight:800;color:#fff}
@@ -1899,7 +1989,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <button class="inf-search-toggle" id="inf-search-toggle" onclick="infToggleSearch()" aria-label="Buscar local">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       </button>
-      <div class="inf-city"><div class="inf-city-dot"></div><span>Rio de Janeiro</span></div>
+      <div class="inf-city" id="inf-city-btn" onclick="infAbrirCidade()"><div class="inf-city-dot"></div><span id="inf-city-name">Rio de Janeiro</span><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#94A3B8;margin-left:1px"><path d="M6 9l6 6 6-6"/></svg></div>
     </div>
     <div class="inf-search-fixed" id="inf-search-fixed" style="display:none">
       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -1934,23 +2024,11 @@ h1.hd-title{font-family:var(--font-brand)!important}
 
     <!-- ═══ ABA: AGORA ═══ -->
     <div class="inf-panelbody inf-fill" id="inf-tab-agora">
-      <div class="inf-sec-lbl">Minha área</div>
-      <div class="inf-featF" id="inf-minha-card" style="background:linear-gradient(135deg,#0EA5E9,#0284C7);border-color:transparent;padding:20px 18px 19px" onclick="infAbrirGps()">
-        <div class="inf-featF-top">
-          <div class="inf-featF-id">
-            <div class="inf-featF-ic" style="background:rgba(255,255,255,.2);width:44px;height:44px;border-radius:12px"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div>
-            <div><div class="inf-featF-name" style="color:#fff;font-size:18px">Minha área</div><div class="inf-featF-sub" id="inf-minha-sub" style="color:rgba(255,255,255,.75)">Raio de 300m · toque para ver ruas</div></div>
-          </div>
-          <div class="inf-featF-ct" id="inf-minha-ct" style="display:none">0</div>
-        </div>
-        <div class="inf-featF-mini" id="inf-minha-mini" style="background:rgba(255,255,255,.16);display:none"></div>
-      </div>
+      <div class="inf-sec-lbl" id="inf-favs-section" style="display:none">Seus favoritos</div>
+      <div class="inf-favs-scroll" id="inf-favs-row"></div>
 
-      <div class="inf-sec-lbl">Informe da área</div>
-      <div class="inf-feed-list" id="inf-feed-area" style="margin-bottom:2px"><div class="inf-empty-feed">Ative o GPS pra ver os informes perto de você</div></div>
-
-      <div class="inf-sec-lbl">Últimos informes</div>
-      <div class="inf-feed-list inf-feed-fill" id="inf-feed-city"><div class="inf-empty-feed">Carregando…</div></div>
+      <div class="inf-sec-lbl">Informes perto de você</div>
+      <div id="inf-feed-agora"><div class="inf-empty-feed">Carregando…</div></div>
     </div>
 
     <!-- ═══ ABA: AEROPORTOS ═══ -->
@@ -2028,6 +2106,10 @@ h1.hd-title{font-family:var(--font-brand)!important}
         <div class="inf-panel-loc" id="inf-panel-loc">—</div>
         <div class="inf-panel-meta" id="inf-panel-meta"></div>
       </div>
+      <div class="inf-head-badges" id="inf-head-badges" style="display:flex;gap:6px;flex-shrink:0"></div>
+      <button class="inf-panel-fav" id="inf-panel-map" onclick="infAbrirNoMapa()" style="display:none" aria-label="Abrir no mapa">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#0EA5E9" stroke-width="2.2"><path d="M9 20l-5.5 2V6L9 4l6 2 5.5-2v16L15 22l-6-2z"/><line x1="9" y1="4" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="20"/></svg>
+      </button>
       <button class="inf-panel-fav" id="inf-panel-fav" onclick="infToggleFav()">
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#F59E0B" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
       </button>
@@ -2132,6 +2214,19 @@ h1.hd-title{font-family:var(--font-brand)!important}
 
 <!-- ════ MODAIS ════ -->
 
+<!-- Informes: trocar cidade (16/08/2026, pedido do Yuri) -->
+<div class="mo" id="mo-inf-cidade">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head"><h2>Escolher cidade</h2><button class="xbtn" onclick="closeMo('mo-inf-cidade')">&#x2715;</button></div>
+    <div class="inf-city-search-box">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#94A3B8" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="inf-city-search-input" placeholder="Buscar cidade…" oninput="infBuscarCidade(this.value)">
+    </div>
+    <div id="inf-city-list"></div>
+  </div>
+</div>
+
 <!-- Informes: Relatar (seleção de tipo — sem texto livre, pedido do Yuri
      16/08/2026. Fluxo com etapas de detalhe por tipo, aprovado.) -->
 <div class="mo" id="mo-inf-relatar">
@@ -2145,8 +2240,24 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
       <span id="inf-relatar-back-lbl"></span>
     </div>
-    <div id="inf-relatar-loc" style="font-size:11px;color:var(--muted);margin:0 0 14px">📍 localizando…</div>
+    <div id="inf-relatar-loc" class="inf-relatar-loc-chip">
+      <div class="inf-relatar-loc-ic" id="inf-relatar-loc-ic"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#14B8A6" stroke-width="2.3"><circle cx="12" cy="12" r="4"/></svg></div>
+      <span id="inf-relatar-loc-txt" class="inf-relatar-loc-txt">Localizando…</span>
+      <button class="inf-relatar-loc-btn" onclick="infRelatarAlterarLocal()">Alterar</button>
+    </div>
     <div id="inf-relatar-body"></div>
+  </div>
+</div>
+
+<div class="mo" id="mo-inf-colaborar">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <h2>Colabore com a comunidade</h2>
+      <button class="xbtn" onclick="closeMo('mo-inf-colaborar')">&#x2715;</button>
+    </div>
+    <div style="font-size:11.5px;color:var(--muted);margin:-6px 0 4px;line-height:1.5" id="inf-colab-sub"></div>
+    <div id="inf-colab-body"></div>
   </div>
 </div>
 
@@ -12207,27 +12318,17 @@ authInit();
 initAds();
 function infRenderFavs(){
   const row=document.getElementById('inf-favs-row');if(!row)return;
-  // 4 slots: 3 favoritados + 1 vazio, ou menos se tiver menos
-  const slots=[];
-  for(let i=0;i<4;i++){
-    if(_infFavs[i]) slots.push(_infFavs[i]);
-    else slots.push(null);
-  }
+  const sec=document.getElementById('inf-favs-section');
+  if(!_infFavs.length){ row.innerHTML=''; if(sec) sec.style.display='none'; return; }
+  if(sec) sec.style.display='block';
   const t_fn=k=>INF_TIPOS[k]||INF_TIPOS.bairro;
-  row.innerHTML=slots.map((f,i)=>{
-    if(!f) return`<div class="inf-fav-chip empty" onclick="showToast('Toque na ★ dentro de qualquer local')">
-      <div class="inf-fav-empty-ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
-      <div class="inf-fav-empty-lbl">Adicionar</div>
-    </div>`;
+  row.innerHTML=_infFavs.map(f=>{
     const t=t_fn(f.t);
-    return`<div class="inf-fav-chip" onclick="infAbrirLocal(this,'${f.n}','${f.t}')">
-      <div class="inf-fav-ic" style="background:${t.bg}">${infIconSvg(f.t,t.cor,12)}</div>
-      <div class="inf-fav-name">${f.n}</div>
+    return`<div class="inf-fav-chip" onclick="infAbrirLocal(this,'${f.n.replace(/'/g,"\\'")}','${f.t}')">
+      <div class="inf-fav-ic" style="background:${t.bg}">${infIconSvg(f.t,t.cor,17)}</div>
+      <div><div class="inf-fav-name">${esc(f.n)}</div><div class="inf-fav-sub">${t.label}</div></div>
     </div>`;
   }).join('');
-  // Ocultar seção se não tiver nenhum favorito
-  const sec=document.getElementById('inf-favs-section');
-  if(sec) sec.style.display=_infFavs.length===0?'none':'block';
 }
 
 function infEditarFavs(){
@@ -12381,7 +12482,10 @@ const INF_SDBDB = [
   {n:'Copacabana Palace',t:'hotel'},{n:'Fairmont Rio',t:'hotel'},{n:'Intercontinental',t:'hotel'},
   {n:'Windsor Barra',t:'hotel'},{n:'Sheraton Grand',t:'hotel'},{n:'Ibis Copacabana',t:'hotel'},
 ];
-let _infLoc=null,_infTipoKey=null,_infMinutos=60,_infRepTipo=null,_infRepValor=null,_infRepDetalhe=null;
+let _infLoc=null,_infTipoKey=null,_infMinutos=60,_infRepTipo=null,_infRepValor=null,_infRepDetalhe=null,_infPanelVenue=null;
+// Cidade do Informes (16/08/2026, pedido do Yuri) — antes fixa "Rio de
+// Janeiro" no HTML, agora clicável e persistida.
+let _infCity = JSON.parse(localStorage.getItem('sm_inf_city') || '{"name":"Rio de Janeiro","uf":"RJ"}');
 let _infFavs=JSON.parse(localStorage.getItem('sm_inf_favs')||'[]');
 const INF_AVC=['#6D28D9','#0369A1','#B45309','#0F766E','#15803D','#BE123C','#7C3AED','#0284C7'];
 const INF_BADGE={dinamico:'infbd',transito:'infbt',fiscalizacao:'infbf',fila:'infbfi',demanda:'infbde',lotacao:'infblo',acidente:'infbac'};
@@ -12390,8 +12494,7 @@ function renderInformes(){
   infCarregarContagens();
   infRenderBairrosTab();
   infRenderVenueLists();
-  infCarregarFeedCidade();
-  infCarregarMinhaArea();
+  infCarregarFeedAgora();
 }
 
 function infTab(id){
@@ -12416,119 +12519,133 @@ function infRenderVenueLists(){
     el.innerHTML=v.itens.map(item=>`<div class="inf-vitem" onclick="infAbrirLocal(this,'${item.n.replace(/'/g,"\\'")}','${v.tipo}')">
       <div class="inf-vitem-ic" style="background:${t.bg}">${infIconSvg(v.tipo,t.cor,15)}</div>
       <div><div class="inf-vitem-name">${item.n}</div><div class="inf-vitem-sub">${item.sub||''}</div></div>
+      <div class="inf-vitem-badges" data-vname="${esc(item.n)}"></div>
       <div class="inf-vitem-ct z">–</div>
     </div>`).join('');
   });
   infCarregarContagens();
+  infCarregarBadgesListagem();
 }
 
-// ── Feed genérico: renderiza uma lista de informes com avatar + votos ──
-function infRenderFeedList(elId,informes,vazioMsg){
-  const el=document.getElementById(elId);if(!el)return;
-  if(!informes||!informes.length){el.innerHTML=`<div class="inf-empty-feed">${vazioMsg}</div>`;return;}
-  el.innerHTML=informes.map(inf=>{
-    const badge=INF_BADGE[inf.param_type]||'infbt';
-    const t=INF_TIPOS.bairro; // ícone de fallback visual, cor vem do badge
-    const lbl=INF_PLBL[inf.param_type]||inf.param_type;
-    const desc=esc(lbl)+' · '+esc(inf.param_value||'')+(inf.param_detail?' · '+esc(inf.param_detail):'');
-    const ageMin=Math.max(0,Math.round((Date.now()-new Date(inf.created_at))/60000));
-    const ageStr=ageMin<1?'agora':'há '+ageMin+' min';
-    const av=INF_AVC[Math.abs((inf.user_id||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0))%INF_AVC.length];
-    const ltr=(inf.user_id||'MO').slice(0,2).toUpperCase();
-    return`<div class="inf-feed-row" onclick="infAbrirLocal(null,'${(inf.location_name||'').replace(/'/g,"\\'")}','bairro')">
-      <div class="inf-feed-ic ${badge}">${INF_PICONS[inf.param_type]||''}</div>
-      <div class="inf-feed-body"><div class="inf-feed-txt">${desc}</div><div class="inf-feed-loc">${esc(inf.location_name||'')} · ${ageStr}</div></div>
-      <div class="inf-feed-right">
-        <div class="inf-feed-av" style="background:${av}">${ltr}</div>
-        <div class="inf-feed-votes inf-votes">
-          <button class="inf-vbtn up" onclick="event.stopPropagation();infVotar('${inf.id}','up',this)"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>${inf.votes_up||0}</button>
-          <button class="inf-vbtn dn" onclick="event.stopPropagation();infVotar('${inf.id}','dn',this)"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>${inf.votes_dn||0}</button>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
+// Badges "Alta demanda"/"Tarifa dinâmica" nos itens da listagem —
+// mesmo visual do header (ícone+texto), some quando não há dado.
+// Reaproveita venue_cache (já resolvido em lote pela infCarregarContagens
+// não; aqui cada item pede seu próprio lat/lng, mas em paralelo/Promise.all
+// pra não travar a UI — listas são pequenas, 6-7 itens por aba).
+async function infCarregarBadgesListagem(){
+  if(!_SUPA) return;
+  const els=[...document.querySelectorAll('.inf-vitem-badges[data-vname]')];
+  if(!els.length) return;
+  await Promise.all(els.map(async el=>{
+    const nome=el.getAttribute('data-vname');
+    try{
+      const {data:vc}=await _SUPA.from('venue_cache').select('id,lat,lng').ilike('name',nome).limit(1);
+      if(!vc||!vc.length) return;
+      const venue=vc[0];
+      const d=0.003;
+      const [{data:stats},{data:posts}]=await Promise.all([
+        _SUPA.rpc('venue_collab_stats',{p_venue_id:venue.id}),
+        _SUPA.from('feed_posts').select('param_value,param_detail,created_at')
+          .eq('type','dinamico').eq('status','ativo').gt('expires_at',new Date().toISOString())
+          .gte('lat',venue.lat-d).lte('lat',venue.lat+d).gte('lng',venue.lng-d).lte('lng',venue.lng+d)
+          .order('created_at',{ascending:false}).limit(10)
+      ]);
+      let html='';
+      if(stats && stats.alta_demanda_agora){
+        html+=`<div class="inf-badge-btn peak"><svg viewBox="0 0 24 24" width="14" height="14" fill="#fff" stroke="none"><path d="M12 2c1 3-2 4-2 7a4 4 0 0 0 8 0c0-1-.5-2-1-2 1 3-1 4-2 4a2 2 0 0 1-2-2c0-2 2-3 2-5-2 0-4 1-5 3-1 2-1 4 0 6a6 6 0 0 0 12-2c0-4-3-6-4-9-1 1-3 3-3 5-1-2-1-3-1-5-2 1-2 3-2 5z"/></svg><span>ALTA</span></div>`;
+      }
+      const dyn99=(posts||[]).find(p=>p.param_value==='99');
+      if(dyn99){
+        html+=`<div class="inf-badge-btn dyn"><svg viewBox="0 0 24 24" width="14" height="14" fill="#fff" stroke="none"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><span>99: ${esc(dyn99.param_detail||'ativo')}</span></div>`;
+      }
+      el.innerHTML=html;
+    }catch(e){ /* silencioso — badge é acessório, não pode travar a lista */ }
+  }));
 }
 
-async function infCarregarFeedCidade(){
-  if(!_SUPA){infRenderFeedList('inf-feed-city',[],'Sem conexão');return;}
-  try{
-    const{data}=await _SUPA.from('informes')
-      .select('*').eq('is_active',true)
-      .gt('expires_at',new Date().toISOString())
-      .order('created_at',{ascending:false}).limit(20);
-    infRenderFeedList('inf-feed-city',data,'Nenhum informe recente · seja o primeiro a reportar!');
-  }catch(e){console.warn('feed cidade',e);infRenderFeedList('inf-feed-city',[],'Erro ao carregar');}
+function infHaversineM(lat1,lon1,lat2,lon2){
+  const R=6371000, toRad=x=>x*Math.PI/180;
+  const dLat=toRad(lat2-lat1), dLon=toRad(lon2-lon1);
+  const a=Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
-
-// ── Minha área: geolocaliza, acha o bairro mais próximo e carrega stats + feed local ──
-async function infCarregarMinhaArea(){
-  const subEl=document.getElementById('inf-minha-sub');
-  const ctEl=document.getElementById('inf-minha-ct');
-  const miniEl=document.getElementById('inf-minha-mini');
-  if(!navigator.geolocation){infRenderFeedList('inf-feed-area',[],'GPS não disponível');return;}
+// Feed unificado da aba "Agora" (16/08/2026) — substitui os antigos
+// "Informe da área" + "Últimos informes" (2 listas separadas, tabela
+// informes) por 1 lista só, ordenada por proximidade real via GPS,
+// direto de feed_posts.
+async function infCarregarFeedAgora(){
+  infRenderFavs();
+  const wrap=document.getElementById('inf-feed-agora');
+  if(!wrap)return;
+  if(!navigator.geolocation){wrap.innerHTML='<div class="inf-empty-feed">GPS não disponível</div>';return;}
   navigator.geolocation.getCurrentPosition(async pos=>{
     try{
       const{latitude:lat,longitude:lon}=pos.coords;
-      const revR=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&zoom=16&format=json&accept-language=pt`,{headers:{'User-Agent':'MoB/1.0'}});
-      const rev=await revR.json();
-      const bairro=rev.address?.suburb||rev.address?.neighbourhood||rev.address?.city_district||'';
-      if(subEl)subEl.textContent=(bairro?bairro+' · ':'')+'raio de 300m';
-      if(!_SUPA||!bairro)return;
-      const{data}=await _SUPA.from('informes')
-        .select('*').eq('location_name',bairro).eq('is_active',true)
-        .gt('expires_at',new Date().toISOString())
-        .order('created_at',{ascending:false}).limit(10);
-      const n=data?data.length:0;
-      if(ctEl){ctEl.style.display=n>0?'flex':'none';ctEl.textContent=n;}
-      if(miniEl && n>0){
-        const pp={};(data||[]).forEach(r=>{if(!pp[r.param_type])pp[r.param_type]=r;});
-        const stat=(pid)=>{const inf=pp[pid];if(!inf)return'';
-          return`<div class="inf-featF-mstat"><span class="inf-featF-mstat-ic" style="color:#fff">${INF_PICONS[pid]||''}</span><span class="inf-featF-mstat-val" style="color:#fff">${inf.param_value}</span></div>`;};
-        const html=Object.keys(pp).slice(0,6).map(stat).join('');
-        if(html){miniEl.innerHTML=html;miniEl.style.display='grid';}
-      }
-      infRenderFeedList('inf-feed-area',(data||[]).slice(0,3),'Nenhum informe recente na sua área');
-    }catch(e){console.warn('minha area',e);infRenderFeedList('inf-feed-area',[],'Erro ao carregar');}
-  },()=>{if(subEl)subEl.textContent='Permissão de GPS negada';infRenderFeedList('inf-feed-area',[],'Ative o GPS pra ver os informes perto de você');},{timeout:10000,enableHighAccuracy:true});
+      if(!_SUPA){wrap.innerHTML='<div class="inf-empty-feed">Sem conexão</div>';return;}
+      const d=0.02; // ~2km — feed geral da região, mais largo que o painel de 1 local
+      const{data}=await _SUPA.from('feed_posts').select('*')
+        .eq('status','ativo').gt('expires_at',new Date().toISOString())
+        .gte('lat',lat-d).lte('lat',lat+d)
+        .gte('lng',lon-d).lte('lng',lon+d)
+        .order('created_at',{ascending:false}).limit(30);
+      const posts=(data||[]).map(p=>{p._distM=infHaversineM(lat,lon,p.lat,p.lng);return p;})
+        .sort((a,b)=>a._distM-b._distM);
+      wrap.innerHTML = posts.length ? await infBuildPostCardsHtml(posts) : '<div class="inf-empty-feed">Nenhum informe recente por perto · seja o primeiro a reportar!</div>';
+    }catch(e){console.warn('feed agora',e);wrap.innerHTML='<div class="inf-empty-feed">Erro ao carregar</div>';}
+  },()=>{wrap.innerHTML='<div class="inf-empty-feed">Ative o GPS pra ver os informes perto de você</div>';},{timeout:10000,enableHighAccuracy:true});
 }
 
 async function infCarregarContagens(){
   if(!_SUPA)return;
   try{
-    const{data}=await _SUPA.from('informes')
-      .select('location_name')
-      .eq('is_active',true)
-      .gt('expires_at',new Date().toISOString());
+    // Migrado de 'informes' (tabela legada, sem post novo desde a
+    // reformulação de 16/08/2026 — segue existindo só pro cron de
+    // expiração antigo) pra feed_posts. feed_posts não tem location_name
+    // (é geolocalizado, não por local nomeado), então a contagem vira
+    // match textual no endereço geocodificado — aproximado, não é mais
+    // igualdade exata como era com location_name. Efeito prático: alguns
+    // locais podem subcontar se o endereço reverso não citar o nome
+    // exatamente (ex.: aeroporto que geocodifica só como rua) — degrada
+    // pra "–" nesse caso, nunca quebra a tela.
+    const{data}=await _SUPA.from('feed_posts')
+      .select('address')
+      .eq('status','ativo')
+      .gt('expires_at',new Date().toISOString())
+      .not('address','is',null);
     if(!data)return;
-    const cnt={};data.forEach(r=>{cnt[r.location_name]=(cnt[r.location_name]||0)+1;});
+    const countFor=(nome)=>{
+      const needle=(nome||'').toLowerCase().trim();
+      if(!needle) return 0;
+      return data.filter(r=>(r.address||'').toLowerCase().includes(needle)).length;
+    };
     // Atualiza contagem individual dos bairros quando inline
     document.querySelectorAll('.inf-bchip-ct').forEach(el=>{
       const nome=el.closest('.inf-bchip')?.querySelector('.inf-bchip-name')?.textContent||'';
-      const n=cnt[nome]||0;
+      const n=countFor(nome);
       el.textContent=n;el.className='inf-bchip-ct'+(n===0?' z':'');
     });
     [['gig','Galeão (GIG)'],['sdu','Santos Dumont (SDU)'],['rod','Rodoviária Novo Rio']].forEach(([id,n])=>{
-      const el=document.getElementById('inf-ct-'+id);if(el)el.textContent=cnt[n]||0;
+      const el=document.getElementById('inf-ct-'+id);if(el)el.textContent=countFor(n);
     });
     Object.entries({sul:INF_BAIRROS.sul,norte:INF_BAIRROS.norte,oeste:INF_BAIRROS.oeste,centro:INF_BAIRROS.centro}).forEach(([z,bs])=>{
-      const total=bs.reduce((s,b)=>s+(cnt[b]||0),0);
+      const total=bs.reduce((s,b)=>s+countFor(b),0);
       const el=document.getElementById('inf-zct-'+z);
       if(el){el.textContent=total;el.className='inf-zcard-ct'+(total===0?' z':'');}
     });
     Object.entries({bares:INF_VENUES.bares.itens,hoteis:INF_VENUES.hoteis.itens,eventos:INF_VENUES.eventos.itens,turistico:INF_VENUES.turistico.itens}).forEach(([cat,itens])=>{
-      const total=itens.reduce((s,i)=>s+(cnt[i.n]||0),0);
+      const total=itens.reduce((s,i)=>s+countFor(i.n),0);
       const el=document.getElementById('inf-cct-'+cat);if(el)el.textContent=total||'–';
     });
     // Badges individuais nas listas de venues das abas (bares/hotéis/eventos/turístico/shoppings)
     document.querySelectorAll('.inf-vitem-ct').forEach(el=>{
       const nome=el.closest('.inf-vitem')?.querySelector('.inf-vitem-name')?.textContent||'';
-      const n=cnt[nome]||0;
+      const n=countFor(nome);
       el.textContent=n||'–';el.className='inf-vitem-ct'+(n===0?' z':'');
     });
   }catch(e){console.warn('inf cnt',e);}
 }
 
-function infAbrirLocal(el,nome,tipoKey){
+async function infAbrirLocal(el,nome,tipoKey){
   document.querySelectorAll('.inf-feat,.inf-featF,.inf-bchip,.inf-zcard,.inf-vitem').forEach(b=>b.classList.remove('active'));
   if(el)el.classList.add('active');
   _infLoc=nome;_infTipoKey=tipoKey;
@@ -12541,79 +12658,403 @@ function infAbrirLocal(el,nome,tipoKey){
   document.getElementById('inf-panel-meta').textContent='Carregando…';
   document.getElementById('inf-panel-fav').classList.toggle('on',_infFavs.some(f=>f.n===nome));
   document.getElementById('inf-panel').classList.add('open');
+  // Botão "Abrir no mapa" — busca a coordenada no venue_cache (fonte
+  // OpenStreetMap) ANTES de carregar os informes, porque agora o feed
+  // "Últimos informes" filtra por proximidade real (lat/lng), não mais
+  // por texto exato do nome do local.
+  _infPanelVenue = null;
+  const mapBtn = document.getElementById('inf-panel-map');
+  if (mapBtn) mapBtn.style.display = 'none';
+  if (_SUPA) {
+    try {
+      const { data } = await _SUPA.from('venue_cache').select('id,lat,lng').ilike('name', nome).limit(1);
+      if (data && data.length) {
+        _infPanelVenue = data[0];
+        if (mapBtn) mapBtn.style.display = 'flex';
+      }
+    } catch(e) { console.warn('venue_cache lookup', e); }
+  }
   infCarregarInformes(nome,tipoKey);
   // Realtime: assina novos informes para esse local
   infSubscribeRealtime(nome,tipoKey);
 }
+function infAbrirNoMapa(){
+  if (!_infPanelVenue) return;
+  const url = `https://www.google.com/maps/search/?api=1&query=${_infPanelVenue.lat},${_infPanelVenue.lng}`;
+  window.open(url, '_blank');
+}
 
-async function infCarregarInformes(nome,tipoKey){
-  const t=INF_TIPOS[tipoKey]||INF_TIPOS.bairro;
-  let informes=[];
-  try{
-    if(_SUPA){
-      // Busca lista de informes (para exibir na lista com avatares)
-      const{data:lista}=await _SUPA.from('informes')
-        .select('*').eq('location_name',nome).eq('is_active',true)
-        .gt('expires_at',new Date().toISOString())
-        .order('votes_up',{ascending:false}).limit(30);
-      informes=lista||[];
-      // Busca status consolidado (moda por param_type) para os chips
-      const{data:status}=await _SUPA.from('informes_status')
-        .select('*').eq('location_name',nome).limit(20);
-      if(status&&status.length){
-        // Sobrescreve pp (por param) com o valor mais votado de cada tipo
-        status.forEach(r=>{
-          if(!pp[r.param_type]||r.total_up>=(pp[r.param_type]?.votes_up||0)){
-            pp[r.param_type]={param_value:r.param_value,param_detail:r.param_detail,
-              votes_up:r.total_up,confianca:r.confianca};
-          }
-        });
-      }
-    }
-  }catch(e){console.warn('inf load',e);}
-  document.getElementById('inf-panel-meta').textContent=informes.length+' informe'+(informes.length!==1?'s':'')+' · últimos '+_infMinutos+'min';
-  // status
-  const pp={};informes.forEach(r=>{if(!pp[r.param_type])pp[r.param_type]=r;});
-  const chipH=(pid,big)=>{
-    const lbl=INF_PLBL[pid]||pid;const inf=pp[pid];
-    const val=inf?(inf.param_value+(inf.param_detail?' · '+inf.param_detail:'')):'–';
-    const cls=inf?infChipClass(pid,val):'neu';
-    return`<div class="inf-chip ${big?'big':'sm'} ${cls}"><span class="inf-chip-lbl">${lbl}</span><span class="inf-chip-val">${val}</span></div>`;
+// ── Metadados dos 4 tipos de informe manual (Fiscalização/Trânsito/
+// Alerta/Lotação — Demanda e Dinâmico são automáticos, não aparecem
+// aqui como relato de usuário) ──────────────────────────────────────
+const INF_POST_META = {
+  blitz:    {label:'Fiscalização', color:'#2563EB', bg:'#DBEAFE'},
+  transito: {label:'Trânsito',     color:'#EA580C', bg:'#FFEDD5'},
+  risco:    {label:'Alerta',       color:'#DC2626', bg:'#FEF2F2'},
+  lotacao:  {label:'Lotação',      color:'#7C3AED', bg:'#F5F3FF'}
+};
+const INF_TRANSITO_LBL = ['Parado','Muito lento','Lento','Moderado','Fluindo','Livre'];
+const INF_DISLIKE_REASONS = {
+  blitz:    ['Não existe','Já saiu'],
+  transito: ['Mudou','Não é assim'],
+  lotacao:  ['Mudou','Não é assim'],
+  risco:    ['Não existe','Já foi liberado']
+};
+function infPostIconSvg(type){
+  const icons = {
+    blitz: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+    transito: '<rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/>',
+    risco: '<path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/>',
+    lotacao: '<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>'
   };
-  const cols2=t.r2.length>=4?4:t.r2.length>=3?3:t.r2.length||1;
-  document.getElementById('inf-status').innerHTML=
-    `<div class="inf-st-r1">${t.r1.map(p=>chipH(p,true)).join('')}</div>`+
-    (t.r2.length?`<div class="inf-st-r2" style="grid-template-columns:repeat(${cols2},1fr)">${t.r2.map(p=>chipH(p,false)).join('')}</div>`:'');
-  // lista
-  if(!informes.length){document.getElementById('inf-list-wrap').innerHTML='<div class="inf-empty">Nenhum informe recente · seja o primeiro a reportar!</div>';return;}
-  document.getElementById('inf-list-wrap').innerHTML=informes.map((inf,i)=>{
-    const badge=INF_BADGE[inf.param_type]||'infbt';
-    const lbl=esc(INF_PLBL[inf.param_type]||inf.param_type);
-    const desc=esc(inf.param_value)+(inf.param_detail?' · '+esc(inf.param_detail):'');
-    const ageMin=Math.max(0,Math.round((Date.now()-new Date(inf.created_at))/60000));
-    const ageStr=ageMin<1?'agora':ageMin+'min';
-    const conf=inf.votes_up>=10?3:inf.votes_up>=5?2:1;
-    const confLbl=['','fraco','confiável','confirmado'][conf];
-    const confCls=['','inf-conf1','inf-conf2','inf-conf3'][conf];
-    const avN=Math.min(3,1+Math.floor(inf.votes_up/3));
-    const avs=Array.from({length:avN},(_,ai)=>{
-      const c=INF_AVC[(i+ai)%INF_AVC.length];
-      const ltr=(inf.user_id||'MO').slice(ai*2,ai*2+2).toUpperCase();
-      return`<div class="inf-av" style="background:${c};z-index:${avN-ai}">${ltr||'MO'}</div>`;
-    }).join('');
-    return`<div class="inf-item">
-      <div class="inf-ibadge ${badge}">${lbl}</div>
-      <div class="inf-ibody">
-        <div class="inf-idesc">${desc}</div>
-        <div class="inf-iage"><span class="iago">${ageStr}</span> · <span class="${confCls}">${confLbl}</span></div>
-        <div class="inf-votes">
-          <button class="inf-vbtn up" onclick="infVotar('${inf.id}','up',this)"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>${inf.votes_up}</button>
-          <button class="inf-vbtn dn" onclick="infVotar('${inf.id}','dn',this)"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/><path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>${inf.votes_dn}</button>
+  return icons[type] || icons.blitz;
+}
+function infPostTitle(p){
+  if (p.type === 'transito') { const n = p.nivel ?? 0; return `${n} · ${INF_TRANSITO_LBL[n]||''}`; }
+  if (p.param_value && p.param_detail) return `${esc(p.param_value)} · ${esc(p.param_detail)}`;
+  if (p.param_value) return esc(p.param_value);
+  return INF_POST_META[p.type]?.label || p.type;
+}
+// Busca em lote quem deu "curtir" em vários posts de uma vez (evita 1
+// query por linha da lista).
+async function infFetchReactorsMap(postIds){
+  if (!postIds.length || !_SUPA) return {};
+  try{
+    const { data } = await _SUPA.from('feed_reactions').select('post_id,user_id')
+      .in('post_id', postIds).eq('vote','up').order('created_at',{ascending:true});
+    const map = {};
+    (data||[]).forEach(r => { (map[r.post_id] = map[r.post_id]||[]).push(r.user_id); });
+    return map;
+  }catch(e){ return {}; }
+}
+function infAvatarsHtml(p, reactorsMap){
+  const ids = [p.user_id, ...(reactorsMap[p.id]||[])].filter((v,i,a)=>v && a.indexOf(v)===i);
+  const shown = ids.slice(0,4);
+  const extra = ids.length - shown.length;
+  let html = extra > 0 ? `<div class="inf-post-av more">+${extra}</div>` : '';
+  html += shown.map(uid => {
+    const c = INF_AVC[Math.abs((uid||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0))%INF_AVC.length];
+    const ltr = (uid||'MO').replace(/-/g,'').slice(0,2).toUpperCase();
+    return `<div class="inf-post-av" style="background:${c}">${ltr}</div>`;
+  }).join('');
+  return html;
+}
+function infPostRowHtml(p, reactorsMap){
+  const meta = INF_POST_META[p.type] || INF_POST_META.blitz;
+  const ageMin = Math.max(0, Math.round((Date.now()-new Date(p.created_at))/60000));
+  const ageStr = ageMin<1 ? 'agora' : ageMin+'min';
+  const distTxt = p._distM!=null ? Math.round(p._distM)+'m · ' : '';
+  const locTxt = distTxt + (p.address || '');
+  return `<div class="inf-post-row" id="ipr-${p.id}">
+    <div class="inf-post-top">
+      <div class="inf-post-typecol">
+        <div class="inf-post-time">${ageStr}</div>
+        <div class="inf-post-ic" style="background:${meta.bg}"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="${meta.color}" stroke-width="2">${infPostIconSvg(p.type)}</svg></div>
+        <div class="inf-post-typelbl" style="color:${meta.color}">${meta.label}</div>
+      </div>
+      <div class="inf-post-body">
+        <div class="inf-post-txt">${infPostTitle(p)}</div>
+        ${locTxt ? `<div class="inf-post-locchip"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span>${esc(locTxt)}</span></div>` : ''}
+        <div class="inf-post-actions">
+          <button class="inf-post-act" onclick="infPostLike('${p.id}',this)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/></svg><span>${p.votes_up||0}</span></button>
+          <button class="inf-post-act" onclick="infPostDislikeToggle('${p.id}','${p.type}')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/></svg></button>
+          <button class="inf-post-act" onclick="infPostCommentsToggle('${p.id}')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>${p.comments_count||0}</span></button>
         </div>
       </div>
-      <div class="inf-avs">${avs}</div>
+      <div class="inf-post-avs">${infAvatarsHtml(p, reactorsMap)}</div>
+    </div>
+    <div id="ipr-dislike-${p.id}"></div>
+    <div id="ipr-comments-${p.id}"></div>
+  </div>`;
+}
+async function infBuildPostCardsHtml(posts){
+  if (!posts.length) return '';
+  const reactorsMap = await infFetchReactorsMap(posts.map(p=>p.id));
+  return `<div class="inf-post-card">${posts.map(p=>infPostRowHtml(p,reactorsMap)).join('')}</div>`;
+}
+// Curtir — sempre soma (sem alternar "descurtir"), atualiza contador na hora.
+async function infPostLike(postId, btn){
+  if (!_supaUser) { showToast('Faça login pra curtir.'); return; }
+  btn.classList.add('on-like');
+  try{
+    await _SUPA.from('feed_reactions').upsert({post_id:postId, user_id:_supaUser.id, vote:'up', reason:null}, {onConflict:'post_id,user_id'});
+    const { data } = await _SUPA.from('feed_posts').select('votes_up').eq('id',postId).single();
+    if (data) { const span = btn.querySelector('span'); if(span) span.textContent = data.votes_up; }
+  }catch(e){ console.warn('like', e); }
+}
+// Não curtir — abre painel perguntando o motivo (texto muda por tipo de
+// informe), pedido do Yuri (16/08/2026). O auto-encerramento por
+// downvote já existe no banco (feed_reactions_apply) — o motivo aqui é
+// só contexto, não precisa mudar essa lógica.
+function infPostDislikeToggle(postId, type){
+  const panel = document.getElementById('ipr-dislike-'+postId);
+  if (!panel) return;
+  if (panel.innerHTML) { panel.innerHTML=''; return; }
+  const reasons = INF_DISLIKE_REASONS[type] || ['Não existe','Já acabou'];
+  panel.innerHTML = `<div class="inf-post-dislike-panel">
+    <div class="inf-post-dislike-q">Por que você não confirma?</div>
+    <div class="inf-post-dislike-opts">
+      ${reasons.map(r=>`<div class="inf-post-dislike-opt" onclick="infPostDislikeSend('${postId}',${JSON.stringify(r)})">${r}</div>`).join('')}
+    </div>
+  </div>`;
+}
+async function infPostDislikeSend(postId, reason){
+  if (!_supaUser) { showToast('Faça login.'); return; }
+  try{
+    await _SUPA.from('feed_reactions').upsert({post_id:postId, user_id:_supaUser.id, vote:'down', reason}, {onConflict:'post_id,user_id'});
+    const row = document.getElementById('ipr-'+postId);
+    if (row) { const btns = row.querySelectorAll('.inf-post-act'); if(btns[1]) btns[1].classList.add('on-dislike'); }
+    document.getElementById('ipr-dislike-'+postId).innerHTML = '';
+    showToast('Obrigado pelo feedback!');
+  }catch(e){ console.warn('dislike', e); showToast('Erro ao enviar.'); }
+}
+// Comentar — expande inline, sem sair da linha (pedido do Yuri).
+function infPostCommentsToggle(postId){
+  const panel = document.getElementById('ipr-comments-'+postId);
+  if (!panel) return;
+  if (panel.innerHTML) { panel.innerHTML=''; return; }
+  infPostCommentsLoad(postId);
+}
+async function infPostCommentsLoad(postId){
+  const panel = document.getElementById('ipr-comments-'+postId);
+  if (!panel) return;
+  panel.innerHTML = '<div class="inf-post-comments"><div style="font-size:11px;color:var(--muted)">Carregando…</div></div>';
+  try{
+    const { data } = await _SUPA.from('feed_comments').select('*').eq('post_id',postId).order('created_at',{ascending:true}).limit(50);
+    const items = (data||[]).map(c => {
+      const ltr = (c.user_id||'MO').replace(/-/g,'').slice(0,2).toUpperCase();
+      return `<div class="inf-comment-item"><div class="inf-comment-av">${ltr}</div><div class="inf-comment-txt">${esc(c.body)}</div></div>`;
+    }).join('');
+    panel.innerHTML = `<div class="inf-post-comments">
+      ${items || '<div style="font-size:11px;color:var(--muted);margin-bottom:8px">Nenhum comentário ainda</div>'}
+      <div class="inf-comment-input-row">
+        <input class="inf-comment-input" id="ipr-cinput-${postId}" placeholder="Escrever um comentário…">
+        <button class="inf-comment-send" onclick="infPostCommentSend('${postId}')"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--blue)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+      </div>
     </div>`;
+  }catch(e){ panel.innerHTML = '<div class="inf-post-comments"><div style="font-size:11px;color:var(--muted)">Erro ao carregar</div></div>'; }
+}
+async function infPostCommentSend(postId){
+  if (!_supaUser) { showToast('Faça login pra comentar.'); return; }
+  const inp = document.getElementById('ipr-cinput-'+postId);
+  const body = (inp?.value||'').trim();
+  if (!body) return;
+  try{
+    await _SUPA.from('feed_comments').insert({post_id:postId, user_id:_supaUser.id, body});
+    await infPostCommentsLoad(postId);
+    // Atualiza o contador visível na linha, sem recarregar a lista toda.
+    const row = document.getElementById('ipr-'+postId);
+    if (row) { const span = row.querySelector('.inf-post-actions .inf-post-act:last-child span'); if (span) span.textContent = (parseInt(span.textContent)||0)+1; }
+  }catch(e){ showToast('Erro ao comentar.'); }
+}
+
+// venue_cache.id já resolvido em _infPanelVenue (infAbrirLocal, roda antes)
+// Logos reais Uber/99 (Regra #2 — nunca recriar em SVG, usar exatamente
+// a imagem fornecida). Uber 112x40 (proporção original 2,8:1), 99 56x56.
+const INF_LOGO_UBER = 'data:image/png;base64,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';
+const INF_LOGO_99 = 'data:image/png;base64,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';
+
+async function infCarregarInformes(nome,tipoKey){
+  let posts=[];
+  try{
+    if(_SUPA && _infPanelVenue){
+      const d=0.003; // ~300m
+      const{data}=await _SUPA.from('feed_posts').select('*')
+        .eq('status','ativo').gt('expires_at',new Date().toISOString())
+        .gte('lat',_infPanelVenue.lat-d).lte('lat',_infPanelVenue.lat+d)
+        .gte('lng',_infPanelVenue.lng-d).lte('lng',_infPanelVenue.lng+d)
+        .order('created_at',{ascending:false}).limit(30);
+      posts=data||[];
+    }
+  }catch(e){console.warn('inf load',e);}
+  document.getElementById('inf-panel-meta').textContent=posts.length+' informe'+(posts.length!==1?'s':'')+' recente'+(posts.length!==1?'s':'');
+
+  // Painel "Agora" (5 indicadores) — reaproveita o MESMO posts já
+  // buscado acima (mesma janela de proximidade/expiração), sem query extra.
+  infRenderAgoraGrid(posts);
+
+  // Dicas do local + horário de pico + "alta demanda agora" — agregação
+  // pública SEM % (venue_collab_stats) + histórico de Fiscalização
+  // (venue_fiscalizacao_comum). Roda em paralelo com o resto.
+  let stats=null, fiscComum=false;
+  if(_SUPA && _infPanelVenue){
+    try{
+      const [{data:s},{data:fc}]=await Promise.all([
+        _SUPA.rpc('venue_collab_stats',{p_venue_id:_infPanelVenue.id}),
+        _SUPA.rpc('venue_fiscalizacao_comum',{p_lat:_infPanelVenue.lat,p_lng:_infPanelVenue.lng})
+      ]);
+      stats=s; fiscComum=!!fc;
+    }catch(e){console.warn('inf stats',e);}
+  }
+  infRenderHeaderBadges(stats, posts);
+
+  const listEl=document.getElementById('inf-list-wrap');
+  const postsHtml = posts.length ? await infBuildPostCardsHtml(posts) : '<div class="inf-empty">Nenhum informe recente · seja o primeiro a reportar!</div>';
+  listEl.innerHTML = postsHtml + infDicasHtml(stats, fiscComum) + infPeakHtml(stats) + infCollabBannerHtml();
+}
+
+// ── Painel "Agora" — 5 indicadores ao vivo (Demanda/Lotação/Trânsito/
+// Fiscalização/Dinâmico). Dinâmico vira 2 cards (Uber/99) com logo real.
+// IMPORTANTE: 'blitz' e 'fiscalizacao' coexistem em feed_posts.type pro
+// mesmo conceito (a barra "Relatar agora" grava 'blitz', o resto do
+// sistema usa 'fiscalizacao') — cobre os dois aqui pra não perder relato.
+function infRenderAgoraGrid(posts){
+  const el=document.getElementById('inf-status'); if(!el) return;
+  const mostRecent=(types)=>{
+    const list=posts.filter(p=>types.includes(p.type)).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+    return list[0]||null;
+  };
+  const ageStr=(p)=>{
+    const min=Math.max(0,Math.round((Date.now()-new Date(p.created_at))/60000));
+    return min<1?'agora':'há '+min+' min';
+  };
+  const tile=(lbl,post,valGetter)=>{
+    if(!post) return `<div class="inf-live-tile"><div class="inf-live-tile-lbl">${lbl}</div><div class="inf-live-tile-val empty">—</div><div class="inf-live-tile-age">Sem relato recente</div></div>`;
+    return `<div class="inf-live-tile"><div class="inf-live-tile-lbl">${lbl}</div><div class="inf-live-tile-val">${esc(valGetter(post))}</div><div class="inf-live-tile-age">${ageStr(post)}</div></div>`;
+  };
+
+  const demanda=mostRecent(['demanda']);
+  const lotacao=mostRecent(['lotacao']);
+  const transito=mostRecent(['transito']);
+  const fiscal=mostRecent(['blitz','fiscalizacao']);
+
+  let html = tile('Demanda', demanda, p=>p.param_value||'Tocando')
+    + tile('Lotação', lotacao, p=>p.param_value||'Relatado')
+    + tile('Trânsito', transito, p=>p.nivel!=null ? (INF_TRANSITO_LBL[p.nivel]||'Relatado') : (p.param_value||'Relatado'))
+    + tile('Fiscalização', fiscal, p=>p.param_value ? (p.param_value+(p.param_detail?' · '+p.param_detail:'')) : 'Relatada');
+
+  const dinamicoPosts=posts.filter(p=>p.type==='dinamico').sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  const uberP=dinamicoPosts.find(p=>p.param_value==='uber');
+  const n99P=dinamicoPosts.find(p=>p.param_value==='99');
+  const dynTile=(logo,alt,w,hh,post,valFn)=>{
+    const img=`<img src="${logo}" alt="${alt}" width="${w}" height="${hh}">`;
+    if(!post) return `<div class="inf-dyn-tile">${img}<div class="inf-dyn-info"><div class="inf-dyn-val empty">—</div><div class="inf-dyn-age">Sem dado agora</div></div></div>`;
+    return `<div class="inf-dyn-tile">${img}<div class="inf-dyn-info"><div class="inf-dyn-val">${esc(valFn(post))}</div><div class="inf-dyn-age">${ageStr(post)}</div></div></div>`;
+  };
+  html += `<div class="inf-dyn-grid">`
+    + dynTile(INF_LOGO_UBER,'Uber',36,13,uberP, p=>p.body?p.body.replace('Dinâmico ','').trim():'Ativo')
+    + dynTile(INF_LOGO_99,'99',24,24,n99P, p=>p.param_detail || (p.body?p.body.replace('Dinâmico ','').trim():'Ativo'))
+    + `</div>`;
+
+  el.innerHTML=`<div class="inf-agora-hd"><span class="inf-live-dot"></span>Agora</div><div class="inf-live-grid">${html}</div>`;
+}
+
+// Badges "Alta demanda"/"Tarifa dinâmica" no header do painel — mesmo
+// visual usado na listagem (infCarregarBadgesListagem). Só aparece
+// quando o dado é real; sem os dois, a linha de badges some inteira.
+function infRenderHeaderBadges(stats, posts){
+  const el=document.getElementById('inf-head-badges'); if(!el) return;
+  let html='';
+  if(stats && stats.alta_demanda_agora){
+    html+=`<div class="inf-badge-btn peak"><svg viewBox="0 0 24 24" width="18" height="18" fill="#fff" stroke="none"><path d="M12 2c1 3-2 4-2 7a4 4 0 0 0 8 0c0-1-.5-2-1-2 1 3-1 4-2 4a2 2 0 0 1-2-2c0-2 2-3 2-5-2 0-4 1-5 3-1 2-1 4 0 6a6 6 0 0 0 12-2c0-4-3-6-4-9-1 1-3 3-3 5-1-2-1-3-1-5-2 1-2 3-2 5z"/></svg><span>ALTA<br>DEMANDA</span></div>`;
+  }
+  if(posts.some(p=>p.type==='dinamico')){
+    html+=`<div class="inf-badge-btn dyn"><svg viewBox="0 0 24 24" width="18" height="18" fill="#fff" stroke="none"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><span>TARIFA<br>DINÂMICA</span></div>`;
+  }
+  el.innerHTML=html;
+}
+
+// "Dicas do local" — fatos simples, SEM % pública (pedido explícito do
+// Yuri). Some a seção inteira se não há nenhum fato disponível ainda.
+function infDicasHtml(stats, fiscComum){
+  const tips=[];
+  if(stats && stats.embarque==='facil') tips.push({bg:'#F0FDF4',color:'#16A34A',sw:'2.5',svg:'<polyline points="20 6 9 17 4 12"/>',txt:'Fácil de embarque'});
+  else if(stats && stats.embarque==='dificil') tips.push({bg:'#FEF2F2',color:'#DC2626',sw:'2.2',svg:'<circle cx="12" cy="12" r="9"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',txt:'Difícil de embarque'});
+  if(stats && stats.embarque_area==='definida') tips.push({bg:'#EFF6FF',color:'#2563EB',sw:'2.2',svg:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',txt:'Área de embarque definida'});
+  else if(stats && stats.embarque_area==='livre') tips.push({bg:'#EFF6FF',color:'#2563EB',sw:'2.2',svg:'<path d="M3 12h18M3 6h18M3 18h18"/>',txt:'Área de embarque livre'});
+  if(fiscComum) tips.push({bg:'#EFF6FF',color:'#2563EB',sw:'2',svg:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',txt:'Fiscalização é comum aqui'});
+  if(!tips.length) return '';
+  const rows=tips.map(t=>`<div class="inf-tip-row"><div class="inf-tip-ic" style="background:${t.bg}"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="${t.color}" stroke-width="${t.sw}" stroke-linecap="round" stroke-linejoin="round">${t.svg}</svg></div><div class="inf-tip-txt">${esc(t.txt)}</div></div>`).join('');
+  return `<div class="inf-agora-hd" style="margin-top:16px">Dicas do local</div><div class="inf-tips-card">${rows}</div>`;
+}
+
+// Gráfico de horário de pico — 8 blocos de 3h, bloco atual destacado.
+// Some se ninguém colaborou ainda (sem inventar dado).
+function infPeakHtml(stats){
+  if(!stats || !stats.peak_hist || !stats.peak_hist.some(n=>n>0)) return '';
+  const hist=stats.peak_hist;
+  const max=Math.max(...hist,1);
+  const curBlk=Math.floor(new Date().getHours()/3);
+  const labels=['0-3h','3-6h','6-9h','9-12h','12-15h','15-18h','18-21h','21-24h'];
+  const bars=hist.map((n,i)=>{
+    const hpct=Math.max(6,Math.round(n/max*100));
+    const cls=i===curBlk?'inf-peak-bar now':'inf-peak-bar';
+    return `<div class="inf-peak-bar-wrap"><div class="${cls}" style="height:${hpct}%"></div></div>`;
   }).join('');
+  const lbls=labels.map(l=>`<div class="inf-peak-lbl">${l}</div>`).join('');
+  const nowRow=labels.map((_,i)=>`<div class="inf-peak-now-cell">${i===curBlk?'<div class="inf-peak-now-mark">AGORA</div>':''}</div>`).join('');
+  return `<div class="inf-agora-hd" style="margin-top:16px">Horários de alta demanda</div><div class="inf-peak-card"><div class="inf-peak-bars">${bars}</div><div class="inf-peak-lbl-row">${lbls}</div><div class="inf-peak-now-row">${nowRow}</div></div>`;
+}
+
+function infCollabBannerHtml(){
+  return `<button class="inf-collab-banner" onclick="infOpenColaborar()">
+    <div class="inf-collab-ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+    <div class="inf-collab-txt"><b>Colabore com a comunidade</b><span>Ajude outros motoristas com dados desse local</span></div>
+  </button>`;
+}
+
+// ── Formulário "Colabore com a comunidade" (3 perguntas aprovadas) ──
+let _infColabState={embarque:null,area:null,horas:new Set(),texto:''};
+function infOpenColaborar(){
+  if(!_supaUser){ showToast('Faça login pra colaborar.'); return; }
+  if(!_infPanelVenue){ showToast('Não consegui identificar esse local ainda.'); return; }
+  _infColabState={embarque:null,area:null,horas:new Set(),texto:''};
+  document.getElementById('inf-colab-sub').textContent=`Nos envie informações sobre o ${_infLoc||'local'} — ajuda outros motoristas a decidir se vale a pena vir pra cá.`;
+  infRenderColabForm();
+  openMo('mo-inf-colaborar');
+}
+function infRenderColabForm(){
+  const s=_infColabState;
+  const horas=['0h–3h','3h–6h','6h–9h','9h–12h','12h–15h','15h–18h','18h–21h','21h–24h'];
+  document.getElementById('inf-colab-body').innerHTML=`
+    <div class="inf-qblock">
+      <span class="inf-qnum">1</span><span class="inf-qtitle">Como é o embarque no local?</span>
+      <div class="inf-qopts2">
+        <div class="inf-qopt ${s.embarque==='facil'?'picked':''}" onclick="infColabPick('embarque','facil')">Fácil</div>
+        <div class="inf-qopt ${s.embarque==='dificil'?'picked':''}" onclick="infColabPick('embarque','dificil')">Difícil</div>
+      </div>
+      ${s.embarque?`<div class="inf-qsub-lbl">Área de embarque:</div>
+      <div class="inf-qsub-opts">
+        <div class="inf-qsub-opt ${s.area==='livre'?'picked':''}" onclick="infColabPick('area','livre')">Livre</div>
+        <div class="inf-qsub-opt ${s.area==='definida'?'picked':''}" onclick="infColabPick('area','definida')">Definida</div>
+      </div>`:''}
+    </div>
+    <div class="inf-qblock">
+      <span class="inf-qnum">2</span><span class="inf-qtitle">Horários de mais movimento</span>
+      <div style="font-size:10px;color:#94A3B8;margin:2px 0 0 24px">Pode marcar mais de um</div>
+      <div class="inf-qtime-grid">${horas.map((h,i)=>`<div class="inf-qtime-chip ${s.horas.has(i)?'picked':''}" onclick="infColabToggleHora(${i})">${h}</div>`).join('')}</div>
+    </div>
+    <div class="inf-qblock" style="margin-bottom:6px">
+      <span class="inf-qnum">3</span><span class="inf-qtitle">Alguma outra observação sobre esse local?</span>
+      <textarea class="inf-qtextarea" id="inf-colab-texto" placeholder="Opcional — conta pra gente algo que ache importante...">${esc(s.texto||'')}</textarea>
+      <div class="inf-qnote"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Não aparece publicamente — usamos internamente</div>
+    </div>
+    <button class="inf-qsend" onclick="infColabEnviar()">Enviar colaboração</button>`;
+}
+function infColabPick(field,val){
+  _infColabState[field]=_infColabState[field]===val?null:val;
+  if(field==='embarque' && _infColabState.embarque===null) _infColabState.area=null;
+  infRenderColabForm();
+}
+function infColabToggleHora(i){
+  if(_infColabState.horas.has(i)) _infColabState.horas.delete(i); else _infColabState.horas.add(i);
+  infRenderColabForm();
+}
+async function infColabEnviar(){
+  if(!_supaUser||!_infPanelVenue||!_SUPA) return;
+  _infColabState.texto=document.getElementById('inf-colab-texto')?.value||'';
+  const row={
+    user_id:_supaUser.id, venue_id:_infPanelVenue.id,
+    embarque:_infColabState.embarque, embarque_area:_infColabState.area,
+    peak_hours:[..._infColabState.horas], free_text:_infColabState.texto||null
+  };
+  try{
+    const {error}=await _SUPA.from('venue_collab_survey').upsert(row,{onConflict:'user_id,venue_id'});
+    closeMo('mo-inf-colaborar');
+    if(error){ console.error('colab',error); showToast('Erro ao enviar. Tenta de novo.','error'); return; }
+    showToast('Obrigado! Colaboração enviada.','success');
+    if(_infLoc) infCarregarInformes(_infLoc,_infTipoKey);
+  }catch(e){ console.error('colab',e); showToast('Erro ao enviar.','error'); }
 }
 
 function infChipClass(pid,val){
@@ -12691,7 +13132,8 @@ function infVoltarZonas(){
   document.getElementById('inf-bairros-inline').style.display='none';
 }
 
-function infAbrirGps(){
+function infAbrirGps(mode){
+  mode = mode || 'browse';
   document.getElementById('inf-gps-list').innerHTML='<div class="inf-empty">Obtendo localização…</div>';
   document.getElementById('inf-ov-gps').classList.add('open');
   if(!navigator.geolocation){document.getElementById('inf-gps-list').innerHTML='<div class="inf-empty">GPS não disponível</div>';return;}
@@ -12709,8 +13151,11 @@ function infAbrirGps(){
       const priority=['primary','secondary','tertiary','residential'];
       const ruas=[];const seen=new Set([ruaAtual]);
       [...oD.elements].sort((a,b)=>{const pa=priority.indexOf(a.tags.highway);const pb=priority.indexOf(b.tags.highway);return(pa<0?99:pa)-(pb<0?99:pb);}).forEach(el=>{const n=el.tags.name;if(n&&!seen.has(n)){seen.add(n);ruas.push(n);}});
-      let html=`<div class="inf-loc-item" onclick="infFecharOv('inf-ov-gps');infAbrirLocal(null,'${escJsAttr(ruaAtual)}','rua')"><div class="inf-loc-ic" style="background:#CCFBF1"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#14B8A6" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg></div><div class="inf-loc-body"><div class="inf-loc-name" style="color:#14B8A6">${esc(ruaAtual)}</div><div class="inf-loc-sub">Você está aqui · ${esc(bairro)}</div></div></div>`;
-      ruas.slice(0,10).forEach(r=>{html+=`<div class="inf-loc-item" onclick="infFecharOv('inf-ov-gps');infAbrirLocal(null,'${escJsAttr(r)}','rua')"><div class="inf-loc-ic" style="background:#CCFBF1"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#14B8A6" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/></svg></div><div class="inf-loc-body"><div class="inf-loc-name">${esc(r)}</div><div class="inf-loc-sub">Próxima · ≈300m</div></div></div>`;});
+      const onTap = (nome) => mode === 'relatar'
+        ? `infRelatarPickLocal('${escJsAttr(nome)}')`
+        : `infFecharOv('inf-ov-gps');infAbrirLocal(null,'${escJsAttr(nome)}','rua')`;
+      let html=`<div class="inf-loc-item" onclick="${onTap(ruaAtual)}"><div class="inf-loc-ic" style="background:#CCFBF1"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#14B8A6" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg></div><div class="inf-loc-body"><div class="inf-loc-name" style="color:#14B8A6">${esc(ruaAtual)}</div><div class="inf-loc-sub">Você está aqui · ${esc(bairro)}</div></div></div>`;
+      ruas.slice(0,10).forEach(r=>{html+=`<div class="inf-loc-item" onclick="${onTap(r)}"><div class="inf-loc-ic" style="background:#CCFBF1"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#14B8A6" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/></svg></div><div class="inf-loc-body"><div class="inf-loc-name">${esc(r)}</div><div class="inf-loc-sub">Próxima · ≈300m</div></div></div>`;});
       document.getElementById('inf-gps-list').innerHTML=html;
     }catch(e){document.getElementById('inf-gps-list').innerHTML='<div class="inf-empty">Erro ao buscar. Tente novamente.</div>';}
   },()=>{document.getElementById('inf-gps-list').innerHTML='<div class="inf-empty">Permissão negada</div>';},{timeout:10000,enableHighAccuracy:true});
@@ -12870,6 +13315,69 @@ function infBuscarGlobal(q){
 }
 // Busca colapsável (16/08/2026, pedido do Yuri) — vira ícone, só expande
 // quando toca, no lugar do campo fixo que ocupava uma linha inteira.
+// Mantém a barra de abas do Informes grudada certinho embaixo do topbar,
+// medindo a altura real em vez de chutar um valor fixo (16/08/2026 —
+// bug real: header colapsável mudou de altura, valor fixo antigo (74px)
+// cortava a primeira lista). ResizeObserver corrige sozinho pra sempre,
+// não importa o que mude na altura do topbar no futuro.
+(function infWatchTopbarHeight(){
+  const el = document.getElementById('inf-topbar');
+  if (!el || typeof ResizeObserver === 'undefined') return;
+  const apply = () => document.documentElement.style.setProperty('--inf-topbar-h', el.offsetHeight + 'px');
+  new ResizeObserver(apply).observe(el);
+  apply();
+})();
+// Trocar cidade (16/08/2026) — abre com a atual marcada + algumas
+// sugestões próximas; busca de verdade via Nominatim (mesma fonte já
+// usada em todo o resto do app pra geocodificação).
+function infAbrirCidade(){
+  document.getElementById('inf-city-search-input').value = '';
+  infRenderCidadeDefaults();
+  openMo('mo-inf-cidade');
+}
+function infRenderCidadeDefaults(){
+  const sugestoes = [
+    {name:'Rio de Janeiro', uf:'RJ'}, {name:'Teresópolis', uf:'RJ'},
+    {name:'Niterói', uf:'RJ'}, {name:'São Paulo', uf:'SP'}
+  ];
+  document.getElementById('inf-city-list').innerHTML = sugestoes.map(infCidadeItemHtml).join('');
+}
+function infCidadeItemHtml(c){
+  const isActive = c.name === _infCity.name && c.uf === _infCity.uf;
+  return `<div class="inf-city-item ${isActive?'active':''}" onclick="infEscolherCidade('${c.name.replace(/'/g,"\\'")}','${c.uf}')">
+    <div class="inf-city-item-ic"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div>
+    <div><div class="inf-city-item-name">${c.name}</div><div class="inf-city-item-uf">${c.uf}</div></div>
+    ${isActive ? '<svg class="inf-city-item-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+  </div>`;
+}
+let _infCitySearchDebounce = null;
+function infBuscarCidade(q){
+  clearTimeout(_infCitySearchDebounce);
+  if (!q || q.trim().length < 2) { infRenderCidadeDefaults(); return; }
+  _infCitySearchDebounce = setTimeout(async () => {
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(q)}&country=Brazil&format=json&addressdetails=1&limit=8`, {headers:{'User-Agent':'MoB/1.0'}});
+      const data = await r.json();
+      const cidades = data
+        .filter(d => d.address && (d.address.city || d.address.town || d.address.municipality))
+        .map(d => ({name: d.address.city || d.address.town || d.address.municipality, uf: d.address.state_code || (d.address['ISO3166-2-lvl4']||'').split('-')[1] || ''}));
+      const vistos = new Set();
+      const unicos = cidades.filter(c => { const k = c.name+c.uf; if (vistos.has(k)) return false; vistos.add(k); return true; });
+      document.getElementById('inf-city-list').innerHTML = unicos.length
+        ? unicos.map(infCidadeItemHtml).join('')
+        : '<div class="inf-empty">Nenhuma cidade encontrada</div>';
+    } catch(e) { console.warn('busca cidade', e); }
+  }, 400);
+}
+function infEscolherCidade(name, uf){
+  _infCity = {name, uf};
+  localStorage.setItem('sm_inf_city', JSON.stringify(_infCity));
+  document.getElementById('inf-city-name').textContent = name;
+  closeMo('mo-inf-cidade');
+  showToast('Cidade alterada para '+name);
+  // Recarrega o que depender da cidade — feed "Agora" e listas de venue.
+  try { infCarregarFeedAgora?.(); } catch(e){}
+}
 function infToggleSearch(){
   const el = document.getElementById('inf-search-fixed');
   const btn = document.getElementById('inf-search-toggle');
@@ -12910,22 +13418,43 @@ function infOpenRelatar(){
         <span class="qr-label">${t.label}</span>
       </div>`
     ).join('') + `</div>`;
-  const locEl = document.getElementById('inf-relatar-loc');
-  locEl.textContent = '📍 localizando…';
+  const locTxt = document.getElementById('inf-relatar-loc-txt');
+  locTxt.textContent = 'Localizando…';
   openMo('mo-inf-relatar');
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(async pos=>{
-      _infRelState.lat = pos.coords.latitude; _infRelState.lng = pos.coords.longitude;
-      try{
-        const revR = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&zoom=16&format=json&accept-language=pt`,{headers:{'User-Agent':'MoB/1.0'}});
-        const rev = await revR.json();
-        _infRelState.address = rev.address?.road || rev.address?.suburb || rev.address?.neighbourhood || null;
-      }catch(e){ _infRelState.address = null; }
-      const el = document.getElementById('inf-relatar-loc');
-      if (el) el.textContent = '📍 ' + (_infRelState.address || 'localização atual');
-    }, ()=>{ const el=document.getElementById('inf-relatar-loc'); if(el) el.textContent='📍 localização indisponível'; },
-    {timeout:7000, maximumAge:60000});
-  } else { locEl.textContent = '📍 GPS indisponível'; }
+  infRelatarBuscarLocalizacao();
+}
+// Pede o GPS e preenche o chip de endereço — separado do resto pra poder
+// ser chamado de novo depois que a pessoa toca "Alterar" e volta.
+function infRelatarBuscarLocalizacao(){
+  const locTxt = document.getElementById('inf-relatar-loc-txt');
+  if (!navigator.geolocation) { if (locTxt) locTxt.textContent = 'GPS indisponível'; return; }
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    _infRelState.lat = pos.coords.latitude; _infRelState.lng = pos.coords.longitude;
+    try{
+      const revR = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&zoom=16&format=json&accept-language=pt`,{headers:{'User-Agent':'MoB/1.0'}});
+      const rev = await revR.json();
+      _infRelState.address = rev.address?.road || rev.address?.suburb || rev.address?.neighbourhood || null;
+    }catch(e){ _infRelState.address = null; }
+    const el = document.getElementById('inf-relatar-loc-txt');
+    if (el) el.textContent = _infRelState.address || 'Localização atual';
+  }, ()=>{ const el=document.getElementById('inf-relatar-loc-txt'); if(el) el.textContent='Localização indisponível'; },
+  {timeout:7000, maximumAge:60000});
+}
+// "Alterar" (16/08/2026, pedido do Yuri) — reaproveita a MESMA busca de
+// rua próxima que "Minha área" já usa (infAbrirGps), só que em vez de
+// abrir o painel de navegação, seta o endereço da corrida atual e volta
+// pro Informe. Motorista pode não estar exatamente onde o GPS achou, ou
+// o GPS errou — dá pra corrigir manualmente antes de publicar.
+function infRelatarAlterarLocal(){
+  closeMo('mo-inf-relatar');
+  infAbrirGps('relatar');
+}
+function infRelatarPickLocal(nome){
+  _infRelState.address = nome;
+  infFecharOv('inf-ov-gps');
+  openMo('mo-inf-relatar');
+  const el = document.getElementById('inf-relatar-loc-txt');
+  if (el) el.textContent = nome;
 }
 function infRelatarShowBack(label, fn){
   _infRelState.backFn = fn;
