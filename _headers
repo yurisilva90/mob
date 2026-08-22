@@ -1,5 +1,5 @@
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://jlsrpptslwfhmkvelaro.supabase.co wss://jlsrpptslwfhmkvelaro.supabase.co https://nominatim.openstreetmap.org https://router.project-osrm.org https://overpass-api.de https://smartmobi-proxy.yurisilva1990.workers.dev; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://jlsrpptslwfhmkvelaro.supabase.co wss://jlsrpptslwfhmkvelaro.supabase.co https://wrmgmsmpszsdmntketfq.supabase.co wss://wrmgmsmpszsdmntketfq.supabase.co https://nominatim.openstreetmap.org https://router.project-osrm.org https://overpass-api.de https://smartmobi-proxy.yurisilva1990.workers.dev; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin

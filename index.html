@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://jlsrpptslwfhmkvelaro.supabase.co wss://jlsrpptslwfhmkvelaro.supabase.co https://wrmgmsmpszsdmntketfq.supabase.co wss://wrmgmsmpszsdmntketfq.supabase.co https://nominatim.openstreetmap.org https://router.project-osrm.org https://overpass-api.de https://smartmobi-proxy.yurisilva1990.workers.dev; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -1272,9 +1273,23 @@ h1.hd-title{font-family:var(--font-brand)!important}
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" integrity="sha384-+mbV2IY1Zk/X1p/nWllGySJSUN8uMs+gUAN10Or95UBH0fpj6GfKgPmgC5EXieXG" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" integrity="sha384-D/t0ZMqQW31H3az8ktEiNb39wyKnS82iFY52QPACM+IjKW3jDUhyIgh2PApRqJZs" crossorigin="anonymous"></script>
   <script>
+    // Ambiente de teste (Cloudflare Pages sempre publica em *.pages.dev,
+    // seja a URL de produção do projeto ou o link de preview de uma branch)
+    // fala com um banco Supabase separado do de produção — assim nenhum
+    // teste grava dado real de motorista. Regra "por enquanto": revisar
+    // quando a produção ganhar um domínio próprio no Cloudflare.
+    const _MOB_IS_TEST_ENV = /\.pages\.dev$/i.test(location.hostname);
+    const _MOB_SUPA_CONFIG = _MOB_IS_TEST_ENV ? {
+      url: 'https://wrmgmsmpszsdmntketfq.supabase.co',
+      key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndybWdtc21wc3pzZG1udGtldGZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc0MTMzNDQsImV4cCI6MjEwMjk4OTM0NH0.OMZliNHYTj_R6HhHI9yizWAzREMGFfv2_yHk4s6z9N0'
+    } : {
+      url: 'https://jlsrpptslwfhmkvelaro.supabase.co',
+      key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impsc3JwcHRzbHdmaG1rdmVsYXJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NjYxNzIsImV4cCI6MjA4OTQ0MjE3Mn0.4gD4dKx05QaOAAkY1gAx2HuH_CN31Xg3kkDMdvZ4kh0'
+    };
+    console.info('[MōB] ambiente:', _MOB_IS_TEST_ENV ? 'TESTE (mob-teste)' : 'produção');
     const _SUPA = supabase.createClient(
-      'https://jlsrpptslwfhmkvelaro.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impsc3JwcHRzbHdmaG1rdmVsYXJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NjYxNzIsImV4cCI6MjA4OTQ0MjE3Mn0.4gD4dKx05QaOAAkY1gAx2HuH_CN31Xg3kkDMdvZ4kh0',
+      _MOB_SUPA_CONFIG.url,
+      _MOB_SUPA_CONFIG.key,
       {
         auth: {
           persistSession: true,
