@@ -1,1 +1,0 @@
-execucao temporaria 3; remover apos o ajuste
