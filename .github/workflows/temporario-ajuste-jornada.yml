@@ -2,14 +2,15 @@ name: Ajuste temporario Jornada
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 permissions:
   contents: write
 
 jobs:
   ajustar:
-    if: github.event.head_commit.message == 'chore: rotina temporária do aviso da Jornada'
+    if: ${{ github.event.head_commit.message == 'chore: rotina temporária do aviso da Jornada' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,137 +23,19 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-
+          import base64
           path = Path('index.html')
           html = path.read_text(encoding='utf-8')
           marker = '<!-- JOURNEY_FLASH_PERMISSION_WARNING_V1 -->'
-          if marker in html:
-              print('Ajuste ja aplicado.')
-          else:
-              injection = r'''
-<!-- JOURNEY_FLASH_PERMISSION_WARNING_V1 -->
-<script>
-(function(){
-  function isJourneyFlashNative(){
-    try { return typeof isNativeApp === 'function' && isNativeApp() && typeof SmartMobiNative !== 'undefined'; }
-    catch(e){ return false; }
-  }
-
-  function journeyFlashPermissionState(){
-    if(!isJourneyFlashNative()) return null;
-    try{
-      const state = {
-        a11y: !!SmartMobiNative.isA11yEnabled(),
-        overlay: !!SmartMobiNative.hasOverlay(),
-        capture: !!SmartMobiNative.isScreenCaptureActive()
-      };
-      state.missing = [];
-      if(!state.a11y) state.missing.push('Acessibilidade');
-      if(!state.overlay) state.missing.push('Sobrepor outros apps');
-      if(!state.capture) state.missing.push('Leitura da tela');
-      return state;
-    }catch(e){ return null; }
-  }
-
-  function ensureJourneyFlashWarning(){
-    let el = document.getElementById('journey-flash-warning');
-    if(el) return el;
-    const card = document.getElementById('journey-card');
-    if(!card || !card.parentNode) return null;
-
-    el = document.createElement('button');
-    el.type = 'button';
-    el.id = 'journey-flash-warning';
-    el.setAttribute('aria-label','Abrir permissões do MōB Flash');
-    el.style.cssText = 'display:none;width:calc(100% - 32px);margin:0 16px 12px;padding:12px 14px;border:1px solid #FDBA74;border-radius:16px;background:#FFF7ED;box-shadow:0 3px 12px rgba(154,52,18,.08);text-align:left;cursor:pointer;touch-action:manipulation;font-family:inherit;align-items:center;gap:11px;color:#9A3412';
-    el.innerHTML = '<span style="width:34px;height:34px;border-radius:11px;background:#FFEDD5;display:flex;align-items:center;justify-content:center;flex:0 0 34px">'+
-      '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.6 2.6 17a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 3.6a2 2 0 0 0-3.4 0Z"/></svg></span>'+
-      '<span style="flex:1;min-width:0"><strong style="display:block;font-size:12.5px;font-weight:800;line-height:1.35;color:#9A3412">MōB Flash precisa de atenção</strong><span id="journey-flash-warning-sub" style="display:block;font-size:10.8px;font-weight:600;line-height:1.4;color:#C2410C;margin-top:2px"></span></span>'+
-      '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto;opacity:.7"><path d="M9 18l6-6-6-6"/></svg>';
-    el.addEventListener('click', openJourneyFlashPermissions);
-    card.parentNode.insertBefore(el, card);
-    return el;
-  }
-
-  async function openJourneyFlashPermissions(){
-    try{
-      if(typeof _flashLoadDraft === 'function') await _flashLoadDraft();
-      if(typeof flashWizardMode !== 'undefined') flashWizardMode = 'settings';
-      if(typeof flashWizardOnComplete !== 'undefined') flashWizardOnComplete = null;
-      if(typeof _flashWizardShowStep === 'function') _flashWizardShowStep(2);
-      if(typeof renderFlashKpiList === 'function') renderFlashKpiList();
-      if(typeof renderFlashPreview === 'function') renderFlashPreview();
-      if(typeof renderFlashPerms === 'function') renderFlashPerms();
-      if(typeof openMo === 'function') openMo('mo-flash');
-    }catch(e){
-      try{
-        if(typeof openFlashConfig === 'function'){
-          await openFlashConfig();
-          if(typeof _flashWizardShowStep === 'function') _flashWizardShowStep(2);
-          if(typeof renderFlashPerms === 'function') renderFlashPerms();
-        }
-      }catch(_e){}
-    }
-  }
-  window.openJourneyFlashPermissions = openJourneyFlashPermissions;
-
-  function renderJourneyFlashWarning(){
-    const el = ensureJourneyFlashWarning();
-    if(!el) return;
-
-    let journeyActive = false;
-    try { journeyActive = !!(S && S.gps && (S.gps.st === 'running' || S.gps.st === 'paused')); }
-    catch(e){}
-    if(!journeyActive){ el.style.display='none'; return; }
-
-    const state = journeyFlashPermissionState();
-    if(!state || state.missing.length === 0){ el.style.display='none'; return; }
-
-    const sub = document.getElementById('journey-flash-warning-sub');
-    if(sub){
-      const n = state.missing.length;
-      sub.textContent = n === 1
-        ? state.missing[0] + ' está pendente. Toque para ativar.'
-        : n + ' permissões estão pendentes. Toque para ativar.';
-    }
-    el.style.display='flex';
-  }
-  window.renderJourneyFlashWarning = renderJourneyFlashWarning;
-
-  const originalGpsStart = window.gpsStart;
-  if(typeof originalGpsStart === 'function'){
-    window.gpsStart = function(){
-      const result = originalGpsStart.apply(this, arguments);
-      setTimeout(renderJourneyFlashWarning, 500);
-      setTimeout(renderJourneyFlashWarning, 1200);
-      return result;
-    };
-  }
-
-  window.addEventListener('focus', function(){ setTimeout(renderJourneyFlashWarning, 250); });
-  document.addEventListener('visibilitychange', function(){
-    if(!document.hidden) setTimeout(renderJourneyFlashWarning, 250);
-  });
-  setInterval(function(){
-    let active = false;
-    try { active = !!(S && S.gps && (S.gps.st === 'running' || S.gps.st === 'paused')); } catch(e){}
-    if(active) renderJourneyFlashWarning();
-    else {
-      const el = document.getElementById('journey-flash-warning');
-      if(el) el.style.display='none';
-    }
-  }, 3000);
-
-  setTimeout(renderJourneyFlashWarning, 900);
-})();
-</script>
-'''
+          if marker not in html:
+              injection = base64.b64decode('PCEtLSBKT1VSTkVZX0ZMQVNIX1BFUk1JU1NJT05fV0FSTklOR19WMSAtLT4KPHNjcmlwdD4KKGZ1bmN0aW9uKCl7CiAgZnVuY3Rpb24gaXNKb3VybmV5Rmxhc2hOYXRpdmUoKXsKICAgIHRyeSB7IHJldHVybiB0eXBlb2YgaXNOYXRpdmVBcHAgPT09ICdmdW5jdGlvbicgJiYgaXNOYXRpdmVBcHAoKSAmJiB0eXBlb2YgU21hcnRNb2JpTmF0aXZlICE9PSAndW5kZWZpbmVkJzsgfQogICAgY2F0Y2goZSl7IHJldHVybiBmYWxzZTsgfQogIH0KCiAgZnVuY3Rpb24gam91cm5leUZsYXNoUGVybWlzc2lvblN0YXRlKCl7CiAgICBpZighaXNKb3VybmV5Rmxhc2hOYXRpdmUoKSkgcmV0dXJuIG51bGw7CiAgICB0cnl7CiAgICAgIGNvbnN0IHN0YXRlID0gewogICAgICAgIGExMXk6ICEhU21hcnRNb2JpTmF0aXZlLmlzQTExeUVuYWJsZWQoKSwKICAgICAgICBvdmVybGF5OiAhIVNtYXJ0TW9iaU5hdGl2ZS5oYXNPdmVybGF5KCksCiAgICAgICAgY2FwdHVyZTogISFTbWFydE1vYmlOYXRpdmUuaXNTY3JlZW5DYXB0dXJlQWN0aXZlKCkKICAgICAgfTsKICAgICAgc3RhdGUubWlzc2luZyA9IFtdOwogICAgICBpZighc3RhdGUuYTExeSkgc3RhdGUubWlzc2luZy5wdXNoKCdBY2Vzc2liaWxpZGFkZScpOwogICAgICBpZighc3RhdGUub3ZlcmxheSkgc3RhdGUubWlzc2luZy5wdXNoKCdTb2JyZXBvciBvdXRyb3MgYXBwcycpOwogICAgICBpZighc3RhdGUuY2FwdHVyZSkgc3RhdGUubWlzc2luZy5wdXNoKCdMZWl0dXJhIGRhIHRlbGEnKTsKICAgICAgcmV0dXJuIHN0YXRlOwogICAgfWNhdGNoKGUpeyByZXR1cm4gbnVsbDsgfQogIH0KCiAgZnVuY3Rpb24gZW5zdXJlSm91cm5leUZsYXNoV2FybmluZygpewogICAgbGV0IGVsID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2pvdXJuZXktZmxhc2gtd2FybmluZycpOwogICAgaWYoZWwpIHJldHVybiBlbDsKICAgIGNvbnN0IGNhcmQgPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnam91cm5leS1jYXJkJyk7CiAgICBpZighY2FyZCB8fCAhY2FyZC5wYXJlbnROb2RlKSByZXR1cm4gbnVsbDsKCiAgICBlbCA9IGRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoJ2J1dHRvbicpOwogICAgZWwudHlwZSA9ICdidXR0b24nOwogICAgZWwuaWQgPSAnam91cm5leS1mbGFzaC13YXJuaW5nJzsKICAgIGVsLnNldEF0dHJpYnV0ZSgnYXJpYS1sYWJlbCcsJ0FicmlyIHBlcm1pc3PDtWVzIGRvIE3FjUIgRmxhc2gnKTsKICAgIGVsLnN0eWxlLmNzc1RleHQgPSAnZGlzcGxheTpub25lO3dpZHRoOmNhbGMoMTAwJSAtIDMycHgpO21hcmdpbjowIDE2cHggMTJweDtwYWRkaW5nOjEycHggMTRweDtib3JkZXI6MXB4IHNvbGlkICNGREJBNzQ7Ym9yZGVyLXJhZGl1czoxNnB4O2JhY2tncm91bmQ6I0ZGRjdFRDtib3gtc2hhZG93OjAgM3B4IDEycHggcmdiYSgxNTQsNTIsMTgsLjA4KTt0ZXh0LWFsaWduOmxlZnQ7Y3Vyc29yOnBvaW50ZXI7dG91Y2gtYWN0aW9uOm1hbmlwdWxhdGlvbjtmb250LWZhbWlseTppbmhlcml0O2FsaWduLWl0ZW1zOmNlbnRlcjtnYXA6MTFweDtjb2xvcjojOUEzNDEyJzsKICAgIGVsLmlubmVySFRNTCA9ICc8c3BhbiBzdHlsZT0id2lkdGg6MzRweDtoZWlnaHQ6MzRweDtib3JkZXItcmFkaXVzOjExcHg7YmFja2dyb3VuZDojRkZFREQ1O2Rpc3BsYXk6ZmxleDthbGlnbi1pdGVtczpjZW50ZXI7anVzdGlmeS1jb250ZW50OmNlbnRlcjtmbGV4OjAgMCAzNHB4Ij4nKwogICAgICAnPHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJjdXJyZW50Q29sb3IiIHN0cm9rZS13aWR0aD0iMi4yIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIGQ9Ik0xMiA5djQiLz48cGF0aCBkPSJNMTIgMTdoLjAxIi8+PHBhdGggZD0iTTEwLjMgMy42IDIuNiAxN2EyIDIgMCAwIDAgMS43IDNoMTUuNGEyIDIgMCAwIDAgMS43LTNMMTMuNyAzLjZhMiAyIDAgMCAwLTMuNCAwWiIvPjwvc3ZnPjwvc3Bhbj4nKwogICAgICAnPHNwYW4gc3R5bGU9ImZsZXg6MTttaW4td2lkdGg6MCI+PHN0cm9uZyBzdHlsZT0iZGlzcGxheTpibG9jaztmb250LXNpemU6MTIuNXB4O2ZvbnQtd2VpZ2h0OjgwMDtsaW5lLWhlaWdodDoxLjM1O2NvbG9yOiM5QTM0MTIiPk3FjUIgRmxhc2ggcHJlY2lzYSBkZSBhdGVuw6fDo288L3N0cm9uZz48c3BhbiBpZD0iam91cm5leS1mbGFzaC13YXJuaW5nLXN1YiIgc3R5bGU9ImRpc3BsYXk6YmxvY2s7Zm9udC1zaXplOjEwLjhweDtmb250LXdlaWdodDo2MDA7bGluZS1oZWlnaHQ6MS40O2NvbG9yOiNDMjQxMEM7bWFyZ2luLXRvcDoycHgiPjwvc3Bhbj48L3NwYW4+JysKICAgICAgJzxzdmcgdmlld0JveD0iMCAwIDI0IDI0IiB3aWR0aD0iMTciIGhlaWdodD0iMTciIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHlsZT0iZmxleDowIDAgYXV0bztvcGFjaXR5Oi43Ij48cGF0aCBkPSJNOSAxOGw2LTYtNi02Ii8+PC9zdmc+JzsKICAgIGVsLmFkZEV2ZW50TGlzdGVuZXIoJ2NsaWNrJywgb3BlbkpvdXJuZXlGbGFzaFBlcm1pc3Npb25zKTsKICAgIGNhcmQucGFyZW50Tm9kZS5pbnNlcnRCZWZvcmUoZWwsIGNhcmQpOwogICAgcmV0dXJuIGVsOwogIH0KCiAgYXN5bmMgZnVuY3Rpb24gb3BlbkpvdXJuZXlGbGFzaFBlcm1pc3Npb25zKCl7CiAgICB0cnl7CiAgICAgIGlmKHR5cGVvZiBfZmxhc2hMb2FkRHJhZnQgPT09ICdmdW5jdGlvbicpIGF3YWl0IF9mbGFzaExvYWREcmFmdCgpOwogICAgICBpZih0eXBlb2YgZmxhc2hXaXphcmRNb2RlICE9PSAndW5kZWZpbmVkJykgZmxhc2hXaXphcmRNb2RlID0gJ3NldHRpbmdzJzsKICAgICAgaWYodHlwZW9mIGZsYXNoV2l6YXJkT25Db21wbGV0ZSAhPT0gJ3VuZGVmaW5lZCcpIGZsYXNoV2l6YXJkT25Db21wbGV0ZSA9IG51bGw7CiAgICAgIGlmKHR5cGVvZiBfZmxhc2hXaXphcmRTaG93U3RlcCA9PT0gJ2Z1bmN0aW9uJykgX2ZsYXNoV2l6YXJkU2hvd1N0ZXAoMik7CiAgICAgIGlmKHR5cGVvZiByZW5kZXJGbGFzaEtwaUxpc3QgPT09ICdmdW5jdGlvbicpIHJlbmRlckZsYXNoS3BpTGlzdCgpOwogICAgICBpZih0eXBlb2YgcmVuZGVyRmxhc2hQcmV2aWV3ID09PSAnZnVuY3Rpb24nKSByZW5kZXJGbGFzaFByZXZpZXcoKTsKICAgICAgaWYodHlwZW9mIHJlbmRlckZsYXNoUGVybXMgPT09ICdmdW5jdGlvbicpIHJlbmRlckZsYXNoUGVybXMoKTsKICAgICAgaWYodHlwZW9mIG9wZW5NbyA9PT0gJ2Z1bmN0aW9uJykgb3Blbk1vKCdtby1mbGFzaCcpOwogICAgfWNhdGNoKGUpewogICAgICB0cnl7CiAgICAgICAgaWYodHlwZW9mIG9wZW5GbGFzaENvbmZpZyA9PT0gJ2Z1bmN0aW9uJyl7CiAgICAgICAgICBhd2FpdCBvcGVuRmxhc2hDb25maWcoKTsKICAgICAgICAgIGlmKHR5cGVvZiBfZmxhc2hXaXphcmRTaG93U3RlcCA9PT0gJ2Z1bmN0aW9uJykgX2ZsYXNoV2l6YXJkU2hvd1N0ZXAoMik7CiAgICAgICAgICBpZih0eXBlb2YgcmVuZGVyRmxhc2hQZXJtcyA9PT0gJ2Z1bmN0aW9uJykgcmVuZGVyRmxhc2hQZXJtcygpOwogICAgICAgIH0KICAgICAgfWNhdGNoKF9lKXt9CiAgICB9CiAgfQogIHdpbmRvdy5vcGVuSm91cm5leUZsYXNoUGVybWlzc2lvbnMgPSBvcGVuSm91cm5leUZsYXNoUGVybWlzc2lvbnM7CgogIGZ1bmN0aW9uIHJlbmRlckpvdXJuZXlGbGFzaFdhcm5pbmcoKXsKICAgIGNvbnN0IGVsID0gZW5zdXJlSm91cm5leUZsYXNoV2FybmluZygpOwogICAgaWYoIWVsKSByZXR1cm47CgogICAgbGV0IGpvdXJuZXlBY3RpdmUgPSBmYWxzZTsKICAgIHRyeSB7IGpvdXJuZXlBY3RpdmUgPSAhIShTICYmIFMuZ3BzICYmIChTLmdwcy5zdCA9PT0gJ3J1bm5pbmcnIHx8IFMuZ3BzLnN0ID09PSAncGF1c2VkJykpOyB9CiAgICBjYXRjaChlKXt9CiAgICBpZigham91cm5leUFjdGl2ZSl7IGVsLnN0eWxlLmRpc3BsYXk9J25vbmUnOyByZXR1cm47IH0KCiAgICBjb25zdCBzdGF0ZSA9IGpvdXJuZXlGbGFzaFBlcm1pc3Npb25TdGF0ZSgpOwogICAgaWYoIXN0YXRlIHx8IHN0YXRlLm1pc3NpbmcubGVuZ3RoID09PSAwKXsgZWwuc3R5bGUuZGlzcGxheT0nbm9uZSc7IHJldHVybjsgfQoKICAgIGNvbnN0IHN1YiA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdqb3VybmV5LWZsYXNoLXdhcm5pbmctc3ViJyk7CiAgICBpZihzdWIpewogICAgICBjb25zdCBuID0gc3RhdGUubWlzc2luZy5sZW5ndGg7CiAgICAgIHN1Yi50ZXh0Q29udGVudCA9IG4gPT09IDEKICAgICAgICA/IHN0YXRlLm1pc3NpbmdbMF0gKyAnIGVzdMOhIHBlbmRlbnRlLiBUb3F1ZSBwYXJhIGF0aXZhci4nCiAgICAgICAgOiBuICsgJyBwZXJtaXNzw7VlcyBlc3TDo28gcGVuZGVudGVzLiBUb3F1ZSBwYXJhIGF0aXZhci4nOwogICAgfQogICAgZWwuc3R5bGUuZGlzcGxheT0nZmxleCc7CiAgfQogIHdpbmRvdy5yZW5kZXJKb3VybmV5Rmxhc2hXYXJuaW5nID0gcmVuZGVySm91cm5leUZsYXNoV2FybmluZzsKCiAgY29uc3Qgb3JpZ2luYWxHcHNTdGFydCA9IHdpbmRvdy5ncHNTdGFydDsKICBpZih0eXBlb2Ygb3JpZ2luYWxHcHNTdGFydCA9PT0gJ2Z1bmN0aW9uJyl7CiAgICB3aW5kb3cuZ3BzU3RhcnQgPSBmdW5jdGlvbigpewogICAgICBjb25zdCByZXN1bHQgPSBvcmlnaW5hbEdwc1N0YXJ0LmFwcGx5KHRoaXMsIGFyZ3VtZW50cyk7CiAgICAgIHNldFRpbWVvdXQocmVuZGVySm91cm5leUZsYXNoV2FybmluZywgNTAwKTsKICAgICAgc2V0VGltZW91dChyZW5kZXJKb3VybmV5Rmxhc2hXYXJuaW5nLCAxMjAwKTsKICAgICAgcmV0dXJuIHJlc3VsdDsKICAgIH07CiAgfQoKICB3aW5kb3cuYWRkRXZlbnRMaXN0ZW5lcignZm9jdXMnLCBmdW5jdGlvbigpeyBzZXRUaW1lb3V0KHJlbmRlckpvdXJuZXlGbGFzaFdhcm5pbmcsIDI1MCk7IH0pOwogIGRvY3VtZW50LmFkZEV2ZW50TGlzdGVuZXIoJ3Zpc2liaWxpdHljaGFuZ2UnLCBmdW5jdGlvbigpewogICAgaWYoIWRvY3VtZW50LmhpZGRlbikgc2V0VGltZW91dChyZW5kZXJKb3VybmV5Rmxhc2hXYXJuaW5nLCAyNTApOwogIH0pOwogIHNldEludGVydmFsKGZ1bmN0aW9uKCl7CiAgICBsZXQgYWN0aXZlID0gZmFsc2U7CiAgICB0cnkgeyBhY3RpdmUgPSAhIShTICYmIFMuZ3BzICYmIChTLmdwcy5zdCA9PT0gJ3J1bm5pbmcnIHx8IFMuZ3BzLnN0ID09PSAncGF1c2VkJykpOyB9IGNhdGNoKGUpe30KICAgIGlmKGFjdGl2ZSkgcmVuZGVySm91cm5leUZsYXNoV2FybmluZygpOwogICAgZWxzZSB7CiAgICAgIGNvbnN0IGVsID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2pvdXJuZXktZmxhc2gtd2FybmluZycpOwogICAgICBpZihlbCkgZWwuc3R5bGUuZGlzcGxheT0nbm9uZSc7CiAgICB9CiAgfSwgMzAwMCk7CgogIHNldFRpbWVvdXQocmVuZGVySm91cm5leUZsYXNoV2FybmluZywgOTAwKTsKfSkoKTsKPC9zY3JpcHQ+Cg==').decode('utf-8')
               if '</body>' not in html:
                   raise SystemExit('Nao encontrei </body> em index.html')
               head, tail = html.rsplit('</body>', 1)
-              html = head + injection + '\n</body>' + tail
-              path.write_text(html, encoding='utf-8')
+              path.write_text(head + injection + '\n</body>' + tail, encoding='utf-8')
               print('Ajuste aplicado em index.html')
+          else:
+              print('Ajuste ja aplicado')
           PY
 
           git config user.name "ChatGPT"
