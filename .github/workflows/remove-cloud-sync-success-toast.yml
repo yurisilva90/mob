@@ -1,0 +1,33 @@
+name: Remove cloud sync success toast
+on:
+  push:
+    paths:
+      - '.github/workflows/remove-cloud-sync-success-toast.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remove success toast only
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          target="showToast('Sincronizado com a nuvem.');"
+          n=s.count(target)
+          if n < 1:
+              raise SystemExit('toast de sincronização não encontrado')
+          s=s.replace(target,"/* sincronização silenciosa: sem toast de sucesso */")
+          p.write_text(s,encoding='utf-8')
+          print('avisos removidos:',n)
+          PY
+      - name: Commit silent sync
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Sync cloud silently without success toast"
+          git push
