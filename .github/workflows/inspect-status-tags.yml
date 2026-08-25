@@ -10,26 +10,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Extrair trechos
+      - name: Extrair trechos precisos
         run: |
           python3 - <<'PY'
           from pathlib import Path
           lines=Path('index.html').read_text(encoding='utf-8').splitlines()
-          keys=['autoTripItem','auto-status','chip-auto','Importada','importada','pendingCount','confirmImport','status: \'confirmada\'','status === \'estimada\'','status === \'capturada\'','value_needs_review','import_video_id']
+          needles=[
+            ('autoTripItem','function autoTripItem(',-5,90),
+            ('confirmImport','async function confirmImport(',-5,180),
+            ('banner','const pendingCount =',-20,45),
+            ('tripItem','function tripItem(',-5,90),
+            ('importVideo','import_video_id',-10,40),
+          ]
           out=[]
-          for key in keys:
-              hits=[i for i,x in enumerate(lines) if key in x]
-              out.append(f'===== {key} hits={len(hits)} =====')
-              for i in hits[:40]:
-                  a=max(0,i-12); b=min(len(lines),i+28)
-                  out.append(f'--- {a+1}-{b} ---')
+          for label,needle,before,after in needles:
+              hits=[i for i,x in enumerate(lines) if needle in x]
+              out.append(f'===== {label} hits={len(hits)} =====')
+              for i in hits[:8]:
+                  a=max(0,i+before); b=min(len(lines),i+after)
                   out.extend(f'{n+1}: {lines[n]}' for n in range(a,b))
-          Path('.tmp-status-tags.txt').write_text('\n'.join(out),encoding='utf-8')
+          Path('.tmp-status-precise.txt').write_text('\n'.join(out),encoding='utf-8')
           PY
       - name: Commit inspeção
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .tmp-status-tags.txt
-          git diff --cached --quiet || git commit -m "chore: inspecionar status e tags"
+          git add .tmp-status-precise.txt
+          git diff --cached --quiet || git commit -m "chore: detalhar status e tags"
           git push
