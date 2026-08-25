@@ -10,49 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Corrigir renderização
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path('index.html')
-          s=p.read_text(encoding='utf-8')
-
-          old="""function renderJourneyCard(day, isToday) {
-  const jc = document.getElementById('journey-card');
-  if (!jc) return;
-"""
-          new="""function renderJourneyCard(day, isToday) {
-  const jc = document.getElementById('journey-card');
-  if (!jc) return;
-  const cardDate = day?.date || S.curDate || DB.today();
-"""
-          if s.count(old)!=1: raise SystemExit(f'cabecalho renderJourneyCard inesperado: {s.count(old)}')
-          s=s.replace(old,new,1)
-
-          reps={
-            "const autoTripsReady = S._autoTripsDataDate === d;":"const autoTripsReady = S._autoTripsDataDate === cardDate;",
-            "pcbEl.dataset.dataDate = d;":"pcbEl.dataset.dataDate = cardDate;",
-            "pcbEl.dataset.dataDate !== d":"pcbEl.dataset.dataDate !== cardDate"
-          }
-          for a,b in reps.items():
-            n=s.count(a)
-            if a=="pcbEl.dataset.dataDate = d;":
-              if n!=2: raise SystemExit(f'atribuição dataDate esperada 2x, encontrada {n}')
-              s=s.replace(a,b)
-            else:
-              if n!=1: raise SystemExit(f'{a} esperado 1x, encontrado {n}')
-              s=s.replace(a,b,1)
-
-          # Sanidades diretamente ligadas ao bug do print: o botão precisa continuar
-          # existindo no HTML e o estado idle precisa preenchê-lo com gpsStart().
-          if 'id="jc-actions"' not in s: raise SystemExit('jc-actions ausente')
-          if 'state === \'idle\'' not in s or 'onclick="gpsStart()"' not in s: raise SystemExit('botão iniciar ausente')
-          if 'S._autoTripsDataDate === d' in s: raise SystemExit('referência d inválida ainda presente')
-
-          p.write_text(s,encoding='utf-8')
-          Path('.tmp-journey-button.txt').unlink(missing_ok=True)
-          Path('.github/workflows/inspect-journey-button.yml').unlink(missing_ok=True)
-          PY
+      - name: Aplicar correção
+        run: python3 .tmp-fix-journey-button.py
       - name: Validar e publicar
         run: |
           grep -q 'const cardDate = day?.date || S.curDate || DB.today();' index.html
