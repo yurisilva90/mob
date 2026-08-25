@@ -1,0 +1,29 @@
+name: Realtime da sessão atual
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  ajustar:
+    if: "${{ github.event.head_commit.message == 'chore: executar realtime sessão atual' }}"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Aplicar ajuste
+        shell: bash
+        run: |
+          python3 .github/patch-realtime-session.py
+          git config user.name "ChatGPT"
+          git config user.email "noreply@openai.com"
+          git rm .github/patch-realtime-session.py .github/workflows/temporario-realtime-session.yml .github/trigger-realtime-session.txt
+          git add index.html
+          git commit -m "feat: jornada atual realtime e indicadores por sessão"
+          git push origin HEAD:main
