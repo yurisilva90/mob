@@ -1,0 +1,41 @@
+name: Inspecionar video zero
+on:
+  push:
+    paths:
+      - '.github/workflows/inspect-video-zero.yml'
+permissions:
+  contents: write
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extrair pipeline atual
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8')
+          needles=['async function processImportBatch','async function extractVideoFrames','async function extractFromImage','async function extractWithRetry','function showImportMatch']
+          out=[]
+          for needle in needles:
+              i=s.find(needle)
+              out.append('===== '+needle+' =====')
+              if i<0:
+                  out.append('NAO ENCONTRADO')
+                  continue
+              # pega até próxima função ou no máximo 18000 chars
+              j=s.find('\nfunction ', i+len(needle))
+              j2=s.find('\nasync function ', i+len(needle))
+              ends=[x for x in (j,j2) if x!=-1]
+              end=min(ends) if ends else min(len(s),i+18000)
+              if end-i>18000: end=i+18000
+              out.append(s[i:end])
+          Path('.tmp-video-zero.txt').write_text('\n\n'.join(out),encoding='utf-8')
+          PY
+      - name: Publicar inspeção
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .tmp-video-zero.txt
+          git commit -m "chore: inspecionar leitura zero do video"
+          git push
