@@ -1,0 +1,48 @@
+name: Inspecionar importacao de video
+on:
+  push:
+    paths:
+      - '.github/workflows/inspect-video-import.yml'
+permissions:
+  contents: write
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extrair trechos relevantes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8').splitlines()
+          needles=[
+            'async function processImportBatch',
+            'function processImportBatch',
+            'async function extractVideoFrames',
+            'function extractVideoFrames',
+            'async function extractWithRetry',
+            'function extractWithRetry',
+            'async function uploadImportVideo',
+            'function uploadImportVideo',
+            'renderImportRing',
+            'Analisando vídeo',
+            'loadedmetadata',
+            'seeked',
+          ]
+          out=[]
+          for needle in needles:
+            hits=[i for i,x in enumerate(s) if needle in x]
+            out.append(f'===== {needle} hits={len(hits)} =====')
+            for i in hits[:20]:
+              a=max(0,i-40); b=min(len(s),i+220)
+              out.extend(f'{n+1}: {s[n]}' for n in range(a,b))
+          Path('.tmp-video-import.txt').write_text('\n'.join(out),encoding='utf-8')
+          PY
+      - name: Publicar inspecao
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .tmp-video-import.txt
+          git diff --cached --quiet || git commit -m "chore: inspecionar processamento de video"
+          git push
