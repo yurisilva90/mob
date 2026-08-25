@@ -1,0 +1,54 @@
+name: Aplicar jornada contínua e dias operacionais
+on:
+  push:
+    paths:
+      - '.github/workflows/temporario-operational-day.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Aplicar alterações
+        run: python3 .github/patch-operational-day.py
+      - name: Validar regras principais
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          checks=[
+            'JOURNEY_CONTINUOUS_OPERATIONAL_V3',
+            'operationalRangeForPlatform',
+            "if(p === 'uber') start.setHours(4,0,0,0)",
+            'loadAutoTripsForOperationalDay(operationalPlat, operationalDate)',
+            'const closeDate = _ymd(startMs)',
+            'date:       _ymd(g.start)',
+            'window.checkMidnightCrossing = function(){ return; }',
+            'journeyBreakdownForSession',
+            'renderContinuousSessionList'
+          ]
+          missing=[x for x in checks if x not in s]
+          if missing: raise SystemExit('Faltando: '+repr(missing))
+          m=re.search(r'<!-- JOURNEY_CONTINUOUS_OPERATIONAL_V3 -->\s*<script>(.*?)</script>',s,re.S)
+          if not m: raise SystemExit('V3 não encontrado')
+          Path('/tmp/v3.js').write_text(m.group(1),encoding='utf-8')
+          print('Validação estrutural OK')
+          PY
+          node --check /tmp/v3.js
+      - name: Remover arquivos temporários
+        run: |
+          rm -f .github/patch-operational-day.py
+          rm -f .github/workflows/temporario-operational-day.yml
+          rm -f .github/workflows/inspect-operational-day.yml
+          rm -f .github/workflows/inspect-operational-day-2.yml
+          rm -f .github/workflows/inspect-operational-day-3.yml
+          rm -f .github/workflows/inspect-match-operational.yml
+      - name: Publicar
+        run: |
+          git config user.name 'ChatGPT'
+          git config user.email 'noreply@openai.com'
+          git add -A
+          git commit -m 'feat: jornada contínua e dias operacionais por plataforma'
+          git push
