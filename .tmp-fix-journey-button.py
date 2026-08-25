@@ -24,8 +24,8 @@ if 'id="jc-actions"' not in s:
     raise SystemExit('jc-actions ausente')
 if "state === 'idle'" not in s or 'onclick="gpsStart()"' not in s:
     raise SystemExit('botão iniciar ausente')
-if 'S._autoTripsDataDate === d' in s:
-    raise SystemExit('referência d inválida ainda presente')
+if "const autoTripsReady = S._autoTripsDataDate === cardDate;" not in s:
+    raise SystemExit('banner da Jornada não foi corrigido')
 
 p.write_text(s, encoding='utf-8')
 Path('.tmp-journey-button.txt').unlink(missing_ok=True)
