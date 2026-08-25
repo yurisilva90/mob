@@ -1,0 +1,34 @@
+name: Inspect Journey Perm
+on:
+  push:
+    paths: ['.github/workflows/inspect-journey-perm.yml']
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: perm-warning-ui
+      - run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text()
+          keys=['function renderJourneyCard','renderJourneyCard(', 'jc-breakdown','Iniciar Jornada']
+          out=[]
+          for k in keys:
+            pos=0
+            while True:
+              i=s.find(k,pos)
+              if i<0: break
+              out.append(f'\n===== {k} @ {i} =====\n'+s[max(0,i-2200):i+7500])
+              pos=i+len(k)
+              if len(out)>12: break
+          Path('_journey_perm_snippet.txt').write_text('\n'.join(out))
+          PY
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add _journey_perm_snippet.txt
+          git commit -m 'chore: extrair trecho da jornada' || true
+          git push origin HEAD:perm-warning-ui
