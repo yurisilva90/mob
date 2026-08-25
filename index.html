@@ -7195,10 +7195,8 @@ async function processImportBatch(images, videos, plat) {
     } catch(e) { console.warn('Erro print '+(i+1)+' (desistiu após 3 tentativas):', e); }
     updateRing('Analisando print' + (totalImgs>1 ? ' ' + Math.min(i+2,totalImgs) + ' de ' + totalImgs : '') + ' ' + dot, false);
   }
-  const videoUploads = [];
   let videoFrameReadFailed = false;
   for (let v = 0; v < videos.length; v++) {
-    videoUploads.push(uploadImportVideo(videos[v], operationalPlat, operationalDate));
     try {
       updateRing('Preparando vídeo ' + dot, false);
       const frames = await extractVideoFrames(videos[v], (done, total) => {
@@ -7222,10 +7220,13 @@ async function processImportBatch(images, videos, plat) {
     return;
   }
 
-  // Guarda o(s) id(s) do(s) vídeo(s) já salvos no Storage — usado em
-  // confirmImport() pra vincular cada corrida ao vídeo que a confirmou
-  // (auditoria manual futura, retenção de 180 dias).
-  const _videoUploadResults = await Promise.all(videoUploads);
+  // Só envia o arquivo original depois que a leitura local terminou.
+  // Em celular/WebView, fazer upload e seek/decodificação simultaneamente
+  // do mesmo File grande pode bloquear o decoder e deixar a tela parada.
+  if (videos.length) updateRing('Salvando vídeo para conferência ' + dot, false);
+  const _videoUploadResults = await Promise.all(
+    videos.map(file => uploadImportVideo(file, operationalPlat, operationalDate))
+  );
   window._pendingImportVideoIds = _videoUploadResults.filter(Boolean);
   if (videos.length && window._pendingImportVideoIds.length < videos.length) {
     showToast('Corridas importadas, mas o vídeo de auditoria não pôde ser salvo — confira sua conexão.', 'error');
@@ -7473,6 +7474,8 @@ async function extractVideoFrames(file, onProgress) {
     video.src        = url;
     video.muted      = true;
     video.playsInline = true;
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
     video.preload    = 'auto';
 
     const metadataTimer = setTimeout(() => {
@@ -7483,6 +7486,7 @@ async function extractVideoFrames(file, onProgress) {
 
     video.onloadedmetadata = async () => {
       clearTimeout(metadataTimer);
+      try {
       // loadedmetadata só garante dimensões/duração. Em Android/WebView o
       // decoder pode ainda não ter nenhum frame disponível. Aguarda dados
       // reais antes de iniciar os seeks, evitando canvas preto em MP4 válido.
@@ -7495,7 +7499,6 @@ async function extractVideoFrames(file, onProgress) {
           const cleanup = () => { clearTimeout(timer); video.removeEventListener('loadeddata', finish); video.removeEventListener('canplay', finish); };
           video.addEventListener('loadeddata', finish, {once:true});
           video.addEventListener('canplay', finish, {once:true});
-          try { video.load(); } catch(e) {}
         });
       }
       // Limit canvas size for performance
@@ -7562,10 +7565,9 @@ async function extractVideoFrames(file, onProgress) {
       for (let timeIndex = 0; timeIndex < times.length; timeIndex++) {
         const time = times[timeIndex];
         try {
-          await new Promise((res) => {
-            // O handler entra antes do seek, mas damos tempo real para o WebView
-            // decodificar o quadro. Em alguns Androids 1,5 s era curto e o
-            // fallback desenhava um frame preto, fazendo o vídeo inteiro zerar.
+          const frameDrawn = await new Promise((res) => {
+            // Só considera o seek concluído quando há um frame decodificado de
+            // verdade. O fallback não transforma ausência de frame em imagem preta.
             let done = false;
             const finishSeek = (fromEvent) => {
               if (done) return;
@@ -7574,17 +7576,25 @@ async function extractVideoFrames(file, onProgress) {
                 done = true;
                 clearTimeout(timer);
                 video.onseeked = null;
+                let ok = false;
                 try {
-                  if (video.readyState >= 2) ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                  if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    ok = true;
+                  }
                 } catch(e) {}
-                res();
+                res(ok);
               };
-              if (fromEvent) setTimeout(draw, 80); else draw();
+              if (fromEvent && typeof video.requestVideoFrameCallback === 'function') {
+                try { video.requestVideoFrameCallback(() => draw()); return; } catch(e) {}
+              }
+              if (fromEvent) setTimeout(draw, 120); else draw();
             };
-            const timer = setTimeout(() => finishSeek(false), 4000);
+            const timer = setTimeout(() => finishSeek(false), 4500);
             video.onseeked = () => finishSeek(true);
             video.currentTime = Math.min(time, Math.max(0, duration - 0.03));
           });
+          if (!frameDrawn) continue;
           // Detecta conteúdo no QUADRO INTEIRO. Antes olhava só 20x20 px do
           // canto superior esquerdo; em screen recording esse canto pode ser
           // preto (status bar/recorte) e todos os frames reais eram descartados.
@@ -7609,7 +7619,9 @@ async function extractVideoFrames(file, onProgress) {
           lastFp = fp;
           frames.push(canvas.toDataURL('image/jpeg', 0.7).split(',')[1]);
         } catch(e) { console.warn('Frame t='+time, e); }
-        if (typeof onProgress === 'function') onProgress(timeIndex + 1, times.length);
+        finally {
+          if (typeof onProgress === 'function') onProgress(timeIndex + 1, times.length);
+        }
       }
       if (skipped) console.log('[extractVideoFrames] frames quase-duplicados pulados:', skipped);
 
@@ -7617,6 +7629,11 @@ async function extractVideoFrames(file, onProgress) {
       URL.revokeObjectURL(url);
       if (frames.length > 0) resolve(frames);
       else reject(new Error('Nenhum quadro legível foi extraído do vídeo.'));
+      } catch(e) {
+        try{document.body.removeChild(video);}catch(e2){}
+        URL.revokeObjectURL(url);
+        reject(e instanceof Error ? e : new Error(String(e)));
+      }
     };
 
     video.onerror = (e) => {
