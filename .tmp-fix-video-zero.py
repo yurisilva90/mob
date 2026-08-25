@@ -1,0 +1,94 @@
+from pathlib import Path
+p=Path('index.html')
+s=p.read_text(encoding='utf-8')
+
+old_seek='''            // Handler precisa existir antes do seek: em arquivo local o evento pode ser imediato.
+            let done = false;
+            const finishSeek = () => {
+              if (done) return;
+              done = true;
+              clearTimeout(timer);
+              video.onseeked = null;
+              try { ctx.drawImage(video, 0, 0, canvas.width, canvas.height); } catch(e) {}
+              res();
+            };
+            const timer = setTimeout(finishSeek, 1500);
+            video.onseeked = finishSeek;
+            video.currentTime = time;'''
+new_seek='''            // O handler entra antes do seek, mas damos tempo real para o WebView
+            // decodificar o quadro. Em alguns Androids 1,5 s era curto e o
+            // fallback desenhava um frame preto, fazendo o vídeo inteiro zerar.
+            let done = false;
+            const finishSeek = (fromEvent) => {
+              if (done) return;
+              const draw = () => {
+                if (done) return;
+                done = true;
+                clearTimeout(timer);
+                video.onseeked = null;
+                try {
+                  if (video.readyState >= 2) ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                } catch(e) {}
+                res();
+              };
+              if (fromEvent) setTimeout(draw, 80); else draw();
+            };
+            const timer = setTimeout(() => finishSeek(false), 4000);
+            video.onseeked = () => finishSeek(true);
+            video.currentTime = Math.min(time, Math.max(0, duration - 0.03));'''
+if s.count(old_seek)!=1: raise SystemExit(f'seek esperado 1x, encontrado {s.count(old_seek)}')
+s=s.replace(old_seek,new_seek,1)
+
+old_content='''          // Only keep frames with content (not blank/black)
+          const px = ctx.getImageData(0, 0, 20, 20).data;
+          const hasContent = Array.from(px).some(v => v > 10);
+          if (!hasContent) continue;'''
+new_content='''          // Detecta conteúdo no QUADRO INTEIRO. Antes olhava só 20x20 px do
+          // canto superior esquerdo; em screen recording esse canto pode ser
+          // preto (status bar/recorte) e todos os frames reais eram descartados.
+          const probe = document.createElement('canvas');
+          probe.width = 24; probe.height = 24;
+          const pctx = probe.getContext('2d');
+          pctx.drawImage(canvas, 0, 0, probe.width, probe.height);
+          const px = pctx.getImageData(0, 0, probe.width, probe.height).data;
+          let lit = 0, maxLum = 0;
+          for (let pi = 0; pi < px.length; pi += 4) {
+            const lum = (px[pi] + px[pi+1] + px[pi+2]) / 3;
+            if (lum > 12) lit++;
+            if (lum > maxLum) maxLum = lum;
+          }
+          const hasContent = maxLum > 18 && lit >= 3;
+          if (!hasContent) continue;'''
+if s.count(old_content)!=1: raise SystemExit(f'conteúdo esperado 1x, encontrado {s.count(old_content)}')
+s=s.replace(old_content,new_content,1)
+
+old_res='      resolve(frames.length > 0 ? frames : []);'
+new_res="      if (frames.length > 0) resolve(frames);\n      else reject(new Error('Nenhum quadro legível foi extraído do vídeo.'));"
+if s.count(old_res)!=1: raise SystemExit(f'resolve esperado 1x, encontrado {s.count(old_res)}')
+s=s.replace(old_res,new_res,1)
+
+old_decl='''  const videoUploads = [];
+  for (let v = 0; v < videos.length; v++) {'''
+new_decl='''  const videoUploads = [];
+  let videoFrameReadFailed = false;
+  for (let v = 0; v < videos.length; v++) {'''
+if s.count(old_decl)!=1: raise SystemExit(f'decl esperado 1x, encontrado {s.count(old_decl)}')
+s=s.replace(old_decl,new_decl,1)
+
+target="    } catch(e) { console.warn('Erro vídeo '+(v+1)+':', e); }"
+repl="    } catch(e) { videoFrameReadFailed = true; console.warn('Erro vídeo '+(v+1)+':', e); }"
+if s.count(target)!=1: raise SystemExit(f'catch esperado 1x, encontrado {s.count(target)}')
+s=s.replace(target,repl,1)
+
+marker='  // Guarda o(s) id(s) do(s) vídeo(s) já salvos no Storage — usado em'
+insert="""  if (videos.length && videoFrameReadFailed && unique.length === 0) {
+    showToast('Não consegui ler os quadros do vídeo. Tente novamente; se persistir, envie outro formato.', 'error');
+    closeMo('mo-import-confirm');
+    return;
+  }
+
+"""
+if s.count(marker)!=1: raise SystemExit(f'marcador esperado 1x, encontrado {s.count(marker)}')
+s=s.replace(marker,insert+marker,1)
+
+p.write_text(s,encoding='utf-8')
