@@ -1,0 +1,40 @@
+name: Inspecionar fluxo atual de video
+on:
+  push:
+    paths:
+      - '.github/workflows/inspect-current-video.yml'
+permissions:
+  contents: write
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extrair trechos
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          lines=p.read_text(encoding='utf-8').splitlines()
+          needles=['async function processImportBatch','async function extractVideoFrames','function extractVideoFrames','async function uploadImportVideo','mo-import-file','processImportBatch(']
+          out=[]
+          seen=set()
+          for needle in needles:
+              hits=[i for i,x in enumerate(lines) if needle in x]
+              out.append(f'===== {needle} hits={len(hits)} =====')
+              for i in hits[:10]:
+                  key=(max(0,i-50),min(len(lines),i+220))
+                  if key in seen: continue
+                  seen.add(key)
+                  a,b=key
+                  out.extend(f'{n+1}: {lines[n]}' for n in range(a,b))
+          Path('.tmp-current-video.txt').write_text('\n'.join(out),encoding='utf-8')
+          Path('.github/workflows/inspect-current-video.yml').unlink(missing_ok=True)
+          PY
+      - name: Publicar inspeção
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore: registrar diagnóstico do vídeo"
+          git push
