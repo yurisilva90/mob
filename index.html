@@ -5000,6 +5000,7 @@ function renderJornada() {
 function renderJourneyCard(day, isToday) {
   const jc = document.getElementById('journey-card');
   if (!jc) return;
+  const cardDate = day?.date || S.curDate || DB.today();
   // Card de sessão atual (timer/km/botão) só faz sentido em "hoje" — em dia
   // passado não existe jornada "em andamento" possível, então esse card
   // some por completo. O restante da função continua rodando igual: os
@@ -5057,19 +5058,19 @@ function renderJourneyCard(day, isToday) {
   if (pcbEl) {
     // Não interpreta cache ainda carregando como zero corridas. Durante refresh,
     // mantém o último estado visual válido do mesmo dia.
-    const autoTripsReady = S._autoTripsDataDate === d;
+    const autoTripsReady = S._autoTripsDataDate === cardDate;
     if (autoTripsReady) {
       const pendingCount = autoTripsHoje.filter(t => t.status === 'capturada' || t.status === 'estimada').length;
-      pcbEl.dataset.dataDate = d;
+      pcbEl.dataset.dataDate = cardDate;
       if (pendingCount > 0) {
         pcbEl.style.display = 'flex';
         setText('pcb-title', pendingCount + (pendingCount===1 ? ' corrida aguardando confirmação' : ' corridas aguardando confirmação'));
       } else {
         pcbEl.style.display = 'none';
       }
-    } else if (pcbEl.dataset.dataDate && pcbEl.dataset.dataDate !== d) {
+    } else if (pcbEl.dataset.dataDate && pcbEl.dataset.dataDate !== cardDate) {
       pcbEl.style.display = 'none';
-      pcbEl.dataset.dataDate = d;
+      pcbEl.dataset.dataDate = cardDate;
     }
   }
 
