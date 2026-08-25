@@ -1,0 +1,37 @@
+name: Inspect flash card
+on:
+  push:
+    paths:
+      - '.github/workflows/inspect-flash-card.yml'
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: perm-warning-ui
+      - run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text()
+          keys=['openFlashConfig()', "openFlashConfig()", 'MōB Flash', 'flashReader']
+          out=[]
+          seen=set()
+          for k in keys:
+            start=0
+            while True:
+              i=s.find(k,start)
+              if i<0: break
+              if i not in seen:
+                seen.add(i); out.append('\n===== %s @ %d =====\n%s' % (k,i,s[max(0,i-1800):i+3500]))
+              start=i+len(k)
+              if len(out)>=15: break
+          Path('_flashcard_snippet.txt').write_text('\n'.join(out))
+          PY
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add _flashcard_snippet.txt
+          git commit -m 'chore: extrair card do Flash' || true
+          git push origin HEAD:perm-warning-ui
