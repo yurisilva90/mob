@@ -1,0 +1,24 @@
+name: Inspecionar jornada operacional 3
+on:
+  push:
+    paths:
+      - '.github/workflows/inspect-operational-day-3.yml'
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trechos finais
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          l=Path('index.html').read_text(encoding='utf-8').splitlines()
+          keys=['async function uploadImportVideo','function checkMidnightCrossing','function resolveMidnightSplit','function openMidnightModal','function showJourneySummary','function renderCorridasActive','corridasPeriod','processImportBatch(','plat-import','import-platform','data-plat']
+          for key in keys:
+              print('\n===== KEY:',key,'=====')
+              hits=[i for i,x in enumerate(l) if key in x]
+              for i in hits[:8]:
+                  a=max(0,i-15); b=min(len(l),i+60)
+                  print(f'--- {a+1}-{b} ---')
+                  for n in range(a,b): print(f'{n+1}: {l[n]}')
+          PY
