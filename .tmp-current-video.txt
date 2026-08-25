@@ -1,0 +1,1086 @@
+===== async function processImportBatch hits=1 =====
+7063:       </div>
+7064:     </div>
+7065:     <div style="font-size:13.5px;font-weight:700;color:#0F172A;margin-bottom:5px;display:flex;align-items:center;gap:6px">${statusHtml}</div>
+7066:     <div style="font-size:12px;color:#64748B">${valHtml}</div>
+7067:   </div>`;
+7068: }
+7069: 
+7070: // Tenta de novo (até 3x) antes de desistir de um print/frame — evita que um
+7071: // erro passageiro de rede derrube a corrida inteira do import silenciosamente.
+7072: async function extractWithRetry(fn, onRetry, maxAttempts) {
+7073:   maxAttempts = maxAttempts || 3;
+7074:   let lastErr;
+7075:   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+7076:     try { return await fn(); }
+7077:     catch(e) {
+7078:       lastErr = e;
+7079:       if (attempt < maxAttempts) { onRetry(attempt+1, maxAttempts); await new Promise(r => setTimeout(r, 800)); }
+7080:     }
+7081:   }
+7082:   throw lastErr;
+7083: }
+7084: 
+7085: // Sobe o vídeo original pro Storage (bucket import-videos, retenção de
+7086: // 180 dias) e registra em import_videos — pedido do Yuri (16/08/2026):
+7087: // base pra confirmação de valor real (campeonatos/incentivos futuros) e
+7088: // pra dar dá pra conferir manualmente qualquer corrida em disputa. Falha
+7089: // de upload NUNCA trava o import (retorna null, segue sem vínculo) — o
+7090: // vídeo é auditoria extra, não pode ser bloqueio de fluxo.
+7091: async function uploadImportVideo(file, plat, operationalDate) {
+7092:   if (!_supaUser) return null;
+7093:   try {
+7094:     const ext = (file.name && file.name.includes('.')) ? file.name.split('.').pop().toLowerCase() : 'mp4';
+7095:     const opDate = operationalDate || S.curDate || DB.today();
+7096:     const opPlat = normalizeOperationalPlatform(plat);
+7097:     const opRange = operationalRangeForPlatform(opPlat, opDate);
+7098:     const path = `${_supaUser.id}/${opDate}/${opPlat}/${DB.uid()}.${ext}`;
+7099:     const { error: upErr } = await _SUPA.storage.from('import-videos').upload(path, file, {
+7100:       contentType: file.type || 'video/mp4'
+7101:     });
+7102:     if (upErr) { console.warn('upload vídeo falhou (segue sem vínculo):', upErr); return null; }
+7103:     const { data, error } = await _SUPA.from('import_videos').insert({
+7104:       user_id: _supaUser.id, storage_path: path, file_size_bytes: file.size || null,
+7105:       platform: opPlat, operational_date: opDate,
+7106:       period_start: new Date(opRange.startMs).toISOString(),
+7107:       period_end: new Date(opRange.endMs).toISOString()
+7108:     }).select('id').single();
+7109:     if (error) { console.warn('registro import_videos falhou (segue sem vínculo):', error); return null; }
+7110:     return data.id;
+7111:   } catch(e) { console.warn('uploadImportVideo erro:', e); return null; }
+7112: }
+7113: async function processImportBatch(images, videos, plat) {
+7114:   const operationalDate = S.curDate || DB.today();
+7115:   const operationalPlat = normalizeOperationalPlatform(plat);
+7116:   window._pendingImportOperationalDate = operationalDate;
+7117:   window._pendingImportPlatform = operationalPlat;
+7118:   const targetCount = (importPrecheck.uberCount||0) + (importPrecheck.p99Count||0);
+7119:   const targetValue = (importPrecheck.uberValue||0) + (importPrecheck.p99Value||0);
+7120:   const totalImgs = images.length, totalVids = videos.length;
+7121:   const label = [totalImgs?`${totalImgs} print${totalImgs>1?'s':''}`:'', totalVids?`${totalVids} vídeo${totalVids>1?'s':''}`:''].filter(Boolean).join(' + ');
+7122:   document.getElementById('ic-title').textContent = 'Analisando ' + label;
+7123:   document.getElementById('ic-btn').style.display = 'none';
+7124:   openMo('mo-import-confirm');
+7125: 
+7126:   const unique = [];
+7127:   const details = [];
+7128:   const seen = new Set();
+7129:   let foundCount = 0, foundVal = 0;
+7130:   let curDetail = null; // acumulador do fragmento de detalhe em aberto
+7131:   const flushDetail = () => { if (curDetail) { details.push(curDetail); curDetail = null; } };
+7132:   const mergeDetailFrag = (t) => {
+7133:     // Decide se é o MESMO cartão de detalhe (outro pedaço do mesmo scroll)
+7134:     // usando horário e endereço — nunca valor. Valor podia vir ligeiramente
+7135:     // diferente entre frames ("Você ganhou" vs "Total") e isso fazia o
+7136:     // mesmo cartão virar DOIS fragmentos, que depois viravam duas corridas
+7137:     // (uma real + uma fantasma) no import.
+7138:     const conflicts = (a, b) => a != null && b != null && a !== b;
+7139:     const sameRide = curDetail && (
+7140:       (t.time && curDetail.time) ? t.time === curDetail.time
+7141:         : (!conflicts(curDetail.originFull, t.originFull) && !conflicts(curDetail.destFull, t.destFull))
+7142:     );
+7143:     if (sameRide) {
+7144:       // mesmo cartão — preenche só o que esse fragmento ainda não tinha
+7145:       if (curDetail.km == null && t.km != null) curDetail.km = t.km;
+7146:       if (curDetail.duration == null && t.duration != null) curDetail.duration = t.duration;
+7147:       if (!curDetail.time && t.time) curDetail.time = t.time;
+7148:       if (!curDetail.originFull && t.originFull) { curDetail.originFull = t.originFull; curDetail.origin = t.origin; }
+7149:       if (!curDetail.destFull && t.destFull) { curDetail.destFull = t.destFull; curDetail.dest = t.dest; }
+7150:     } else {
+7151:       // horário ou endereço batendo diferente do acumulador — é outra
+7152:       // corrida: fecha o anterior e abre um novo
+7153:       flushDetail();
+7154:       curDetail = t;
+7155:     }
+7156:   };
+7157:   // Valida e deduplica NA HORA, frame a frame — o contador do anel só sobe
+7158:   // com corrida nova validada. Antes somava a extração bruta de cada frame,
+7159:   // e como os frames de vídeo se sobrepõem, a mesma corrida contava várias
+7160:   // vezes (ex: 37/17 na tela sendo que eram 17 corridas reais).
+7161:   const absorb = (trips) => {
+7162:     let sawList = false;
+7163:     (trips||[]).forEach(t => {
+7164:       if (t.screen === 'detail') {
+7165:         // Tela de detalhe: só km/tempo/endereço interessam — sem valor.
+7166:         // Se o fragmento não trouxe NENHUM desses três, não vale a pena.
+7167:         if (t.km == null && t.duration == null && !t.originFull && !t.destFull) return;
+7168:         mergeDetailFrag(t); return;
+7169:       }
+7170:       if (!(t.value > 0)) return; // fusão/cartão cortado gera R$0,00 — nunca é corrida real
+7171:       sawList = true;
+7172:       t.time = normTime(t.time);
+7173:       const key = t.time+'_'+(t.value||0).toFixed(2);
+7174:       if (seen.has(key)) return;
+7175:       seen.add(key);
+7176:       unique.push(t);
+7177:       foundCount++; foundVal += (t.value||0);
+7178:     });
+7179:     if (sawList) flushDetail(); // voltou pra tela de lista — fecha o detalhe que tava em aberto
+7180:   };
+7181:   const dot = '<span style="width:6px;height:6px;border-radius:50%;background:#22C55E;display:inline-block;animation:pulseDot 1s infinite ease-in-out"></span>';
+7182:   const retryIcon = '<svg style="animation:vspin 1s linear infinite" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#D97706" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-2.6-6.4"/></svg>';
+7183:   const updateRing = (statusHtml, isWarn) => {
+7184:     document.getElementById('ic-body').innerHTML = renderImportRing(foundCount, targetCount, foundVal, targetValue, statusHtml, isWarn);
+7185:   };
+7186:   updateRing('Iniciando ' + dot, false);
+7187: 
+7188:   for (let i = 0; i < images.length; i++) {
+7189:     try {
+7190:       const trips = await extractWithRetry(
+7191:         () => extractTripsFromImage(images[i], plat),
+7192:         () => updateRing(retryIcon + ' Processando novamente...', true)
+7193:       );
+7194:       absorb(trips);
+7195:     } catch(e) { console.warn('Erro print '+(i+1)+' (desistiu após 3 tentativas):', e); }
+7196:     updateRing('Analisando print' + (totalImgs>1 ? ' ' + Math.min(i+2,totalImgs) + ' de ' + totalImgs : '') + ' ' + dot, false);
+7197:   }
+7198:   const videoUploads = [];
+7199:   let videoFrameReadFailed = false;
+7200:   for (let v = 0; v < videos.length; v++) {
+7201:     videoUploads.push(uploadImportVideo(videos[v], operationalPlat, operationalDate));
+7202:     try {
+7203:       updateRing('Preparando vídeo ' + dot, false);
+7204:       const frames = await extractVideoFrames(videos[v], (done, total) => {
+7205:         updateRing('Preparando vídeo · ' + done + '/' + total + ' quadros ' + dot, false);
+7206:       });
+7207:       for (let i = 0; i < frames.length; i++) {
+7208:         try {
+7209:           const trips = await extractWithRetry(
+7210:             () => extractTripsFromBase64(frames[i], 'image/jpeg', plat),
+7211:             () => updateRing(retryIcon + ' Processando novamente...', true)
+7212:           );
+7213:           absorb(trips);
+7214:         } catch(e) { console.warn('Frame erro (desistiu após 3 tentativas):', e); }
+7215:         updateRing('Analisando vídeo · ' + (i+1) + '/' + frames.length + ' quadros ' + dot, false);
+7216:       }
+7217:     } catch(e) { videoFrameReadFailed = true; console.warn('Erro vídeo '+(v+1)+':', e); }
+7218:   }
+7219:   if (videos.length && videoFrameReadFailed && unique.length === 0) {
+7220:     showToast('Não consegui decodificar os quadros deste vídeo neste aparelho. O arquivo pode ser válido; tente novamente.', 'error');
+7221:     closeMo('mo-import-confirm');
+7222:     return;
+7223:   }
+7224: 
+7225:   // Guarda o(s) id(s) do(s) vídeo(s) já salvos no Storage — usado em
+7226:   // confirmImport() pra vincular cada corrida ao vídeo que a confirmou
+7227:   // (auditoria manual futura, retenção de 180 dias).
+7228:   const _videoUploadResults = await Promise.all(videoUploads);
+7229:   window._pendingImportVideoIds = _videoUploadResults.filter(Boolean);
+7230:   if (videos.length && window._pendingImportVideoIds.length < videos.length) {
+7231:     showToast('Corridas importadas, mas o vídeo de auditoria não pôde ser salvo — confira sua conexão.', 'error');
+7232:   }
+7233:   flushDetail(); // fragmento de detalhe que ficou aberto no fim do vídeo
+7234: 
+7235:   // Resolve conflitos de horário: a regra pedida pra IA é "cada horário =
+7236:   // uma corrida só", mas o dedup acima só barra repetição idêntica
+7237:   // (mesmo horário E mesmo valor) — se o mesmo horário veio com valores
+7238:   // DIFERENTES em frames diferentes (mistura de cartão vizinho num frame
+7239:   // só), os dois passavam pra lista como corridas separadas, inflando a
+7240:   // contagem e o total. Aqui, pra cada (plataforma, horário), fica só a
+7241:   // leitura de valor que mais se repetiu entre os frames — a leitura
+7242:   // certa tende a se confirmar igual em vários frames seguidos (o vídeo
+7243:   // se sobrepõe), enquanto uma leitura errada por mistura de cartão
+7244:   // costuma aparecer uma vez só.
+7245:   function resolveTimeConflicts(list) {
+7246:     const groups = new Map();
+7247:     list.forEach(t => {
+7248:       const k = (t.platform || '') + '_' + t.time;
+7249:       (groups.get(k) || groups.set(k, []).get(k)).push(t);
+7250:     });
+7251:     const resolved = [];
+7252:     groups.forEach(items => {
+7253:       if (items.length === 1) { resolved.push(items[0]); return; }
+7254:       const byValue = new Map();
+7255:       items.forEach(t => {
+7256:         const vk = (t.value || 0).toFixed(2);
+7257:         (byValue.get(vk) || byValue.set(vk, []).get(vk)).push(t);
+7258:       });
+7259:       let best = null;
+7260:       byValue.forEach(arr => { if (!best || arr.length > best.length) best = arr; });
+7261:       // dentro do grupo vencedor, prefere o item com endereço mais completo
+7262:       let rep = best[0];
+7263:       best.forEach(t => {
+7264:         const len = (t.originFull || '').length + (t.destFull || '').length;
+7265:         const repLen = (rep.originFull || '').length + (rep.destFull || '').length;
+7266:         if (len > repLen) rep = t;
+7267:       });
+7268:       resolved.push(rep);
+7269:     });
+7270:     return resolved;
+7271:   }
+7272:   const resolvedUnique = resolveTimeConflicts(unique);
+7273:   unique.length = 0;
+7274:   unique.push(...resolvedUnique);
+7275: 
+7276:   // Funde os detalhes nas corridas da lista — SÓ completa km/tempo/endereço
+7277:   // de uma corrida que a LISTA já confirmou (com valor de verdade). Nunca
+7278:   // cria corrida nova a partir de detalhe sozinho: sem valor, não tem como
+7279:   // confirmar que é real, e foi exatamente isso que gerava corrida fantasma
+7280:   // no import (fragmento de detalhe virando corrida "avulsa" por engano).
+7281:   details.forEach(d => {
+7282:     let cand = null;
+7283:     if (d.time) cand = unique.find(u => u.time === d.time && !u._enriched);
+7284:     if (!cand && (d.originFull || d.destFull)) {
+7285:       cand = unique.find(u => !u._enriched &&
+7286:         ((d.originFull && u.originFull === d.originFull) || (d.destFull && u.destFull === d.destFull)));
+7287:     }
+7288:     if (cand) {
+7289:       cand._enriched = true;
+7290:       if (d.km != null && d.km > 0)       { cand.km = d.km; cand.kmEstimado = false; }
+7291:       if (d.duration != null && d.duration > 0) cand.duration = d.duration;
+7292:       // Endereço do detalhe é a linha inteira, sem truncar — prefere ele.
+7293:       if (d.originFull) { cand.originFull = d.originFull; cand.origin = d.origin; }
+7294:       if (d.destFull)   { cand.destFull = d.destFull; cand.dest = d.dest; }
+7295:     }
+7296:   });
+7297: 
+7298:   const day = DB.day(S.curDate);
+7299: 
+7300:   // Casa cada corrida do vídeo com auto_trips do dia ANTES de mostrar a
+7301:   // tela (pedido do Yuri, 16/08/2026) — permite separar "vai só corrigir
+7302:   // valor" de "é corrida nova" já na seleção, e esconder o que não muda
+7303:   // nada em vez de mostrar tudo misturado.
+7304:   const autoTripsPool = (await loadAutoTripsForOperationalDay(operationalPlat, operationalDate)) || [];
+7305:   const numEq = (a,b,tol) => Math.abs((a||0)-(b||0)) <= (tol||0.02);
+7306:   const annotated = unique.map((t,i) => {
+7307:     const matched = matchAutoTrip(t, autoTripsPool);
+7308:     if (matched) autoTripsPool.splice(autoTripsPool.indexOf(matched), 1); // consumido — nunca casa duas vezes
+7309:     const base = {...t, _sel:true, _idx:i,
+7310:       platform: t.platform === '99' ? '99' : 'uber',
+7311:       _exists: isTripDuplicate(t, day.trips)};
+7312:     if (matched) {
+7313:       const newVal = parseFloat(t.value)||0;
+7314:       return {...base, _matchedAutoTripId: matched.id, _isNew: false,
+7315:         _oldValue: matched.offer_value, _changed: !numEq(matched.offer_value, newVal, 0.02)};
+7316:     }
+7317:     return {...base, _matchedAutoTripId: null, _isNew: true, _changed: true};
+7318:   });
+7319:   // Só mostra o que de fato vai mudar algo — casada sem diferença de valor
+7320:   // não aparece (nada a fazer), nova sem valor legível também não aparece
+7321:   // (sem valor não dá pra confirmar que é corrida de verdade).
+7322:   window._pendingTrips = annotated.filter(t => t._isNew ? (parseFloat(t.value)||0) > 0 : t._changed);
+7323:   // Corrida NOVA nunca confia no endereço do vídeo sem validar — mesma
+7324:   // regra do Kotlin (looksLikeAddress). Sem validação, fica sem endereço
+7325:   // em vez de arriscar lixo/mensagem de chat virando corrida (pedido
+7326:   // explícito do Yuri: "nunca endereço, a não ser que garanta").
+7327:   window._pendingTrips.forEach(t => {
+7328:     if (!t._isNew) return;
+7329:     if (t.originFull && !looksLikeAddress(t.originFull)) { t.originFull = ''; t.origin = ''; }
+7330:     if (t.destFull && !looksLikeAddress(t.destFull)) { t.destFull = ''; t.dest = ''; }
+7331:   });
+7332: 
+===== async function extractVideoFrames hits=1 =====
+7415:   const seen = new Set();
+7416:   const unique = allTrips.filter(t => {
+7417:     if (!(t.value > 0)) return false; // fusão/cartão cortado gera R$0,00 — nunca é corrida real
+7418:     t.time = normTime(t.time);
+7419:     const key = t.time+'_'+(t.value||0).toFixed(2);
+7420:     if (seen.has(key)) return false;
+7421:     seen.add(key); return true;
+7422:   });
+7423:   window._pendingTrips = unique.map((t,i) => ({...t, _sel:true, _idx:i,
+7424:     platform: t.platform === '99' ? '99' : 'uber',
+7425:     _exists: isTripDuplicate(t, day.trips) // pre-mark duplicates
+7426:   }));
+7427:   showImportConfirm();
+7428: }
+7429: 
+7430: async function processVideoImport(file, plat) {
+7431:   document.getElementById('ic-title').textContent = 'Extraindo frames do vídeo...';
+7432:   document.getElementById('ic-body').innerHTML = showSpinner('Analisando vídeo...');
+7433:   document.getElementById('ic-btn').style.display = 'none';
+7434:   openMo('mo-import-confirm');
+7435:   try {
+7436:     const frames = await extractVideoFrames(file);
+7437:     const allTrips = [];
+7438:     for (let i = 0; i < frames.length; i++) {
+7439:       document.getElementById('ic-body').innerHTML = showSpinner('Analisando frame ' + (i+1) + ' de ' + frames.length + '...');
+7440:       try {
+7441:         const trips = await extractTripsFromBase64(frames[i], 'image/jpeg', plat);
+7442:         allTrips.push(...trips);
+7443:       } catch(e) { console.warn('Frame erro:', e); }
+7444:     }
+7445:     const dayV = DB.day(S.curDate);
+7446:     const seenV = new Set();
+7447:     const unique = allTrips.filter(t => {
+7448:       t.time = normTime(t.time);
+7449:       const key = t.time+'_'+(t.value||0).toFixed(2);
+7450:       if (seenV.has(key)) return false;
+7451:       seenV.add(key); return true;
+7452:     });
+7453:     const _dayV = DB.day(S.curDate);
+7454:     window._pendingTrips = unique.map((t,i) => ({...t, _sel:true, _idx:i,
+7455:       platform: t.platform === '99' ? '99' : 'uber',
+7456:       _dup: isTripDuplicate(t, _dayV.trips)}));
+7457:     showImportConfirm();
+7458:   } catch(e) {
+7459:     closeMo('mo-import-confirm');
+7460:     showToast('Erro ao processar vídeo: ' + e.message + '. Use MP4 ou prints do histórico.', 'error');
+7461:     console.error('Video error:', e);
+7462:   }
+7463: }
+7464: 
+7465: async function extractVideoFrames(file, onProgress) {
+7466:   return new Promise((resolve, reject) => {
+7467:     const video  = document.createElement('video');
+7468:     const url    = URL.createObjectURL(file);
+7469:     const canvas = document.createElement('canvas');
+7470:     const ctx    = canvas.getContext('2d');
+7471:     video.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0';
+7472:     document.body.appendChild(video);
+7473:     video.src        = url;
+7474:     video.muted      = true;
+7475:     video.playsInline = true;
+7476:     video.preload    = 'auto';
+7477: 
+7478:     const metadataTimer = setTimeout(() => {
+7479:       try{document.body.removeChild(video);}catch(e){}
+7480:       URL.revokeObjectURL(url);
+7481:       reject(new Error('O vídeo demorou demais para ser preparado. Tente novamente.'));
+7482:     }, 15000);
+7483: 
+7484:     video.onloadedmetadata = async () => {
+7485:       clearTimeout(metadataTimer);
+7486:       // loadedmetadata só garante dimensões/duração. Em Android/WebView o
+7487:       // decoder pode ainda não ter nenhum frame disponível. Aguarda dados
+7488:       // reais antes de iniciar os seeks, evitando canvas preto em MP4 válido.
+7489:       if (video.readyState < 2) {
+7490:         await new Promise((resolve, reject) => {
+7491:           let settled = false;
+7492:           const finish = () => { if (settled) return; settled = true; cleanup(); resolve(); };
+7493:           const fail = () => { if (settled) return; settled = true; cleanup(); reject(new Error('Não foi possível decodificar o vídeo.')); };
+7494:           const timer = setTimeout(fail, 12000);
+7495:           const cleanup = () => { clearTimeout(timer); video.removeEventListener('loadeddata', finish); video.removeEventListener('canplay', finish); };
+7496:           video.addEventListener('loadeddata', finish, {once:true});
+7497:           video.addEventListener('canplay', finish, {once:true});
+7498:           try { video.load(); } catch(e) {}
+7499:         });
+7500:       }
+7501:       // Limit canvas size for performance
+7502:       const MAX = 1080;
+7503:       const ratio = Math.min(MAX / video.videoWidth, MAX / video.videoHeight, 1);
+7504:       canvas.width  = Math.round(video.videoWidth  * ratio);
+7505:       canvas.height = Math.round(video.videoHeight * ratio);
+7506: 
+7507:       const duration = video.duration;
+7508:       if (!isFinite(duration) || isNaN(duration) || duration <= 0) {
+7509:         // Duration unknown — try capturing current frame
+7510:         try {
+7511:           await new Promise(r => setTimeout(r, 500));
+7512:           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+7513:           const frame = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+7514:           try{document.body.removeChild(video);}catch(e2){}
+7515:           URL.revokeObjectURL(url);
+7516:           resolve([frame]);
+7517:         } catch(e) {
+7518:           try{document.body.removeChild(video);}catch(e2){}
+7519:           URL.revokeObjectURL(url);
+7520:           reject(new Error('Não foi possível ler o vídeo. Tente em formato MP4.'));
+7521:         }
+7522:         return;
+7523:       }
+7524: 
+7525:       const INTERVAL = 0.6; // frame a cada 0.6s (era 1s) — menos distância de
+7526:       // rolagem entre frames reduz a chance de misturar campos de cartões
+7527:       // vizinhos, e dá mais leituras repetidas por corrida real pra
+7528:       // resolveTimeConflicts() escolher a leitura certa por maioria
+7529:       const times = [];
+7530:       for (let t = 0.5; t < duration; t += INTERVAL) times.push(parseFloat(t.toFixed(2)));
+7531:       if (!times.length) times.push(0);
+7532: 
+7533:       // Fingerprint pequeno (32x32 grayscale) pra comparar frames e pular
+7534:       // quando o scroll tá parado/lento — evita mandar quase-o-mesmo-frame
+7535:       // pra IA, que é a causa de valores "fantasma" (leitura funde 2 frames
+7536:       // parecidos com corrida cortada/sobreposta).
+7537:       const FP = 32;
+7538:       const fpCanvas = document.createElement('canvas');
+7539:       fpCanvas.width = FP; fpCanvas.height = FP;
+7540:       const fpCtx = fpCanvas.getContext('2d');
+7541:       function frameFingerprint() {
+7542:         fpCtx.drawImage(canvas, 0, 0, FP, FP);
+7543:         const d = fpCtx.getImageData(0, 0, FP, FP).data;
+7544:         const g = new Float32Array(FP*FP);
+7545:         for (let i = 0; i < g.length; i++) {
+7546:           const o = i*4;
+7547:           g[i] = (d[o] + d[o+1] + d[o+2]) / 3;
+7548:         }
+7549:         return g;
+7550:       }
+7551:       function fpDiff(a, b) {
+7552:         let sum = 0;
+7553:         for (let i = 0; i < a.length; i++) sum += Math.abs(a[i]-b[i]);
+7554:         return sum / (a.length * 255); // normalizado 0..1
+7555:       }
+7556:       const SIMILARITY_THRESHOLD = 0.02; // <2% de mudança = frame quase idêntico, pula
+7557: 
+7558:       const frames = [];
+7559:       let lastFp = null;
+7560:       let skipped = 0;
+7561:       if (typeof onProgress === 'function') onProgress(0, times.length);
+7562:       for (let timeIndex = 0; timeIndex < times.length; timeIndex++) {
+7563:         const time = times[timeIndex];
+7564:         try {
+7565:           await new Promise((res) => {
+7566:             // O handler entra antes do seek, mas damos tempo real para o WebView
+7567:             // decodificar o quadro. Em alguns Androids 1,5 s era curto e o
+7568:             // fallback desenhava um frame preto, fazendo o vídeo inteiro zerar.
+7569:             let done = false;
+7570:             const finishSeek = (fromEvent) => {
+7571:               if (done) return;
+7572:               const draw = () => {
+7573:                 if (done) return;
+7574:                 done = true;
+7575:                 clearTimeout(timer);
+7576:                 video.onseeked = null;
+7577:                 try {
+7578:                   if (video.readyState >= 2) ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+7579:                 } catch(e) {}
+7580:                 res();
+7581:               };
+7582:               if (fromEvent) setTimeout(draw, 80); else draw();
+7583:             };
+7584:             const timer = setTimeout(() => finishSeek(false), 4000);
+7585:             video.onseeked = () => finishSeek(true);
+7586:             video.currentTime = Math.min(time, Math.max(0, duration - 0.03));
+7587:           });
+7588:           // Detecta conteúdo no QUADRO INTEIRO. Antes olhava só 20x20 px do
+7589:           // canto superior esquerdo; em screen recording esse canto pode ser
+7590:           // preto (status bar/recorte) e todos os frames reais eram descartados.
+7591:           const probe = document.createElement('canvas');
+7592:           probe.width = 24; probe.height = 24;
+7593:           const pctx = probe.getContext('2d');
+7594:           pctx.drawImage(canvas, 0, 0, probe.width, probe.height);
+7595:           const px = pctx.getImageData(0, 0, probe.width, probe.height).data;
+7596:           let lit = 0, maxLum = 0;
+7597:           for (let pi = 0; pi < px.length; pi += 4) {
+7598:             const lum = (px[pi] + px[pi+1] + px[pi+2]) / 3;
+7599:             if (lum > 12) lit++;
+7600:             if (lum > maxLum) maxLum = lum;
+7601:           }
+7602:           const hasContent = maxLum > 18 && lit >= 3;
+7603:           if (!hasContent) continue;
+7604:           const fp = frameFingerprint();
+7605:           if (lastFp && fpDiff(fp, lastFp) < SIMILARITY_THRESHOLD) {
+7606:             skipped++;
+7607:             continue; // scroll parado/lento — quase igual ao frame anterior mantido
+7608:           }
+7609:           lastFp = fp;
+7610:           frames.push(canvas.toDataURL('image/jpeg', 0.7).split(',')[1]);
+7611:         } catch(e) { console.warn('Frame t='+time, e); }
+7612:         if (typeof onProgress === 'function') onProgress(timeIndex + 1, times.length);
+7613:       }
+7614:       if (skipped) console.log('[extractVideoFrames] frames quase-duplicados pulados:', skipped);
+7615: 
+7616:       try{document.body.removeChild(video);}catch(e){}
+7617:       URL.revokeObjectURL(url);
+7618:       if (frames.length > 0) resolve(frames);
+7619:       else reject(new Error('Nenhum quadro legível foi extraído do vídeo.'));
+7620:     };
+7621: 
+7622:     video.onerror = (e) => {
+7623:       clearTimeout(metadataTimer);
+7624:       try{document.body.removeChild(video);}catch(e2){}
+7625:       URL.revokeObjectURL(url);
+7626:       const msg = e?.target?.error?.message || '';
+7627:       reject(new Error('Formato de vídeo não suportado. Use MP4 gravado pelo celular.\n' + msg));
+7628:     };
+7629:     video.load();
+7630:   });
+7631: }
+7632: 
+7633: async function extractTripsFromImage(file, plat) {
+7634:   const b64 = await new Promise((res,rej) => {
+7635:     const r = new FileReader();
+7636:     r.onload = () => res(r.result.split(',')[1]); r.onerror = () => rej(r.error); r.readAsDataURL(file);
+7637:   });
+7638:   return extractTripsFromBase64(b64, file.type||'image/jpeg', plat);
+7639: }
+7640: 
+7641: async function extractTripsFromBase64(b64, mt, plat) {
+7642:   const cashWarning = 'ATENÇÃO — confusão comum: "Dinheiro recebido" (ícone de câmera/recibo) NÃO é gorjeta nem dinâmico, é so a forma de pagamento (o passageiro pagou em espécie). Quando uma corrida tiver "Preço dinâmico" (ícone de raio) E "Dinheiro recebido" juntas, são DUAS linhas diferentes — extraia SÓ o valor do "Preço dinâmico" em dinamico, e NUNCA coloque o valor de "Dinheiro recebido" em gorjeta (nem em dinamico, nem em value). Exemplo: corrida com "R$ 12,50 Preço dinâmico" e "R$ 27,05 Dinheiro recebido" → dinamico:12.50, gorjeta:0.00 (o R$27,05 não entra em lugar nenhum do JSON).';
+7643:   // Prompt único — a IA identifica sozinha se é Uber ou 99 pelo layout da
+7644:   // imagem (em vez de confiar em qual botão o usuário tocou, que pode estar
+7645:   // errado). Cada corrida retornada inclui "platform":"uber"|"99".
+7646:   const prompt = 'Esta imagem mostra uma tela do app de motorista — pode ser: (1) UBER, tela "Histórico de ganhos" (lista de corridas com linha divisória entre elas, "Preço dinâmico" com ícone de raio, "Valor extra" com ícone de mão/coração = gorjeta); (2) 99 LISTA, tela "Histórico de corridas" do app 99 Motorista (ícone de carro + texto "Pop", tag laranja "Taxa Fixa de X%", "Ganhos pagos no app" ou "Ganhos pagos em dinheiro"); ou (3) 99 DETALHE, tela "Detalhes da corrida" do 99 (título "Detalhes da corrida" no topo, "Você ganhou R$X" em destaque, campos "Duração" e "Distância"). PRIMEIRO identifique qual das três telas é, pelo layout, e siga SOMENTE as regras dessa tela, abaixo. Inclua "platform":"uber" ou "platform":"99" em cada item do JSON (uma imagem só tem UMA plataforma e UM tipo de tela, nunca misture).\n\n' +
+7647:     '=== SE FOR UBER ===\n' +
+7648:     'Extraia CADA corrida, mas SÓ quando ela aparecer COMPLETA na imagem (com a linha divisória acima e abaixo) — se uma corrida estiver cortada no topo ou na base da imagem (incompleta), IGNORE essa corrida, não tente adivinhar ou completar com dados de outra. Ignore Missão (R$ 0,00). ' + cashWarning + ' Abaixo do valor principal de cada corrida também pode aparecer "Valor extra" (ícone de mão/coração — é a gorjeta do passageiro) — extraia esse valor em gorjeta quando existir. Também pode aparecer "Pedágio R$X,XX" — extraia esse valor em pedagio quando existir (0.00 quando não aparecer). Cada corrida mostra dois endereços (origem e destino): copie a linha de texto INTEIRA, palavra por palavra, exatamente como está escrita na tela, sem resumir ou cortar nenhuma parte, em "originFull"/"destFull". E TAMBÉM extraia só o nome do bairro (sem rua, número, cidade, UF ou CEP) em "origin"/"dest" — ex: se o texto na tela é "Rua Corcovado, 213, Jardim Botânico - Rio de Janeiro - RJ, 22460-050, BR", então origin="Jardim Botânico" e originFull="Rua Corcovado, 213, Jardim Botânico - Rio de Janeiro - RJ, 22460-050, BR" (a linha inteira, não abreviada). Formato de cada item: {"platform":"uber","time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"Black","origin":"bairro","originFull":"endereço completo","dest":"bairro","destFull":"endereço completo","dinamico":0.00,"gorjeta":0.00,"pedagio":0.00,"taxaZero":false,"dinheiro":false}. duration=minutos inteiros. dinamico, gorjeta e pedagio ficam 0.00 quando não aparecerem. "taxaZero":true se houver indicação de 0% de taxa. "dinheiro":true se pagamento em dinheiro.\n\n' +
+7649:     '=== SE FOR 99 ===\n' +
+7650:     'Estrutura de CADA corrida, sempre nesta ordem: ' +
+7651:     '(1) Data e hora no formato "DD/MM/AAAA HH:MM" — extraia SOMENTE o HH:MM como campo "time". ' +
+7652:     '(2) Forma de pagamento: "Ganhos pagos no app" ou "Ganhos pagos em dinheiro" — IGNORE, não é valor nem corrida. ' +
+7653:     '(3) Ícone de carro + nome da categoria (pode ser "Pop", "Negocia", "Comfort" ou outra — leia o que estiver escrito, não assuma que é sempre "Pop") + valor "R$X,XX" à direita — este R$X,XX é o "value" da corrida, não importa qual seja a categoria. Converta vírgula para ponto (R$7,90 → 7.90). Guarde o texto exato da categoria lida em "category" com o prefixo "99" (ex: categoria "Pop" → "99Pop", categoria "Negocia" → "99Negocia"). ' +
+7654:     '(4) Tag laranja "Taxa Fixa de X%" — extraia o número X como "serviceFee" em formato decimal (ex: "Taxa Fixa de 15%" → serviceFee:0.15, "Taxa Fixa de 0%" → serviceFee:0). Não é gorjeta nem dinâmico. ' +
+7655:     '(5) Endereço de origem (ícone seta pra cima) e endereço de destino (ícone seta pra baixo) — copie a linha de texto INTEIRA, palavra por palavra, exatamente como está escrita na tela, sem resumir ou cortar nenhuma parte (incluindo nome de rua, número e complemento quando visíveis) em "originFull"/"destFull". E TAMBÉM extraia só o nome do bairro (sem rua, número, cidade, UF) em "origin"/"dest" — ex: se o texto na tela é "Rua Carmela Dutra, Agriões, Teresópolis - RJ", então origin="Agriões" e originFull="Rua Carmela Dutra, Agriões, Teresópolis - RJ" (a linha inteira, não abreviada). ' +
+7656:     '(5b) Pode aparecer "Pedágio R$X,XX" — extraia esse valor em pedagio quando existir (0.00 quando não aparecer). ' +
+7657:     '(6) Status verde "Pago" ou "Pedido finalizado" — marca o FIM desta corrida. ' +
+7658:     '(7) CABEÇALHO FIXO QUE NÃO ROLA: no topo da tela ficam fixas as abas "Corridas / Entregas" e a barra de filtros ("18/7 ▼", "Taxas ▼", "Pagamento ▼") — esse bloco NUNCA rola junto com a lista. Enquanto a lista sobe, a linha de data/hora de cada corrida desaparece por baixo desse cabeçalho fixo ANTES do resto do cartão (forma de pagamento, categoria+valor, taxa, endereços, status), que continuam visíveis mais um pouco. Por isso, na MAIORIA dos frames, o primeiro cartão logo abaixo do cabeçalho fixo aparece SEM a linha de data/hora, mesmo com todo o resto do cartão visível e legível. ' +
+7659:     'REGRAS: ' +
+7660:     'Extraia SOMENTE corridas COMPLETAS que mostrem data+hora, categoria+valor, e pelo menos um endereço. ' +
+7661:     'VALIDAÇÃO LINHA A LINHA — REGRA MAIS IMPORTANTE DE TODAS: só extraia uma corrida se o bloco dela estiver 100% delimitado e visível NESTA imagem, do início ao fim: (a) a linha de data/hora "DD/MM/AAAA HH:MM" visível e completa dentro do PRÓPRIO cartão, imediatamente acima da forma de pagamento — nunca herdada do cabeçalho fixo nem de outro frame, (b) o status verde ("Pago" ou "Pedido finalizado") visível na BASE do bloco, e (c) a LINHA FINA divisória visível separando este bloco do vizinho. Se QUALQUER uma dessas três fronteiras não estiver visível — cartão cortado no topo da imagem, cortado na base, sem linha fina clara entre as informações, OU cartão que começa colado no cabeçalho fixo (abas "Corridas/Entregas" + filtros) sem nenhuma linha de data/hora entre eles — NÃO EXTRAIA essa corrida. Um cartão logo abaixo do cabeçalho fixo com categoria+valor/taxa/endereços/status visíveis mas SEM data/hora acima já teve a data/hora dele engolida pelo cabeçalho — trate exatamente como cartão cortado, mesmo que o resto pareça completo. É melhor deixar de fora do que adivinhar: esse mesmo cartão aparece COMPLETO, com a data/hora visível, em um frame anterior (alguns instantes antes, antes de rolar pra debaixo do cabeçalho). NUNCA complete um cartão cortado com dados do vizinho, e NUNCA reaproveite ou "lembre" uma data/hora vista em outro frame — a data/hora tem que estar escrita nesta mesma imagem, colada nesse cartão específico. ' +
+7662:     'CADA HORÁRIO (HH:MM) IDENTIFICA UMA ÚNICA CORRIDA: nunca retorne dois itens com o mesmo "time" — se o mesmo horário aparecer repetido, é o mesmo cartão visto duas vezes, retorne só um. ' +
+7663:     'LINHAS DIVISÓRIAS: cada corrida fica delimitada por LINHAS HORIZONTAIS FINAS na tela. O bloco de uma corrida é: data/hora → forma de pagamento → Pop + valor → tag de taxa → endereços → linha fina → status verde ("Pago" ou "Pedido finalizado"). Use essas linhas finas como fronteira: TODOS os campos de uma corrida (hora, valor, taxa, endereços, status) ficam juntos dentro do mesmo bloco, entre duas linhas finas. NUNCA combine um campo de um bloco com um campo de outro bloco — se uma linha fina separa a data/hora de um valor ou endereço, eles pertencem a corridas DIFERENTES. ' +
+7664:     'O valor R$X,XX de cada corrida está DENTRO do mesmo cartão que a data/hora dela (mesma caixa, entre a linha da data e o status final) — NUNCA use o valor de um cartão vizinho de cima ou de baixo. Se o valor do cartão não estiver visível por inteiro dentro dele, IGNORE a corrida em vez de pegar o valor de outro cartão. ' +
+7665:     'BAIRRO NUNCA É A CIDADE: a linha de endereço da 99 termina com a CIDADE e UF (ex: "..., Teresópolis - RJ") e muitas vezes NEM TEM bairro — só rua/estrada, número, CEP e cidade (ex: "Estr. Teresópolis x Friburgo, nº 8500, 25976-655, Teresópolis - RJ"). Nesse caso use o nome da rua/estrada em "origin"/"dest" (no exemplo: "Estr. Teresópolis x Friburgo"). O nome da cidade sozinho NUNCA vai em "origin"/"dest" — cuidado: a palavra "Teresópolis" pode fazer parte do nome de uma estrada (aí pode) mas nunca deve ser usada sozinha por ser a cidade do fim da linha. Sem rua legível, use "" (string vazia). ' +
+7666:     'IGNORE corridas com valor R$0,00 ou cujo valor não esteja claramente legível — corrida real da 99 sempre tem valor maior que zero. ' +
+7667:     'AUTOCONFERÊNCIA FINAL: antes de devolver o JSON, revise item por item e confirme: (1) o bloco da corrida estava 100% delimitado NESTA imagem — data/hora própria do cartão (não colada no cabeçalho fixo) + status na base + linhas finas; (2) time, value, taxa e endereços vieram TODOS do MESMO cartão; (3) nenhum "time" foi copiado, adivinhado ou "lembrado" de outro cartão/frame — se a data/hora não está escrita nesta imagem colada nesse cartão, o item inteiro sai do JSON. Remova qualquer item que não passe nas três checagens. ' +
+7668:     '"km" e "duration" sempre 0 pois não aparecem no histórico. ' +
+7669:     '"dinamico" e "gorjeta" sempre 0.00 pois não aparecem no histórico da 99. ' +
+7670:     'Formato de cada item: {"platform":"99","time":"HH:MM","value":0.00,"km":0.0,"duration":0,"category":"99Pop","origin":"bairro","originFull":"endereço completo","dest":"bairro","destFull":"endereço completo","dinamico":0.00,"gorjeta":0.00,"pedagio":0.00,"serviceFee":0.00,"dinheiro":false}. "serviceFee" é sempre o número da tag "Taxa Fixa de X%" convertido pra decimal (15% → 0.15). "dinheiro":true quando aparecer "Ganhos pagos em dinheiro".\n\n' +
+7671:     '=== SE FOR 99 DETALHE ===\n' +
+7672:     'Esta tela mostra UMA única corrida, mas é ROLÁVEL: um frame de vídeo captura só uma PARTE dela por vez. Essa tela serve SÓ pra completar km, duração e endereço completo de uma corrida que a lista já identificou — NÃO extraia valor, dinheiro, taxa, dinâmico, gorjeta nem pedágio aqui (a lista já tem isso, e misturar valor lido nesta tela causava corrida duplicada/fantasma no import). Extraia como FRAGMENTO: pegue os campos abaixo que estiverem legíveis NESTE frame, deixe os que não aparecerem como null. ' +
+7673:     'Campos: "duration" = Duração convertida pra MINUTOS INTEIROS arredondados (12m50s → 13; 5m42s → 6), null se não aparecer neste frame. "km" = número de Distância (6,2 km → 6.2), null se não aparecer. "time" = horário HH:MM da data completa (ex "06/07/2026 15:51:42" → "15:51"), null se não aparecer neste frame. "originFull"/"destFull" = endereço completo dos pontos verde(origem)/laranja(destino) quando visíveis, null se não aparecerem; "origin"/"dest" = bairro extraído desses endereços (nunca a cidade sozinha — mesma regra da lista). ' +
+7674:     'Formato (retorne um array com este único item; campos não vistos = null): {"platform":"99","screen":"detail","time":null,"km":null,"duration":null,"origin":null,"originFull":null,"dest":null,"destFull":null}.\n\n' +
+7675:     'Retorne SOMENTE um único JSON array, sem texto extra. Se não houver corridas completas retorne [].';
+7676:   const requestController = new AbortController();
+7677:   const requestTimer = setTimeout(() => requestController.abort(), 25000);
+7678:   let resp;
+7679:   try {
+7680:     resp = await fetch('https://smartmobi-proxy.yurisilva1990.workers.dev', {
+7681:       method:'POST', headers:{'Content-Type':'application/json'}, signal:requestController.signal,
+7682:       body: JSON.stringify({model:'claude-haiku-4-5-20251001', max_tokens:1500,
+7683:         messages:[{role:'user', content:[{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:prompt}]}]})
+7684:     });
+===== function extractVideoFrames hits=1 =====
+===== async function uploadImportVideo hits=1 =====
+7041:   openMo('mo-import');
+7042: }
+7043: function importPrecheckSkip() {
+7044:   importPrecheck = { uberCount: null, uberValue: null, p99Count: null, p99Value: null };
+7045:   closeMo('mo-import-precheck');
+7046:   openMo('mo-import');
+7047: }
+7048: 
+7049: function renderImportRing(found, target, foundVal, targetVal, statusHtml, isWarn) {
+7050:   const hasTarget = target > 0;
+7051:   const pct = hasTarget ? Math.min(100, found/target*100) : 0;
+7052:   const deg = Math.round(pct*3.6);
+7053:   const ringColor = isWarn ? '#F59E0B' : '#22C55E';
+7054:   const ringBg = hasTarget ? `conic-gradient(${ringColor} 0deg ${deg}deg, #E2E8F0 ${deg}deg 360deg)` : '#E2E8F0';
+7055:   const countHtml = hasTarget ? `${found}<span style="font-size:16px;color:#94A3B8">/${target}</span>` : `${found}`;
+7056:   const valHtml = hasTarget ? `${DB.fRI(foundVal)} de ${DB.fRI(targetVal)} já identificados` : `${DB.fRI(foundVal)} identificados até agora`;
+7057:   return `<div style="display:flex;flex-direction:column;align-items:center;padding:30px 0 10px">
+7058:     <div style="width:130px;height:130px;border-radius:50%;background:${ringBg};display:flex;align-items:center;justify-content:center;margin-bottom:20px;position:relative;transition:background .4s">
+7059:       <div style="position:absolute;inset:8px;border-radius:50%;background:#fff"></div>
+7060:       <div style="position:relative;text-align:center">
+7061:         <div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:28px;color:#0F172A">${countHtml}</div>
+7062:         <div style="font-size:10px;color:#64748B;font-weight:700;margin-top:2px">CORRIDAS</div>
+7063:       </div>
+7064:     </div>
+7065:     <div style="font-size:13.5px;font-weight:700;color:#0F172A;margin-bottom:5px;display:flex;align-items:center;gap:6px">${statusHtml}</div>
+7066:     <div style="font-size:12px;color:#64748B">${valHtml}</div>
+7067:   </div>`;
+7068: }
+7069: 
+7070: // Tenta de novo (até 3x) antes de desistir de um print/frame — evita que um
+7071: // erro passageiro de rede derrube a corrida inteira do import silenciosamente.
+7072: async function extractWithRetry(fn, onRetry, maxAttempts) {
+7073:   maxAttempts = maxAttempts || 3;
+7074:   let lastErr;
+7075:   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+7076:     try { return await fn(); }
+7077:     catch(e) {
+7078:       lastErr = e;
+7079:       if (attempt < maxAttempts) { onRetry(attempt+1, maxAttempts); await new Promise(r => setTimeout(r, 800)); }
+7080:     }
+7081:   }
+7082:   throw lastErr;
+7083: }
+7084: 
+7085: // Sobe o vídeo original pro Storage (bucket import-videos, retenção de
+7086: // 180 dias) e registra em import_videos — pedido do Yuri (16/08/2026):
+7087: // base pra confirmação de valor real (campeonatos/incentivos futuros) e
+7088: // pra dar dá pra conferir manualmente qualquer corrida em disputa. Falha
+7089: // de upload NUNCA trava o import (retorna null, segue sem vínculo) — o
+7090: // vídeo é auditoria extra, não pode ser bloqueio de fluxo.
+7091: async function uploadImportVideo(file, plat, operationalDate) {
+7092:   if (!_supaUser) return null;
+7093:   try {
+7094:     const ext = (file.name && file.name.includes('.')) ? file.name.split('.').pop().toLowerCase() : 'mp4';
+7095:     const opDate = operationalDate || S.curDate || DB.today();
+7096:     const opPlat = normalizeOperationalPlatform(plat);
+7097:     const opRange = operationalRangeForPlatform(opPlat, opDate);
+7098:     const path = `${_supaUser.id}/${opDate}/${opPlat}/${DB.uid()}.${ext}`;
+7099:     const { error: upErr } = await _SUPA.storage.from('import-videos').upload(path, file, {
+7100:       contentType: file.type || 'video/mp4'
+7101:     });
+7102:     if (upErr) { console.warn('upload vídeo falhou (segue sem vínculo):', upErr); return null; }
+7103:     const { data, error } = await _SUPA.from('import_videos').insert({
+7104:       user_id: _supaUser.id, storage_path: path, file_size_bytes: file.size || null,
+7105:       platform: opPlat, operational_date: opDate,
+7106:       period_start: new Date(opRange.startMs).toISOString(),
+7107:       period_end: new Date(opRange.endMs).toISOString()
+7108:     }).select('id').single();
+7109:     if (error) { console.warn('registro import_videos falhou (segue sem vínculo):', error); return null; }
+7110:     return data.id;
+7111:   } catch(e) { console.warn('uploadImportVideo erro:', e); return null; }
+7112: }
+7113: async function processImportBatch(images, videos, plat) {
+7114:   const operationalDate = S.curDate || DB.today();
+7115:   const operationalPlat = normalizeOperationalPlatform(plat);
+7116:   window._pendingImportOperationalDate = operationalDate;
+7117:   window._pendingImportPlatform = operationalPlat;
+7118:   const targetCount = (importPrecheck.uberCount||0) + (importPrecheck.p99Count||0);
+7119:   const targetValue = (importPrecheck.uberValue||0) + (importPrecheck.p99Value||0);
+7120:   const totalImgs = images.length, totalVids = videos.length;
+7121:   const label = [totalImgs?`${totalImgs} print${totalImgs>1?'s':''}`:'', totalVids?`${totalVids} vídeo${totalVids>1?'s':''}`:''].filter(Boolean).join(' + ');
+7122:   document.getElementById('ic-title').textContent = 'Analisando ' + label;
+7123:   document.getElementById('ic-btn').style.display = 'none';
+7124:   openMo('mo-import-confirm');
+7125: 
+7126:   const unique = [];
+7127:   const details = [];
+7128:   const seen = new Set();
+7129:   let foundCount = 0, foundVal = 0;
+7130:   let curDetail = null; // acumulador do fragmento de detalhe em aberto
+7131:   const flushDetail = () => { if (curDetail) { details.push(curDetail); curDetail = null; } };
+7132:   const mergeDetailFrag = (t) => {
+7133:     // Decide se é o MESMO cartão de detalhe (outro pedaço do mesmo scroll)
+7134:     // usando horário e endereço — nunca valor. Valor podia vir ligeiramente
+7135:     // diferente entre frames ("Você ganhou" vs "Total") e isso fazia o
+7136:     // mesmo cartão virar DOIS fragmentos, que depois viravam duas corridas
+7137:     // (uma real + uma fantasma) no import.
+7138:     const conflicts = (a, b) => a != null && b != null && a !== b;
+7139:     const sameRide = curDetail && (
+7140:       (t.time && curDetail.time) ? t.time === curDetail.time
+7141:         : (!conflicts(curDetail.originFull, t.originFull) && !conflicts(curDetail.destFull, t.destFull))
+7142:     );
+7143:     if (sameRide) {
+7144:       // mesmo cartão — preenche só o que esse fragmento ainda não tinha
+7145:       if (curDetail.km == null && t.km != null) curDetail.km = t.km;
+7146:       if (curDetail.duration == null && t.duration != null) curDetail.duration = t.duration;
+7147:       if (!curDetail.time && t.time) curDetail.time = t.time;
+7148:       if (!curDetail.originFull && t.originFull) { curDetail.originFull = t.originFull; curDetail.origin = t.origin; }
+7149:       if (!curDetail.destFull && t.destFull) { curDetail.destFull = t.destFull; curDetail.dest = t.dest; }
+7150:     } else {
+7151:       // horário ou endereço batendo diferente do acumulador — é outra
+7152:       // corrida: fecha o anterior e abre um novo
+7153:       flushDetail();
+7154:       curDetail = t;
+7155:     }
+7156:   };
+7157:   // Valida e deduplica NA HORA, frame a frame — o contador do anel só sobe
+7158:   // com corrida nova validada. Antes somava a extração bruta de cada frame,
+7159:   // e como os frames de vídeo se sobrepõem, a mesma corrida contava várias
+7160:   // vezes (ex: 37/17 na tela sendo que eram 17 corridas reais).
+7161:   const absorb = (trips) => {
+7162:     let sawList = false;
+7163:     (trips||[]).forEach(t => {
+7164:       if (t.screen === 'detail') {
+7165:         // Tela de detalhe: só km/tempo/endereço interessam — sem valor.
+7166:         // Se o fragmento não trouxe NENHUM desses três, não vale a pena.
+7167:         if (t.km == null && t.duration == null && !t.originFull && !t.destFull) return;
+7168:         mergeDetailFrag(t); return;
+7169:       }
+7170:       if (!(t.value > 0)) return; // fusão/cartão cortado gera R$0,00 — nunca é corrida real
+7171:       sawList = true;
+7172:       t.time = normTime(t.time);
+7173:       const key = t.time+'_'+(t.value||0).toFixed(2);
+7174:       if (seen.has(key)) return;
+7175:       seen.add(key);
+7176:       unique.push(t);
+7177:       foundCount++; foundVal += (t.value||0);
+7178:     });
+7179:     if (sawList) flushDetail(); // voltou pra tela de lista — fecha o detalhe que tava em aberto
+7180:   };
+7181:   const dot = '<span style="width:6px;height:6px;border-radius:50%;background:#22C55E;display:inline-block;animation:pulseDot 1s infinite ease-in-out"></span>';
+7182:   const retryIcon = '<svg style="animation:vspin 1s linear infinite" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#D97706" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-2.6-6.4"/></svg>';
+7183:   const updateRing = (statusHtml, isWarn) => {
+7184:     document.getElementById('ic-body').innerHTML = renderImportRing(foundCount, targetCount, foundVal, targetValue, statusHtml, isWarn);
+7185:   };
+7186:   updateRing('Iniciando ' + dot, false);
+7187: 
+7188:   for (let i = 0; i < images.length; i++) {
+7189:     try {
+7190:       const trips = await extractWithRetry(
+7191:         () => extractTripsFromImage(images[i], plat),
+7192:         () => updateRing(retryIcon + ' Processando novamente...', true)
+7193:       );
+7194:       absorb(trips);
+7195:     } catch(e) { console.warn('Erro print '+(i+1)+' (desistiu após 3 tentativas):', e); }
+7196:     updateRing('Analisando print' + (totalImgs>1 ? ' ' + Math.min(i+2,totalImgs) + ' de ' + totalImgs : '') + ' ' + dot, false);
+7197:   }
+7198:   const videoUploads = [];
+7199:   let videoFrameReadFailed = false;
+7200:   for (let v = 0; v < videos.length; v++) {
+7201:     videoUploads.push(uploadImportVideo(videos[v], operationalPlat, operationalDate));
+7202:     try {
+7203:       updateRing('Preparando vídeo ' + dot, false);
+7204:       const frames = await extractVideoFrames(videos[v], (done, total) => {
+7205:         updateRing('Preparando vídeo · ' + done + '/' + total + ' quadros ' + dot, false);
+7206:       });
+7207:       for (let i = 0; i < frames.length; i++) {
+7208:         try {
+7209:           const trips = await extractWithRetry(
+7210:             () => extractTripsFromBase64(frames[i], 'image/jpeg', plat),
+7211:             () => updateRing(retryIcon + ' Processando novamente...', true)
+7212:           );
+7213:           absorb(trips);
+7214:         } catch(e) { console.warn('Frame erro (desistiu após 3 tentativas):', e); }
+7215:         updateRing('Analisando vídeo · ' + (i+1) + '/' + frames.length + ' quadros ' + dot, false);
+7216:       }
+7217:     } catch(e) { videoFrameReadFailed = true; console.warn('Erro vídeo '+(v+1)+':', e); }
+7218:   }
+7219:   if (videos.length && videoFrameReadFailed && unique.length === 0) {
+7220:     showToast('Não consegui decodificar os quadros deste vídeo neste aparelho. O arquivo pode ser válido; tente novamente.', 'error');
+7221:     closeMo('mo-import-confirm');
+7222:     return;
+7223:   }
+7224: 
+7225:   // Guarda o(s) id(s) do(s) vídeo(s) já salvos no Storage — usado em
+7226:   // confirmImport() pra vincular cada corrida ao vídeo que a confirmou
+7227:   // (auditoria manual futura, retenção de 180 dias).
+7228:   const _videoUploadResults = await Promise.all(videoUploads);
+7229:   window._pendingImportVideoIds = _videoUploadResults.filter(Boolean);
+7230:   if (videos.length && window._pendingImportVideoIds.length < videos.length) {
+7231:     showToast('Corridas importadas, mas o vídeo de auditoria não pôde ser salvo — confira sua conexão.', 'error');
+7232:   }
+7233:   flushDetail(); // fragmento de detalhe que ficou aberto no fim do vídeo
+7234: 
+7235:   // Resolve conflitos de horário: a regra pedida pra IA é "cada horário =
+7236:   // uma corrida só", mas o dedup acima só barra repetição idêntica
+7237:   // (mesmo horário E mesmo valor) — se o mesmo horário veio com valores
+7238:   // DIFERENTES em frames diferentes (mistura de cartão vizinho num frame
+7239:   // só), os dois passavam pra lista como corridas separadas, inflando a
+7240:   // contagem e o total. Aqui, pra cada (plataforma, horário), fica só a
+7241:   // leitura de valor que mais se repetiu entre os frames — a leitura
+7242:   // certa tende a se confirmar igual em vários frames seguidos (o vídeo
+7243:   // se sobrepõe), enquanto uma leitura errada por mistura de cartão
+7244:   // costuma aparecer uma vez só.
+7245:   function resolveTimeConflicts(list) {
+7246:     const groups = new Map();
+7247:     list.forEach(t => {
+7248:       const k = (t.platform || '') + '_' + t.time;
+7249:       (groups.get(k) || groups.set(k, []).get(k)).push(t);
+7250:     });
+7251:     const resolved = [];
+7252:     groups.forEach(items => {
+7253:       if (items.length === 1) { resolved.push(items[0]); return; }
+7254:       const byValue = new Map();
+7255:       items.forEach(t => {
+7256:         const vk = (t.value || 0).toFixed(2);
+7257:         (byValue.get(vk) || byValue.set(vk, []).get(vk)).push(t);
+7258:       });
+7259:       let best = null;
+7260:       byValue.forEach(arr => { if (!best || arr.length > best.length) best = arr; });
+7261:       // dentro do grupo vencedor, prefere o item com endereço mais completo
+7262:       let rep = best[0];
+7263:       best.forEach(t => {
+7264:         const len = (t.originFull || '').length + (t.destFull || '').length;
+7265:         const repLen = (rep.originFull || '').length + (rep.destFull || '').length;
+7266:         if (len > repLen) rep = t;
+7267:       });
+7268:       resolved.push(rep);
+7269:     });
+7270:     return resolved;
+7271:   }
+7272:   const resolvedUnique = resolveTimeConflicts(unique);
+7273:   unique.length = 0;
+7274:   unique.push(...resolvedUnique);
+7275: 
+7276:   // Funde os detalhes nas corridas da lista — SÓ completa km/tempo/endereço
+7277:   // de uma corrida que a LISTA já confirmou (com valor de verdade). Nunca
+7278:   // cria corrida nova a partir de detalhe sozinho: sem valor, não tem como
+7279:   // confirmar que é real, e foi exatamente isso que gerava corrida fantasma
+7280:   // no import (fragmento de detalhe virando corrida "avulsa" por engano).
+7281:   details.forEach(d => {
+7282:     let cand = null;
+7283:     if (d.time) cand = unique.find(u => u.time === d.time && !u._enriched);
+7284:     if (!cand && (d.originFull || d.destFull)) {
+7285:       cand = unique.find(u => !u._enriched &&
+7286:         ((d.originFull && u.originFull === d.originFull) || (d.destFull && u.destFull === d.destFull)));
+7287:     }
+7288:     if (cand) {
+7289:       cand._enriched = true;
+7290:       if (d.km != null && d.km > 0)       { cand.km = d.km; cand.kmEstimado = false; }
+7291:       if (d.duration != null && d.duration > 0) cand.duration = d.duration;
+7292:       // Endereço do detalhe é a linha inteira, sem truncar — prefere ele.
+7293:       if (d.originFull) { cand.originFull = d.originFull; cand.origin = d.origin; }
+7294:       if (d.destFull)   { cand.destFull = d.destFull; cand.dest = d.dest; }
+7295:     }
+7296:   });
+7297: 
+7298:   const day = DB.day(S.curDate);
+7299: 
+7300:   // Casa cada corrida do vídeo com auto_trips do dia ANTES de mostrar a
+7301:   // tela (pedido do Yuri, 16/08/2026) — permite separar "vai só corrigir
+7302:   // valor" de "é corrida nova" já na seleção, e esconder o que não muda
+7303:   // nada em vez de mostrar tudo misturado.
+7304:   const autoTripsPool = (await loadAutoTripsForOperationalDay(operationalPlat, operationalDate)) || [];
+7305:   const numEq = (a,b,tol) => Math.abs((a||0)-(b||0)) <= (tol||0.02);
+7306:   const annotated = unique.map((t,i) => {
+7307:     const matched = matchAutoTrip(t, autoTripsPool);
+7308:     if (matched) autoTripsPool.splice(autoTripsPool.indexOf(matched), 1); // consumido — nunca casa duas vezes
+7309:     const base = {...t, _sel:true, _idx:i,
+7310:       platform: t.platform === '99' ? '99' : 'uber',
+===== mo-import-file hits=0 =====
+===== processImportBatch( hits=2 =====
+6966:   if (full) { h = parseInt(full[1]); m = parseInt(full[2] || 0); }
+6967:   else if (justH) { h = parseInt(justH[1]); }
+6968:   else if (justM) { m = parseInt(justM[1]); }
+6969:   else if (justNum) { m = parseInt(justNum[1]); }
+6970:   else return null;
+6971:   return Math.max(0, h*3600 + m*60);
+6972: }
+6973: function updateTempoAdjDisplay() {
+6974:   const inp = document.getElementById('tempoadj-val');
+6975:   if (inp) inp.value = fmtDur(tempoAdjCurSecs / 60);
+6976: }
+6977: function tempoAdjStep(deltaMin) {
+6978:   tempoAdjCurSecs = Math.max(0, tempoAdjCurSecs + deltaMin * 60);
+6979:   updateTempoAdjDisplay();
+6980: }
+6981: function tempoAdjInputCommit() {
+6982:   const inp = document.getElementById('tempoadj-val');
+6983:   if (!inp) return;
+6984:   const parsed = parseTempoAdjInput(inp.value);
+6985:   if (parsed === null) { updateTempoAdjDisplay(); return; }
+6986:   tempoAdjCurSecs = parsed;
+6987:   updateTempoAdjDisplay();
+6988: }
+6989: function saveTempoAdjust() {
+6990:   tempoAdjInputCommit();
+6991:   const day = DB.day(S.curDate);
+6992:   day.tempoAdjust = Math.round(tempoAdjCurSecs - tempoAdjBaseSecs);
+6993:   DB.saveDay(day);
+6994:   SYNC.push('day_meta', { date: S.curDate, tempo_adjust_secs: day.tempoAdjust });
+6995:   closeMo('mo-tempo-adjust');
+6996:   renderJornada();
+6997:   showToast('Tempo total ajustado.');
+6998: }
+6999: 
+7000: // ── IMPORT AI ─────────────────────────────────────────────────
+7001: // Detecta vídeo por MIME type, com fallback por extensão do nome do
+7002: // arquivo — em alguns celulares (Live Photo/Motion Photo, ou o picker de
+7003: // Arquivos) o navegador reporta file.type vazio ou incorreto, e o print
+7004: // (imagem) acabava sendo classificado errado e descartado.
+7005: function isVideoFile(f) {
+7006:   if (f.type) return f.type.startsWith('video/');
+7007:   return /\.(mp4|mov|webm|mkv|avi|m4v|3gp)$/i.test(f.name||'');
+7008: }
+7009: function handleImport(input, plat) {
+7010:   if (!input.files.length) return;
+7011:   const files = Array.from(input.files);
+7012:   closeMo('mo-import');
+7013:   const videos = files.filter(isVideoFile);
+7014:   const images = files.filter(f => !isVideoFile(f));
+7015:   if (!videos.length && !images.length) return;
+7016:   processImportBatch(images, videos, plat);
+7017: }
+7018: // Processa imagens E vídeos da mesma seleção juntos — antes, se um vídeo
+7019: // viesse junto (ex: Live Photo confundida com foto), TODAS as imagens da
+7020: // seleção eram silenciosamente descartadas (só processava videos[0]).
+7021: let importPrecheck = { uberCount: null, uberValue: null, p99Count: null, p99Value: null };
+7022: 
+7023: function openImportPrecheck() {
+7024:   ['ipc-uber-count','ipc-uber-value','ipc-99-count','ipc-99-value'].forEach(id => {
+7025:     const el = document.getElementById(id); if (el) el.value = '';
+7026:   });
+7027:   openMo('mo-import-precheck');
+7028: }
+7029: function _readPrecheckField(id) {
+7030:   const v = document.getElementById(id)?.value;
+7031:   return (v === '' || v === undefined || v === null) ? null : parseFloat(String(v).replace(',','.'));
+7032: }
+7033: function importPrecheckNext() {
+7034:   importPrecheck = {
+7035:     uberCount: _readPrecheckField('ipc-uber-count'),
+7036:     uberValue: _readPrecheckField('ipc-uber-value'),
+7037:     p99Count:  _readPrecheckField('ipc-99-count'),
+7038:     p99Value:  _readPrecheckField('ipc-99-value')
+7039:   };
+7040:   closeMo('mo-import-precheck');
+7041:   openMo('mo-import');
+7042: }
+7043: function importPrecheckSkip() {
+7044:   importPrecheck = { uberCount: null, uberValue: null, p99Count: null, p99Value: null };
+7045:   closeMo('mo-import-precheck');
+7046:   openMo('mo-import');
+7047: }
+7048: 
+7049: function renderImportRing(found, target, foundVal, targetVal, statusHtml, isWarn) {
+7050:   const hasTarget = target > 0;
+7051:   const pct = hasTarget ? Math.min(100, found/target*100) : 0;
+7052:   const deg = Math.round(pct*3.6);
+7053:   const ringColor = isWarn ? '#F59E0B' : '#22C55E';
+7054:   const ringBg = hasTarget ? `conic-gradient(${ringColor} 0deg ${deg}deg, #E2E8F0 ${deg}deg 360deg)` : '#E2E8F0';
+7055:   const countHtml = hasTarget ? `${found}<span style="font-size:16px;color:#94A3B8">/${target}</span>` : `${found}`;
+7056:   const valHtml = hasTarget ? `${DB.fRI(foundVal)} de ${DB.fRI(targetVal)} já identificados` : `${DB.fRI(foundVal)} identificados até agora`;
+7057:   return `<div style="display:flex;flex-direction:column;align-items:center;padding:30px 0 10px">
+7058:     <div style="width:130px;height:130px;border-radius:50%;background:${ringBg};display:flex;align-items:center;justify-content:center;margin-bottom:20px;position:relative;transition:background .4s">
+7059:       <div style="position:absolute;inset:8px;border-radius:50%;background:#fff"></div>
+7060:       <div style="position:relative;text-align:center">
+7061:         <div style="font-family:'Poppins',sans-serif;font-weight:900;font-size:28px;color:#0F172A">${countHtml}</div>
+7062:         <div style="font-size:10px;color:#64748B;font-weight:700;margin-top:2px">CORRIDAS</div>
+7063:       </div>
+7064:     </div>
+7065:     <div style="font-size:13.5px;font-weight:700;color:#0F172A;margin-bottom:5px;display:flex;align-items:center;gap:6px">${statusHtml}</div>
+7066:     <div style="font-size:12px;color:#64748B">${valHtml}</div>
+7067:   </div>`;
+7068: }
+7069: 
+7070: // Tenta de novo (até 3x) antes de desistir de um print/frame — evita que um
+7071: // erro passageiro de rede derrube a corrida inteira do import silenciosamente.
+7072: async function extractWithRetry(fn, onRetry, maxAttempts) {
+7073:   maxAttempts = maxAttempts || 3;
+7074:   let lastErr;
+7075:   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+7076:     try { return await fn(); }
+7077:     catch(e) {
+7078:       lastErr = e;
+7079:       if (attempt < maxAttempts) { onRetry(attempt+1, maxAttempts); await new Promise(r => setTimeout(r, 800)); }
+7080:     }
+7081:   }
+7082:   throw lastErr;
+7083: }
+7084: 
+7085: // Sobe o vídeo original pro Storage (bucket import-videos, retenção de
+7086: // 180 dias) e registra em import_videos — pedido do Yuri (16/08/2026):
+7087: // base pra confirmação de valor real (campeonatos/incentivos futuros) e
+7088: // pra dar dá pra conferir manualmente qualquer corrida em disputa. Falha
+7089: // de upload NUNCA trava o import (retorna null, segue sem vínculo) — o
+7090: // vídeo é auditoria extra, não pode ser bloqueio de fluxo.
+7091: async function uploadImportVideo(file, plat, operationalDate) {
+7092:   if (!_supaUser) return null;
+7093:   try {
+7094:     const ext = (file.name && file.name.includes('.')) ? file.name.split('.').pop().toLowerCase() : 'mp4';
+7095:     const opDate = operationalDate || S.curDate || DB.today();
+7096:     const opPlat = normalizeOperationalPlatform(plat);
+7097:     const opRange = operationalRangeForPlatform(opPlat, opDate);
+7098:     const path = `${_supaUser.id}/${opDate}/${opPlat}/${DB.uid()}.${ext}`;
+7099:     const { error: upErr } = await _SUPA.storage.from('import-videos').upload(path, file, {
+7100:       contentType: file.type || 'video/mp4'
+7101:     });
+7102:     if (upErr) { console.warn('upload vídeo falhou (segue sem vínculo):', upErr); return null; }
+7103:     const { data, error } = await _SUPA.from('import_videos').insert({
+7104:       user_id: _supaUser.id, storage_path: path, file_size_bytes: file.size || null,
+7105:       platform: opPlat, operational_date: opDate,
+7106:       period_start: new Date(opRange.startMs).toISOString(),
+7107:       period_end: new Date(opRange.endMs).toISOString()
+7108:     }).select('id').single();
+7109:     if (error) { console.warn('registro import_videos falhou (segue sem vínculo):', error); return null; }
+7110:     return data.id;
+7111:   } catch(e) { console.warn('uploadImportVideo erro:', e); return null; }
+7112: }
+7113: async function processImportBatch(images, videos, plat) {
+7114:   const operationalDate = S.curDate || DB.today();
+7115:   const operationalPlat = normalizeOperationalPlatform(plat);
+7116:   window._pendingImportOperationalDate = operationalDate;
+7117:   window._pendingImportPlatform = operationalPlat;
+7118:   const targetCount = (importPrecheck.uberCount||0) + (importPrecheck.p99Count||0);
+7119:   const targetValue = (importPrecheck.uberValue||0) + (importPrecheck.p99Value||0);
+7120:   const totalImgs = images.length, totalVids = videos.length;
+7121:   const label = [totalImgs?`${totalImgs} print${totalImgs>1?'s':''}`:'', totalVids?`${totalVids} vídeo${totalVids>1?'s':''}`:''].filter(Boolean).join(' + ');
+7122:   document.getElementById('ic-title').textContent = 'Analisando ' + label;
+7123:   document.getElementById('ic-btn').style.display = 'none';
+7124:   openMo('mo-import-confirm');
+7125: 
+7126:   const unique = [];
+7127:   const details = [];
+7128:   const seen = new Set();
+7129:   let foundCount = 0, foundVal = 0;
+7130:   let curDetail = null; // acumulador do fragmento de detalhe em aberto
+7131:   const flushDetail = () => { if (curDetail) { details.push(curDetail); curDetail = null; } };
+7132:   const mergeDetailFrag = (t) => {
+7133:     // Decide se é o MESMO cartão de detalhe (outro pedaço do mesmo scroll)
+7134:     // usando horário e endereço — nunca valor. Valor podia vir ligeiramente
+7135:     // diferente entre frames ("Você ganhou" vs "Total") e isso fazia o
+7136:     // mesmo cartão virar DOIS fragmentos, que depois viravam duas corridas
+7137:     // (uma real + uma fantasma) no import.
+7138:     const conflicts = (a, b) => a != null && b != null && a !== b;
+7139:     const sameRide = curDetail && (
+7140:       (t.time && curDetail.time) ? t.time === curDetail.time
+7141:         : (!conflicts(curDetail.originFull, t.originFull) && !conflicts(curDetail.destFull, t.destFull))
+7142:     );
+7143:     if (sameRide) {
+7144:       // mesmo cartão — preenche só o que esse fragmento ainda não tinha
+7145:       if (curDetail.km == null && t.km != null) curDetail.km = t.km;
+7146:       if (curDetail.duration == null && t.duration != null) curDetail.duration = t.duration;
+7147:       if (!curDetail.time && t.time) curDetail.time = t.time;
+7148:       if (!curDetail.originFull && t.originFull) { curDetail.originFull = t.originFull; curDetail.origin = t.origin; }
+7149:       if (!curDetail.destFull && t.destFull) { curDetail.destFull = t.destFull; curDetail.dest = t.dest; }
+7150:     } else {
+7151:       // horário ou endereço batendo diferente do acumulador — é outra
+7152:       // corrida: fecha o anterior e abre um novo
+7153:       flushDetail();
+7154:       curDetail = t;
+7155:     }
+7156:   };
+7157:   // Valida e deduplica NA HORA, frame a frame — o contador do anel só sobe
+7158:   // com corrida nova validada. Antes somava a extração bruta de cada frame,
+7159:   // e como os frames de vídeo se sobrepõem, a mesma corrida contava várias
+7160:   // vezes (ex: 37/17 na tela sendo que eram 17 corridas reais).
+7161:   const absorb = (trips) => {
+7162:     let sawList = false;
+7163:     (trips||[]).forEach(t => {
+7164:       if (t.screen === 'detail') {
+7165:         // Tela de detalhe: só km/tempo/endereço interessam — sem valor.
+7166:         // Se o fragmento não trouxe NENHUM desses três, não vale a pena.
+7167:         if (t.km == null && t.duration == null && !t.originFull && !t.destFull) return;
+7168:         mergeDetailFrag(t); return;
+7169:       }
+7170:       if (!(t.value > 0)) return; // fusão/cartão cortado gera R$0,00 — nunca é corrida real
+7171:       sawList = true;
+7172:       t.time = normTime(t.time);
+7173:       const key = t.time+'_'+(t.value||0).toFixed(2);
+7174:       if (seen.has(key)) return;
+7175:       seen.add(key);
+7176:       unique.push(t);
+7177:       foundCount++; foundVal += (t.value||0);
+7178:     });
+7179:     if (sawList) flushDetail(); // voltou pra tela de lista — fecha o detalhe que tava em aberto
+7180:   };
+7181:   const dot = '<span style="width:6px;height:6px;border-radius:50%;background:#22C55E;display:inline-block;animation:pulseDot 1s infinite ease-in-out"></span>';
+7182:   const retryIcon = '<svg style="animation:vspin 1s linear infinite" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#D97706" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-2.6-6.4"/></svg>';
+7183:   const updateRing = (statusHtml, isWarn) => {
+7184:     document.getElementById('ic-body').innerHTML = renderImportRing(foundCount, targetCount, foundVal, targetValue, statusHtml, isWarn);
+7185:   };
+7186:   updateRing('Iniciando ' + dot, false);
+7187: 
+7188:   for (let i = 0; i < images.length; i++) {
+7189:     try {
+7190:       const trips = await extractWithRetry(
+7191:         () => extractTripsFromImage(images[i], plat),
+7192:         () => updateRing(retryIcon + ' Processando novamente...', true)
+7193:       );
+7194:       absorb(trips);
+7195:     } catch(e) { console.warn('Erro print '+(i+1)+' (desistiu após 3 tentativas):', e); }
+7196:     updateRing('Analisando print' + (totalImgs>1 ? ' ' + Math.min(i+2,totalImgs) + ' de ' + totalImgs : '') + ' ' + dot, false);
+7197:   }
+7198:   const videoUploads = [];
+7199:   let videoFrameReadFailed = false;
+7200:   for (let v = 0; v < videos.length; v++) {
+7201:     videoUploads.push(uploadImportVideo(videos[v], operationalPlat, operationalDate));
+7202:     try {
+7203:       updateRing('Preparando vídeo ' + dot, false);
+7204:       const frames = await extractVideoFrames(videos[v], (done, total) => {
+7205:         updateRing('Preparando vídeo · ' + done + '/' + total + ' quadros ' + dot, false);
+7206:       });
+7207:       for (let i = 0; i < frames.length; i++) {
+7208:         try {
+7209:           const trips = await extractWithRetry(
+7210:             () => extractTripsFromBase64(frames[i], 'image/jpeg', plat),
+7211:             () => updateRing(retryIcon + ' Processando novamente...', true)
+7212:           );
+7213:           absorb(trips);
+7214:         } catch(e) { console.warn('Frame erro (desistiu após 3 tentativas):', e); }
+7215:         updateRing('Analisando vídeo · ' + (i+1) + '/' + frames.length + ' quadros ' + dot, false);
+7216:       }
+7217:     } catch(e) { videoFrameReadFailed = true; console.warn('Erro vídeo '+(v+1)+':', e); }
+7218:   }
+7219:   if (videos.length && videoFrameReadFailed && unique.length === 0) {
+7220:     showToast('Não consegui decodificar os quadros deste vídeo neste aparelho. O arquivo pode ser válido; tente novamente.', 'error');
+7221:     closeMo('mo-import-confirm');
+7222:     return;
+7223:   }
+7224: 
+7225:   // Guarda o(s) id(s) do(s) vídeo(s) já salvos no Storage — usado em
+7226:   // confirmImport() pra vincular cada corrida ao vídeo que a confirmou
+7227:   // (auditoria manual futura, retenção de 180 dias).
+7228:   const _videoUploadResults = await Promise.all(videoUploads);
+7229:   window._pendingImportVideoIds = _videoUploadResults.filter(Boolean);
+7230:   if (videos.length && window._pendingImportVideoIds.length < videos.length) {
+7231:     showToast('Corridas importadas, mas o vídeo de auditoria não pôde ser salvo — confira sua conexão.', 'error');
+7232:   }
+7233:   flushDetail(); // fragmento de detalhe que ficou aberto no fim do vídeo
+7234: 
+7235:   // Resolve conflitos de horário: a regra pedida pra IA é "cada horário =
