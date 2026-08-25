@@ -5056,12 +5056,21 @@ function renderJourneyCard(day, isToday) {
   // sozinho quando não sobra pendência.
   const pcbEl = document.getElementById('pending-confirm-banner');
   if (pcbEl) {
-    const pendingCount = autoTripsHoje.filter(t => t.status === 'capturada' || t.status === 'estimada').length;
-    if (pendingCount > 0) {
-      pcbEl.style.display = 'flex';
-      setText('pcb-title', pendingCount + (pendingCount===1 ? ' corrida aguardando confirmação' : ' corridas aguardando confirmação'));
-    } else {
+    // Não interpreta cache ainda carregando como zero corridas. Durante refresh,
+    // mantém o último estado visual válido do mesmo dia.
+    const autoTripsReady = S._autoTripsDataDate === d;
+    if (autoTripsReady) {
+      const pendingCount = autoTripsHoje.filter(t => t.status === 'capturada' || t.status === 'estimada').length;
+      pcbEl.dataset.dataDate = d;
+      if (pendingCount > 0) {
+        pcbEl.style.display = 'flex';
+        setText('pcb-title', pendingCount + (pendingCount===1 ? ' corrida aguardando confirmação' : ' corridas aguardando confirmação'));
+      } else {
+        pcbEl.style.display = 'none';
+      }
+    } else if (pcbEl.dataset.dataDate && pcbEl.dataset.dataDate !== d) {
       pcbEl.style.display = 'none';
+      pcbEl.dataset.dataDate = d;
     }
   }
 
@@ -5071,36 +5080,10 @@ function renderJourneyCard(day, isToday) {
   // contado agora); ao encerrar, o dado sai daqui e já está consolidado no
   // "Total do dia" logo abaixo — pedido do Yuri (16/08/2026), evita
   // duplicar/deixar a mesma barra "grudada" depois de já ter encerrado.
+  // As barras são atualizadas exclusivamente pela timeline contínua V3.
+  // A rotina base não sobrescreve mais a leitura real com auto_trips.
   const jcBd = document.getElementById('jc-breakdown');
-  if (jcBd) {
-    if (live && liveElapsed > 0) {
-      jcBd.style.display = '';
-      const liveAutoTrips = autoTripsHoje.filter(t => {
-        const ts = autoTripTs(t);
-        return ts && ts >= g.start;
-      });
-      const bd = computeStatusBreakdown(liveElapsed, liveKm, liveAutoTrips);
-      setHTML('jc-bar', buildSbarHtml(bd));
-      setHTML('jc-blist', buildSrowsHtml(bd));
-    } else {
-      jcBd.style.display = 'none';
-    }
-  }
-
-  // Mesma barra, agora no card "Total do dia" — soma o dia inteiro
-  // (sessões encerradas + sessão ao vivo), então funciona em qualquer
-  // data, passada ou de hoje, não só enquanto a jornada está rodando.
   const tdBdRow = document.getElementById('td-bd-row');
-  if (tdBdRow) {
-    if (totalElapsed > 0) {
-      tdBdRow.style.display = '';
-      const tdBd = computeStatusBreakdown(totalElapsed, totalKm, autoTripsHoje);
-      setHTML('td-bd-bar', buildSbarHtml(tdBd));
-      setHTML('td-bd-list', buildSrowsHtml(tdBd));
-    } else {
-      tdBdRow.style.display = 'none';
-    }
-  }
 
   setText('jc-trips', day.trips.length + autoTripsHoje.length);
   setText('jc-trips2', day.trips.length + autoTripsHoje.length);
@@ -14269,19 +14252,8 @@ async function feedEnviarComentario(){
       }
     }catch(e){ console.warn('[JourneyStatusTimeline]',e); }
   }
+  // Compatibilidade apenas: V3 abaixo é o único renderizador automático.
   window.renderStatusTimeline=renderStatusTimeline;
-
-  if(typeof window.renderJornada==='function'){
-    const original=window.renderJornada;
-    window.renderJornada=function(){
-      const r=original.apply(this,arguments);
-      setTimeout(renderStatusTimeline,0);
-      return r;
-    };
-  }
-  setInterval(renderStatusTimeline,1000);
-  setInterval(()=>{ if(S&&S.sec==='jornada'&&S.curDate) loadStatusSegments(S.curDate); },15000);
-  setTimeout(renderStatusTimeline,500);
 })();
 </script>
 
@@ -14414,7 +14386,7 @@ async function feedEnviarComentario(){
         .order('trip_started_at',{ascending:true});
       if(!error) journeyAutoCache.set(k,{loading:false,ts:Date.now(),rows:data||[]});
     }catch(e){ journeyAutoCache.set(k,{loading:false,ts:Date.now(),rows:old?.rows||[]}); }
-    try{ if(S.sec==='jornada') setTimeout(()=>renderJornada(),0); }catch(e){}
+    try{ if(S.sec==='jornada') setTimeout(()=>{renderContinuousSessionList();renderContinuousStatusBars();},0); }catch(e){}
   }
   function journeyAutoTrips(sess,fallback){
     const k=journeyKey(sess), c=journeyAutoCache.get(k);
@@ -14450,7 +14422,7 @@ async function feedEnviarComentario(){
         .eq('user_id',_supaUser.id).eq('session_id',sess.id).order('start_ms',{ascending:true});
       if(!error) journeyStatusCache.set(k,{loading:false,ts:Date.now(),rows:data||[]});
     }catch(e){ journeyStatusCache.set(k,{loading:false,ts:Date.now(),rows:old?.rows||[]}); }
-    try{ if(S.sec==='jornada') setTimeout(()=>renderJornada(),0); }catch(e){}
+    try{ if(S.sec==='jornada') setTimeout(()=>{renderContinuousSessionList();renderContinuousStatusBars();},0); }catch(e){}
   }
   function statusBreakdownRows(rows,elapsedSec,kmTotal,clipStart,clipEnd,liveSessionId){
     const out={total:Math.max(0,Number(elapsedSec)||0),online:{sec:0,km:0,pct:0},buscando:{sec:0,km:0,pct:0},corrida:{sec:0,km:0,pct:0}};
@@ -14486,6 +14458,7 @@ async function feedEnviarComentario(){
     ensureJourneyStatus(sess);
     const c=journeyStatusCache.get(journeyKey(sess));
     if(c&&c.rows&&c.rows.length) return statusBreakdownRows(c.rows,elapsedSec,kmTotal,null,null,(S?.gps?.st==='running'?S.gps.sessionId:null));
+    if(!c || c.loading) return {total:0,online:{sec:0,km:0,pct:0},buscando:{sec:0,km:0,pct:0},corrida:{sec:0,km:0,pct:0}};
     return computeStatusBreakdown(elapsedSec,kmTotal,fallbackAuto||[]);
   };
 
@@ -14510,7 +14483,7 @@ async function feedEnviarComentario(){
         });
       }
     }catch(e){overlapSessionCache.set(dateStr,{loading:false,ts:Date.now(),rows:old?.rows||[]});}
-    try{if(S.sec==='jornada')setTimeout(()=>renderJornada(),0);}catch(e){}
+    try{if(S.sec==='jornada')setTimeout(()=>{renderContinuousSessionList();renderContinuousStatusBars();},0);}catch(e){}
   }
   function overlappingJourneyDescriptors(dateStr){
     const b=civilDayBounds(dateStr), map=new Map();
@@ -14579,20 +14552,35 @@ async function feedEnviarComentario(){
         .lt('start_ms',b.endMs).or(`end_ms.is.null,end_ms.gte.${b.startMs}`).order('start_ms',{ascending:true});
       if(!error)civilStatusCache.set(dateStr,{loading:false,ts:Date.now(),rows:data||[]});
     }catch(e){civilStatusCache.set(dateStr,{loading:false,ts:Date.now(),rows:old?.rows||[]});}
-    try{if(S.sec==='jornada')setTimeout(()=>renderJornada(),0);}catch(e){}
+    try{if(S.sec==='jornada')setTimeout(()=>{renderContinuousSessionList();renderContinuousStatusBars();},0);}catch(e){}
   }
   function renderContinuousStatusBars(){
-    if(!S?.curDate)return;ensureCivilStatus(S.curDate);
+    if(!S?.curDate)return;
+    ensureCivilStatus(S.curDate);
     const c=civilStatusCache.get(S.curDate), rows=c?.rows||[];
+    const tdRow=document.getElementById('td-bd-row');
     if(rows.length){
       const b=civilDayBounds(S.curDate), bd=statusBreakdownRows(rows,0,0,b.startMs,b.endMs,(S?.gps?.st==='running'?S.gps.sessionId:null));
-      const row=document.getElementById('td-bd-row');if(row)row.style.display='';
+      if(tdRow)tdRow.style.display='';
       try{setHTML('td-bd-bar',buildSbarHtml(bd));setHTML('td-bd-list',buildSrowsHtml(bd));}catch(e){}
+    } else if(c && !c.loading && tdRow) {
+      tdRow.style.display='none';
     }
+
+    const jcRow=document.getElementById('jc-breakdown');
     if(S?.gps?.st==='running'&&S.gps.sessionId){
       const sess={id:S.gps.sessionId,start:S.gps.start,end:null,km:S.gps.km||0,elapsed:getElapsed()};
-      ensureJourneyStatus(sess);const c2=journeyStatusCache.get(journeyKey(sess));
-      if(c2?.rows?.length){const bd=journeyBreakdownForSession(sess,getElapsed(),S.gps.km||0,[]);try{setHTML('jc-bar',buildSbarHtml(bd));setHTML('jc-blist',buildSrowsHtml(bd));}catch(e){}}
+      ensureJourneyStatus(sess);
+      const c2=journeyStatusCache.get(journeyKey(sess));
+      if(c2?.rows?.length){
+        const bd=journeyBreakdownForSession(sess,getElapsed(),S.gps.km||0,[]);
+        if(jcRow)jcRow.style.display='';
+        try{setHTML('jc-bar',buildSbarHtml(bd));setHTML('jc-blist',buildSrowsHtml(bd));}catch(e){}
+      } else if(c2 && !c2.loading && jcRow) {
+        jcRow.style.display='none';
+      }
+    } else if(jcRow) {
+      jcRow.style.display='none';
     }
   }
 
@@ -14603,6 +14591,7 @@ async function feedEnviarComentario(){
     try{renderContinuousStatusBars();}catch(e){console.warn('[continuous status]',e);}
   };
 
+  setInterval(()=>{try{if(S.sec==='jornada')renderContinuousStatusBars();}catch(e){}},1000);
   setTimeout(()=>{try{if(S.sec==='jornada')renderJornada();}catch(e){}},600);
 })();
 </script>
