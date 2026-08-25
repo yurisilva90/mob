@@ -1,4 +1,4 @@
-name: Inspecionar botão Jornada
+name: Corrigir botão Jornada
 on:
   push:
     paths:
@@ -6,29 +6,61 @@ on:
 permissions:
   contents: write
 jobs:
-  inspect:
+  patch:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Extrair estado GPS
+      - name: Corrigir renderização
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
-          lines=Path('index.html').read_text(encoding='utf-8').splitlines()
-          pats=[r'\bgps\s*:',r'\bgps\s*=',r'S\.gps\.st\s*=',r'\bst\s*:',r'function gpsStart',r'function gpsStop',r'function confirmStop',r'jc-actions',r'j-actions']
-          out=[]
-          for p in pats:
-            rx=re.compile(p)
-            hits=[(i+1,x) for i,x in enumerate(lines) if rx.search(x)]
-            out.append(f'===== {p} hits={len(hits)} =====')
-            out.extend(f'{i}: {x[:1200]}' for i,x in hits[:200])
-          Path('.tmp-journey-button.txt').write_text('\n'.join(out),encoding='utf-8')
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+
+          old="""function renderJourneyCard(day, isToday) {
+  const jc = document.getElementById('journey-card');
+  if (!jc) return;
+"""
+          new="""function renderJourneyCard(day, isToday) {
+  const jc = document.getElementById('journey-card');
+  if (!jc) return;
+  const cardDate = day?.date || S.curDate || DB.today();
+"""
+          if s.count(old)!=1: raise SystemExit(f'cabecalho renderJourneyCard inesperado: {s.count(old)}')
+          s=s.replace(old,new,1)
+
+          reps={
+            "const autoTripsReady = S._autoTripsDataDate === d;":"const autoTripsReady = S._autoTripsDataDate === cardDate;",
+            "pcbEl.dataset.dataDate = d;":"pcbEl.dataset.dataDate = cardDate;",
+            "pcbEl.dataset.dataDate !== d":"pcbEl.dataset.dataDate !== cardDate"
+          }
+          for a,b in reps.items():
+            n=s.count(a)
+            if a=="pcbEl.dataset.dataDate = d;":
+              if n!=2: raise SystemExit(f'atribuição dataDate esperada 2x, encontrada {n}')
+              s=s.replace(a,b)
+            else:
+              if n!=1: raise SystemExit(f'{a} esperado 1x, encontrado {n}')
+              s=s.replace(a,b,1)
+
+          # Sanidades diretamente ligadas ao bug do print: o botão precisa continuar
+          # existindo no HTML e o estado idle precisa preenchê-lo com gpsStart().
+          if 'id="jc-actions"' not in s: raise SystemExit('jc-actions ausente')
+          if 'state === \'idle\'' not in s or 'onclick="gpsStart()"' not in s: raise SystemExit('botão iniciar ausente')
+          if 'S._autoTripsDataDate === d' in s: raise SystemExit('referência d inválida ainda presente')
+
+          p.write_text(s,encoding='utf-8')
+          Path('.tmp-journey-button.txt').unlink(missing_ok=True)
+          Path('.github/workflows/inspect-journey-button.yml').unlink(missing_ok=True)
           PY
-      - name: Commit inspeção
+      - name: Validar e publicar
         run: |
+          grep -q 'const cardDate = day?.date || S.curDate || DB.today();' index.html
+          grep -q 'id="jc-actions"' index.html
+          grep -q 'onclick="gpsStart()"' index.html
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .tmp-journey-button.txt
-          git diff --cached --quiet || git commit -m "chore: inspecionar estado GPS da Jornada"
+          git add -A
+          git diff --cached --quiet && exit 1
+          git commit -m "fix: restaurar botão de iniciar Jornada"
           git push
