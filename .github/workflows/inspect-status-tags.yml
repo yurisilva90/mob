@@ -1,4 +1,4 @@
-name: Inspecionar status e tags
+name: Finalizar status e tags das corridas
 on:
   push:
     paths:
@@ -6,36 +6,32 @@ on:
 permissions:
   contents: write
 jobs:
-  inspect:
+  patch:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Extrair trechos precisos
+      - name: Aplicar ajuste final
+        run: python3 .tmp-finalize-trip-status.py
+      - name: Validar e publicar
         run: |
+          grep -q "capture_source === 'importada'" index.html
+          grep -q "Aguardando confirmação" index.html
+          grep -q "capture_source: 'importada'" index.html
+          grep -q "status: 'confirmada'" index.html
           python3 - <<'PY'
           from pathlib import Path
-          lines=Path('index.html').read_text(encoding='utf-8').splitlines()
-          needles=[
-            ('autoTripItem','function autoTripItem(',-5,90),
-            ('confirmImport','async function confirmImport(',-5,180),
-            ('banner','const pendingCount =',-20,45),
-            ('loadDay','async function loadAutoTripsForDay(',-5,65),
-            ('loadOperational','async function loadAutoTripsForOperationalDay(',-5,65),
-            ('autoTripsQueries',"from('auto_trips')",-8,24),
-          ]
-          out=[]
-          for label,needle,before,after in needles:
-              hits=[i for i,x in enumerate(lines) if needle in x]
-              out.append(f'===== {label} hits={len(hits)} =====')
-              for i in hits[:20]:
-                  a=max(0,i+before); b=min(len(lines),i+after)
-                  out.extend(f'{n+1}: {lines[n]}' for n in range(a,b))
-          Path('.tmp-status-precise.txt').write_text('\n'.join(out),encoding='utf-8')
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          assert "statusTxt = t.status==='confirmada' ? 'Confirmada' : 'Aguardando confirmação'" in s
+          assert "pendingCount = autoTripsHoje.filter(t => t.status !== 'confirmada' || t.value_needs_review === true).length" in s
+          Path('.tmp-finalize-trip-status.py').unlink(missing_ok=True)
+          Path('.tmp-status-tags.txt').unlink(missing_ok=True)
+          Path('.tmp-status-precise.txt').unlink(missing_ok=True)
+          Path('.github/workflows/inspect-status-tags.yml').unlink(missing_ok=True)
           PY
-      - name: Commit inspeção
-        run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .tmp-status-precise.txt
-          git diff --cached --quiet || git commit -m "chore: inspecionar consultas de corridas"
+          git add -A
+          git diff --cached --quiet && exit 1
+          git commit -m "feat: simplificar confirmação e origem das corridas"
           git push
