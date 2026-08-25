@@ -7217,7 +7217,7 @@ async function processImportBatch(images, videos, plat) {
     } catch(e) { videoFrameReadFailed = true; console.warn('Erro vídeo '+(v+1)+':', e); }
   }
   if (videos.length && videoFrameReadFailed && unique.length === 0) {
-    showToast('Não consegui ler os quadros do vídeo. Tente novamente; se persistir, envie outro formato.', 'error');
+    showToast('Não consegui decodificar os quadros deste vídeo neste aparelho. O arquivo pode ser válido; tente novamente.', 'error');
     closeMo('mo-import-confirm');
     return;
   }
@@ -7483,6 +7483,21 @@ async function extractVideoFrames(file, onProgress) {
 
     video.onloadedmetadata = async () => {
       clearTimeout(metadataTimer);
+      // loadedmetadata só garante dimensões/duração. Em Android/WebView o
+      // decoder pode ainda não ter nenhum frame disponível. Aguarda dados
+      // reais antes de iniciar os seeks, evitando canvas preto em MP4 válido.
+      if (video.readyState < 2) {
+        await new Promise((resolve, reject) => {
+          let settled = false;
+          const finish = () => { if (settled) return; settled = true; cleanup(); resolve(); };
+          const fail = () => { if (settled) return; settled = true; cleanup(); reject(new Error('Não foi possível decodificar o vídeo.')); };
+          const timer = setTimeout(fail, 12000);
+          const cleanup = () => { clearTimeout(timer); video.removeEventListener('loadeddata', finish); video.removeEventListener('canplay', finish); };
+          video.addEventListener('loadeddata', finish, {once:true});
+          video.addEventListener('canplay', finish, {once:true});
+          try { video.load(); } catch(e) {}
+        });
+      }
       // Limit canvas size for performance
       const MAX = 1080;
       const ratio = Math.min(MAX / video.videoWidth, MAX / video.videoHeight, 1);
