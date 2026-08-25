@@ -7199,8 +7199,10 @@ async function processImportBatch(images, videos, plat) {
   for (let v = 0; v < videos.length; v++) {
     videoUploads.push(uploadImportVideo(videos[v], operationalPlat, operationalDate));
     try {
-      updateRing('Analisando vídeo ' + dot, false);
-      const frames = await extractVideoFrames(videos[v]);
+      updateRing('Preparando vídeo ' + dot, false);
+      const frames = await extractVideoFrames(videos[v], (done, total) => {
+        updateRing('Preparando vídeo · ' + done + '/' + total + ' quadros ' + dot, false);
+      });
       for (let i = 0; i < frames.length; i++) {
         try {
           const trips = await extractWithRetry(
@@ -7209,7 +7211,7 @@ async function processImportBatch(images, videos, plat) {
           );
           absorb(trips);
         } catch(e) { console.warn('Frame erro (desistiu após 3 tentativas):', e); }
-        updateRing('Analisando vídeo ' + dot, false);
+        updateRing('Analisando vídeo · ' + (i+1) + '/' + frames.length + ' quadros ' + dot, false);
       }
     } catch(e) { console.warn('Erro vídeo '+(v+1)+':', e); }
   }
@@ -7453,7 +7455,7 @@ async function processVideoImport(file, plat) {
   }
 }
 
-async function extractVideoFrames(file) {
+async function extractVideoFrames(file, onProgress) {
   return new Promise((resolve, reject) => {
     const video  = document.createElement('video');
     const url    = URL.createObjectURL(file);
@@ -7466,7 +7468,14 @@ async function extractVideoFrames(file) {
     video.playsInline = true;
     video.preload    = 'auto';
 
+    const metadataTimer = setTimeout(() => {
+      try{document.body.removeChild(video);}catch(e){}
+      URL.revokeObjectURL(url);
+      reject(new Error('O vídeo demorou demais para ser preparado. Tente novamente.'));
+    }, 15000);
+
     video.onloadedmetadata = async () => {
+      clearTimeout(metadataTimer);
       // Limit canvas size for performance
       const MAX = 1080;
       const ratio = Math.min(MAX / video.videoWidth, MAX / video.videoHeight, 1);
@@ -7527,20 +7536,24 @@ async function extractVideoFrames(file) {
       const frames = [];
       let lastFp = null;
       let skipped = 0;
-      for (const time of times) {
+      if (typeof onProgress === 'function') onProgress(0, times.length);
+      for (let timeIndex = 0; timeIndex < times.length; timeIndex++) {
+        const time = times[timeIndex];
         try {
           await new Promise((res) => {
-            // Timeout fallback — some browsers never fire onseeked
-            const timer = setTimeout(() => {
-              try { ctx.drawImage(video, 0, 0, canvas.width, canvas.height); } catch(e) {}
-              res();
-            }, 4000);
-            video.currentTime = time;
-            video.onseeked = () => {
+            // Handler precisa existir antes do seek: em arquivo local o evento pode ser imediato.
+            let done = false;
+            const finishSeek = () => {
+              if (done) return;
+              done = true;
               clearTimeout(timer);
+              video.onseeked = null;
               try { ctx.drawImage(video, 0, 0, canvas.width, canvas.height); } catch(e) {}
               res();
             };
+            const timer = setTimeout(finishSeek, 1500);
+            video.onseeked = finishSeek;
+            video.currentTime = time;
           });
           // Only keep frames with content (not blank/black)
           const px = ctx.getImageData(0, 0, 20, 20).data;
@@ -7554,6 +7567,7 @@ async function extractVideoFrames(file) {
           lastFp = fp;
           frames.push(canvas.toDataURL('image/jpeg', 0.7).split(',')[1]);
         } catch(e) { console.warn('Frame t='+time, e); }
+        if (typeof onProgress === 'function') onProgress(timeIndex + 1, times.length);
       }
       if (skipped) console.log('[extractVideoFrames] frames quase-duplicados pulados:', skipped);
 
@@ -7563,6 +7577,7 @@ async function extractVideoFrames(file) {
     };
 
     video.onerror = (e) => {
+      clearTimeout(metadataTimer);
       try{document.body.removeChild(video);}catch(e2){}
       URL.revokeObjectURL(url);
       const msg = e?.target?.error?.message || '';
@@ -7615,11 +7630,21 @@ async function extractTripsFromBase64(b64, mt, plat) {
     'Campos: "duration" = Duração convertida pra MINUTOS INTEIROS arredondados (12m50s → 13; 5m42s → 6), null se não aparecer neste frame. "km" = número de Distância (6,2 km → 6.2), null se não aparecer. "time" = horário HH:MM da data completa (ex "06/07/2026 15:51:42" → "15:51"), null se não aparecer neste frame. "originFull"/"destFull" = endereço completo dos pontos verde(origem)/laranja(destino) quando visíveis, null se não aparecerem; "origin"/"dest" = bairro extraído desses endereços (nunca a cidade sozinha — mesma regra da lista). ' +
     'Formato (retorne um array com este único item; campos não vistos = null): {"platform":"99","screen":"detail","time":null,"km":null,"duration":null,"origin":null,"originFull":null,"dest":null,"destFull":null}.\n\n' +
     'Retorne SOMENTE um único JSON array, sem texto extra. Se não houver corridas completas retorne [].';
-  const resp = await fetch('https://smartmobi-proxy.yurisilva1990.workers.dev', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({model:'claude-haiku-4-5-20251001', max_tokens:1500,
-      messages:[{role:'user', content:[{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:prompt}]}]})
-  });
+  const requestController = new AbortController();
+  const requestTimer = setTimeout(() => requestController.abort(), 25000);
+  let resp;
+  try {
+    resp = await fetch('https://smartmobi-proxy.yurisilva1990.workers.dev', {
+      method:'POST', headers:{'Content-Type':'application/json'}, signal:requestController.signal,
+      body: JSON.stringify({model:'claude-haiku-4-5-20251001', max_tokens:1500,
+        messages:[{role:'user', content:[{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:prompt}]}]})
+    });
+  } catch(e) {
+    if (e && e.name === 'AbortError') throw new Error('Tempo esgotado ao analisar quadro');
+    throw e;
+  } finally {
+    clearTimeout(requestTimer);
+  }
   if (!resp.ok) throw new Error('Worker error ' + resp.status);
   const data = await resp.json();
   const raw  = ((data.content?.[0]?.text)||'[]').replace(/```json|```/g,'').trim();
