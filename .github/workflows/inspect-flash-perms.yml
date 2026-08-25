@@ -1,0 +1,30 @@
+name: Inspect Flash Perms
+on:
+  push:
+    branches: [ main ]
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Show permission and flash snippets
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text(errors='ignore')
+          terms=['renderFlashPerms','FlashPerm','Acessibilidade','Sobrepor','Leitura da tela','Bateria','MōB Flash','Mob Flash','flash-card','flashCard']
+          seen=[]
+          for term in terms:
+              start=0
+              while True:
+                  i=s.find(term,start)
+                  if i<0: break
+                  if any(abs(i-x)<300 for x in seen):
+                      start=i+1; continue
+                  seen.append(i)
+                  a=max(0,i-1200); b=min(len(s),i+2800)
+                  print('\n===== TERM',term,'AT',i,'=====\n')
+                  print(s[a:b])
+                  start=i+1
+          print('\nTOTAL_MATCHES',len(seen))
+          PY
