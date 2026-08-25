@@ -1,0 +1,43 @@
+name: Fix video ready state
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-video-ready-state.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch video decoder readiness
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          old="""    video.onloadedmetadata = async () => {\n      clearTimeout(metadataTimer);\n      // Limit canvas size for performance"""
+          new="""    video.onloadedmetadata = async () => {\n      clearTimeout(metadataTimer);\n      // loadedmetadata só garante dimensões/duração. Em Android/WebView o\n      // decoder pode ainda não ter nenhum frame disponível. Aguarda dados\n      // reais antes de iniciar os seeks, evitando canvas preto em MP4 válido.\n      if (video.readyState < 2) {\n        await new Promise((resolve, reject) => {\n          let settled = false;\n          const finish = () => { if (settled) return; settled = true; cleanup(); resolve(); };\n          const fail = () => { if (settled) return; settled = true; cleanup(); reject(new Error('Não foi possível decodificar o vídeo.')); };\n          const timer = setTimeout(fail, 12000);\n          const cleanup = () => { clearTimeout(timer); video.removeEventListener('loadeddata', finish); video.removeEventListener('canplay', finish); };\n          video.addEventListener('loadeddata', finish, {once:true});\n          video.addEventListener('canplay', finish, {once:true});\n          try { video.load(); } catch(e) {}\n        });\n      }\n      // Limit canvas size for performance"""
+          if s.count(old)!=1:
+              raise SystemExit(f'loadedmetadata block count={s.count(old)}')
+          s=s.replace(old,new,1)
+
+          # Improve the error shown to the user: it is a decoder/read problem,
+          # not necessarily an unsupported file format.
+          oldmsg="showToast('Não consegui ler os quadros do vídeo. Tente novamente; se persistir, envie outro formato.', 'error');"
+          newmsg="showToast('Não consegui decodificar os quadros deste vídeo neste aparelho. O arquivo pode ser válido; tente novamente.', 'error');"
+          if oldmsg in s:
+              s=s.replace(oldmsg,newmsg,1)
+
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Validate and publish
+        run: |
+          grep -q "loadeddata', finish" index.html
+          grep -q "video.readyState < 2" index.html
+          rm -f .github/workflows/fix-video-ready-state.yml .github/workflows/fix-video-zero-frames.yml .github/workflows/fix-video-zero-frames-v2.yml .tmp-fix-video-zero.py .tmp-video-zero.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix: aguardar decoder antes de ler vídeo"
+          git push
