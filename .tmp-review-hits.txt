@@ -1,0 +1,120 @@
+===== data_quality_flag =====
+4337:       .is('data_quality_flag', null)
+4397:     .is('data_quality_flag', null)
+4431:     .is('data_quality_flag', null)
+4735:   const statusCls = t.data_quality_flag ? 'susp' : (t.value_needs_review ? 'susp' : (t.status==='confirmada' ? 'conf' : (t.status==='estimada' ? 'estim' : 'pend')));
+4736:   const statusTxt = t.data_quality_flag ? 'Suspeita — revisar' : (t.value_needs_review ? 'Valor a confirmar' : (t.status==='confirmada' ? 'Confirmada' : (t.status==='estimada' ? 'Aguardando confirmação' : 'Aguardando revisão')));
+14307:       .is('data_quality_flag',null)
+14383:         .eq('user_id',_supaUser.id).is('data_quality_flag',null)
+===== Suspeita =====
+4736:   const statusTxt = t.data_quality_flag ? 'Suspeita — revisar' : (t.value_needs_review ? 'Valor a confirmar' : (t.status==='confirmada' ? 'Confirmada' : (t.status==='estimada' ? 'Aguardando confirmação' : 'Aguardando revisão')));
+===== suspeita =====
+===== Aguardando confirmação =====
+4736:   const statusTxt = t.data_quality_flag ? 'Suspeita — revisar' : (t.value_needs_review ? 'Valor a confirmar' : (t.status==='confirmada' ? 'Confirmada' : (t.status==='estimada' ? 'Aguardando confirmação' : 'Aguardando revisão')));
+===== Aguardando revisão =====
+4282: // reconferir sozinho corridas "Aguardando revisão" (status='capturada')
+4736:   const statusTxt = t.data_quality_flag ? 'Suspeita — revisar' : (t.value_needs_review ? 'Valor a confirmar' : (t.status==='confirmada' ? 'Confirmada' : (t.status==='estimada' ? 'Aguardando confirmação' : 'Aguardando revisão')));
+===== Iniciar Jornada =====
+10778: // Flash" quanto pelo assistente de Iniciar Jornada, sempre o mesmo dado.
+10813: let flashWizardMode = 'settings';   // 'settings' (Mais > MōB Flash) ou 'start' (Iniciar Jornada)
+10830: // Entrada pelo botão de Iniciar Jornada — mesmo assistente, terminando em
+11391:     // Veio do fluxo de Iniciar Jornada — sem toast (ia distrair bem na hora
+===== Metas =====
+169: /* Metas do dia: CSS movido pra seção solta (ver .goal-item/.gbar mais
+284: /* ── Metas do dia ── */
+1605:   <!-- Metas do dia: pedido do Yuri (23/07/2026) — sai de dentro do card
+1608:        fundo da tela, sem balão/card branco por trás). renderMetasDoDia()
+1610:   <div class="section" style="padding:0 16px 8px"><h2>Metas do dia</h2><button class="add" onclick="openMetasHojeModal()">Editar &#8250;</button></div>
+2350:       <h2 style="font-size:16px;font-weight:800;color:var(--text)">Metas de hoje</h2>
+2376:     <button class="save receita" onclick="saveMetasHoje()">Salvar metas de hoje</button>
+3709: // ── Metas do período (financeiro, km, tempo online — vem do Planejar Jornada) ──
+4951:   renderMetasDoDia(day);
+5048:   // tinha sido feita em rev/sessionItem/renderMetasDoDia, faltava aqui.
+5143: function openMetasHojeModal() {
+5164: function saveMetasHoje() {
+5173:   try { renderMetasDoDia(day); } catch(e) {}
+5174:   showToast('Metas de hoje atualizadas!', 'success');
+5176: function renderMetasDoDia(day) {
+5188:   const ov = day.metaOverride || null; // ajuste específico deste dia (via modal 'Metas de hoje')
+5272:   renderMetasDoDia(DB.day(S.curDate));
+5280:     renderMetasDoDia(DB.day(S.curDate));
+===== renderContinuousStatusBars =====
+14389:     try{ if(S.sec==='jornada') setTimeout(()=>{renderContinuousSessionList();renderContinuousStatusBars();},0); }catch(e){}
+14425:     try{ if(S.sec==='jornada') setTimeout(()=>{renderContinuousSessionList();renderContinuousStatusBars();},0); }catch(e){}
+14486:     try{if(S.sec==='jornada')setTimeout(()=>{renderContinuousSessionList();renderContinuousStatusBars();},0);}catch(e){}
+14555:     try{if(S.sec==='jornada')setTimeout(()=>{renderContinuousSessionList();renderContinuousStatusBars();},0);}catch(e){}
+14557:   function renderContinuousStatusBars(){
+14591:     try{renderContinuousStatusBars();}catch(e){console.warn('[continuous status]',e);}
+14594:   setInterval(()=>{try{if(S.sec==='jornada')renderContinuousStatusBars();}catch(e){}},1000);
+===== journeyBreakdownForSession =====
+5355:   const sessBd = (typeof journeyBreakdownForSession === 'function')
+5356:     ? journeyBreakdownForSession(sess, elapsedSecs, km, autoTrips)
+14456:   window.journeyBreakdownForSession = function(sess,elapsedSec,kmTotal,fallbackAuto){
+14576:         const bd=journeyBreakdownForSession(sess,getElapsed(),S.gps.km||0,[]);
+===== loadAutoTripsForOperationalDay =====
+7294:   const autoTripsPool = (await loadAutoTripsForOperationalDay(operationalPlat, operationalDate)) || [];
+14302:   window.loadAutoTripsForOperationalDay = async function(plat,dateStr){
+===== journeyAutoCache =====
+14365:   const journeyAutoCache = new Map();
+14376:     const k=journeyKey(sess), old=journeyAutoCache.get(k);
+14379:     journeyAutoCache.set(k,{loading:true,ts:Date.now(),rows:old?.rows||[]});
+14387:       if(!error) journeyAutoCache.set(k,{loading:false,ts:Date.now(),rows:data||[]});
+14388:     }catch(e){ journeyAutoCache.set(k,{loading:false,ts:Date.now(),rows:old?.rows||[]}); }
+14392:     const k=journeyKey(sess), c=journeyAutoCache.get(k);
+===== renderJornada =====
+3225:     renderJornada(); // render imediato com dado local (nunca trava esperando rede)
+3228:       reconcileJornadaHoje().then(() => renderJornada()).catch(()=>{});
+3232:         _closeOrphanSessions().then(n => { if (n) renderJornada(); }).catch(()=>{});
+3952:   renderJornada();
+3957:   renderJornada();
+3960: function toggleTripsView() { S.tripsExpanded = !S.tripsExpanded; renderJornada(); }
+4015: // lógica de sessionItem/renderJornada) — então dá pra checar pra QUALQUER
+4261:       if (S.sec === 'jornada') renderJornada();
+4304:       if (S.sec === 'jornada') renderJornada();
+4357:       if (S.sec === 'jornada') renderJornada();
+4872:       if (S.sec === 'jornada') renderJornada();
+4891:     if (date === S.curDate) { renderJornada(); }
+4895: function toggleSessionsView() { S.sessionsExpanded = !S.sessionsExpanded; renderJornada(); }
+4896: function toggleLancView() { S.lancExpanded = !S.lancExpanded; renderJornada(); }
+4898: function renderJornada() {
+4915:   // refaz a busca em toda chamada de renderJornada, que roda com frequência
+4926:       renderJornada();
+4939:       renderJornada();
+5462:   renderJornada();
+5481:     renderJornada();
+5547: // corrida (renderJornada, renderCorridasActive etc.) — reabre sozinho se
+5651:   try { renderJornada(); } catch(e){}
+5944:   renderJornada();
+6689:       try { renderJornada(); } catch(e) {}
+6747:       try { renderJornada(); } catch(e) {}
+6800:       try { renderJornada(); } catch(e) {}
+6831:     try { renderJornada(); } catch(e) {}
+6864:   renderJornada();
+6872:   closeMo('mo-km'); renderJornada();
+6904:     if (S.sec === 'jornada') renderJornada();
+6939:   renderJornada();
+6995:   renderJornada();
+8016:     setTimeout(() => { try { renderJornada(); } catch(e) {} }, 80);
+8088:   if (toUpdateAuto.length || toPushAuto.length) { S.autoTripsDate = null; } // força recarregar no próximo renderJornada
+8099:   try{renderJornada();}catch(e){}
+8373:     try { renderJornada(); } catch(e) {}
+8500:       try { if (S.sec==='jornada') renderJornada(); } catch(e) {}
+8546:     renderJornada();
+8603:   try { renderJornada(); } catch(e) {}
+8820:           try { if (S.sec === "jornada") renderJornada(); if (S.sec === "corridas") renderCorridasActive(); } catch(e) {}
+8898:   try { if (S.sec === 'jornada') renderJornada(); } catch(e) {}
+8946:         setTimeout(() => { try{renderJornada();}catch(e){} try{renderHome();}catch(e){} }, 80);
+8996:     try { renderJornada(); } catch(e) {}
+9287:     try { renderJornada(); } catch(e) {}
+9536:   try { if (S.sec==='jornada') renderJornada(); } catch(e) {}
+9587:   try { renderJornada(); } catch(e) {}
+9664:           try { if (S.sec==='jornada') renderJornada(); } catch(e) {}
+9673:             try { renderJornada(); renderHome(); } catch(e) {}
+10625:       try { renderJornada(); } catch(e) {}
+10686:     try { renderJornada(); } catch(e) {}
+11952:   try{renderJornada();}  catch(e){console.error('renderJornada:',e);}
+11956:     _closeOrphanSessions().then(n => { if (n) { renderJornada(); renderHome(); } }).catch(()=>{});
+12003:   try{renderJornada();}  catch(e){}
+14587:   const previousRenderJornada=window.renderJornada;
+14588:   window.renderJornada=function(){
+14595:   setTimeout(()=>{try{if(S.sec==='jornada')renderJornada();}catch(e){}},600);
