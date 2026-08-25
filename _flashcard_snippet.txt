@@ -1,0 +1,1384 @@
+
+===== openFlashConfig() @ 450787 =====
+
+<div class="screen" id="sc-mais">
+  <div style="padding:16px 16px 8px"><div style="font-size:22px;font-weight:800;letter-spacing:-.04em">Menu</div></div>
+  <div id="mais-modules" style="padding:0 16px;display:flex;flex-direction:column;gap:10px"></div>
+  <div style="padding:16px 16px 8px"><div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Ferramentas</div></div>
+  <div style="padding:0 16px;display:flex;flex-direction:column;gap:8px">
+    <div class="mais-item" onclick="navTo('corridas')"><div class="mais-ico" style="background:#EFF6FF"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2563EB" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div><div><div class="mais-t">Corridas</div><div class="mais-s">Histórico e filtros de corridas</div></div><div class="mais-arr">›</div></div>
+    <div class="mais-item" onclick="navTo('relatorios')"><div class="mais-ico" style="background:#FFF7ED"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-4 4"/></svg></div><div><div class="mais-t">Relatório</div><div class="mais-s">Gráficos, metas e visão geral do período</div></div><div class="mais-arr">›</div></div>
+    <div class="mais-item" onclick="navTo('agenda')"><div class="mais-ico blue"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><div><div class="mais-t">Agenda</div><div class="mais-s">Planejamento e horários de trabalho</div></div><div class="mais-arr">›</div></div>
+    <div class="mais-item" onclick="openFlashConfig()"><div class="mais-ico" style="background:#F0FDF4"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#16A34A" stroke-width="2"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg></div><div><div class="mais-t">MōB Flash</div><div class="mais-s">Nota da oferta em tempo real</div></div><div class="mais-arr">›</div></div>
+  </div>
+  <div style="padding:16px 16px 8px"><div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Configurações</div></div>
+  <div style="padding:0 16px;display:flex;flex-direction:column;gap:8px">
+    <div class="mais-item" onclick="openPerfil()"><div class="mais-ico blue"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg></div><div><div class="mais-t">Perfil</div><div class="mais-s" id="mais-perfil-sub">Configure nome, placa e veículo</div></div><div class="mais-arr">›</div></div>
+    <div class="mais-item" onclick="openConfig()"><div class="mais-ico green"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg></div><div><div class="mais-t">Configurações</div><div class="mais-s">Ícone flutuante, modo escuro e mais</div></div><div class="mais-arr">›</div></div>
+    <div class="mais-item" onclick="navTo('categorias')"><div class="mais-ico orange"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h8"/></svg></div><div><div class="mais-t">Categorias</div><div class="mais-s">Gerencie categorias de despesa</div></div><div class="mais-arr">›</div></div>
+    <div class="mais-item" onclick="openCustoVeiculo()"><div class="mais-ico green"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17h14M6 17l1-6 3-4h4l3 4 1 6"/><circle cx="7.5" cy="17" r="1.5"/><circle cx="16.5" cy="17" r="1.5"/></svg></div><div><div class="mais-t">Custo do veículo</div><div class="mais-s" id="mais-custo-sub">Configure pra ver o lucro líquido real</div></div><div class="mais-arr">›</div></div>
+    <div class="mais-item" onclick="openSuporte()"><div class="mais-ico purple"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg></div><div><div class="mais-t">Suporte</div><div class="mais-s">Ajuda e feedback</div></div><div class="mais-arr">›</div></div>
+  </div>
+  <div style="height:24px"></div>
+</div>
+
+</div><!-- /scroll -->
+
+<!-- ════ NAV ════ -->
+<nav class="bottom" id="app-nav" style="display:flex">
+  <div class="nav active" id="bn-home" onclick="navTo('home')
+
+===== openFlashConfig() @ 987438 =====
+seus dados...'); await _waitBootPull(); }
+  const cfg = DB.cfg();
+  const saved = cfg.flashReader;
+  const defaults = getFlashDefaults();
+  flashDraft = { enabled: saved && saved.enabled !== undefined ? saved.enabled : defaults.enabled, kpis: {}, recusas: {} };
+  FLASH_KPI_DEFS.forEach(d => {
+    const s = (saved && saved.kpis && saved.kpis[d.key]) || {};
+    flashDraft.kpis[d.key] = {
+      enabled: s.enabled !== undefined ? s.enabled : defaults.kpis[d.key].enabled,
+      red: s.red !== undefined ? s.red : defaults.kpis[d.key].red,
+      green: s.green !== undefined ? s.green : defaults.kpis[d.key].green
+    };
+  });
+  FLASH_RECUSA_DEFS.forEach(d => {
+    const s = (saved && saved.recusas && saved.recusas[d.key]) || {};
+    const def = defaults.recusas[d.key];
+    if (d.type === 'list') {
+      flashDraft.recusas[d.key] = {
+        enabled: s.enabled !== undefined ? s.enabled : def.enabled,
+        // PEDIDO (17/07/2026): cada item agora é {label, type:'rua'|'bairro'}
+        // pra dar pra mostrar a tag na lista — normaliza entradas antigas
+        // (string solta, de antes dessa mudança) na hora de carregar.
+        list: Array.isArray(s.list) ? s.list.map(_flashNormEnderecoItem).filter(Boolean) : def.list.slice()
+      };
+    } else {
+      flashDraft.recusas[d.key] = {
+        enabled: s.enabled !== undefined ? s.enabled : def.enabled,
+        value: s.value !== undefined ? s.value : def.value
+      };
+    }
+  });
+}
+
+let flashWizardMode = 'settings';   // 'settings' (Mais > MōB Flash) ou 'start' (Iniciar Jornada)
+let flashWizardOnComplete = null;   // callback chamado ao terminar/pular, só no modo 'start'
+
+// Entrada pelo "Mais" — mesma tela do assistente, só que sem o vínculo com
+// iniciar jornada. Termina com "Salvar", não com "Iniciar jornada".
+async function openFlashConfig() {
+  await _flashLoadDraft();
+  flashWizardMode = 'settings';
+  flashWizardOnComplete = null;
+  _flashWizardShowStep(1);
+  renderFlashKpiList();
+  renderFlashRecusaList();
+  renderFlashPreview();
+  renderFlashPerms();
+  openMo('mo-flash');
+}
+
+// Entrada pelo botão de Iniciar Jornada — mesmo assistente, terminando em
+// "Iniciar jornada" (ou pulando com "Iniciar sem o MōB Flash"). onComplete
+// é chamado exatamente uma vez, ao final de qualquer um dos dois caminhos.
+async function openFlashWizardForJourney(onComplete) {
+  await _flashLoadDraft();
+  flashWizardMode = 'start';
+  flashWizardOnComplete = onComplete;
+  _flashWizardShowStep(1);
+  renderFlashKpiList();
+  renderFlashRecusaList();
+  renderFlashPreview();
+  renderFlashPerms();
+  openMo('mo-flash');
+}
+
+function _flashWizardShowStep(n) {
+  document.getElementById('flash-step1').style.display = n === 1 ? '' : 'none';
+  document.getElementById('flash-step2').style.display = n === 2 ? '' : 'none';
+  document.getElementById('flash-ruler').style.display = 'none';
+  document.getElementById('flash-recusa-num').style.display = 'none';
+  document.getElementById('flash-enderecos').style.display = 'none';
+  // Pular só faz sentido quando tem uma jornada esperando pra iniciar —
+  // no modo settings (Mais > MōB Flash) esses links somem.
+  const skip1 = document.getElementById('flash-skip1');
+  const skip2 = document.getElementById('flash-skip2');
+  const primary2 = document.getElementById('flash-step2-primary');
+  if (skip1) skip1.style.display = (flashWizardMode === 'start') ? '' : 'none';
+  if (skip2) skip2.style.display = (flashWizardMode === 'start') ? '' : 'none';
+  if (primary2) primary2.textContent = (flashWizardMode === 'start') ? 'Iniciar jornada' : 'Salvar configurações';
+}
+
+function flashWizardNext() {
+  _flashWizardShowStep(2);
+  renderFlashPerms();
+}
+
+function flashWizardBack() {
+  _flashWizardShowStep(1);
+}
+
+// "Pular tudo" (passo 1) e "Iniciar sem o MōB Flash" (passo 2) — mesmo
+// efeito: desliga o Flash, salva e segue o fluxo sem exigir nada mais.
+function flashWizardSkip() {
+  flashDraft.enabled = false;
+  flashConfigSave(true);
+}
+
+// startFlash=true → veio do botão principal ("Iniciar jornada"/"Salvar").
+// startFlash=false → veio de um link de pular ("Iniciar sem o Flash").
+function flashWizardFinish(startFlash) {
+  if (startFlash) {
+    // Card pode mostrar só a recusa (17/07/2026), sem indicador nenhum —
+    // então "tem algo pra mostrar" agora conta os dois grupos.
+    const anyOn = Object.values(flashDraft.kpis).some(k => k.enabled) ||
+                  Object.values(flashDraft.recusas).some(r => r.enabled);
+    flashDraft.enabled = anyOn;
+  } else {
+    flashDraft.enabled = false;
+  }
+  flashConfigSave(true);
+}
+
+// ── Régua de limite vermelho/verde (substitui os dois campos de texto) ──
+const FLASH_RULER_BOUNDS = { rkm:[0,5], rhora:[0,100], rmin:[0,3], margem:[0,100], lucro:[0,50] };
+let flashRulerKey = null;
+let flashRulerDrag = null; // 'red' | 'green' | null
+
+function flashOpenRuler(key) {
+  flashRulerKey = key;
+  const d = FLASH_KPI_DEFS.find(x => x.key === key);
+  document.getElementById('flash-ruler-ico').textContent = d.icon;
+  document.getElementById('flash-ruler-title').textContent = d.label;
+  document.getElementById('flash-step1').style.display = 'none';
+  document.getElementById('flash-step2').style.display = 'none';
+  document.getElementById('flash-ruler').style.display = '';
+  _flashRulerRender();
+}
+
+function flashRulerClose() {
+  flashRul
+
+===== openFlashConfig() @ 1723864 =====
+nd:#FFEDD5;display:flex;align-items:center;justify-content:center;flex:0 0 34px">'+
+      '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.6 2.6 17a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 3.6a2 2 0 0 0-3.4 0Z"/></svg></span>'+
+      '<span style="flex:1;min-width:0"><strong style="display:block;font-size:12.5px;font-weight:800;line-height:1.35;color:#9A3412">MōB Flash precisa de atenção</strong><span id="journey-flash-warning-sub" style="display:block;font-size:10.8px;font-weight:600;line-height:1.4;color:#C2410C;margin-top:2px"></span></span>'+
+      '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto;opacity:.7"><path d="M9 18l6-6-6-6"/></svg>';
+    el.addEventListener('click', openJourneyFlashPermissions);
+    card.parentNode.insertBefore(el, card);
+    return el;
+  }
+
+  async function openJourneyFlashPermissions(){
+    try{
+      if(typeof _flashLoadDraft === 'function') await _flashLoadDraft();
+      if(typeof flashWizardMode !== 'undefined') flashWizardMode = 'settings';
+      if(typeof flashWizardOnComplete !== 'undefined') flashWizardOnComplete = null;
+      if(typeof _flashWizardShowStep === 'function') _flashWizardShowStep(2);
+      if(typeof renderFlashKpiList === 'function') renderFlashKpiList();
+      if(typeof renderFlashPreview === 'function') renderFlashPreview();
+      if(typeof renderFlashPerms === 'function') renderFlashPerms();
+      if(typeof openMo === 'function') openMo('mo-flash');
+    }catch(e){
+      try{
+        if(typeof openFlashConfig === 'function'){
+          await openFlashConfig();
+          if(typeof _flashWizardShowStep === 'function') _flashWizardShowStep(2);
+          if(typeof renderFlashPerms === 'function') renderFlashPerms();
+        }
+      }catch(_e){}
+    }
+  }
+  window.openJourneyFlashPermissions = openJourneyFlashPermissions;
+
+  function renderJourneyFlashWarning(){
+    const el = ensureJourneyFlashWarning();
+    if(!el) return;
+
+    let journeyActive = false;
+    try { journeyActive = !!(S && S.gps && (S.gps.st === 'running' || S.gps.st === 'paused')); }
+    catch(e){}
+    if(!journeyActive){ el.style.display='none'; return; }
+
+    const state = journeyFlashPermissionState();
+    if(!state || state.missing.length === 0){ el.style.display='none'; return; }
+
+    const sub = document.getElementById('journey-flash-warning-sub');
+    if(sub){
+      const n = state.missing.length;
+      sub.textContent = n === 1
+        ? state.missing[0] + ' está pendente. Toque para ativar.'
+        : n + ' permissões estão pendentes. Toque para ativar.';
+    }
+    el.style.display='flex';
+  }
+  window.renderJourneyFlashWarning = renderJourneyFlashWarning;
+
+  const originalGpsStart = window.gpsStart;
+  if(typeof originalGpsStart === 'function'){
+    window.gpsStart = function(){
+      const result = originalGpsStart.apply(this, arguments);
+      setTimeout(renderJourneyFlashWarning, 500);
+      setTimeout(renderJourneyFlashWarning, 1200);
+      return result;
+    };
+  }
+
+  window.addEventListener('focus', function(){ setTimeout(renderJourneyFlashWarning, 250); });
+  document.addEventListener('visibilitychange', function(){
+    if(!document.hidden) setTimeout(renderJourneyFlashWarning, 250);
+  });
+  setInterval(function(){
+    let active = false;
+    try { active = !!(S && S.gps && (S.gps.st === 'running' || S.gps.st === 'paused')); } catch(e){}
+    if(active) renderJourneyFlashWarning();
+    else {
+      const el = document.getElementById('journey-flash-warning');
+      if(el) el.style.display='none';
+    }
+  }, 3000);
+
+  setTimeout(renderJourneyFlashWarning, 900);
+})();
+</script>
+
+
+<!-- JOURNEY_STATUS_TIMELINE_V2 -->
+<script>
+(function(){
+  let statusSegmentsDate = null;
+  let statusSegments = [];
+  let statusLoading = false;
+  let nativeSessionBound = null;
+
+  function nativeStatusTimeline(){
+    try{
+      if(window.SmartMobiNative && typeof SmartMobiNative.getJourneyStatusTimeline === 'function'){
+        const raw = SmartMobiNative.getJourneyStatusTimeline();
+        if(!raw) return [];
+        const v = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        return Array.isArray(v) ? v : [];
+      }
+    }catch(e){}
+    return [];
+  }
+
+  function ensureNativeJourneySession(){
+    try{
+      if(!window.SmartMobiNative || typeof SmartMobiNative.setJourneySession !== 'function') return;
+      if(!S || !S.gps || S.gps.st !== 'running' || !S.gps.sessionId || !S.gps.start) return;
+      if(nativeSessionBound === S.gps.sessionId) return;
+      // Sessão criada há poucos segundos = nova. Uma sessão antiga retomada
+      // após kill/reinstalação NÃO ganha passado inventado como Online.
+      const isNew = Math.abs(Date.now() - Number(S.gps.start)) < 15000;
+      SmartMobiNative.setJourneySession(S.gps.sessionId, DB.today(), Number(S.gps.start), Number(S.gps.km)||0, isNew);
+      nativeSessionBound = S.gps.sessionId;
+    }catch(e){}
+  }
+
+  async function loadStatusSegments(dateStr){
+    if(!_supaUser || statusLoading) return;
+    statusLoading = true;
+    try{
+      const {data,error} = await _SUPA.from('
+
+===== MōB Flash @ 25837 =====
+px;background:#f8fafc;padding:14px;font:inherit;font-weight:600}@media(max-width:380px){.amount{font-size:34px}.kpi strong{font-size:19px}.heroGrid{gap:6px}.chart{gap:5px}.barCol i{width:8px}}
+
+/* ── Jornada screen extras ── */
+.daybar{display:flex;align-items:center;gap:10px;margin:4px 0 12px;padding:0 16px}.arrow{width:38px;height:38px;border-radius:14px;background:#fff;border:1px solid var(--line);box-shadow:0 3px 14px rgba(15,23,42,.06);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:20px;cursor:pointer;touch-action:manipulation}.datebox{flex:1;text-align:center}.datebox h1{font-size:19px;line-height:1.1;letter-spacing:-.04em}.datebox p{font-size:12px;color:var(--muted);margin-top:3px;font-weight:600}.today{font-size:10px;padding:2px 8px;border-radius:999px;background:rgba(14,165,233,.12);color:#0A2F6B;margin-left:5px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px;margin-bottom:12px}
+.stats-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.stats-cards .stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 6px;text-align:center;box-shadow:0 3px 14px rgba(15,23,42,.06)}
+.stats-cards .v{font-size:15px;font-weight:800;line-height:1}
+.stats-cards .v.green{color:var(--green2)}
+.stats-cards .v.red{color:#EF4444}
+.stats-cards .l{font-size:9.5px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:6px}
+/* R$/h e R$/km — largura total, preenchendo até as bordas do card */
+/* Faixa de destaque R$/h + R$/km (23/07/2026, mockup aprovado — Opção A).
+   Cor dinâmica POR INDICADOR (independente um do outro — R$/h pode estar
+   verde com R$/km em vermelho ao mesmo tempo): compara com os mesmos
+   limiares vermelho/verde que o MōB Flash já usa
+   (DB.cfg().flashReader.kpis.rhora/.rkm), aplicada em renderJourneyCard(). */
+.rate-strip{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.rate-cell{text-align:center;border-radius:14px;padding:11px 6px;background:rgba(34,197,94,.16);border:1px solid rgba(34,197,94,.4);transition:background .3s,border-color .3s}
+.rate-cell.o{background:rgba(245,158,11,.18);border-color:rgba(245,158,11,.45)}
+.rate-cell.r{background:rgba(239,68,68,.20);border-color:rgba(239,68,68,.5)}
+.rate-cell strong{display:block;font-size:21px;font-weight:800;color:#fff;letter-spacing:-.02em}
+.rate-cell span{display:block;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#86efac;margin-top:2px}
+.rate-cell.o span{color:#fde68a}
+.rate-cell.r span{color:#fca5a5}
+/* Metas do dia: CSS movido pra seção solta (ver .goal-item/.gbar mais
+   abaixo, estilo "grande" já existente) — removido daqui em 23/07/2026,
+   não fica mais embutido no fundo escuro do card da jornada. */
+.stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px 8px;text-align:center;box-shadow:0 3px 14px rgba(15,23,42,.06)}.stat .v{font-family:'Inter',system-ui,sans-serif;font-size:15px;font-weight:700;white-space:nowrap}.stat .l{font-size:9px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-top:5px}.green{color:var(--green2)}.red{color:var(--red)}.blue{color:#0A2F6B}
+
+/* ── Journey card (controles embutidos) ── */
+.journey-wrap{margin:0 16px 12px;border-radius:26px;overflow:hidden;box-shadow:0 10px 30px rgba(15,23,42,.10)}
+.journey{padding:16px;color:#fff;transition:background .25s;box-sizing:border-box}
+.journey.idle{background:var(--blue)}
+.journey.ended{background:var(--blue)}
+.journey.running{background:#15803D}
+.journey-breakdown{background:#fff;padding:14px}
+.sbar-wrap{cursor:pointer;touch-action:manipulation}
+.sbar{height:22px;border-radius:8px;overflow:hidden;display:flex;background:#F1F5F9;margin:0;pointer-events:none}
+.sbar i{display:flex;align-items:center;justify-content:center;height:100%;font-size:9.5px;font-weight:800;color:#fff}
+.sbar-list{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.sbar-list.open{max-height:220px;margin-top:10px}
+.sbar-list .srow{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line)}
+.sbar-list .srow:first-child{border-top:0}
+.sbar-list .sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sbar-list .srow b{flex:1;font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.03em}
+.sbar-list .srow .pct{font-size:10px;font-weight:800;color:var(--muted);width:28px;text-align:right}
+.sbar-list .srow .stempo{font-size:10.5px;font-weight:800;color:var(--text);width:48px;text-align:right}
+.sbar-list .srow .skm{font-size:10.5px;font-weight:700;color:var(--muted);width:56px;text-align:right}
+.td-row.bd .sbar{background:rgba(255,255,255,.10)}
+.td-row.bd .sbar-list.open{margin-top:12px}
+.td-row.bd .sbar-list .srow{border-top:1px solid rgba(255,255,255,.14)}
+.td-row.bd .sbar-list .srow b,.td-row.bd .sbar-list .srow .stempo{color:#fff}
+.td-row.bd .sbar-list .srow .pct,.td-row.bd .sbar-list .srow .skm{color:rgba(255,255,255,.6)}
+.jss-statusbar{padding:2px 14px 12px}
+/* .journey.paused removido */
+.j-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px}
+.j-status{display:none}
+.j-status i{width:8px;height:8px;border-radius:50%
+
+===== MōB Flash @ 451028 =====
+10px"></div>
+  <div style="padding:16px 16px 8px"><div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Ferramentas</div></div>
+  <div style="padding:0 16px;display:flex;flex-direction:column;gap:8px">
+    <div class="mais-item" onclick="navTo('corridas')"><div class="mais-ico" style="background:#EFF6FF"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2563EB" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div><div><div class="mais-t">Corridas</div><div class="mais-s">Histórico e filtros de corridas</div></div><div class="mais-arr">›</div></div>
+    <div class="mais-item" onclick="navTo('relatorios')"><div class="mais-ico" style="background:#FFF7ED"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-4 4"/></svg></div><div><div class="mais-t">Relatório</div><div class="mais-s">Gráficos, metas e visão geral do período</div></div><div class="mais-arr">›</div></div>
+    <div class="mais-item" onclick="navTo('agenda')"><div class="mais-ico blue"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><div><div class="mais-t">Agenda</div><div class="mais-s">Planejamento e horários de trabalho</div></div><div class="mais-arr">›</div></div>
+    <div class="mais-item" onclick="openFlashConfig()"><div class="mais-ico" style="background:#F0FDF4"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#16A34A" stroke-width="2"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg></div><div><div class="mais-t">MōB Flash</div><div class="mais-s">Nota da oferta em tempo real</div></div><div class="mais-arr">›</div></div>
+  </div>
+  <div style="padding:16px 16px 8px"><div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Configurações</div></div>
+  <div style="padding:0 16px;display:flex;flex-direction:column;gap:8px">
+    <div class="mais-item" onclick="openPerfil()"><div class="mais-ico blue"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg></div><div><div class="mais-t">Perfil</div><div class="mais-s" id="mais-perfil-sub">Configure nome, placa e veículo</div></div><div class="mais-arr">›</div></div>
+    <div class="mais-item" onclick="openConfig()"><div class="mais-ico green"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg></div><div><div class="mais-t">Configurações</div><div class="mais-s">Ícone flutuante, modo escuro e mais</div></div><div class="mais-arr">›</div></div>
+    <div class="mais-item" onclick="navTo('categorias')"><div class="mais-ico orange"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h8"/></svg></div><div><div class="mais-t">Categorias</div><div class="mais-s">Gerencie categorias de despesa</div></div><div class="mais-arr">›</div></div>
+    <div class="mais-item" onclick="openCustoVeiculo()"><div class="mais-ico green"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 17h14M6 17l1-6 3-4h4l3 4 1 6"/><circle cx="7.5" cy="17" r="1.5"/><circle cx="16.5" cy="17" r="1.5"/></svg></div><div><div class="mais-t">Custo do veículo</div><div class="mais-s" id="mais-custo-sub">Configure pra ver o lucro líquido real</div></div><div class="mais-arr">›</div></div>
+    <div class="mais-item" onclick="openSuporte()"><div class="mais-ico purple"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg></div><div><div class="mais-t">Suporte</div><div class="mais-s">Ajuda e feedback</div></div><div class="mais-arr">›</div></div>
+  </div>
+  <div style="height:24px"></div>
+</div>
+
+</div><!-- /scroll -->
+
+<!-- ════ NAV ════ -->
+<nav class="bottom" id="app-nav" style="display:flex">
+  <div class="nav active" id="bn-home" onclick="navTo('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span>Início</span>
+  </div>
+  <div class="nav" id="bn-agenda" onclick="navTo('info
+
+===== MōB Flash @ 518288 =====
+ class="lbl">Ano</label>
+      <select class="inp" id="vp-ano"></select>
+    </div>
+    <button class="btn-p" onclick="saveVeiculoPicker()">Confirmar</button>
+  </div>
+</div>
+
+<!-- Suporte -->
+<div class="mo ctr" id="mo-suporte">
+  <div class="sheet ctr" style="text-align:center;padding:28px 20px">
+    <div style="width:56px;height:56px;border-radius:18px;background:#EFF6FF;color:#0EA5E9;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/></svg>
+    </div>
+    <div style="font-size:18px;font-weight:800;margin-bottom:8px">Suporte MōB</div>
+    <div style="font-size:13px;color:#64748B;margin-bottom:20px">Tem alguma dúvida ou sugestão? Entre em contato.</div>
+    <a href="mailto:suporte@mob.app?subject=Suporte+M%C5%8DB" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:46px;border-radius:14px;background:#0A2F6B;color:#fff;font-size:14px;font-weight:800;text-decoration:none;margin:12px 0 4px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Enviar e-mail</a>
+    <div id="suporte-version" style="font-size:11.5px;color:#94A3B8;text-align:center;margin-bottom:14px;font-family:'Inter',system-ui,sans-serif"></div>
+    <button class="btn-p" onclick="closeMo('mo-suporte')">Fechar</button>
+  </div>
+</div>
+
+<!-- MōB Flash — nota da oferta em tempo real (leitura de tela 99/Uber) -->
+<div class="mo" id="mo-flash">
+  <div class="sheet" style="max-width:420px">
+    <div class="sheet-handle"></div>
+
+    <!-- PASSO 1 — Indicadores e Recusas -->
+    <div id="flash-step1">
+      <div class="sheet-head">
+        <div>
+          <div id="flash-step1-tag" style="font-size:11px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.04em">Passo 1 de 2</div>
+          <h2>MōB Flash</h2>
+        </div>
+        <button class="xbtn" onclick="closeMo('mo-flash')">&#x2715;</button>
+      </div>
+      <div style="font-size:12px;color:#64748B;line-height:1.5;margin-bottom:14px">O card mostra até 4 indicadores quando a oferta chega. As recusas funcionam sozinhas — mesmo que os indicadores estejam bons.</div>
+
+      <div id="flash-preview-wrap" style="background:#111318;border-radius:14px;padding:16px 10px;display:flex;justify-content:center;margin-bottom:14px"></div>
+
+      <div style="font-size:11px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.06em;margin:4px 0 2px 2px">Indicadores</div>
+      <div id="flash-kpi-list"></div>
+
+      <div style="font-size:11px;font-weight:800;color:#DC2626;text-transform:uppercase;letter-spacing:.06em;margin:18px 0 2px 2px">Recusas</div>
+      <div style="font-size:11px;color:#94A3B8;margin:0 0 6px 2px;line-height:1.4">Recusa a corrida sozinho e avisa o motivo no card e no áudio.</div>
+      <div id="flash-recusa-list"></div>
+
+      <button class="btn-p" style="margin-top:14px" onclick="flashWizardNext()">Avançar &#8594;</button>
+      <button id="flash-skip1" class="xbtn" style="display:none;width:100%;text-align:center;font-size:12.5px;color:#64748B;font-weight:700;margin-top:12px;background:none;border:0;padding:8px;text-decoration:underline;height:auto" onclick="flashWizardSkip()">Pular tudo, iniciar sem o Flash</button>
+    </div>
+
+    <!-- PASSO 2 — Permissões -->
+    <div id="flash-step2" style="display:none">
+      <div class="sheet-head">
+        <div>
+          <button id="flash-back-btn" style="font-size:12px;color:#94A3B8;font-weight:700;background:none;border:0;padding:0;margin-bottom:6px" onclick="flashWizardBack()">&#8249; Voltar</button>
+          <div style="font-size:11px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.04em">Passo 2 de 2</div>
+          <h2>Ativar permissões</h2>
+        </div>
+        <button class="xbtn" onclick="closeMo('mo-flash')">&#x2715;</button>
+      </div>
+      <div style="font-size:12px;color:#64748B;line-height:1.5;margin:10px 0 14px">Sem isso o card de oferta não aparece automaticamente. Pode ativar depois, se preferir.</div>
+
+      <div style="border:1px solid #E2E8F0;border-radius:14px;padding:4px 14px" id="flash-perms">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #F1F5F9">
+          <div style="flex:1">
+            <div style="font-size:13.5px;font-weight:600;color:#0F172A">Acessibilidade</div>
+            <div style="font-size:11px;color:#94A3B8;margin-top:1px">Lê a tela da 99/Uber quando a oferta chega</div>
+          </div>
+          <div id="flash-perm-a11y" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"></div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #F1F5F9">
+          <div style="flex:1">
+            
+
+===== MōB Flash @ 518759 =====
+  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/></svg>
+    </div>
+    <div style="font-size:18px;font-weight:800;margin-bottom:8px">Suporte MōB</div>
+    <div style="font-size:13px;color:#64748B;margin-bottom:20px">Tem alguma dúvida ou sugestão? Entre em contato.</div>
+    <a href="mailto:suporte@mob.app?subject=Suporte+M%C5%8DB" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:46px;border-radius:14px;background:#0A2F6B;color:#fff;font-size:14px;font-weight:800;text-decoration:none;margin:12px 0 4px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Enviar e-mail</a>
+    <div id="suporte-version" style="font-size:11.5px;color:#94A3B8;text-align:center;margin-bottom:14px;font-family:'Inter',system-ui,sans-serif"></div>
+    <button class="btn-p" onclick="closeMo('mo-suporte')">Fechar</button>
+  </div>
+</div>
+
+<!-- MōB Flash — nota da oferta em tempo real (leitura de tela 99/Uber) -->
+<div class="mo" id="mo-flash">
+  <div class="sheet" style="max-width:420px">
+    <div class="sheet-handle"></div>
+
+    <!-- PASSO 1 — Indicadores e Recusas -->
+    <div id="flash-step1">
+      <div class="sheet-head">
+        <div>
+          <div id="flash-step1-tag" style="font-size:11px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.04em">Passo 1 de 2</div>
+          <h2>MōB Flash</h2>
+        </div>
+        <button class="xbtn" onclick="closeMo('mo-flash')">&#x2715;</button>
+      </div>
+      <div style="font-size:12px;color:#64748B;line-height:1.5;margin-bottom:14px">O card mostra até 4 indicadores quando a oferta chega. As recusas funcionam sozinhas — mesmo que os indicadores estejam bons.</div>
+
+      <div id="flash-preview-wrap" style="background:#111318;border-radius:14px;padding:16px 10px;display:flex;justify-content:center;margin-bottom:14px"></div>
+
+      <div style="font-size:11px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.06em;margin:4px 0 2px 2px">Indicadores</div>
+      <div id="flash-kpi-list"></div>
+
+      <div style="font-size:11px;font-weight:800;color:#DC2626;text-transform:uppercase;letter-spacing:.06em;margin:18px 0 2px 2px">Recusas</div>
+      <div style="font-size:11px;color:#94A3B8;margin:0 0 6px 2px;line-height:1.4">Recusa a corrida sozinho e avisa o motivo no card e no áudio.</div>
+      <div id="flash-recusa-list"></div>
+
+      <button class="btn-p" style="margin-top:14px" onclick="flashWizardNext()">Avançar &#8594;</button>
+      <button id="flash-skip1" class="xbtn" style="display:none;width:100%;text-align:center;font-size:12.5px;color:#64748B;font-weight:700;margin-top:12px;background:none;border:0;padding:8px;text-decoration:underline;height:auto" onclick="flashWizardSkip()">Pular tudo, iniciar sem o Flash</button>
+    </div>
+
+    <!-- PASSO 2 — Permissões -->
+    <div id="flash-step2" style="display:none">
+      <div class="sheet-head">
+        <div>
+          <button id="flash-back-btn" style="font-size:12px;color:#94A3B8;font-weight:700;background:none;border:0;padding:0;margin-bottom:6px" onclick="flashWizardBack()">&#8249; Voltar</button>
+          <div style="font-size:11px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.04em">Passo 2 de 2</div>
+          <h2>Ativar permissões</h2>
+        </div>
+        <button class="xbtn" onclick="closeMo('mo-flash')">&#x2715;</button>
+      </div>
+      <div style="font-size:12px;color:#64748B;line-height:1.5;margin:10px 0 14px">Sem isso o card de oferta não aparece automaticamente. Pode ativar depois, se preferir.</div>
+
+      <div style="border:1px solid #E2E8F0;border-radius:14px;padding:4px 14px" id="flash-perms">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #F1F5F9">
+          <div style="flex:1">
+            <div style="font-size:13.5px;font-weight:600;color:#0F172A">Acessibilidade</div>
+            <div style="font-size:11px;color:#94A3B8;margin-top:1px">Lê a tela da 99/Uber quando a oferta chega</div>
+          </div>
+          <div id="flash-perm-a11y" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"></div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #F1F5F9">
+          <div style="flex:1">
+            <div style="font-size:13.5px;font-weight:600;color:#0F172A">Sobrepor outros apps</div>
+            <div style="font-size:11px;color:#94A3B8;margin-top:1px">Permite o card aparecer por cima da 99/Uber</div>
+          </div>
+          <div id="flash-perm-overlay" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"></div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0">
+       
+
+===== MōB Flash @ 523114 =====
+72A">Acessibilidade</div>
+            <div style="font-size:11px;color:#94A3B8;margin-top:1px">Lê a tela da 99/Uber quando a oferta chega</div>
+          </div>
+          <div id="flash-perm-a11y" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"></div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #F1F5F9">
+          <div style="flex:1">
+            <div style="font-size:13.5px;font-weight:600;color:#0F172A">Sobrepor outros apps</div>
+            <div style="font-size:11px;color:#94A3B8;margin-top:1px">Permite o card aparecer por cima da 99/Uber</div>
+          </div>
+          <div id="flash-perm-overlay" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"></div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0">
+          <div style="flex:1">
+            <div style="font-size:13.5px;font-weight:600;color:#0F172A">Leitura da tela</div>
+            <div style="font-size:11px;color:#94A3B8;margin-top:1px">A 99 mostra a oferta como imagem — precisa reativar a cada abertura do app</div>
+          </div>
+          <div id="flash-perm-capture" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"></div>
+        </div>
+      </div>
+
+      <button id="flash-step2-primary" class="btn-p" style="margin-top:16px;background:#22C55E" onclick="flashWizardFinish(true)">Iniciar jornada</button>
+      <button id="flash-skip2" class="xbtn" style="width:100%;text-align:center;font-size:12.5px;color:#64748B;font-weight:700;margin-top:12px;background:none;border:0;padding:8px;text-decoration:underline;height:auto" onclick="flashWizardFinish(false)">Iniciar sem o MōB Flash</button>
+    </div>
+
+    <!-- Painel da régua — edição de limite vermelho/verde de um KPI -->
+    <div id="flash-ruler" style="display:none">
+      <div class="sheet-head">
+        <button style="font-size:12px;color:#94A3B8;font-weight:700;background:none;border:0;padding:0" onclick="flashRulerClose()">&#8249; Voltar</button>
+        <button class="xbtn" onclick="closeMo('mo-flash')">&#x2715;</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:9px;margin:6px 0 4px">
+        <span id="flash-ruler-ico" style="width:26px;height:26px;border-radius:8px;background:#F1F5F9;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#0A2F6B"></span>
+        <h3 id="flash-ruler-title" style="font-family:var(--font-brand);font-size:15px;font-weight:800;color:#0F172A"></h3>
+      </div>
+      <div style="font-size:11.5px;color:#94A3B8;margin-bottom:26px;line-height:1.5">Arraste os pontos pra ajustar onde o card vira vermelho, amarelo ou verde.</div>
+
+      <div id="flash-ruler-track" style="position:relative;height:10px;border-radius:99px;background:linear-gradient(90deg,#EF4444 0%,#EF4444 30%,#F59E0B 30%,#F59E0B 70%,#10B981 70%,#10B981 100%);margin:0 12px 34px">
+        <div id="flash-ruler-red" style="position:absolute;top:50%;width:24px;height:24px;border-radius:50%;background:#fff;border:3px solid #0A2F6B;transform:translate(-50%,-50%);box-shadow:0 2px 6px rgba(0,0,0,.25);touch-action:none;cursor:grab;left:30%">
+          <span id="flash-ruler-red-val" style="position:absolute;top:-30px;left:50%;transform:translateX(-50%);font-size:12px;font-weight:800;color:#0F172A;background:#fff;padding:2px 8px;border-radius:8px;border:1px solid #E2E8F0;white-space:nowrap"></span>
+        </div>
+        <div id="flash-ruler-green" style="position:absolute;top:50%;width:24px;height:24px;border-radius:50%;background:#fff;border:3px solid #0A2F6B;transform:translate(-50%,-50%);box-shadow:0 2px 6px rgba(0,0,0,.25);touch-action:none;cursor:grab;left:70%">
+          <span id="flash-ruler-green-val" style="position:absolute;top:-30px;left:50%;transform:translateX(-50%);font-size:12px;font-weight:800;color:#0F172A;background:#fff;padding:2px 8px;border-radius:8px;border:1px solid #E2E8F0;white-space:nowrap"></span>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:9.5px;font-weight:800;color:#94A3B8;text-transform:uppercase;margin:0 12px 26px">
+        <span>Vermelho</span><span>Amarelo</span><span>Verde</span>
+      </div>
+
+      <button class="btn-p" onclick="flashRulerClose()">Pronto</button>
+    </div>
+
+    <!-- Painel de valor único — recusas numéricas (nota/passageiro novo/distância) -->
+    <div id="flash-recusa-num" style="display:none">
+      <div class="sheet-head">
+        <button style="font-size:12px;color:#94A3B8;font-weight:700;background:none;border:0;padding:0" onclick="flashRecusaNumClose()">&#8249; Voltar</button>
+        <button class="xbtn" onclick="closeMo('mo-flash')">&#x2715;</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:9px;margin:6px 0 4px">
+        <span id="flash-recusa-num-ico" style="width:26px;height:26px;border-radius:8px;background:#FEF2F2;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#DC2626"></span>
+        <h3 id="flash-recusa-num-title" style="font-family:var(--font-brand);font-size:15px;font-weight:800;color:#0F172A"></h3>
+      </div>
+   
+
+===== MōB Flash @ 643136 =====
+ depois de já ter encerrado.
+  // As barras são atualizadas exclusivamente pela timeline contínua V3.
+  // A rotina base não sobrescreve mais a leitura real com auto_trips.
+  const jcBd = document.getElementById('jc-breakdown');
+  const tdBdRow = document.getElementById('td-bd-row');
+
+  setText('jc-trips', day.trips.length + autoTripsHoje.length);
+  setText('jc-trips2', day.trips.length + autoTripsHoje.length);
+  const aceitasCount = day.trips.length + autoTripsHoje.length;
+  const declinedCount = (S.declined || []).length;
+  setText('jc-aceitas', aceitasCount);
+  setText('jc-recusadas', declinedCount);
+  const corridasSubEl = document.getElementById('jc-corridas-sub');
+  if (corridasSubEl) corridasSubEl.style.display = (aceitasCount>0 || declinedCount>0) ? 'flex' : 'none';
+  const kmAtivo = day.trips.reduce((s,t)=>s+(t.km||0),0)
+                + autoTripsHoje.reduce((s,t)=>s+(parseFloat(t.real_km_trip ?? t.offer_km_trip)||0),0);
+  const kmDesl = Math.max(0, totalKm - kmAtivo);
+  setText('jc-kmativo', kmAtivo.toFixed(1));
+  setText('jc-kmdesl', kmDesl.toFixed(1));
+  const ganhosDia = day.trips.reduce((s,t)=>s+(t.value||0),0)
+                  + autoTripsHoje.reduce((s,t)=>s+(t.offer_value||0),0);
+  const horasDecimal = totalElapsed > 0 ? totalElapsed/3600 : 0;
+  const rsh  = horasDecimal > 0 ? ganhosDia/horasDecimal : null;
+  const rskm = totalKm > 0 ? ganhosDia/totalKm : null;
+  setText('jc-rsh', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
+  setText('jc-rskm', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
+  setText('jc-rsh2', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
+  setText('jc-rskm2', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
+  // Cor por indicador — pedido do Yuri (23/07/2026, mockup aprovado):
+  // mesmos limiares vermelho/verde que o motorista já ajusta na régua do
+  // MōB Flash (Indicadores → R$/km e R$/hora), cada indicador troca de cor
+  // por conta própria. Sem dado ainda (sessão não rodou tempo/km) fica
+  // neutro (verde), não faz sentido alarmar antes de ter dado de verdade.
+  const rateEl = document.getElementById('jc-rate-hora');
+  const kmEl   = document.getElementById('jc-rate-km');
+  const rateEl2 = document.getElementById('jc-rate-hora2');
+  const kmEl2   = document.getElementById('jc-rate-km2');
+  const rateCls = rsh !== null ? rateColorClass('rhora', rsh) : '';
+  const kmCls   = rskm !== null ? rateColorClass('rkm', rskm) : '';
+  if (rateEl)  rateEl.className  = 'td-rcard ' + rateCls;
+  if (kmEl)    kmEl.className    = 'td-rcard ' + kmCls;
+  if (rateEl2) rateEl2.className = 'rate-cell ' + rateCls;
+  if (kmEl2)   kmEl2.className   = 'rate-cell ' + kmCls;
+
+  const actions = document.getElementById('jc-actions');
+  if (!actions) return;
+  if (!isToday) {
+    actions.innerHTML = '';
+  } else if (state === 'idle') {
+    actions.innerHTML = `<button class="j-round-btn play" onclick="gpsStart()" aria-label="Iniciar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>`;
+  } else if (state === 'running') {
+    actions.innerHTML = '<button class="j-round-btn stop" onclick="confirmStop()" aria-label="Encerrar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"/></svg></button>';
+  }
+}
+
+function agMinutesBetween(start, end) {
+  if (!start || !end) return 0;
+  const [h1,m1] = start.split(':').map(Number);
+  const [h2,m2] = end.split(':').map(Number);
+  return Math.max(0, (h2*60+m2) - (h1*60+m1));
+}
+function openMetasHojeModal() {
+  const date = S.curDate || DB.today();
+  const day = DB.day(date);
+  const dow = new Date(date+'T12:00').getDay();
+  const plan = DB.planJornada().find(p => p.days && p.days.includes(dow));
+  const meta = DB.meta();
+  const ov = day.metaOverride || null;
+  const dimMes = new Date(new Date(date+'T12:00').getFullYear(), new Date(date+'T12:00').getMonth()+1, 0).getDate();
+  const moneyGoal = (ov && ov.money) ? ov.money : ((plan && plan.moneyGoal) ? plan.moneyGoal : (meta.general ? meta.general/dimMes : 0));
+  const kmGoal = (ov && ov.km) ? ov.km : (plan && plan.kmGoal ? plan.kmGoal : 0);
+  const schedMin = (ov && ov.hours) ? ov.hours*60 : (plan ? (plan.schedules||[]).reduce((s,b)=>s+agMinutesBetween(b.start,b.end),0) : 0);
+  const mEl = document.getElementById('mh-money'); if (mEl) mEl.value = moneyGoal ? moneyGoal.toFixed(2) : '';
+  const kEl = document.getElementById('mh-km'); if (kEl) kEl.value = kmGoal || '';
+  const hEl = document.getElementById('mh-hours'); if (hEl) hEl.value = schedMin ? (schedMin/60).toFixed(1) : '';
+  const subEl = document.getElementById('mh-sub');
+  if (subEl) {
+    const isToday = date === DB.today();
+    subEl.textContent = isToday ? 'Vale só para hoje' : ('Vale só para ' + new Date(date+'T12:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}));
+  }
+  openMo('mo-metas-hoje');
+}
+function saveMetasHoje() {
+  const date = S.curDate || DB.today();
+  const day = DB.day(date);
+  const money = parseFloat((document.getElementById('mh-money')||{}).value) || 0;
+  const km = parseFloat((document.getElementById('mh-km')||{}).value) || 0;
+  const hours = parseFloat((document.getElementById('mh-hours')||{}).value) || 0;
+  day.metaOverride = { money, km, hours };
+  DB.saveDay(day);
+  closeMo('mo-metas-hoje');
+  try { renderMetasDoDia(day); } catch(e) {
+
+===== MōB Flash @ 704284 =====
+ : ''}
+        ${fixoMensal ? `<div class="cv-brow"><span class="k">Parcela + extras</span><span class="v">${DB.fRI(calc.fixoKm)}/km</span></div>` : ''}
+      </div>
+      ${custoDia ? `<div class="cv-daily"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#D97706" stroke-width="2.4" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l2.5 2.5"/></svg><span>Seu carro custa <b>${DB.fRI(custoDia)} por dia trabalhado</b> só de parcela + extras — antes disso você ainda não está no lucro.</span></div>` : ''}
+      <button class="cv-btn" onclick="custoFinish()">Confirmar e ativar</button>
+      <button class="cv-btn-ghost" onclick="custoBack()">Ajustar valores</button>`;
+  }
+  const bodyEl = document.getElementById('custo-body');
+  if (bodyEl) bodyEl.innerHTML = body;
+}
+// Banner discreto e fechável na Jornada, só enquanto não configurado.
+// Fechar (X) esconde por 7 dias (não incomoda toda vez que abre o app).
+function updateCustoBanner() {
+  const el = document.getElementById('jorn-custo-banner');
+  if (!el) return;
+  const cfg = DB.cfg();
+  if (cfg.custoVeiculo?.configurado) { el.style.display = 'none'; return; }
+  const dismissedAt = cfg.custoBannerDismissedAt;
+  if (dismissedAt && (Date.now() - dismissedAt) < 7*24*60*60*1000) { el.style.display = 'none'; return; }
+  el.style.display = 'flex';
+}
+function dismissCustoBanner() {
+  const cfg = DB.cfg(); cfg.custoBannerDismissedAt = Date.now(); DB.saveCfg(cfg);
+  updateCustoBanner();
+}
+
+// Indicadores individuais por corrida (R$/km, R$/hora, Lucro) — mockup
+// aprovado (25/07/2026), pedido do Yuri: "bater o olho" no desempenho de
+// cada corrida específica, não só nos totais do dia. Reaproveita os MESMOS
+// limiares de cor (rateColorClass/FLASH_KPI_DEFS) já usados na régua do
+// MōB Flash — a mesma calibração que avalia a oferta ANTES de aceitar
+// passa a avaliar o resultado DEPOIS de rodar. km/hora somam
+// deslocamento+corrida (pra automáticas) ou usam o valor único já salvo
+// (pra importadas). Lucro só aparece com custo do veículo configurado —
+// sem isso, mostra o convite pra configurar em vez de inventar número.
+function perfStripHtml(value, km, durMin) {
+  if (!value || !km || km <= 0) return '';
+  const rkm = value / km;
+  const rhora = durMin > 0 ? value / (durMin/60) : null;
+  const cvCfg = DB.cfg().custoVeiculo;
+  const hasCusto = !!(cvCfg && cvCfg.configurado);
+  const lucro = hasCusto ? value - (cvCfg.custoPorKm||0) * km : null;
+  const n = hasCusto ? 3 : 2;
+  const rkmCls = rateColorClass('rkm', rkm);
+  const rhoraCls = rhora!=null ? rateColorClass('rhora', rhora) : '';
+  const lucroCls = lucro!=null ? rateColorClass('lucro', lucro) : '';
+  let html = `<div class="perf-strip" style="grid-template-columns:repeat(${n},1fr)">
+    <div class="perf-cell ${rkmCls}"><strong>${DB.fR(rkm)}</strong><span>por km</span></div>
+    ${rhora!=null?`<div class="perf-cell ${rhoraCls}"><strong>${DB.fR(rhora)}</strong><span>por hora</span></div>`:''}
+    ${hasCusto?`<div class="perf-cell ${lucroCls}"><strong>${DB.fR(lucro)}</strong><span>lucro</span></div>`:''}
+  </div>`;
+  if (!hasCusto) {
+    html += `<div class="cfg-note"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#64748B" stroke-width="2" style="flex:none"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><span>Configure o <a onclick="event.stopPropagation();openCustoVeiculo()">custo do veículo</a> pra ver o lucro real de cada corrida.</span></div>`;
+  }
+  return html;
+}
+function tripItem(t, tripDate) {
+  const plat = {uber:'Uber','99':'99',particular:'Particular'}[t.platform||'uber'] || 'Uber';
+  const dest = t.dest ? ' → '+esc(t.dest) : '';
+  const dur = t.duration ? ' · '+fmtDur(t.duration) : '';
+  // tid sempre único por renderização (nunca reusa t.id) — evita colisão de
+  // DOM id quando a mesma corrida aparece em mais de uma tela ao mesmo tempo
+  // (ex: dentro da Jornada e na tela Corridas), o que fazia o clique parecer
+  // não fazer nada (abria o painel de detalhe da OUTRA instância, escondida)
+  const tid = 'ti'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+  const cashSvg = `<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M2 10h20" stroke="white" stroke-width="1.2" fill="none"/><path d="M2 17h20" stroke="white" stroke-width="1.2" fill="none"/><circle cx="12" cy="13" r="2.5" fill="white"/></svg>`;
+  const extras = [];
+  if (t.dinamico>0) extras.push(`<span class="chip chip-d"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><strong>${DB.fR(t.dinamico)}</strong></span>`);
+  if (t.tip>0)     extras.push(`<span class="chip chip-g"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.5 4.05 3 5.5l7 7Z"/></svg><strong>${DB.fR(t.tip)}</strong></span>`);
+  // Taxa: só mostra quando há dado real do zip ou OCR confirmando 0%
+  let _feePct = null;
+  if (t.serviceFee !== undefined && t.serviceFee !== null) {
+    _feePct = t.serviceFee === 0 ? '0%' : (t.serviceFee*100).toFixed(1).replace('.',',')+'%';
+  } else if (t.taxaZero) { 
+
+===== MōB Flash @ 981729 =====
+vice
+function receiveOverlayTrip(trip) {
+  if (!trip || !trip.value) return;
+  const day = DB.day(S.curDate);
+  if (isTripDuplicate(trip, day.trips)) return;
+  trip.id = trip.id || DB.uid();
+  day.trips.push(trip);
+  DB.saveDay(day);
+  SYNC.push('trips', { id: trip.id, date: S.curDate, platform: trip.platform || 'uber',
+    time: trip.time || null, duration: trip.duration || 0, origin: trip.origin || '',
+    dest: trip.dest || '', value: parseFloat(trip.value) || 0, km: parseFloat(trip.km) || 0,
+    category: trip.category || '', surge: trip.surge || false, airport: trip.airport || false,
+    source: 'overlay' });
+  setTimeout(() => {
+    try { renderJornada(); } catch(e) {}
+    try { renderHome(); } catch(e) {}
+  }, 80);
+  // Vibração de confirmação
+  if (window.SmartMobiNative) SmartMobiNative.vibrate(80);
+}
+
+// Banner de configuração para o app nativo
+function showNativeBanner(msg) {
+  const existing = document.getElementById('native-banner');
+  if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.id = 'native-banner';
+  el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#0F172A;color:#fff;font-size:12px;font-weight:600;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px';
+  el.innerHTML = '<span>' + msg + '</span><button onclick="SmartMobiNative&&SmartMobiNative.openA11ySettings()" style="background:#22C55E;border:0;color:#fff;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">Configurar</button>';
+  document.body.prepend(el);
+  setTimeout(() => el.remove(), 6000);
+}
+
+function onNativeReady() {
+  // App rodando como APK nativo
+  console.log('SmartMobi Native v' + (SmartMobiNative?.getVersion?.() || '?'));
+  syncFlashConfigToNative();
+}
+
+// ── MōB Flash: "Indicadores" que aparecem no card (números coloridos) ──
+const FLASH_KPI_DEFS = [
+  { key:'rkm',    label:'R$ por km',          short:'R$/KM',   icon:'$',  defRed:1.2, defGreen:2.0 },
+  { key:'rhora',  label:'R$ por hora',        short:'R$/HORA', icon:'\u23F1', defRed:25,  defGreen:45 },
+  { key:'rmin',   label:'R$ por minuto',      short:'R$/MIN',  icon:'\u23F2', defRed:0.6, defGreen:1.0 },
+  { key:'margem', label:'% Lucro',            short:'% LUCRO', icon:'%',  defRed:15,  defGreen:40 },
+  { key:'lucro',  label:'Lucro em R$',        short:'R$ LUCRO',icon:'R$', defRed:5,   defGreen:15 },
+];
+const FLASH_DEFAULT_ON = { rkm:true, rhora:true, rmin:false, margem:true, lucro:true };
+const FLASH_PREVIEW_SAMPLE = { rkm:2.37, rhora:49, rmin:0.58, margem:12, lucro:4 };
+
+// Reaproveita o mesmo limiar vermelho/verde do MōB Flash (Indicadores) pra
+// colorir a faixa de destaque R$/h · R$/km da Jornada (23/07/2026, pedido
+// do Yuri) — mesma calibração em dois lugares, sem duplicar configuração.
+// value <= red → 'r' | value >= green → '' (verde, classe base) | entre os
+// dois → 'o'. Se o motorista nunca mexeu na régua, cai no padrão de
+// fábrica (defRed/defGreen do FLASH_KPI_DEFS).
+function rateColorClass(kpiKey, value) {
+  const def = FLASH_KPI_DEFS.find(d => d.key === kpiKey);
+  if (!def) return '';
+  const cfg = (DB.cfg().flashReader && DB.cfg().flashReader.kpis && DB.cfg().flashReader.kpis[kpiKey]) || {};
+  const red = cfg.red !== undefined ? cfg.red : def.defRed;
+  const green = cfg.green !== undefined ? cfg.green : def.defGreen;
+  if (value <= red) return 'r';
+  if (value >= green) return '';
+  return 'o';
+}
+
+// ── MōB Flash: "Recusas" — regras que recusam a corrida sozinhas, mesmo
+// com os Indicadores financeiros bons. PEDIDO (16-17/07/2026): saiu do
+// grupo de KPIs pra virar sua própria seção, com frase explicando o
+// efeito de cada uma ("Recusar ... " em vez de "Recusa se ...").
+// "parada" é bool puro (sem valor numérico); os outros 3 numéricos
+// ("num") usam o mesmo painel de edição; "endereco" é lista (embarque
+// OU destino) e abre uma tela própria.
+const FLASH_RECUSA_DEFS = [
+  { key:'parada', label:'Corrida com parada extra', type:'bool',
+    icon:'\u26A0', phrase: () => 'Recusar corrida com parada extra' },
+  { key:'nota', label:'Nota do passageiro', type:'num', unit:'', step:0.1, min:1, max:5,
+    icon:'\u2605', phrase: v => `Recusar nota do passageiro abaixo de ${flashFmtNum(v)}` },
+  { key:'passageiroNovo', label:'Passageiro novo', type:'num', unit:'corridas', step:1, min:0, max:200,
+    icon:'#', phrase: v => `Recusar passageiro com menos de ${Math.round(v)} corridas` },
+  { key:'distancia', label:'Distância deslocamento', type:'num', unit:'km', step:0.5, min:0.5, max:30,
+    icon:'KM', phrase: v => `Recusar buscar com mais de ${flashFmtNum(v)} km` },
+  { key:'endereco', label:'Endereço recusado', type:'list',
+    icon:'\u2298', phrase: () => 'Recusar embarque ou destino em locais bloqueados' },
+];
+const FLASH_RECUSA_DEFAULT = {
+  parada:  { enabled:true },
+  nota:    { enabled:false, value:4.5 },
+  passageiroNovo: { enabled:true, value:5 },
+  distancia: { enabled:false, value:3.0 },
+  endereco:  { enabled:true, list:[] },
+};
+function flashFmtNum(v) { return (Math.round(v*10)/10).toString().replace('.', ','); }
+
+let flashDraft = null;
+
+function getFlashDefaults() {
+  const kpis = {};
+  FLASH_KPI_DEFS.forEach(d => { kpis[d.key] = { enabled: FLASH_DEFAULT_ON[d.key], red: d.defRed, green: d.defGreen }; });
+  cons
+
+===== MōB Flash @ 982562 =====
+de configuração para o app nativo
+function showNativeBanner(msg) {
+  const existing = document.getElementById('native-banner');
+  if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.id = 'native-banner';
+  el.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#0F172A;color:#fff;font-size:12px;font-weight:600;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px';
+  el.innerHTML = '<span>' + msg + '</span><button onclick="SmartMobiNative&&SmartMobiNative.openA11ySettings()" style="background:#22C55E;border:0;color:#fff;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">Configurar</button>';
+  document.body.prepend(el);
+  setTimeout(() => el.remove(), 6000);
+}
+
+function onNativeReady() {
+  // App rodando como APK nativo
+  console.log('SmartMobi Native v' + (SmartMobiNative?.getVersion?.() || '?'));
+  syncFlashConfigToNative();
+}
+
+// ── MōB Flash: "Indicadores" que aparecem no card (números coloridos) ──
+const FLASH_KPI_DEFS = [
+  { key:'rkm',    label:'R$ por km',          short:'R$/KM',   icon:'$',  defRed:1.2, defGreen:2.0 },
+  { key:'rhora',  label:'R$ por hora',        short:'R$/HORA', icon:'\u23F1', defRed:25,  defGreen:45 },
+  { key:'rmin',   label:'R$ por minuto',      short:'R$/MIN',  icon:'\u23F2', defRed:0.6, defGreen:1.0 },
+  { key:'margem', label:'% Lucro',            short:'% LUCRO', icon:'%',  defRed:15,  defGreen:40 },
+  { key:'lucro',  label:'Lucro em R$',        short:'R$ LUCRO',icon:'R$', defRed:5,   defGreen:15 },
+];
+const FLASH_DEFAULT_ON = { rkm:true, rhora:true, rmin:false, margem:true, lucro:true };
+const FLASH_PREVIEW_SAMPLE = { rkm:2.37, rhora:49, rmin:0.58, margem:12, lucro:4 };
+
+// Reaproveita o mesmo limiar vermelho/verde do MōB Flash (Indicadores) pra
+// colorir a faixa de destaque R$/h · R$/km da Jornada (23/07/2026, pedido
+// do Yuri) — mesma calibração em dois lugares, sem duplicar configuração.
+// value <= red → 'r' | value >= green → '' (verde, classe base) | entre os
+// dois → 'o'. Se o motorista nunca mexeu na régua, cai no padrão de
+// fábrica (defRed/defGreen do FLASH_KPI_DEFS).
+function rateColorClass(kpiKey, value) {
+  const def = FLASH_KPI_DEFS.find(d => d.key === kpiKey);
+  if (!def) return '';
+  const cfg = (DB.cfg().flashReader && DB.cfg().flashReader.kpis && DB.cfg().flashReader.kpis[kpiKey]) || {};
+  const red = cfg.red !== undefined ? cfg.red : def.defRed;
+  const green = cfg.green !== undefined ? cfg.green : def.defGreen;
+  if (value <= red) return 'r';
+  if (value >= green) return '';
+  return 'o';
+}
+
+// ── MōB Flash: "Recusas" — regras que recusam a corrida sozinhas, mesmo
+// com os Indicadores financeiros bons. PEDIDO (16-17/07/2026): saiu do
+// grupo de KPIs pra virar sua própria seção, com frase explicando o
+// efeito de cada uma ("Recusar ... " em vez de "Recusa se ...").
+// "parada" é bool puro (sem valor numérico); os outros 3 numéricos
+// ("num") usam o mesmo painel de edição; "endereco" é lista (embarque
+// OU destino) e abre uma tela própria.
+const FLASH_RECUSA_DEFS = [
+  { key:'parada', label:'Corrida com parada extra', type:'bool',
+    icon:'\u26A0', phrase: () => 'Recusar corrida com parada extra' },
+  { key:'nota', label:'Nota do passageiro', type:'num', unit:'', step:0.1, min:1, max:5,
+    icon:'\u2605', phrase: v => `Recusar nota do passageiro abaixo de ${flashFmtNum(v)}` },
+  { key:'passageiroNovo', label:'Passageiro novo', type:'num', unit:'corridas', step:1, min:0, max:200,
+    icon:'#', phrase: v => `Recusar passageiro com menos de ${Math.round(v)} corridas` },
+  { key:'distancia', label:'Distância deslocamento', type:'num', unit:'km', step:0.5, min:0.5, max:30,
+    icon:'KM', phrase: v => `Recusar buscar com mais de ${flashFmtNum(v)} km` },
+  { key:'endereco', label:'Endereço recusado', type:'list',
+    icon:'\u2298', phrase: () => 'Recusar embarque ou destino em locais bloqueados' },
+];
+const FLASH_RECUSA_DEFAULT = {
+  parada:  { enabled:true },
+  nota:    { enabled:false, value:4.5 },
+  passageiroNovo: { enabled:true, value:5 },
+  distancia: { enabled:false, value:3.0 },
+  endereco:  { enabled:true, list:[] },
+};
+function flashFmtNum(v) { return (Math.round(v*10)/10).toString().replace('.', ','); }
+
+let flashDraft = null;
+
+function getFlashDefaults() {
+  const kpis = {};
+  FLASH_KPI_DEFS.forEach(d => { kpis[d.key] = { enabled: FLASH_DEFAULT_ON[d.key], red: d.defRed, green: d.defGreen }; });
+  const recusas = {};
+  FLASH_RECUSA_DEFS.forEach(d => { recusas[d.key] = JSON.parse(JSON.stringify(FLASH_RECUSA_DEFAULT[d.key])); });
+  return { enabled: true, kpis, recusas };
+}
+
+// Carrega o draft (config salva + defaults) — usado tanto pelo "Mais > MōB
+// Flash" quanto pelo assistente de Iniciar Jornada, sempre o mesmo dado.
+async function _flashLoadDraft() {
+  if (!_bootPullDone) { showToast('Sincronizando seus dados...'); await _waitBootPull(); }
+  const cfg = DB.cfg();
+  const saved = cfg.flashReader;
+  const defaults = getFlashDefaults();
+  flashDraft = { enabled: saved && saved.enabled !== undefined ? saved.enabled : defaults.enabled, kpis: {}, recusas: {} };
+  FLASH_KPI_DEFS.forEach(d => {
+    const s = (saved && saved.kpis && saved.kpis[d.key]) || {};
+    flashDraft.kpis[d.key] = {
+      enabled: s.enabled !== undefi
+
+===== MōB Flash @ 983381 =====
+/ App rodando como APK nativo
+  console.log('SmartMobi Native v' + (SmartMobiNative?.getVersion?.() || '?'));
+  syncFlashConfigToNative();
+}
+
+// ── MōB Flash: "Indicadores" que aparecem no card (números coloridos) ──
+const FLASH_KPI_DEFS = [
+  { key:'rkm',    label:'R$ por km',          short:'R$/KM',   icon:'$',  defRed:1.2, defGreen:2.0 },
+  { key:'rhora',  label:'R$ por hora',        short:'R$/HORA', icon:'\u23F1', defRed:25,  defGreen:45 },
+  { key:'rmin',   label:'R$ por minuto',      short:'R$/MIN',  icon:'\u23F2', defRed:0.6, defGreen:1.0 },
+  { key:'margem', label:'% Lucro',            short:'% LUCRO', icon:'%',  defRed:15,  defGreen:40 },
+  { key:'lucro',  label:'Lucro em R$',        short:'R$ LUCRO',icon:'R$', defRed:5,   defGreen:15 },
+];
+const FLASH_DEFAULT_ON = { rkm:true, rhora:true, rmin:false, margem:true, lucro:true };
+const FLASH_PREVIEW_SAMPLE = { rkm:2.37, rhora:49, rmin:0.58, margem:12, lucro:4 };
+
+// Reaproveita o mesmo limiar vermelho/verde do MōB Flash (Indicadores) pra
+// colorir a faixa de destaque R$/h · R$/km da Jornada (23/07/2026, pedido
+// do Yuri) — mesma calibração em dois lugares, sem duplicar configuração.
+// value <= red → 'r' | value >= green → '' (verde, classe base) | entre os
+// dois → 'o'. Se o motorista nunca mexeu na régua, cai no padrão de
+// fábrica (defRed/defGreen do FLASH_KPI_DEFS).
+function rateColorClass(kpiKey, value) {
+  const def = FLASH_KPI_DEFS.find(d => d.key === kpiKey);
+  if (!def) return '';
+  const cfg = (DB.cfg().flashReader && DB.cfg().flashReader.kpis && DB.cfg().flashReader.kpis[kpiKey]) || {};
+  const red = cfg.red !== undefined ? cfg.red : def.defRed;
+  const green = cfg.green !== undefined ? cfg.green : def.defGreen;
+  if (value <= red) return 'r';
+  if (value >= green) return '';
+  return 'o';
+}
+
+// ── MōB Flash: "Recusas" — regras que recusam a corrida sozinhas, mesmo
+// com os Indicadores financeiros bons. PEDIDO (16-17/07/2026): saiu do
+// grupo de KPIs pra virar sua própria seção, com frase explicando o
+// efeito de cada uma ("Recusar ... " em vez de "Recusa se ...").
+// "parada" é bool puro (sem valor numérico); os outros 3 numéricos
+// ("num") usam o mesmo painel de edição; "endereco" é lista (embarque
+// OU destino) e abre uma tela própria.
+const FLASH_RECUSA_DEFS = [
+  { key:'parada', label:'Corrida com parada extra', type:'bool',
+    icon:'\u26A0', phrase: () => 'Recusar corrida com parada extra' },
+  { key:'nota', label:'Nota do passageiro', type:'num', unit:'', step:0.1, min:1, max:5,
+    icon:'\u2605', phrase: v => `Recusar nota do passageiro abaixo de ${flashFmtNum(v)}` },
+  { key:'passageiroNovo', label:'Passageiro novo', type:'num', unit:'corridas', step:1, min:0, max:200,
+    icon:'#', phrase: v => `Recusar passageiro com menos de ${Math.round(v)} corridas` },
+  { key:'distancia', label:'Distância deslocamento', type:'num', unit:'km', step:0.5, min:0.5, max:30,
+    icon:'KM', phrase: v => `Recusar buscar com mais de ${flashFmtNum(v)} km` },
+  { key:'endereco', label:'Endereço recusado', type:'list',
+    icon:'\u2298', phrase: () => 'Recusar embarque ou destino em locais bloqueados' },
+];
+const FLASH_RECUSA_DEFAULT = {
+  parada:  { enabled:true },
+  nota:    { enabled:false, value:4.5 },
+  passageiroNovo: { enabled:true, value:5 },
+  distancia: { enabled:false, value:3.0 },
+  endereco:  { enabled:true, list:[] },
+};
+function flashFmtNum(v) { return (Math.round(v*10)/10).toString().replace('.', ','); }
+
+let flashDraft = null;
+
+function getFlashDefaults() {
+  const kpis = {};
+  FLASH_KPI_DEFS.forEach(d => { kpis[d.key] = { enabled: FLASH_DEFAULT_ON[d.key], red: d.defRed, green: d.defGreen }; });
+  const recusas = {};
+  FLASH_RECUSA_DEFS.forEach(d => { recusas[d.key] = JSON.parse(JSON.stringify(FLASH_RECUSA_DEFAULT[d.key])); });
+  return { enabled: true, kpis, recusas };
+}
+
+// Carrega o draft (config salva + defaults) — usado tanto pelo "Mais > MōB
+// Flash" quanto pelo assistente de Iniciar Jornada, sempre o mesmo dado.
+async function _flashLoadDraft() {
+  if (!_bootPullDone) { showToast('Sincronizando seus dados...'); await _waitBootPull(); }
+  const cfg = DB.cfg();
+  const saved = cfg.flashReader;
+  const defaults = getFlashDefaults();
+  flashDraft = { enabled: saved && saved.enabled !== undefined ? saved.enabled : defaults.enabled, kpis: {}, recusas: {} };
+  FLASH_KPI_DEFS.forEach(d => {
+    const s = (saved && saved.kpis && saved.kpis[d.key]) || {};
+    flashDraft.kpis[d.key] = {
+      enabled: s.enabled !== undefined ? s.enabled : defaults.kpis[d.key].enabled,
+      red: s.red !== undefined ? s.red : defaults.kpis[d.key].red,
+      green: s.green !== undefined ? s.green : defaults.kpis[d.key].green
+    };
+  });
+  FLASH_RECUSA_DEFS.forEach(d => {
+    const s = (saved && saved.recusas && saved.recusas[d.key]) || {};
+    const def = defaults.recusas[d.key];
+    if (d.type === 'list') {
+      flashDraft.recusas[d.key] = {
+        enabled: s.enabled !== undefined ? s.enabled : def.enabled,
+        // PEDIDO (17/07/2026): cada item agora é {label, type:'rua'|'bairro'}
+        // pra dar pra mostrar a tag na lista — normaliza entradas antigas
+        // (string solta, de antes dessa mudança) na hora de carregar.
+        list: Array.isArray(s.list) ? s.list.map(_flashNormEnderecoItem).filter(Boolean) : def.list.slice()
+     
+
+===== MōB Flash @ 987143 =====
+[d.key])); });
+  return { enabled: true, kpis, recusas };
+}
+
+// Carrega o draft (config salva + defaults) — usado tanto pelo "Mais > MōB
+// Flash" quanto pelo assistente de Iniciar Jornada, sempre o mesmo dado.
+async function _flashLoadDraft() {
+  if (!_bootPullDone) { showToast('Sincronizando seus dados...'); await _waitBootPull(); }
+  const cfg = DB.cfg();
+  const saved = cfg.flashReader;
+  const defaults = getFlashDefaults();
+  flashDraft = { enabled: saved && saved.enabled !== undefined ? saved.enabled : defaults.enabled, kpis: {}, recusas: {} };
+  FLASH_KPI_DEFS.forEach(d => {
+    const s = (saved && saved.kpis && saved.kpis[d.key]) || {};
+    flashDraft.kpis[d.key] = {
+      enabled: s.enabled !== undefined ? s.enabled : defaults.kpis[d.key].enabled,
+      red: s.red !== undefined ? s.red : defaults.kpis[d.key].red,
+      green: s.green !== undefined ? s.green : defaults.kpis[d.key].green
+    };
+  });
+  FLASH_RECUSA_DEFS.forEach(d => {
+    const s = (saved && saved.recusas && saved.recusas[d.key]) || {};
+    const def = defaults.recusas[d.key];
+    if (d.type === 'list') {
+      flashDraft.recusas[d.key] = {
+        enabled: s.enabled !== undefined ? s.enabled : def.enabled,
+        // PEDIDO (17/07/2026): cada item agora é {label, type:'rua'|'bairro'}
+        // pra dar pra mostrar a tag na lista — normaliza entradas antigas
+        // (string solta, de antes dessa mudança) na hora de carregar.
+        list: Array.isArray(s.list) ? s.list.map(_flashNormEnderecoItem).filter(Boolean) : def.list.slice()
+      };
+    } else {
+      flashDraft.recusas[d.key] = {
+        enabled: s.enabled !== undefined ? s.enabled : def.enabled,
+        value: s.value !== undefined ? s.value : def.value
+      };
+    }
+  });
+}
+
+let flashWizardMode = 'settings';   // 'settings' (Mais > MōB Flash) ou 'start' (Iniciar Jornada)
+let flashWizardOnComplete = null;   // callback chamado ao terminar/pular, só no modo 'start'
+
+// Entrada pelo "Mais" — mesma tela do assistente, só que sem o vínculo com
+// iniciar jornada. Termina com "Salvar", não com "Iniciar jornada".
+async function openFlashConfig() {
+  await _flashLoadDraft();
+  flashWizardMode = 'settings';
+  flashWizardOnComplete = null;
+  _flashWizardShowStep(1);
+  renderFlashKpiList();
+  renderFlashRecusaList();
+  renderFlashPreview();
+  renderFlashPerms();
+  openMo('mo-flash');
+}
+
+// Entrada pelo botão de Iniciar Jornada — mesmo assistente, terminando em
+// "Iniciar jornada" (ou pulando com "Iniciar sem o MōB Flash"). onComplete
+// é chamado exatamente uma vez, ao final de qualquer um dos dois caminhos.
+async function openFlashWizardForJourney(onComplete) {
+  await _flashLoadDraft();
+  flashWizardMode = 'start';
+  flashWizardOnComplete = onComplete;
+  _flashWizardShowStep(1);
+  renderFlashKpiList();
+  renderFlashRecusaList();
+  renderFlashPreview();
+  renderFlashPerms();
+  openMo('mo-flash');
+}
+
+function _flashWizardShowStep(n) {
+  document.getElementById('flash-step1').style.display = n === 1 ? '' : 'none';
+  document.getElementById('flash-step2').style.display = n === 2 ? '' : 'none';
+  document.getElementById('flash-ruler').style.display = 'none';
+  document.getElementById('flash-recusa-num').style.display = 'none';
+  document.getElementById('flash-enderecos').style.display = 'none';
+  // Pular só faz sentido quando tem uma jornada esperando pra iniciar —
+  // no modo settings (Mais > MōB Flash) esses links somem.
+  const skip1 = document.getElementById('flash-skip1');
+  const skip2 = document.getElementById('flash-skip2');
+  const primary2 = document.getElementById('flash-step2-primary');
+  if (skip1) skip1.style.display = (flashWizardMode === 'start') ? '' : 'none';
+  if (skip2) skip2.style.display = (flashWizardMode === 'start') ? '' : 'none';
+  if (primary2) primary2.textContent = (flashWizardMode === 'start') ? 'Iniciar jornada' : 'Salvar configurações';
+}
+
+function flashWizardNext() {
+  _flashWizardShowStep(2);
+  renderFlashPerms();
+}
+
+function flashWizardBack() {
+  _flashWizardShowStep(1);
+}
+
+// "Pular tudo" (passo 1) e "Iniciar sem o MōB Flash" (passo 2) — mesmo
+// efeito: desliga o Flash, salva e segue o fluxo sem exigir nada mais.
+function flashWizardSkip() {
+  flashDraft.enabled = false;
+  flashConfigSave(true);
+}
+
+// startFlash=true → veio do botão principal ("Iniciar jornada"/"Salvar").
+// startFlash=false → veio de um link de pular ("Iniciar sem o Flash").
+function flashWizardFinish(startFlash) {
+  if (startFlash) {
+    // Card pode mostrar só a recusa (17/07/2026), sem indicador nenhum —
+    // então "tem algo pra mostrar" agora conta os dois grupos.
+    const anyOn = Object.values(flashDraft.kpis).some(k => k.enabled) ||
+                  Object.values(flashDraft.recusas).some(r => r.enabled);
+    flashDraft.enabled = anyOn;
+  } else {
+    flashDraft.enabled = false;
+  }
+  flashConfigSave(true);
+}
+
+// ── Régua de limite vermelho/verde (substitui os dois campos de texto) ──
+const FLASH_RULER_BOUNDS = { rkm:[0,5], rhora:[0,100], rmin:[0,3], margem:[0,100], lucro:[0,50] };
+let flashRulerKey = null;
+let flashRulerDrag = null; // 'red' | 'green' | null
+
+function flashOpenRuler(key) {
+  flashRulerKey = key;
+  const d = FLASH_KPI_DEFS.find(x => x.key === key);
+  document.getElementById('flash-ruler-ico').textContent = d.icon;
+  document.getElementById('flas
+
+===== MōB Flash @ 987825 =====
+{
+      enabled: s.enabled !== undefined ? s.enabled : defaults.kpis[d.key].enabled,
+      red: s.red !== undefined ? s.red : defaults.kpis[d.key].red,
+      green: s.green !== undefined ? s.green : defaults.kpis[d.key].green
+    };
+  });
+  FLASH_RECUSA_DEFS.forEach(d => {
+    const s = (saved && saved.recusas && saved.recusas[d.key]) || {};
+    const def = defaults.recusas[d.key];
+    if (d.type === 'list') {
+      flashDraft.recusas[d.key] = {
+        enabled: s.enabled !== undefined ? s.enabled : def.enabled,
+        // PEDIDO (17/07/2026): cada item agora é {label, type:'rua'|'bairro'}
+        // pra dar pra mostrar a tag na lista — normaliza entradas antigas
+        // (string solta, de antes dessa mudança) na hora de carregar.
+        list: Array.isArray(s.list) ? s.list.map(_flashNormEnderecoItem).filter(Boolean) : def.list.slice()
+      };
+    } else {
+      flashDraft.recusas[d.key] = {
+        enabled: s.enabled !== undefined ? s.enabled : def.enabled,
+        value: s.value !== undefined ? s.value : def.value
+      };
+    }
+  });
+}
+
+let flashWizardMode = 'settings';   // 'settings' (Mais > MōB Flash) ou 'start' (Iniciar Jornada)
+let flashWizardOnComplete = null;   // callback chamado ao terminar/pular, só no modo 'start'
+
+// Entrada pelo "Mais" — mesma tela do assistente, só que sem o vínculo com
+// iniciar jornada. Termina com "Salvar", não com "Iniciar jornada".
+async function openFlashConfig() {
+  await _flashLoadDraft();
+  flashWizardMode = 'settings';
+  flashWizardOnComplete = null;
+  _flashWizardShowStep(1);
+  renderFlashKpiList();
+  renderFlashRecusaList();
+  renderFlashPreview();
+  renderFlashPerms();
+  openMo('mo-flash');
+}
+
+// Entrada pelo botão de Iniciar Jornada — mesmo assistente, terminando em
+// "Iniciar jornada" (ou pulando com "Iniciar sem o MōB Flash"). onComplete
+// é chamado exatamente uma vez, ao final de qualquer um dos dois caminhos.
+async function openFlashWizardForJourney(onComplete) {
+  await _flashLoadDraft();
+  flashWizardMode = 'start';
+  flashWizardOnComplete = onComplete;
+  _flashWizardShowStep(1);
+  renderFlashKpiList();
+  renderFlashRecusaList();
+  renderFlashPreview();
+  renderFlashPerms();
+  openMo('mo-flash');
+}
+
+function _flashWizardShowStep(n) {
+  document.getElementById('flash-step1').style.display = n === 1 ? '' : 'none';
+  document.getElementById('flash-step2').style.display = n === 2 ? '' : 'none';
+  document.getElementById('flash-ruler').style.display = 'none';
+  document.getElementById('flash-recusa-num').style.display = 'none';
+  document.getElementById('flash-enderecos').style.display = 'none';
+  // Pular só faz sentido quando tem uma jornada esperando pra iniciar —
+  // no modo settings (Mais > MōB Flash) esses links somem.
+  const skip1 = document.getElementById('flash-skip1');
+  const skip2 = document.getElementById('flash-skip2');
+  const primary2 = document.getElementById('flash-step2-primary');
+  if (skip1) skip1.style.display = (flashWizardMode === 'start') ? '' : 'none';
+  if (skip2) skip2.style.display = (flashWizardMode === 'start') ? '' : 'none';
+  if (primary2) primary2.textContent = (flashWizardMode === 'start') ? 'Iniciar jornada' : 'Salvar configurações';
+}
+
+function flashWizardNext() {
+  _flashWizardShowStep(2);
+  renderFlashPerms();
+}
+
+function flashWizardBack() {
+  _flashWizardShowStep(1);
+}
+
+// "Pular tudo" (passo 1) e "Iniciar sem o MōB Flash" (passo 2) — mesmo
+// efeito: desliga o Flash, salva e segue o fluxo sem exigir nada mais.
+function flashWizardSkip() {
+  flashDraft.enabled = false;
+  flashConfigSave(true);
+}
+
+// startFlash=true → veio do botão principal ("Iniciar jornada"/"Salvar").
+// startFlash=false → veio de um link de pular ("Iniciar sem o Flash").
+function flashWizardFinish(startFlash) {
+  if (startFlash) {
+    // Card pode mostrar só a recusa (17/07/2026), sem indicador nenhum —
+    // então "tem algo pra mostrar" agora conta os dois grupos.
+    const anyOn = Object.values(flashDraft.kpis).some(k => k.enabled) ||
+                  Object.values(flashDraft.recusas).some(r => r.enabled);
+    flashDraft.enabled = anyOn;
+  } else {
+    flashDraft.enabled = false;
+  }
+  flashConfigSave(true);
+}
+
+// ── Régua de limite vermelho/verde (substitui os dois campos de texto) ──
+const FLASH_RULER_BOUNDS = { rkm:[0,5], rhora:[0,100], rmin:[0,3], margem:[0,100], lucro:[0,50] };
+let flashRulerKey = null;
+let flashRulerDrag = null; // 'red' | 'green' | null
+
+function flashOpenRuler(key) {
+  flashRulerKey = key;
+  const d = FLASH_KPI_DEFS.find(x => x.key === key);
+  document.getElementById('flash-ruler-ico').textContent = d.icon;
+  document.getElementById('flash-ruler-title').textContent = d.label;
+  document.getElementById('flash-step1').style.display = 'none';
+  document.getElementById('flash-step2').style.display = 'none';
+  document.getElementById('flash-ruler').style.display = '';
+  _flashRulerRender();
+}
+
+function flashRulerClose() {
+  flashRulerKey = null;
+  _flashWizardShowStep(1); // régua só é aberta a partir do passo 1 (lista de KPIs)
+  renderFlashKpiList();
+  renderFlashRecusaList();
+  renderFlashPreview();
+}
+
+function _flashRulerPct(key, val) {
+  const [lo, hi] = FLASH_RULER_BOUNDS[key];
+  return Math.max(0, Math.min(100, ((val - lo) / (hi - lo)) * 100));
+}
+function _flashRulerVal(key, pct) {
+  const [lo, hi] = FLASH
+
+===== flashReader @ 25867 =====
+14px;font:inherit;font-weight:600}@media(max-width:380px){.amount{font-size:34px}.kpi strong{font-size:19px}.heroGrid{gap:6px}.chart{gap:5px}.barCol i{width:8px}}
+
+/* ── Jornada screen extras ── */
+.daybar{display:flex;align-items:center;gap:10px;margin:4px 0 12px;padding:0 16px}.arrow{width:38px;height:38px;border-radius:14px;background:#fff;border:1px solid var(--line);box-shadow:0 3px 14px rgba(15,23,42,.06);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:20px;cursor:pointer;touch-action:manipulation}.datebox{flex:1;text-align:center}.datebox h1{font-size:19px;line-height:1.1;letter-spacing:-.04em}.datebox p{font-size:12px;color:var(--muted);margin-top:3px;font-weight:600}.today{font-size:10px;padding:2px 8px;border-radius:999px;background:rgba(14,165,233,.12);color:#0A2F6B;margin-left:5px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px;margin-bottom:12px}
+.stats-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.stats-cards .stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 6px;text-align:center;box-shadow:0 3px 14px rgba(15,23,42,.06)}
+.stats-cards .v{font-size:15px;font-weight:800;line-height:1}
+.stats-cards .v.green{color:var(--green2)}
+.stats-cards .v.red{color:#EF4444}
+.stats-cards .l{font-size:9.5px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:6px}
+/* R$/h e R$/km — largura total, preenchendo até as bordas do card */
+/* Faixa de destaque R$/h + R$/km (23/07/2026, mockup aprovado — Opção A).
+   Cor dinâmica POR INDICADOR (independente um do outro — R$/h pode estar
+   verde com R$/km em vermelho ao mesmo tempo): compara com os mesmos
+   limiares vermelho/verde que o MōB Flash já usa
+   (DB.cfg().flashReader.kpis.rhora/.rkm), aplicada em renderJourneyCard(). */
+.rate-strip{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.rate-cell{text-align:center;border-radius:14px;padding:11px 6px;background:rgba(34,197,94,.16);border:1px solid rgba(34,197,94,.4);transition:background .3s,border-color .3s}
+.rate-cell.o{background:rgba(245,158,11,.18);border-color:rgba(245,158,11,.45)}
+.rate-cell.r{background:rgba(239,68,68,.20);border-color:rgba(239,68,68,.5)}
+.rate-cell strong{display:block;font-size:21px;font-weight:800;color:#fff;letter-spacing:-.02em}
+.rate-cell span{display:block;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#86efac;margin-top:2px}
+.rate-cell.o span{color:#fde68a}
+.rate-cell.r span{color:#fca5a5}
+/* Metas do dia: CSS movido pra seção solta (ver .goal-item/.gbar mais
+   abaixo, estilo "grande" já existente) — removido daqui em 23/07/2026,
+   não fica mais embutido no fundo escuro do card da jornada. */
+.stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px 8px;text-align:center;box-shadow:0 3px 14px rgba(15,23,42,.06)}.stat .v{font-family:'Inter',system-ui,sans-serif;font-size:15px;font-weight:700;white-space:nowrap}.stat .l{font-size:9px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-top:5px}.green{color:var(--green2)}.red{color:var(--red)}.blue{color:#0A2F6B}
+
+/* ── Journey card (controles embutidos) ── */
+.journey-wrap{margin:0 16px 12px;border-radius:26px;overflow:hidden;box-shadow:0 10px 30px rgba(15,23,42,.10)}
+.journey{padding:16px;color:#fff;transition:background .25s;box-sizing:border-box}
+.journey.idle{background:var(--blue)}
+.journey.ended{background:var(--blue)}
+.journey.running{background:#15803D}
+.journey-breakdown{background:#fff;padding:14px}
+.sbar-wrap{cursor:pointer;touch-action:manipulation}
+.sbar{height:22px;border-radius:8px;overflow:hidden;display:flex;background:#F1F5F9;margin:0;pointer-events:none}
+.sbar i{display:flex;align-items:center;justify-content:center;height:100%;font-size:9.5px;font-weight:800;color:#fff}
+.sbar-list{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.sbar-list.open{max-height:220px;margin-top:10px}
+.sbar-list .srow{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line)}
+.sbar-list .srow:first-child{border-top:0}
+.sbar-list .sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sbar-list .srow b{flex:1;font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.03em}
+.sbar-list .srow .pct{font-size:10px;font-weight:800;color:var(--muted);width:28px;text-align:right}
+.sbar-list .srow .stempo{font-size:10.5px;font-weight:800;color:var(--text);width:48px;text-align:right}
+.sbar-list .srow .skm{font-size:10.5px;font-weight:700;color:var(--muted);width:56px;text-align:right}
+.td-row.bd .sbar{background:rgba(255,255,255,.10)}
+.td-row.bd .sbar-list.open{margin-top:12px}
+.td-row.bd .sbar-list .srow{border-top:1px solid rgba(255,255,255,.14)}
+.td-row.bd .sbar-list .srow b,.td-row.bd .sbar-list .srow .stempo{color:#fff}
+.td-row.bd .sbar-list .srow .pct,.td-row.bd .sbar-list .srow .skm{color:rgba(255,255,255,.6)}
+.jss-statusbar{padding:2px 14px 12px}
+/* .journey.paused removido */
+.j-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px}
+.j-status{display:none}
+.j-status i{width:8px;height:8px;border-radius:50%;background:#fff;flex-shrink:0
