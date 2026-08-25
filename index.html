@@ -14344,6 +14344,10 @@ async function feedEnviarComentario(){
     }catch(e){ console.warn('[JourneyStatusTimeline]',e); }
   }
   // Compatibilidade apenas: V3 abaixo é o único renderizador automático.
+  // Expõe somente o vínculo da sessão nativa para o V3 poder garantir que
+  // uma Jornada recém-iniciada comece a gravar Online/Buscar/Corrida mesmo
+  // sem depender do renderizador legado da barra.
+  window.ensureNativeJourneySession=ensureNativeJourneySession;
   window.renderStatusTimeline=renderStatusTimeline;
 })();
 </script>
@@ -14548,7 +14552,10 @@ async function feedEnviarComentario(){
     ensureJourneyStatus(sess);
     const c=journeyStatusCache.get(journeyKey(sess));
     if(c&&c.rows&&c.rows.length) return statusBreakdownRows(c.rows,elapsedSec,kmTotal,null,null,(S?.gps?.st==='running'?S.gps.sessionId:null));
-    if(!c || c.loading) return {total:0,online:{sec:0,km:0,pct:0},buscando:{sec:0,km:0,pct:0},corrida:{sec:0,km:0,pct:0}};
+    // Jornada ativa nunca some enquanto a timeline chega: sem trechos ainda,
+    // todo o tempo/km conhecido fica como Online e depois é redistribuído
+    // quando Buscar/Corrida forem registrados.
+    if(!c || c.loading) return computeStatusBreakdown(elapsedSec,kmTotal,fallbackAuto||[]);
     return computeStatusBreakdown(elapsedSec,kmTotal,fallbackAuto||[]);
   };
 
@@ -14695,15 +14702,15 @@ async function feedEnviarComentario(){
     const jcRow=document.getElementById('jc-breakdown');
     if(S?.gps?.st==='running'&&S.gps.sessionId){
       const sess={id:S.gps.sessionId,start:S.gps.start,end:null,km:S.gps.km||0,elapsed:getElapsed()};
+      // Garante o vínculo com JourneyStatusTracker mesmo que o renderizador
+      // legado esteja desativado. Isso faz a timeline nativa começar a gravar.
+      try{ if(typeof window.ensureNativeJourneySession==='function') window.ensureNativeJourneySession(); }catch(e){}
       ensureJourneyStatus(sess);
-      const c2=journeyStatusCache.get(journeyKey(sess));
-      if(c2?.rows?.length){
-        const bd=journeyBreakdownForSession(sess,getElapsed(),S.gps.km||0,[]);
-        if(jcRow)jcRow.style.display='';
-        try{setHTML('jc-bar',buildSbarHtml(bd));setHTML('jc-blist',buildSrowsHtml(bd));}catch(e){}
-      } else if(c2 && !c2.loading && jcRow) {
-        jcRow.style.display='none';
-      }
+      const bd=journeyBreakdownForSession(sess,getElapsed(),S.gps.km||0,[]);
+      // Enquanto não existe trecho detalhado, o fallback acima mostra 100%
+      // Online. Jornada ativa nunca deve esconder a barra.
+      if(jcRow)jcRow.style.display='';
+      try{setHTML('jc-bar',buildSbarHtml(bd));setHTML('jc-blist',buildSrowsHtml(bd));}catch(e){}
     } else if(jcRow) {
       jcRow.style.display='none';
     }
