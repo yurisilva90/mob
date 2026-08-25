@@ -1,0 +1,2260 @@
+
+===== function renderJourneyCard @ 637019 =====
+nua apontando pro índice
+    // verdadeiro em day.sessions, então editar/apagar continua certo.
+    const byTime = (day.sessions||[]).map((s,i)=>i)
+      .sort((a,b) => (day.sessions[a].start||0) - (day.sessions[b].start||0));
+    const finishedAll = byTime.slice().reverse()
+      .map((origIdx,ri)=>sessionItem('Jornada '+(total-ri), day.sessions[origIdx], origIdx, S.curDate, day, false));
+    const finishedShown = S.sessionsExpanded ? finishedAll : finishedAll.slice(0,3);
+    const liveRow = (isToday && S.gps.st==='running') ? [sessionItem('Jornada atual', {start:S.gps.start,end:null,km:S.gps.km,elapsed:getElapsed()}, -1, S.curDate, day, true)] : [];
+    const rows = [...liveRow, ...finishedShown];
+    sessEl.innerHTML = rows.length ? rows.join('') : '<div class="empty">Nenhuma sessão registrada</div>';
+  }
+  if (sessToggleBtn) {
+    sessToggleBtn.style.display = (day.sessions||[]).length > 3 ? '' : 'none';
+    sessToggleBtn.innerHTML = S.sessionsExpanded ? 'Ver menos' : 'Ver todas &#8250;';
+  }
+  // Corridas: removido daqui (23/07/2026, pedido do Yuri) — já ficam
+  // acessíveis dentro do detalhe de cada jornada (seta expande e lista via
+  // sessionItem, que já mescla Importadas + Automáticas). Lista de
+  // Importadas ainda mora na tela Corridas separada (navTo('corridas')).
+  // Lançamentos (5 mais recentes, ou todos)
+  const lEl = document.getElementById('jorn-lanc-list');
+  const lancToggleBtn = document.getElementById('lanc-toggle');
+  if (lEl) {
+    const today = DB.today();
+    const allItems = [
+      ...day.revenues.map(r=>Object.assign({},r,{_type:'receita'})),
+      ...day.expenses.map(e=>Object.assign({},e,{_type:'despesa'}))
+    ];
+    // Mostrar todos os lançamentos do dia sem filtro de tab
+    const items = allItems;
+    const show = S.lancExpanded ? items : items.slice(0,5);
+    lEl.innerHTML = show.length ? show.map(it => lancItemJornada(it)).join('') : '<div class="empty">Nenhum lançamento registrado</div>';
+    if (lancToggleBtn) {
+      lancToggleBtn.style.display = items.length > 5 ? '' : 'none';
+      lancToggleBtn.innerHTML = S.lancExpanded ? 'Ver menos' : 'Ver todas &#8250;';
+    }
+  }
+  reapplyOpenTripDetail();
+  reapplyOpenJss();
+}
+
+function renderJourneyCard(day, isToday) {
+  const jc = document.getElementById('journey-card');
+  if (!jc) return;
+  const cardDate = day?.date || S.curDate || DB.today();
+  // Card de sessão atual (timer/km/botão) só faz sentido em "hoje" — em dia
+  // passado não existe jornada "em andamento" possível, então esse card
+  // some por completo. O restante da função continua rodando igual: os
+  // valores que ela calcula (jc-trips, jc-total, jc-kmtotal, jc-kmativo,
+  // jc-kmdesl, jc-rsh, jc-rskm) agora moram no card "Total do dia" — que é
+  // um elemento IRMÃO de journey-card, não um filho, e precisa continuar
+  // sendo populado em qualquer dia, passado ou presente.
+  const jcWrap = document.getElementById('journey-wrap');
+  if (jcWrap) jcWrap.style.display = isToday ? '' : 'none';
+  const g = S.gps;
+  const finished = day.sessions || [];
+  const finishedElapsed = finished.reduce((s,x)=>s+(x.elapsed||0),0);
+  const finishedKm = finished.reduce((s,x)=>s+(x.km||0),0);
+  const live = isToday && g.st === 'running';
+  const liveElapsed = live ? getElapsed() : 0;
+  const liveKm = live ? g.km : 0;
+  const totalElapsed = Math.max(0, finishedElapsed + liveElapsed + (day.tempoAdjust || 0));
+  const totalKm = finishedKm + liveKm + (day.kmAdjust || 0);
+  const state = isToday ? g.st : 'idle';
+
+  let cls = 'idle';
+  if (state === 'running') cls = 'running';
+  else if (finished.length > 0) cls = 'ended';
+  jc.className = 'journey ' + cls;
+
+  setText('jc-status-text',
+    state === 'running' ? 'Online' :
+    finished.length > 0 ? 'Concluído' : 'Iniciar'
+  );
+  const th = Math.floor(liveElapsed/3600), tm = Math.floor(liveElapsed%3600/60), ts = liveElapsed%60;
+  setText('jc-timer', p2(th)+':'+p2(tm)+':'+p2(ts));
+  setText('jc-sub',
+    state === 'running' ? 'Sessão atual · iniciada '+fmtHM(g.start) :
+    finished.length > 0 ? finished.length+(finished.length===1?' jornada hoje':' jornadas hoje') :
+    'Nenhuma sessão iniciada'
+  );
+  setText('jc-km', liveKm.toFixed(1));
+  const tth = Math.floor(totalElapsed/3600), ttm = Math.floor(totalElapsed%3600/60);
+  setText('jc-total', tth+'h'+p2(ttm)+'m');
+  setText('jc-kmtotal', totalKm.toFixed(1)+' km');
+  // CORRIGIDO (23/07/2026, confirmado com dado real pelo Yuri): esses 4
+  // KPIs do card principal (corridas, km ativo, R$/h, R$/km) só somavam
+  // day.trips (Importadas) — sessão só com automáticas mostrava tudo
+  // zerado mesmo com corridas de verdade rodando. Mesma correção que já
+  // tinha sido feita em rev/sessionItem/renderMetasDoDia, faltava aqui.
+  const autoTripsHoje = day.autoTrips || [];
+
+  // Banner "aguardando confirmação" — pedido do Yuri (16/08/2026), substitui
+  // o botão fixo "Importar corridas". Conta corridas que ainda não foram
+  // confirmadas por vídeo do histórico (status 'capturada' ou 'estimada') —
+  // 'confirmada' só existe depois do vídeo, então isso mede exatamente o
+  // que falta conferir naquele dia. Aparece em qualquer dia navegado, some
+  // sozinho quando não sobra pendência.
+  const pcbEl = document.getElementById('pending-confirm-banner');
+  if (pcbEl) {
+    // Não interpreta cache ainda carregando como zero corridas. Durante refresh,
+    // mantém o último estado visual válido do mesmo dia.
+    const autoTripsReady = S._autoTripsDataDate === cardDate;
+    if (autoTripsReady) {
+      const pendingCount = autoTripsHoje.filter(t => t.status !== 'confirmada' || t.value_needs_review === true).length;
+      pcbEl.dataset.dataDate = cardDate;
+      if (pendingCount > 0) {
+        pcbEl.style.display = 'flex';
+        setText('pcb-title', pendingCount + (pendingCount===1 ? ' corrida aguardando confirmação' : ' corridas aguardando confirmação'));
+      } else {
+        pcbEl.style.display = 'none';
+      }
+    } else if (pcbEl.dataset.dataDate && pcbEl.dataset.dataDate !== cardDate) {
+      pcbEl.style.display = 'none';
+      pcbEl.dataset.dataDate = cardDate;
+    }
+  }
+
+  // Barra Online/Buscando passageiro/Em corrida — real, vinda da máquina de
+  // estados do APK (ver computeStatusBreakdown). No card da jornada ATUAL
+  // só faz sentido enquanto a sessão está rodando (é o que está sendo
+  // contado agora); ao encerrar, o dado sai daqui e já está consolidado no
+  // "Total do dia" logo abaixo — pedido do Yuri (16/08/2026), evita
+  // duplicar/deixar a mesma barra "grudada" depois de já ter encerrado.
+  // As barras são atualizadas exclusivamente pela timeline contínua V3.
+  // A rotina base não sobrescreve mais a leitura real com auto_trips.
+  const jcBd = document.getElementById('jc-breakdown');
+  const tdBdRow = document.getElementById('td-bd-row');
+
+  setText('jc-trips', day.trips.length + autoTripsHoje.length);
+  setText('jc-trips2', day.trips.length + autoTripsHoje.length);
+  const aceitasCount = day.trips.length + autoTripsHoje.length;
+  const declinedCount = (S.declined || []).length;
+  setText('jc-aceitas', aceitasCount);
+  setText('jc-recusadas', declinedCount);
+  const corridasSubEl = document.getElementById('jc-corridas-sub');
+  if (corridasSubEl) corridasSubEl.style.display = (aceitasCount>0 || declinedCount>0) ? 'flex' : 'none';
+  const kmAtivo = day.trips.reduce((s,t)=>s+(t.km||0),0)
+                + autoTripsHoje.reduce((s,t)=>s+(parseFloat(t.real_km_trip ?? t.offer_km_trip)||0),0);
+  const kmDesl = Math.max(0, totalKm - kmAtivo);
+  setText('jc-kmativo', kmAtivo.toFixed(1));
+  setText('jc-kmdesl', kmDesl.toFixed(1));
+  const ganhosDia = day.trips.reduce((s,t)=>s+(t.value||0),0)
+                  + autoTripsHoje.reduce((s,t)=>s+(t.offer_value||0),0);
+  const horasDecimal = totalElapsed > 0 ? totalElapsed/3600 : 0;
+  const rsh  = horasDecimal > 0 ? ganhosDia/horasDecimal : null;
+  const rskm = totalKm > 0 ? ganhosDia/totalKm : null;
+  setText('jc-rsh', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
+  setText('jc-rskm', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
+  setText('jc-rsh2', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
+  setText('jc-rskm2', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
+  // Cor por indicador — pedido do Yuri (23/07/2026, mockup aprovado):
+  // mesmos limiares vermelho/verde que o motorista já ajusta na régua do
+  // MōB Flash (Indicadores → R$/km e R$/hora), cada indicador troca de cor
+  // por conta própria. Sem dado ainda (sessão não rodou tempo/km) fica
+  // neutro (verde), não faz sentido alarmar antes de ter dado de verdade.
+  const rateEl = document.getElementById('jc-rate-hora');
+  const kmEl   = document.getElementById('jc-rate-km');
+  const rateEl2 = document.getElementById('jc-rate-hora2');
+  const kmEl2   = document.getElementById('jc-rate-km2');
+  const rateCls = rsh !== null ? rateColorClass('rhora', rsh) : '';
+  const kmCls   = rskm !== null ? rateColorClass('rkm', rskm) : '';
+  if (rateEl)  rateEl.className  = 'td-rcard ' + rateCls;
+  if (kmEl)    kmEl.className    = 'td-rcard ' + kmCls;
+  if (rateEl2) rateEl2.className = 'rate-cell ' + rateCls;
+  if (kmEl2)   kmEl2.className   = 'rate-cell ' + kmCls;
+
+  const actions = document.getElementById('jc-actions');
+  if (!actions) return;
+  if (!isToday) {
+    actions.innerHTML = '';
+  } else if (state === 'idle') {
+    actions.innerHTML = `<button class="j-round-btn play" onclick="gpsStart()" aria-label="Iniciar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>`;
+  } else if (state === 'running') {
+    actions.innerHTML = '<button class="j-round-btn stop" onclick="confirmStop()" aria-label="Encerrar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6"
+
+===== renderJourneyCard( @ 25909 =====
+ 0;padding:18px 16px 26px;box-shadow:0 -12px 35px rgba(15,23,42,.2)}.sheet h3{margin:0 0 14px;font-size:18px}.field{margin:12px 0}.field label{display:block;font-size:11px;text-transform:uppercase;font-weight:800;color:#64748b;margin-bottom:7px}.field input,.field select{width:100%;border:1px solid var(--line);border-radius:16px;background:#f8fafc;padding:14px;font:inherit;font-weight:600}@media(max-width:380px){.amount{font-size:34px}.kpi strong{font-size:19px}.heroGrid{gap:6px}.chart{gap:5px}.barCol i{width:8px}}
+
+/* ── Jornada screen extras ── */
+.daybar{display:flex;align-items:center;gap:10px;margin:4px 0 12px;padding:0 16px}.arrow{width:38px;height:38px;border-radius:14px;background:#fff;border:1px solid var(--line);box-shadow:0 3px 14px rgba(15,23,42,.06);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:20px;cursor:pointer;touch-action:manipulation}.datebox{flex:1;text-align:center}.datebox h1{font-size:19px;line-height:1.1;letter-spacing:-.04em}.datebox p{font-size:12px;color:var(--muted);margin-top:3px;font-weight:600}.today{font-size:10px;padding:2px 8px;border-radius:999px;background:rgba(14,165,233,.12);color:#0A2F6B;margin-left:5px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px;margin-bottom:12px}
+.stats-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.stats-cards .stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 6px;text-align:center;box-shadow:0 3px 14px rgba(15,23,42,.06)}
+.stats-cards .v{font-size:15px;font-weight:800;line-height:1}
+.stats-cards .v.green{color:var(--green2)}
+.stats-cards .v.red{color:#EF4444}
+.stats-cards .l{font-size:9.5px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:6px}
+/* R$/h e R$/km — largura total, preenchendo até as bordas do card */
+/* Faixa de destaque R$/h + R$/km (23/07/2026, mockup aprovado — Opção A).
+   Cor dinâmica POR INDICADOR (independente um do outro — R$/h pode estar
+   verde com R$/km em vermelho ao mesmo tempo): compara com os mesmos
+   limiares vermelho/verde que o MōB Flash já usa
+   (DB.cfg().flashReader.kpis.rhora/.rkm), aplicada em renderJourneyCard(). */
+.rate-strip{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.rate-cell{text-align:center;border-radius:14px;padding:11px 6px;background:rgba(34,197,94,.16);border:1px solid rgba(34,197,94,.4);transition:background .3s,border-color .3s}
+.rate-cell.o{background:rgba(245,158,11,.18);border-color:rgba(245,158,11,.45)}
+.rate-cell.r{background:rgba(239,68,68,.20);border-color:rgba(239,68,68,.5)}
+.rate-cell strong{display:block;font-size:21px;font-weight:800;color:#fff;letter-spacing:-.02em}
+.rate-cell span{display:block;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#86efac;margin-top:2px}
+.rate-cell.o span{color:#fde68a}
+.rate-cell.r span{color:#fca5a5}
+/* Metas do dia: CSS movido pra seção solta (ver .goal-item/.gbar mais
+   abaixo, estilo "grande" já existente) — removido daqui em 23/07/2026,
+   não fica mais embutido no fundo escuro do card da jornada. */
+.stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px 8px;text-align:center;box-shadow:0 3px 14px rgba(15,23,42,.06)}.stat .v{font-family:'Inter',system-ui,sans-serif;font-size:15px;font-weight:700;white-space:nowrap}.stat .l{font-size:9px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-top:5px}.green{color:var(--green2)}.red{color:var(--red)}.blue{color:#0A2F6B}
+
+/* ── Journey card (controles embutidos) ── */
+.journey-wrap{margin:0 16px 12px;border-radius:26px;overflow:hidden;box-shadow:0 10px 30px rgba(15,23,42,.10)}
+.journey{padding:16px;color:#fff;transition:background .25s;box-sizing:border-box}
+.journey.idle{background:var(--blue)}
+.journey.ended{background:var(--blue)}
+.journey.running{background:#15803D}
+.journey-breakdown{background:#fff;padding:14px}
+.sbar-wrap{cursor:pointer;touch-action:manipulation}
+.sbar{height:22px;border-radius:8px;overflow:hidden;display:flex;background:#F1F5F9;margin:0;pointer-events:none}
+.sbar i{display:flex;align-items:center;justify-content:center;height:100%;font-size:9.5px;font-weight:800;color:#fff}
+.sbar-list{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.sbar-list.open{max-height:220px;margin-top:10px}
+.sbar-list .srow{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line)}
+.sbar-list .srow:first-child{border-top:0}
+.sbar-list .sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sbar-list .srow b{flex:1;font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.03em}
+.sbar-list .srow .pct{font-size:10px;font-weight:800;color:var(--muted);width:28px;text-align:right}
+.sbar-list .srow .stempo{font-size:10.5px;font-weight:800;color:var(--text);width:48px;text-align:right}
+.sbar-list .srow .skm{font-size:10.5px;font-weight:700;color:var(--muted);width:56px;text-align:right}
+.td-row.bd .sbar{background:rgba(255,255,255,.10)}
+.td-row.bd .sbar-list.open{margin-top:12px}
+.td-row.bd .sbar-list .srow{border-top:1px solid rgba(255,255,255,.14)}
+.td-row.bd .sbar-list .srow b,.td-row.bd .sbar-list .srow .stempo{color:#fff}
+.td-row.bd .sbar-list .srow .pct,.td-row.bd .sbar-list .srow .skm{color:rgba(255,255,255,.6)}
+.jss-statusbar{padding:2px 14px 12px}
+/* .journey.paused removido */
+.j-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px}
+.j-status{display:none}
+.j-status i{width:8px;height:8px;border-radius:50%;background:#fff;flex-shrink:0}
+.journey.running .j-status i{animation:pulse2 2s infinite}
+@keyframes pulse2{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.5)}50%{box-shadow:0 0 0 5px rgba(255,255,255,0)}}
+.j-import{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:6px 11px;font-size:11px;font-weight:760;color:#fff;display:inline-flex;align-items:center;gap:5px;cursor:pointer;border:0;touch-action:manipulation;margin-left:auto}
+.j-import svg{width:13px;height:13px}
+.j-toprow{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.j-current{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;flex:1;min-width:0}
+.j-current h2{font-family:'Inter',system-ui,sans-serif;font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.j-current p{font-size:10.5px;font-weight:600;opacity:.85;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.j-km{font-size:12px;font-weight:620}
+.j-km strong{display:block;font-family:'Inter',system-ui,sans-serif;font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.j-km span{display:block;margin-top:4px;opacity:.85;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+.j-rates2{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;min-width:0}
+.j-bottomrow{display:flex;align-items:center;gap:10px}
+.j-metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px}
+.j-mini{background:transparent;border:none;border-radius:0;padding:6px 4px;text-align:center}
+.j-mini strong{display:block;font-family:'Inter',system-ui,sans-serif;font-size:22px;font-weight:800;text-align:center}
+.j-mini span{display:block;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;opacity:.78;margin-top:3px}
+.j-metrics2{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px}
+.j-mini.sm{padding:6px 5px;background:rgba(255,255,255,.12);border-radius:12px}
+.j-mini.sm strong{font-size:13px}
+.j-mini.sm span{font-size:8.5px}
+.km-edit-btn{width:18px;height:18px;border-radius:50%;border:0;background:rgba(255,255,255,.22);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;flex-shrink:0;padding:0}
+.val-edit-btn{width:20px;height:20px;border-radius:7px;border:0;background:#F1F5F9;color:#0A2F6B;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;flex-shrink:0;padding:0}
+.j-actions{flex-shrink:0}
+.j-round-btn{width:76px;height:76px;border-radius:50%;background:#fff;border:0;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+.j-round-btn svg{width:61px;height:61px}
+.j-round-btn.play svg{color:#22C55E}
+.j-round-btn.stop svg{color:#EF4444}
+.j-btn{height:52px;border:0;border-radius:16px;font-size:14px;font-weight:780;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;touch-action:manipulation;width:100%;position:relative;z-index:2}
+.j-btn svg{width:17px;height:17px}
+.j-btn.solid-light{background:#fff;color:var(--green2)}
+.j-btn.solid-light.danger{color:var(--red)}
+.j-btn.ghost{background:rgba(15,23,42,.22);border:1px solid rgba(255,255,255,.25);color:#fff}
+.j-btn.go{background:#fff;color:var(--green2);width:auto;display:inline-flex;padding:0 32px;font-size:15px}
+
+/* ── Total do dia (redesenho 15/08/2026) ── */
+.td-card{background:#0D3A7D;border-radius:22px;overflow:hidden;box-shadow:0 4px 18px rgba(15,23,42,.08)}
+.td-row{position:relative;overflow:hidden;padding:15px 16px;border-top:1px solid rgba(255,255,255,.14)}
+.td-row:first-child{border-top:0}
+.td-wm{position:absolute;color:#fff;opacity:.09;pointer-events:none;z-index:0;top:-18%;height:136%;aspect-ratio:1/1}
+.td-wm.left{left:-36px}
+.td-wm.right{right:-40px}
+.td-row>*:not(.td-wm){position:relative;z-index:1}
+.td-corridas{display:flex;align-items:baseline;gap:9px}
+.td-corridas strong{font-size:32px;font-weight:800;color:#fff;letter-spacing:-.03em;line-height:1}
+.td
+
+===== renderJourneyCard( @ 633526 =====
+(day);
+    SYNC.del('trips', { id });
+    renderCorridasActive();
+    if (date === S.curDate) { renderJornada(); }
+    showToast('Corrida excluída.');
+  }, { confirmLabel: 'Excluir' });
+}
+function toggleSessionsView() { S.sessionsExpanded = !S.sessionsExpanded; renderJornada(); }
+function toggleLancView() { S.lancExpanded = !S.lancExpanded; renderJornada(); }
+
+function renderJornada() {
+  if (!S || !DB) return;
+  try { updateCustoBanner(); } catch(e) {}
+  if (!S.curDate) S.curDate = DB.today();
+  const today = DB.today(), d = S.curDate, isToday = d === today;
+  const dt    = new Date(d+'T12:00');
+  const dows  = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+  const ms    = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const msLong= ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  const dateEl = document.getElementById('dn-date');
+  // Formato compacto: "23 jun 2026" — cabe em 1 linha
+  if (dateEl) dateEl.textContent = isToday ? 'Hoje' : (dt.getDate()+' de '+msLong[dt.getMonth()]+' de '+dt.getFullYear());
+  const dowEl = document.getElementById('dn-dow');
+  // Dia da semana + badge "Hoje" na mesma linha
+  if (dowEl) dowEl.innerHTML = dows[dt.getDay()];
+  const day = DB.day(d);
+  // Corridas automáticas do dia — busca assíncrona, cacheada por data (não
+  // refaz a busca em toda chamada de renderJornada, que roda com frequência
+  // inclusive a cada tick do timer da jornada ativa). Refresh periódico via
+  // _syncTick (a cada 1min) cobre corridas novas capturadas durante o dia.
+  if (S.autoTripsDate !== d) {
+    const keepCurrent = S._autoTripsDataDate === d ? (S.autoTrips || []) : [];
+    S.autoTripsDate = d;
+    S.autoTrips = keepCurrent;
+    loadAutoTripsForDay(d).then(list => {
+      if (S.autoTripsDate !== d || !Array.isArray(list)) return; // erro mantém último dado válido
+      S.autoTrips = list;
+      S._autoTripsDataDate = d;
+      renderJornada();
+    });
+  }
+  day.autoTrips = S.autoTrips || [];
+  // Recusadas do dia — mesmo padrão de cache do autoTrips acima. Lida aqui
+  // (S.declined) e usada dentro de renderJourneyCard(), que roda logo a
+  // seguir e populate o card "Total do dia".
+  if (S.declinedDate !== d) {
+    S.declinedDate = d;
+    S.declined = [];
+    loadDeclinedOffersForDay(d).then(list => {
+      if (S.declinedDate !== d) return;
+      S.declined = list;
+      renderJornada();
+    });
+  }
+  const rev = day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0)
+            + day.autoTrips.reduce((s,t)=>s+(t.offer_value||0),0);
+  const exp = day.expenses.reduce((s,e)=>s+(e.amount||0),0);
+  setText('d-rev', DB.fRI(rev));
+  setText('d-exp', DB.fRI(exp));
+  const netEl = document.getElementById('d-net');
+  if (netEl) { netEl.textContent = DB.fRI(rev-exp); netEl.className = 'v ' + (rev-exp>=0 ? 'green' : 'red'); }
+
+  renderJourneyCard(day, isToday);
+  renderMetasDoDia(day);
+
+  // Sessões do dia (3 mais recentes, ou todas — sessão atual sempre aparece)
+  const sessEl = document.getElementById('sessions-list');
+  const sessToggleBtn = document.getElementById('sessions-toggle');
+  if (sessEl) {
+    const total = (day.sessions||[]).length;
+    // Numera pela ORDEM DE HORÁRIO real (start), não pela ordem em que foi
+    // salva/sincronizada no aparelho — evita "Jornada 2" mostrar um horário
+    // mais tarde que "Jornada 3". origIdx continua apontando pro índice
+    // verdadeiro em day.sessions, então editar/apagar continua certo.
+    const byTime = (day.sessions||[]).map((s,i)=>i)
+      .sort((a,b) => (day.sessions[a].start||0) - (day.sessions[b].start||0));
+    const finishedAll = byTime.slice().reverse()
+      .map((origIdx,ri)=>sessionItem('Jornada '+(total-ri), day.sessions[origIdx], origIdx, S.curDate, day, false));
+    const finishedShown = S.sessionsExpanded ? finishedAll : finishedAll.slice(0,3);
+    const liveRow = (isToday && S.gps.st==='running') ? [sessionItem('Jornada atual', {start:S.gps.start,end:null,km:S.gps.km,elapsed:getElapsed()}, -1, S.curDate, day, true)] : [];
+    const rows = [...liveRow, ...finishedShown];
+    sessEl.innerHTML = rows.length ? rows.join('') : '<div class="empty">Nenhuma sessão registrada</div>';
+  }
+  if (sessToggleBtn) {
+    sessToggleBtn.style.display = (day.sessions||[]).length > 3 ? '' : 'none';
+    sessToggleBtn.innerHTML = S.sessionsExpanded ? 'Ver menos' : 'Ver todas &#8250;';
+  }
+  // Corridas: removido daqui (23/07/2026, pedido do Yuri) — já ficam
+  // acessíveis dentro do detalhe de cada jornada (seta expande e lista via
+  // sessionItem, que já mescla Importadas + Automáticas). Lista de
+  // Importadas ainda mora na tela Corridas separada (navTo('corridas')).
+  // Lançamentos (5 mais recentes, ou todos)
+  const lEl = document.getElementById('jorn-lanc-list');
+  const lancToggleBtn = document.getElementById('lanc-toggle');
+  if (lEl) {
+    const today = DB.today();
+    const allItems = [
+      ...day.revenues.map(r=>Object.assign({},r,{_type:'receita'})),
+      ...day.expenses.map(e=>Object.assign({},e,{_type:'despesa'}))
+    ];
+    // Mostrar todos os lançamentos do dia sem filtro de tab
+    const items = allItems;
+    const show = S.lancExpanded ? items : items.slice(0,5);
+    lEl.innerHTML = show.length ? show.map(it => lancItemJornada(it)).join('') : '<div class="empty">Nenhum lançamento registrado</div>';
+    if (lancToggleBtn) {
+      lancToggleBtn.style.display = items.length > 5 ? '' : 'none';
+      lancToggleBtn.innerHTML = S.lancExpanded ? 'Ver menos' : 'Ver todas &#8250;';
+    }
+  }
+  reapplyOpenTripDetail();
+  reapplyOpenJss();
+}
+
+function renderJourneyCard(day, isToday) {
+  const jc = document.getElementById('journey-card');
+  if (!jc) return;
+  const cardDate = day?.date || S.curDate || DB.today();
+  // Card de sessão atual (timer/km/botão) só faz sentido em "hoje" — em dia
+  // passado não existe jornada "em andamento" possível, então esse card
+  // some por completo. O restante da função continua rodando igual: os
+  // valores que ela calcula (jc-trips, jc-total, jc-kmtotal, jc-kmativo,
+  // jc-kmdesl, jc-rsh, jc-rskm) agora moram no card "Total do dia" — que é
+  // um elemento IRMÃO de journey-card, não um filho, e precisa continuar
+  // sendo populado em qualquer dia, passado ou presente.
+  const jcWrap = document.getElementById('journey-wrap');
+  if (jcWrap) jcWrap.style.display = isToday ? '' : 'none';
+  const g = S.gps;
+  const finished = day.sessions || [];
+  const finishedElapsed = finished.reduce((s,x)=>s+(x.elapsed||0),0);
+  const finishedKm = finished.reduce((s,x)=>s+(x.km||0),0);
+  const live = isToday && g.st === 'running';
+  const liveElapsed = live ? getElapsed() : 0;
+  const liveKm = live ? g.km : 0;
+  const totalElapsed = Math.max(0, finishedElapsed + liveElapsed + (day.tempoAdjust || 0));
+  const totalKm = finishedKm + liveKm + (day.kmAdjust || 0);
+  const state = isToday ? g.st : 'idle';
+
+  let cls = 'idle';
+  if (state === 'running') cls = 'running';
+  else if (finished.length > 0) cls = 'ended';
+  jc.className = 'journey ' + cls;
+
+  setText('jc-status-text',
+    state === 'running' ? 'Online' :
+    finished.length > 0 ? 'Concluído' : 'Iniciar'
+  );
+  const th = Math.floor(liveElapsed/3600), tm = Math.floor(liveElapsed%3600/60), ts = liveElapsed%60;
+  setText('jc-timer', p2(th)+':'+p2(tm)+':'+p2(ts));
+  setText('jc-sub',
+    state === 'running' ? 'Sessão atual · iniciada '+fmtHM(g.start) :
+    finished.length > 0 ? finished.length+(finished.length===1?' jornada hoje':' jornadas hoje') :
+    'Nenhuma sessão iniciada'
+  );
+  setText('jc-km', liveKm.toFixed(1));
+  const tth = Math.floor(totalElapsed/3600), ttm = Math.floor(totalElapsed%3600/60);
+  setText('jc-total', tth+'h'+p2(ttm)+'m');
+  setText('jc-kmtotal', totalKm.toFixed(1)+' km');
+  // CORRIGIDO (23/07/2026, confirmado com dado real pelo Yuri): esses 4
+  // KPIs do card principal (corridas, km ativo, R$/h, R$/km) só somavam
+  // day.trips (Importadas) — sessão só com automáticas mostrava tudo
+  // zerado mesmo com corridas de verdade rodando. Mesma correção que já
+  // tinha sido feita em rev/sessionItem/renderMetasDoDia, faltava aqui.
+  const autoTripsHoje = day.autoTrips || [];
+
+  // Banner "aguardando confirmação" — pedido do Yuri (16/08/2026), substitui
+  // o botão fixo "Importar corridas". Conta corridas que ainda não foram
+  // confirmadas por vídeo do histórico (status 'capturada' ou 'estimada') —
+  // 'confirmada' só existe depois do vídeo, então isso mede exatamente o
+  // que falta conferir naquele dia. Aparece em qualquer dia navegado, some
+  // sozinho quando não sobra pendência.
+  const pcbEl = document.getElementById('pending-confirm-banner');
+  if (pcbEl) {
+    // Não interpreta cache ainda carregando como zero corridas. Durante refresh,
+    // mantém o último estado visual válido do mesmo dia.
+    const autoTripsReady = S._autoTripsDataDate === cardDate;
+    if (autoTripsReady) {
+      const pendingCount = autoTripsHoje.filter(t => t.status !== 'confirmada' || t.value_needs_review === true).length;
+      pcbEl.dataset.dataDate = cardDate;
+      if (pendingCount > 0) {
+        pcbEl.style.display = 'flex';
+        setText('pcb-title', pendingCount + (pendingCount===1 ? ' corrida aguardando confirmação' : ' corridas aguardando confirmação'));
+      } else {
+        pcbEl.style.display = 'none';
+      }
+    } else if (pcbEl.dataset.dataDate && pcbEl.dataset.dataDate !== cardDate) {
+      pcbEl.style.display = 'none';
+      pcbEl.dataset.dataDate = cardDate;
+    }
+  }
+
+  // Barra Online/Buscando passageiro/Em corrida — real, vinda da máquina de
+  // estados do APK (ver 
+
+===== renderJourneyCard( @ 634293 =====
+','jul','ago','set','out','nov','dez'];
+  const msLong= ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  const dateEl = document.getElementById('dn-date');
+  // Formato compacto: "23 jun 2026" — cabe em 1 linha
+  if (dateEl) dateEl.textContent = isToday ? 'Hoje' : (dt.getDate()+' de '+msLong[dt.getMonth()]+' de '+dt.getFullYear());
+  const dowEl = document.getElementById('dn-dow');
+  // Dia da semana + badge "Hoje" na mesma linha
+  if (dowEl) dowEl.innerHTML = dows[dt.getDay()];
+  const day = DB.day(d);
+  // Corridas automáticas do dia — busca assíncrona, cacheada por data (não
+  // refaz a busca em toda chamada de renderJornada, que roda com frequência
+  // inclusive a cada tick do timer da jornada ativa). Refresh periódico via
+  // _syncTick (a cada 1min) cobre corridas novas capturadas durante o dia.
+  if (S.autoTripsDate !== d) {
+    const keepCurrent = S._autoTripsDataDate === d ? (S.autoTrips || []) : [];
+    S.autoTripsDate = d;
+    S.autoTrips = keepCurrent;
+    loadAutoTripsForDay(d).then(list => {
+      if (S.autoTripsDate !== d || !Array.isArray(list)) return; // erro mantém último dado válido
+      S.autoTrips = list;
+      S._autoTripsDataDate = d;
+      renderJornada();
+    });
+  }
+  day.autoTrips = S.autoTrips || [];
+  // Recusadas do dia — mesmo padrão de cache do autoTrips acima. Lida aqui
+  // (S.declined) e usada dentro de renderJourneyCard(), que roda logo a
+  // seguir e populate o card "Total do dia".
+  if (S.declinedDate !== d) {
+    S.declinedDate = d;
+    S.declined = [];
+    loadDeclinedOffersForDay(d).then(list => {
+      if (S.declinedDate !== d) return;
+      S.declined = list;
+      renderJornada();
+    });
+  }
+  const rev = day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0)
+            + day.autoTrips.reduce((s,t)=>s+(t.offer_value||0),0);
+  const exp = day.expenses.reduce((s,e)=>s+(e.amount||0),0);
+  setText('d-rev', DB.fRI(rev));
+  setText('d-exp', DB.fRI(exp));
+  const netEl = document.getElementById('d-net');
+  if (netEl) { netEl.textContent = DB.fRI(rev-exp); netEl.className = 'v ' + (rev-exp>=0 ? 'green' : 'red'); }
+
+  renderJourneyCard(day, isToday);
+  renderMetasDoDia(day);
+
+  // Sessões do dia (3 mais recentes, ou todas — sessão atual sempre aparece)
+  const sessEl = document.getElementById('sessions-list');
+  const sessToggleBtn = document.getElementById('sessions-toggle');
+  if (sessEl) {
+    const total = (day.sessions||[]).length;
+    // Numera pela ORDEM DE HORÁRIO real (start), não pela ordem em que foi
+    // salva/sincronizada no aparelho — evita "Jornada 2" mostrar um horário
+    // mais tarde que "Jornada 3". origIdx continua apontando pro índice
+    // verdadeiro em day.sessions, então editar/apagar continua certo.
+    const byTime = (day.sessions||[]).map((s,i)=>i)
+      .sort((a,b) => (day.sessions[a].start||0) - (day.sessions[b].start||0));
+    const finishedAll = byTime.slice().reverse()
+      .map((origIdx,ri)=>sessionItem('Jornada '+(total-ri), day.sessions[origIdx], origIdx, S.curDate, day, false));
+    const finishedShown = S.sessionsExpanded ? finishedAll : finishedAll.slice(0,3);
+    const liveRow = (isToday && S.gps.st==='running') ? [sessionItem('Jornada atual', {start:S.gps.start,end:null,km:S.gps.km,elapsed:getElapsed()}, -1, S.curDate, day, true)] : [];
+    const rows = [...liveRow, ...finishedShown];
+    sessEl.innerHTML = rows.length ? rows.join('') : '<div class="empty">Nenhuma sessão registrada</div>';
+  }
+  if (sessToggleBtn) {
+    sessToggleBtn.style.display = (day.sessions||[]).length > 3 ? '' : 'none';
+    sessToggleBtn.innerHTML = S.sessionsExpanded ? 'Ver menos' : 'Ver todas &#8250;';
+  }
+  // Corridas: removido daqui (23/07/2026, pedido do Yuri) — já ficam
+  // acessíveis dentro do detalhe de cada jornada (seta expande e lista via
+  // sessionItem, que já mescla Importadas + Automáticas). Lista de
+  // Importadas ainda mora na tela Corridas separada (navTo('corridas')).
+  // Lançamentos (5 mais recentes, ou todos)
+  const lEl = document.getElementById('jorn-lanc-list');
+  const lancToggleBtn = document.getElementById('lanc-toggle');
+  if (lEl) {
+    const today = DB.today();
+    const allItems = [
+      ...day.revenues.map(r=>Object.assign({},r,{_type:'receita'})),
+      ...day.expenses.map(e=>Object.assign({},e,{_type:'despesa'}))
+    ];
+    // Mostrar todos os lançamentos do dia sem filtro de tab
+    const items = allItems;
+    const show = S.lancExpanded ? items : items.slice(0,5);
+    lEl.innerHTML = show.length ? show.map(it => lancItemJornada(it)).join('') : '<div class="empty">Nenhum lançamento registrado</div>';
+    if (lancToggleBtn) {
+      lancToggleBtn.style.display = items.length > 5 ? '' : 'none';
+      lancToggleBtn.innerHTML = S.lancExpanded ? 'Ver menos' : 'Ver todas &#8250;';
+    }
+  }
+  reapplyOpenTripDetail();
+  reapplyOpenJss();
+}
+
+function renderJourneyCard(day, isToday) {
+  const jc = document.getElementById('journey-card');
+  if (!jc) return;
+  const cardDate = day?.date || S.curDate || DB.today();
+  // Card de sessão atual (timer/km/botão) só faz sentido em "hoje" — em dia
+  // passado não existe jornada "em andamento" possível, então esse card
+  // some por completo. O restante da função continua rodando igual: os
+  // valores que ela calcula (jc-trips, jc-total, jc-kmtotal, jc-kmativo,
+  // jc-kmdesl, jc-rsh, jc-rskm) agora moram no card "Total do dia" — que é
+  // um elemento IRMÃO de journey-card, não um filho, e precisa continuar
+  // sendo populado em qualquer dia, passado ou presente.
+  const jcWrap = document.getElementById('journey-wrap');
+  if (jcWrap) jcWrap.style.display = isToday ? '' : 'none';
+  const g = S.gps;
+  const finished = day.sessions || [];
+  const finishedElapsed = finished.reduce((s,x)=>s+(x.elapsed||0),0);
+  const finishedKm = finished.reduce((s,x)=>s+(x.km||0),0);
+  const live = isToday && g.st === 'running';
+  const liveElapsed = live ? getElapsed() : 0;
+  const liveKm = live ? g.km : 0;
+  const totalElapsed = Math.max(0, finishedElapsed + liveElapsed + (day.tempoAdjust || 0));
+  const totalKm = finishedKm + liveKm + (day.kmAdjust || 0);
+  const state = isToday ? g.st : 'idle';
+
+  let cls = 'idle';
+  if (state === 'running') cls = 'running';
+  else if (finished.length > 0) cls = 'ended';
+  jc.className = 'journey ' + cls;
+
+  setText('jc-status-text',
+    state === 'running' ? 'Online' :
+    finished.length > 0 ? 'Concluído' : 'Iniciar'
+  );
+  const th = Math.floor(liveElapsed/3600), tm = Math.floor(liveElapsed%3600/60), ts = liveElapsed%60;
+  setText('jc-timer', p2(th)+':'+p2(tm)+':'+p2(ts));
+  setText('jc-sub',
+    state === 'running' ? 'Sessão atual · iniciada '+fmtHM(g.start) :
+    finished.length > 0 ? finished.length+(finished.length===1?' jornada hoje':' jornadas hoje') :
+    'Nenhuma sessão iniciada'
+  );
+  setText('jc-km', liveKm.toFixed(1));
+  const tth = Math.floor(totalElapsed/3600), ttm = Math.floor(totalElapsed%3600/60);
+  setText('jc-total', tth+'h'+p2(ttm)+'m');
+  setText('jc-kmtotal', totalKm.toFixed(1)+' km');
+  // CORRIGIDO (23/07/2026, confirmado com dado real pelo Yuri): esses 4
+  // KPIs do card principal (corridas, km ativo, R$/h, R$/km) só somavam
+  // day.trips (Importadas) — sessão só com automáticas mostrava tudo
+  // zerado mesmo com corridas de verdade rodando. Mesma correção que já
+  // tinha sido feita em rev/sessionItem/renderMetasDoDia, faltava aqui.
+  const autoTripsHoje = day.autoTrips || [];
+
+  // Banner "aguardando confirmação" — pedido do Yuri (16/08/2026), substitui
+  // o botão fixo "Importar corridas". Conta corridas que ainda não foram
+  // confirmadas por vídeo do histórico (status 'capturada' ou 'estimada') —
+  // 'confirmada' só existe depois do vídeo, então isso mede exatamente o
+  // que falta conferir naquele dia. Aparece em qualquer dia navegado, some
+  // sozinho quando não sobra pendência.
+  const pcbEl = document.getElementById('pending-confirm-banner');
+  if (pcbEl) {
+    // Não interpreta cache ainda carregando como zero corridas. Durante refresh,
+    // mantém o último estado visual válido do mesmo dia.
+    const autoTripsReady = S._autoTripsDataDate === cardDate;
+    if (autoTripsReady) {
+      const pendingCount = autoTripsHoje.filter(t => t.status !== 'confirmada' || t.value_needs_review === true).length;
+      pcbEl.dataset.dataDate = cardDate;
+      if (pendingCount > 0) {
+        pcbEl.style.display = 'flex';
+        setText('pcb-title', pendingCount + (pendingCount===1 ? ' corrida aguardando confirmação' : ' corridas aguardando confirmação'));
+      } else {
+        pcbEl.style.display = 'none';
+      }
+    } else if (pcbEl.dataset.dataDate && pcbEl.dataset.dataDate !== cardDate) {
+      pcbEl.style.display = 'none';
+      pcbEl.dataset.dataDate = cardDate;
+    }
+  }
+
+  // Barra Online/Buscando passageiro/Em corrida — real, vinda da máquina de
+  // estados do APK (ver computeStatusBreakdown). No card da jornada ATUAL
+  // só faz sentido enquanto a sessão está rodando (é o que está sendo
+  // contado agora); ao encerrar, o dado sai daqui e já está consolidado no
+  // "Total do dia" logo abaixo — pedido do Yuri (16/08/2026), evita
+  // duplicar/deixar a mesma barra "grudada" depois de já ter encerrado.
+  // As barras são atualizadas exclusivamente pela timeline contínua V3.
+  // A rotina base não sobrescreve mais a leitura real com auto_trips.
+  const jcBd = document.getElementById('jc-breakdown');
+  const tdBdRow = document.getElementById('td-bd-row');
+
+  setText('jc-trips', day.trips.length + autoTripsHoje.length);
+  setText('jc-trips2', day.trips.length + autoTripsHoje.length);
+  const aceitasCount = day.trips.length + 
+
+===== renderJourneyCard( @ 637028 =====
+ando pro índice
+    // verdadeiro em day.sessions, então editar/apagar continua certo.
+    const byTime = (day.sessions||[]).map((s,i)=>i)
+      .sort((a,b) => (day.sessions[a].start||0) - (day.sessions[b].start||0));
+    const finishedAll = byTime.slice().reverse()
+      .map((origIdx,ri)=>sessionItem('Jornada '+(total-ri), day.sessions[origIdx], origIdx, S.curDate, day, false));
+    const finishedShown = S.sessionsExpanded ? finishedAll : finishedAll.slice(0,3);
+    const liveRow = (isToday && S.gps.st==='running') ? [sessionItem('Jornada atual', {start:S.gps.start,end:null,km:S.gps.km,elapsed:getElapsed()}, -1, S.curDate, day, true)] : [];
+    const rows = [...liveRow, ...finishedShown];
+    sessEl.innerHTML = rows.length ? rows.join('') : '<div class="empty">Nenhuma sessão registrada</div>';
+  }
+  if (sessToggleBtn) {
+    sessToggleBtn.style.display = (day.sessions||[]).length > 3 ? '' : 'none';
+    sessToggleBtn.innerHTML = S.sessionsExpanded ? 'Ver menos' : 'Ver todas &#8250;';
+  }
+  // Corridas: removido daqui (23/07/2026, pedido do Yuri) — já ficam
+  // acessíveis dentro do detalhe de cada jornada (seta expande e lista via
+  // sessionItem, que já mescla Importadas + Automáticas). Lista de
+  // Importadas ainda mora na tela Corridas separada (navTo('corridas')).
+  // Lançamentos (5 mais recentes, ou todos)
+  const lEl = document.getElementById('jorn-lanc-list');
+  const lancToggleBtn = document.getElementById('lanc-toggle');
+  if (lEl) {
+    const today = DB.today();
+    const allItems = [
+      ...day.revenues.map(r=>Object.assign({},r,{_type:'receita'})),
+      ...day.expenses.map(e=>Object.assign({},e,{_type:'despesa'}))
+    ];
+    // Mostrar todos os lançamentos do dia sem filtro de tab
+    const items = allItems;
+    const show = S.lancExpanded ? items : items.slice(0,5);
+    lEl.innerHTML = show.length ? show.map(it => lancItemJornada(it)).join('') : '<div class="empty">Nenhum lançamento registrado</div>';
+    if (lancToggleBtn) {
+      lancToggleBtn.style.display = items.length > 5 ? '' : 'none';
+      lancToggleBtn.innerHTML = S.lancExpanded ? 'Ver menos' : 'Ver todas &#8250;';
+    }
+  }
+  reapplyOpenTripDetail();
+  reapplyOpenJss();
+}
+
+function renderJourneyCard(day, isToday) {
+  const jc = document.getElementById('journey-card');
+  if (!jc) return;
+  const cardDate = day?.date || S.curDate || DB.today();
+  // Card de sessão atual (timer/km/botão) só faz sentido em "hoje" — em dia
+  // passado não existe jornada "em andamento" possível, então esse card
+  // some por completo. O restante da função continua rodando igual: os
+  // valores que ela calcula (jc-trips, jc-total, jc-kmtotal, jc-kmativo,
+  // jc-kmdesl, jc-rsh, jc-rskm) agora moram no card "Total do dia" — que é
+  // um elemento IRMÃO de journey-card, não um filho, e precisa continuar
+  // sendo populado em qualquer dia, passado ou presente.
+  const jcWrap = document.getElementById('journey-wrap');
+  if (jcWrap) jcWrap.style.display = isToday ? '' : 'none';
+  const g = S.gps;
+  const finished = day.sessions || [];
+  const finishedElapsed = finished.reduce((s,x)=>s+(x.elapsed||0),0);
+  const finishedKm = finished.reduce((s,x)=>s+(x.km||0),0);
+  const live = isToday && g.st === 'running';
+  const liveElapsed = live ? getElapsed() : 0;
+  const liveKm = live ? g.km : 0;
+  const totalElapsed = Math.max(0, finishedElapsed + liveElapsed + (day.tempoAdjust || 0));
+  const totalKm = finishedKm + liveKm + (day.kmAdjust || 0);
+  const state = isToday ? g.st : 'idle';
+
+  let cls = 'idle';
+  if (state === 'running') cls = 'running';
+  else if (finished.length > 0) cls = 'ended';
+  jc.className = 'journey ' + cls;
+
+  setText('jc-status-text',
+    state === 'running' ? 'Online' :
+    finished.length > 0 ? 'Concluído' : 'Iniciar'
+  );
+  const th = Math.floor(liveElapsed/3600), tm = Math.floor(liveElapsed%3600/60), ts = liveElapsed%60;
+  setText('jc-timer', p2(th)+':'+p2(tm)+':'+p2(ts));
+  setText('jc-sub',
+    state === 'running' ? 'Sessão atual · iniciada '+fmtHM(g.start) :
+    finished.length > 0 ? finished.length+(finished.length===1?' jornada hoje':' jornadas hoje') :
+    'Nenhuma sessão iniciada'
+  );
+  setText('jc-km', liveKm.toFixed(1));
+  const tth = Math.floor(totalElapsed/3600), ttm = Math.floor(totalElapsed%3600/60);
+  setText('jc-total', tth+'h'+p2(ttm)+'m');
+  setText('jc-kmtotal', totalKm.toFixed(1)+' km');
+  // CORRIGIDO (23/07/2026, confirmado com dado real pelo Yuri): esses 4
+  // KPIs do card principal (corridas, km ativo, R$/h, R$/km) só somavam
+  // day.trips (Importadas) — sessão só com automáticas mostrava tudo
+  // zerado mesmo com corridas de verdade rodando. Mesma correção que já
+  // tinha sido feita em rev/sessionItem/renderMetasDoDia, faltava aqui.
+  const autoTripsHoje = day.autoTrips || [];
+
+  // Banner "aguardando confirmação" — pedido do Yuri (16/08/2026), substitui
+  // o botão fixo "Importar corridas". Conta corridas que ainda não foram
+  // confirmadas por vídeo do histórico (status 'capturada' ou 'estimada') —
+  // 'confirmada' só existe depois do vídeo, então isso mede exatamente o
+  // que falta conferir naquele dia. Aparece em qualquer dia navegado, some
+  // sozinho quando não sobra pendência.
+  const pcbEl = document.getElementById('pending-confirm-banner');
+  if (pcbEl) {
+    // Não interpreta cache ainda carregando como zero corridas. Durante refresh,
+    // mantém o último estado visual válido do mesmo dia.
+    const autoTripsReady = S._autoTripsDataDate === cardDate;
+    if (autoTripsReady) {
+      const pendingCount = autoTripsHoje.filter(t => t.status !== 'confirmada' || t.value_needs_review === true).length;
+      pcbEl.dataset.dataDate = cardDate;
+      if (pendingCount > 0) {
+        pcbEl.style.display = 'flex';
+        setText('pcb-title', pendingCount + (pendingCount===1 ? ' corrida aguardando confirmação' : ' corridas aguardando confirmação'));
+      } else {
+        pcbEl.style.display = 'none';
+      }
+    } else if (pcbEl.dataset.dataDate && pcbEl.dataset.dataDate !== cardDate) {
+      pcbEl.style.display = 'none';
+      pcbEl.dataset.dataDate = cardDate;
+    }
+  }
+
+  // Barra Online/Buscando passageiro/Em corrida — real, vinda da máquina de
+  // estados do APK (ver computeStatusBreakdown). No card da jornada ATUAL
+  // só faz sentido enquanto a sessão está rodando (é o que está sendo
+  // contado agora); ao encerrar, o dado sai daqui e já está consolidado no
+  // "Total do dia" logo abaixo — pedido do Yuri (16/08/2026), evita
+  // duplicar/deixar a mesma barra "grudada" depois de já ter encerrado.
+  // As barras são atualizadas exclusivamente pela timeline contínua V3.
+  // A rotina base não sobrescreve mais a leitura real com auto_trips.
+  const jcBd = document.getElementById('jc-breakdown');
+  const tdBdRow = document.getElementById('td-bd-row');
+
+  setText('jc-trips', day.trips.length + autoTripsHoje.length);
+  setText('jc-trips2', day.trips.length + autoTripsHoje.length);
+  const aceitasCount = day.trips.length + autoTripsHoje.length;
+  const declinedCount = (S.declined || []).length;
+  setText('jc-aceitas', aceitasCount);
+  setText('jc-recusadas', declinedCount);
+  const corridasSubEl = document.getElementById('jc-corridas-sub');
+  if (corridasSubEl) corridasSubEl.style.display = (aceitasCount>0 || declinedCount>0) ? 'flex' : 'none';
+  const kmAtivo = day.trips.reduce((s,t)=>s+(t.km||0),0)
+                + autoTripsHoje.reduce((s,t)=>s+(parseFloat(t.real_km_trip ?? t.offer_km_trip)||0),0);
+  const kmDesl = Math.max(0, totalKm - kmAtivo);
+  setText('jc-kmativo', kmAtivo.toFixed(1));
+  setText('jc-kmdesl', kmDesl.toFixed(1));
+  const ganhosDia = day.trips.reduce((s,t)=>s+(t.value||0),0)
+                  + autoTripsHoje.reduce((s,t)=>s+(t.offer_value||0),0);
+  const horasDecimal = totalElapsed > 0 ? totalElapsed/3600 : 0;
+  const rsh  = horasDecimal > 0 ? ganhosDia/horasDecimal : null;
+  const rskm = totalKm > 0 ? ganhosDia/totalKm : null;
+  setText('jc-rsh', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
+  setText('jc-rskm', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
+  setText('jc-rsh2', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
+  setText('jc-rskm2', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
+  // Cor por indicador — pedido do Yuri (23/07/2026, mockup aprovado):
+  // mesmos limiares vermelho/verde que o motorista já ajusta na régua do
+  // MōB Flash (Indicadores → R$/km e R$/hora), cada indicador troca de cor
+  // por conta própria. Sem dado ainda (sessão não rodou tempo/km) fica
+  // neutro (verde), não faz sentido alarmar antes de ter dado de verdade.
+  const rateEl = document.getElementById('jc-rate-hora');
+  const kmEl   = document.getElementById('jc-rate-km');
+  const rateEl2 = document.getElementById('jc-rate-hora2');
+  const kmEl2   = document.getElementById('jc-rate-km2');
+  const rateCls = rsh !== null ? rateColorClass('rhora', rsh) : '';
+  const kmCls   = rskm !== null ? rateColorClass('rkm', rskm) : '';
+  if (rateEl)  rateEl.className  = 'td-rcard ' + rateCls;
+  if (kmEl)    kmEl.className    = 'td-rcard ' + kmCls;
+  if (rateEl2) rateEl2.className = 'rate-cell ' + rateCls;
+  if (kmEl2)   kmEl2.className   = 'rate-cell ' + kmCls;
+
+  const actions = document.getElementById('jc-actions');
+  if (!actions) return;
+  if (!isToday) {
+    actions.innerHTML = '';
+  } else if (state === 'idle') {
+    actions.innerHTML = `<button class="j-round-btn play" onclick="gpsStart()" aria-label="Iniciar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>`;
+  } else if (state === 'running') {
+    actions.innerHTML = '<button class="j-round-btn stop" onclick="confirmStop()" aria-label="Encerrar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="1
+
+===== renderJourneyCard( @ 913186 =====
+l;
+  g.sessionId = null; g.forceDate = null;
+  try { syncNavButton(); } catch(e) { console.error('[gpsStop] syncNavButton:', e); }
+  try { releaseWakeLock(); } catch(e) { console.error('[gpsStop] releaseWakeLock:', e); }
+
+  // ═══ FASE 2 — detalhamento local (lista de jornadas do dia). Se algo
+  // aqui falhar, a jornada JÁ está marcada como encerrada na Fase 1 —
+  // o pior caso é essa jornada específica não aparecer na listagem local
+  // até a próxima reconciliação com o Supabase, nunca ficar 'presa'. ═══
+  let sess = { id: cloudId, start: startMs, end: endMs, km: kmSnap, elapsed: elapsedSnap };
+  try {
+    const day = DB.day(closeDate);
+    if (!day.sessions) day.sessions = [];
+    const _sIdx = day.sessions.findIndex(s => s.id === cloudId);
+    if (_sIdx >= 0) day.sessions[_sIdx] = sess; else day.sessions.push(sess);
+    const totalKm = day.sessions.reduce((s,x)=>s+(x.km||0),0);
+    const totalElapsed = day.sessions.reduce((s,x)=>s+(x.elapsed||0),0);
+    day.session = { km: totalKm, elapsed: totalElapsed };
+    if (!day.kmTotal && totalKm > 0.1) day.kmTotal = parseFloat(totalKm.toFixed(1));
+    DB.saveDay(day);
+  } catch(e) { console.error('[gpsStop] Falha ao salvar detalhe local (fechamento já confirmado):', e); }
+
+  setTimeout(() => {
+    try { renderJornada(); } catch(e) {}
+    try { renderHome(); } catch(e) {}
+  }, 80);
+  if (elapsedSnap > 60) setTimeout(() => showJourneySummary(sess), 500);
+}
+function getElapsed() {
+  const g = S.gps; if (!g.start) return 0;
+  const p = g.pausedMs + (g.pa ? Date.now()-g.pa : 0);
+  return Math.floor((Date.now()-g.start-p)/1000);
+}
+let _gpsCloudTick = 0;
+function gpsUpdate() {
+  _gpsCloudTick++;
+  if (_gpsCloudTick % 300 === 0) _persistGpsCloud().catch(()=>{}); // a cada 5 min
+  // Roda independente de qual dia o usuário está vendo na tela — a virada
+  // de meia-noite tem que ser detectada mesmo se ele estiver olhando outro
+  // dia no momento.
+  checkMidnightCrossing();
+  // Só atualiza os elementos visuais se o usuário estiver vendo hoje.
+  // Se navegar para outro dia, o timer continua rodando internamente mas
+  // não sobrescreve o card que está mostrando dados daquele dia.
+  if (S.curDate !== DB.today()) return;
+  renderJourneyCard(DB.day(S.curDate), true);
+}
+
+// ── PERSISTÊNCIA DA SESSÃO GPS (sobrevive a reload do WebView) ─────────────
+function persistGps() {
+  const g = S.gps;
+  if (g.st === 'idle') { DB.del('sm_gps_session'); return; }
+  const lastPt = g.pts && g.pts.length ? g.pts[g.pts.length-1] : null;
+  DB.set('sm_gps_session', {
+    st: g.st, start: g.start, pausedMs: g.pausedMs, pa: g.pa,
+    km: g.km, lastPt, baseKm: g.baseKm, baseElapsed: g.baseElapsed,
+    sessionId: g.sessionId, forceDate: g.forceDate || null
+  });
+  // Checkpoint no Supabase (não bloqueia)
+  _persistGpsCloud().catch(()=>{});
+}
+
+async function _persistGpsCloud() {
+  if (!_supaUser || !S.gps.start || S.gps.st === 'idle') return;
+  // Defesa contra instância fantasma: se outra aba/instância desta MESMA
+  // origem já encerrou a jornada (apagou o marcador local), esta instância
+  // deve se autodestruir em vez de continuar fazendo checkpoint de uma
+  // jornada que já não existe mais oficialmente. localStorage é compartilhado
+  // entre abas da mesma origem — isso funciona mesmo sem comunicação direta.
+  const localMarker = DB.get('sm_gps_session');
+  if (!localMarker || (localMarker.st !== 'running' && localMarker.st !== 'paused')) {
+    console.warn('[_persistGpsCloud] Marcador local ausente — outra instância já encerrou. Auto-parando esta.');
+    S.gps.st = 'idle'; S.gps.start = null;
+    if (S.gps.wid) { try{ navigator.geolocation.clearWatch(S.gps.wid); }catch(e){} }
+    if (S.gps.ti) { try{ clearInterval(S.gps.ti); }catch(e){} }
+    return;
+  }
+  const g = S.gps;
+  if (!g.sessionId) g.sessionId = DB.uid();
+  const snapId = g.sessionId; // capturar antes do await
+  await _SUPA.from('sessions').upsert({
+    id:         snapId,
+    user_id:    _supaUser.id,
+    date:       _ymd(g.start), // Jornada contínua: não troca de identidade à meia-noite
+    start_ms:   g.start,
+    end_ms:     null,
+    km:         parseFloat((g.km||0).toFixed(3)),
+    elapsed_secs: getElapsed(),
+    paused_ms:  0,
+    is_paused:  false,
+    km_desloc:  null
+  }, { onConflict: 'id' });
+  // Guard de corrida: se gpsStop() foi chamado enquanto este await estava
+  // pendente, o nosso write (end_ms=null) pode ter chegado ao Supabase
+  // DEPOIS do write de fechamento, reabrindo a sessão. Re-aplicar o tombstone.
+  if (S.gps.st === 'idle') {
+    try {
+      if (_gcss().has(snapId)) {
+        const _cl=JSON.parse(localStorage.getItem('sm_gps_last_closed')||'null');
+        const _em=(_cl&&_cl.id===snapId)?_cl.end:Date.now();
+        await _SUPA.from('sessions').upsert({id:snapId,user_id:_supaUser.id,end_ms:_em,is_paused:false,paused_ms:0},{onConflict:'id'});
+        console.log('[_persistGpsCloud] Race condition — fechamento re-aplicado:',snapId);
+      }
+    } catch(e) {}
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// JORNADA CRUZOU A MEIA-NOITE — detecta, pergunta pro motorista, aplica.
+// ══════════════════════════════════════════════════════════════════════
+function _ymd(ms) { const d = new Date(ms); return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate()); }
+
+// Chamado a cada tick do gpsUpdate() (1x/s) e ao restaurar a sessão no boot.
+// Barato o bastante pra rodar toda hora: só comparação de strings até achar
+// uma virada real; o trabalho pesado (abrir modal) só acontece uma vez por
+// virada, travado pelo localStorage (sm_midnight_resolved_*).
+function checkMidnightCrossing() {
+  const g = S.gps;
+  if (g.st !== 'running' || !g.start) return;
+  if (S._midnightModalOpen) return; // já perguntando, não reprocessa
+  const startDate = _ymd(g.start);
+  const today = DB.today();
+  if (startDate === today) return; // ainda no mesmo dia — nada a fazer
+  if (g.forceDate) return; // motorista já resolveu essa jornada (opção 'ontem')
+  const resolvedKey = 'sm_midnight_resolved_' + (g.sessionId||'x') + '_' + today;
+  if (localStorage.getItem(resolvedKey)) return; // já perguntado/resolvido pra essa virada
+  openMidnightModal(startDate, today);
+}
+
+function openMidnightModal(startDate, todayStr) {
+  S._midnightModalOpen = true;
+  const g = S.gps;
+  const sD = new Date(g.start), nD = new Date();
+  const startLabel = p2(sD.getDate())+'/'+p2(sD.getMonth()+1)+' · '+p2(sD.getHours())+':'+p2(sD.getMinutes());
+  const nowLabel = p2(nD.getDate())+'/'+p2(nD.getMonth()+1)+' · '+p2(nD.getHours())+':'+p2(nD.getMinutes());
+  const startDD = startDate.split('-')[2]+'/'+startDate.split('-')[1];
+  const todayDD = todayStr.split('-')[2]+'/'+todayStr.split('-')[1];
+  document.getElementById('mn-sheet').innerHTML = `
+    <div class="sheet-handle"></div>
+    <div style="width:52px;height:52px;border-radius:16px;background:#FFFBEB;border:1.5px solid #FDE68A;display:flex;align-items:center;justify-content:center;margin-bottom:14px">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#D97706" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+    </div>
+    <h2 style="font-family:'Poppins',sans-serif;font-weight:800;font-size:17px;color:#0F172A;margin-bottom:6px;line-height:1.3">Sua jornada passou da meia-noite</h2>
+    <p style="font-size:13px;color:#64748B;line-height:1.55;margin-bottom:6px">Você iniciou <b style="color:#0F172A">ontem</b> e continua rodando. Como quer contar essa jornada?</p>
+    <div style="display:flex;align-items:center;gap:8px;margin:16px 0 18px;background:#F7F9FC;border:1px solid #E2E8F0;border-radius:14px;padding:12px 14px">
+      <div style="flex:1;text-align:center">
+        <div style="font-size:10px;color:#94A3B8;font-weight:700;text-transform:uppercase;letter-spacing:.04em">Início</div>
+        <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:15px;color:#0F172A;margin-top:2px">${startDD} · ${startLabel.split(' · ')[1]}</div>
+      </div>
+      <div style="color:#CBD5E1;font-size:16px">→</div>
+      <div style="flex:1;text-align:center">
+        <div style="font-size:10px;color:#94A3B8;font-weight:700;text-transform:uppercase;letter-spacing:.04em">Agora</div>
+        <div style="font-family:'Poppins',sans-serif;font-weight:800;font-size:15px;color:#0F172A;margin-top:2px">${todayDD} · ${nowLabel.split(' · ')[1]}</div>
+      </div>
+    </div>
+    <button class="mn-opt" onclick="resolveMidnightSplit('split')" style="display:flex;align-items:center;gap:12px;width:100%;background:#F0FDF4;border:1.5px solid #BBF7D0;border-radius:16px;padding:13px 14px;margin-bottom:10px;text-align:left;cursor:pointer">
+      <div style="width:38px;height:38px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#DCFCE7;color:#16A34A"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v18M5 12h14"/></svg></div>
+      <div style="flex:1"><div style="font-size:13.5px;font-weight:700;color:#0F172A">Dividir até meia-noite <span style="font-size:9px;font-weight:800;color:#16A34A;background:#DCFCE7;padding:2px 7px;border-radius:99px;margin-left:6px">RECOMENDADO</span></div>
+      <div style="font-size:11px;color:#94A3B8;margin-top:1px;line-height:1.4">Fecha a jornada de ontem às 23:59:59 e abre uma nova hoje às 00:00. Corridas ficam no dia de cada uma.</div></div>
+    </button>
+    <button class="mn-opt" onclick="resolveMidnightSplit('yesterday')" style="display:flex;align-items:center;gap:12px;width:100%;background:#fff;border:1.5px solid #E2E8F0;border-radius:16px;padding:13px 14px;margin-bottom:10px;text-align:left;cursor:
+
+===== jc-breakdown @ 404162 =====
+" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <p id="dn-dow"></p>
+      </div>
+      <button class="arrow" onclick="chgDay(1)">&#8250;</button>
+      <input type="date" id="jorn-date-input" onchange="setJornadaDate(this.value)" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px">
+    </div>
+  </div>
+
+  <div id="pending-confirm-banner" class="pending-confirm-banner" style="display:none" onclick="openImportPrecheck()">
+    <div class="pcb-ico">
+      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+    </div>
+    <div class="pcb-txt">
+      <div class="pcb-title" id="pcb-title">corridas aguardando confirmação</div>
+      <div class="pcb-sub">Toque para enviar o vídeo do histórico</div>
+    </div>
+    <svg class="pcb-chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+  </div>
+
+  <div class="journey-wrap" id="journey-wrap">
+  <div class="journey idle" id="journey-card">
+    <div class="j-status" style="display:none"><i></i><span id="jc-status-text">Iniciar</span></div>
+    <div class="j-toprow">
+      <div class="j-current" style="grid-template-columns:1.3fr 1fr 1fr;flex:1">
+        <div><h2 id="jc-timer">00:00:00</h2><p id="jc-sub">Nenhuma sessão iniciada</p></div>
+        <div class="j-km"><strong id="jc-km">0,0</strong><span>Km</span></div>
+        <div class="j-km"><strong id="jc-trips2">0</strong><span>Corridas</span></div>
+      </div>
+    </div>
+    <div class="j-bottomrow">
+      <div class="j-rates2">
+        <div class="rate-cell" id="jc-rate-hora2"><strong id="jc-rsh2">R$0,00</strong><span>R$ / hora</span></div>
+        <div class="rate-cell" id="jc-rate-km2"><strong id="jc-rskm2">R$0,00</strong><span>R$ / km</span></div>
+      </div>
+      <div class="j-actions" id="jc-actions"></div>
+    </div>
+  </div>
+  <div class="journey-breakdown" id="jc-breakdown" style="display:none">
+    <div class="sbar-wrap" onclick="toggleBar('jc-blist')"><div class="sbar" id="jc-bar"></div></div>
+    <div class="sbar-list" id="jc-blist"></div>
+  </div>
+  </div>
+
+  <div class="section" style="padding:16px 16px 8px"><h2>Total do dia</h2></div>
+  <div style="padding:0 16px 14px">
+    <div class="td-card">
+
+      <div class="td-row">
+        <svg class="td-wm right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l1.5-4.5A2 2 0 0 1 6.4 7h11.2a2 2 0 0 1 1.9 1.5L21 13"/><path d="M3 13h18v4a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4z"/><circle cx="7.5" cy="17" r="1.3"/><circle cx="16.5" cy="17" r="1.3"/></svg>
+        <div class="td-corridas"><strong id="jc-trips">0</strong><span>Corridas</span></div>
+        <div class="td-sub" id="jc-corridas-sub" style="display:none">
+          <span class="td-chip ok"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span id="jc-aceitas">0</span> aceitas</span>
+          <span class="td-vline"></span>
+          <span class="td-chip no"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg><span id="jc-recusadas">0</span> recusadas</span>
+        </div>
+      </div>
+
+      <div class="td-row">
+        <div class="tk-split">
+          <div class="tk-half left">
+            <svg class="td-wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 6.5v5.5l4 2.3"/></svg>
+            <div style="display:flex;align-items:center;justify-content:center;gap:6px;position:relative;z-index:1">
+              <strong id="jc-total">0h00</strong>
+              <button class="km-edit-btn" onclick="openTempoAdjust()" aria-label="Editar tempo total">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+              </button>
+            </div>
+            <span>Tempo total</span>
+          </div>
+          <div class="tk-divider"></div>
+          <div class="tk-half right">
+            <svg class="td-wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 23L9 1M20 23L15 1"/><path d="M12 3.5v3M12 10v3M12 16.5v3"/></svg>
+            <div style="display:flex;align-items:center;justify-content:center;gap:5px;position:relative;z-index:1">
+              <strong id="jc-kmtotal">0,0 km</strong>
+              <button class="km-edit-btn" onclick="openKmAdjust()" aria-label="Editar km total">
+                <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+              </button>
+            </div>
+            <span>Km total</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="td-row">
+        <svg class="td-wm left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22"/><path d="M17 5.5c0-2-2.2-3.3-5-3.3s-5 1.5-5 3.7c0 2.5 2.2 3.5 5 4.3c3.2.9 5.4 1.9 5.4 4.5c0 2.5-2.4 3.8-5.4 3.8s-5.4-1.4-5.4-3.8"/></svg>
+        <div class="td-rates">
+          <div class="td-rcard" id="jc-rate-hora"><strong id="jc-rsh">R$0,00</strong><span>R$ / hora</span></div>
+          <div class="td-rcard" id="jc-rate-km"><strong id="jc-rskm">R$0,00</strong><span>R$ / km</span></div>
+        </div>
+        <div class="td-fin-divider"></div>
+        <div class="td-fin">
+          <div class="cell"><strong class="g" id="d-rev">R$0</strong><span>Receitas</span></div>
+          <div class="cell"><strong class="r" id="d-exp">R$0</strong><span>Despesas</span></div>
+          <div class="cell"><strong id="d-net">R$0</strong><span>Resultado</span></div>
+        </div>
+      </div>
+
+      <div class="td-row bd" id="td-bd-row" style="display:none">
+        <div class="sbar" id="td-bd-bar"></div>
+        <div class="sbar-list open" id="td-bd-list"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Metas do dia: pedido do Yuri (23/07/2026) — sai de dentro do card
+       azul da jornada (onde competia por espaço com timer/km/corridas) e
+       vira seção solta, igual "Lançamentos" logo abaixo (título + link no
+       fundo da tela, sem balão/card branco por trás). renderMetasDoDia()
+       não muda nada — só o container onde a mesma função escreve. -->
+  <div class="section" style="padding:0 16px 8px"><h2>Metas do dia</h2><button class="add" onclick="openMetasHojeModal()">Editar &#8250;</button></div>
+  <div style="padding:0 16px 4px">
+    <div class="metas-wrap">
+      <svg class="metas-wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2.2"/></svg>
+      <div id="metas-dia-stack"></div>
+    </div>
+  </div>
+
+  <div class="section" style="padding:16px 16px 8px"><h2>Jornadas do dia</h2><button class="add" onclick="toggleSessionsView()" id="sessions-toggle" style="display:none">Ver todas &#8250;</button></div>
+  <div style="padding:0 16px"><div id="sessions-list"><div class="empty">Nenhuma sessão registrada</div></div></div>
+
+  <div class="section" style="padding:16px 16px 8px"><h2>Lançamentos</h2><div style="display:flex;gap:8px;align-items:center"><button class="add" onclick="toggleLancView()" id="lanc-toggle" style="display:none">Ver todas &#8250;</button><button class="add" onclick="openLanc('receita')">+ Adicionar</button></div></div>
+  <div style="padding:0 16px"><div id="jorn-lanc-list"><div class="empty">Nenhum lançamento registrado</div></div></div>
+
+  <div style="height:8px"></div>
+</div>
+
+<!-- ══ TELA FINANCEIRO ════════════════════════════════════════════════════ -->
+<div class="screen" id="sc-financeiro">
+  <div class="wrap">
+    <section class="hero" style="margin-bottom:14px">
+      <div class="fin-hero-top">
+        <div class="fin-ptabs">
+          <button id="fp-today" onclick="setFinPer('today')">Hoje</button>
+          <button id="fp-month" class="on" onclick="setFinPer('month')">Mês</button>
+          <button id="fp-year" onclick="setFinPer('year')">Ano</button>
+        </div>
+        <button class="fin-filter-btn" id="fin-filter-btn" onclick="openFinFilter()"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/></svg></button>
+      </div>
+      <div class="heroTop">
+        <div><div class="label">Saldo líquido</div><div class="amount" id="fin-amount">R$ 0,00</div><div class="sub" id="fin-sub">Entradas R$ 0 · Saídas R$ 0</div></div>
+      </div>
+      <div class="fin-range-chip" id="fin-range-chip" style="display:none">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><rect x="3" y="4" width="18" he
+
+===== jc-breakdown @ 641549 =====
+ (Importadas) — sessão só com automáticas mostrava tudo
+  // zerado mesmo com corridas de verdade rodando. Mesma correção que já
+  // tinha sido feita em rev/sessionItem/renderMetasDoDia, faltava aqui.
+  const autoTripsHoje = day.autoTrips || [];
+
+  // Banner "aguardando confirmação" — pedido do Yuri (16/08/2026), substitui
+  // o botão fixo "Importar corridas". Conta corridas que ainda não foram
+  // confirmadas por vídeo do histórico (status 'capturada' ou 'estimada') —
+  // 'confirmada' só existe depois do vídeo, então isso mede exatamente o
+  // que falta conferir naquele dia. Aparece em qualquer dia navegado, some
+  // sozinho quando não sobra pendência.
+  const pcbEl = document.getElementById('pending-confirm-banner');
+  if (pcbEl) {
+    // Não interpreta cache ainda carregando como zero corridas. Durante refresh,
+    // mantém o último estado visual válido do mesmo dia.
+    const autoTripsReady = S._autoTripsDataDate === cardDate;
+    if (autoTripsReady) {
+      const pendingCount = autoTripsHoje.filter(t => t.status !== 'confirmada' || t.value_needs_review === true).length;
+      pcbEl.dataset.dataDate = cardDate;
+      if (pendingCount > 0) {
+        pcbEl.style.display = 'flex';
+        setText('pcb-title', pendingCount + (pendingCount===1 ? ' corrida aguardando confirmação' : ' corridas aguardando confirmação'));
+      } else {
+        pcbEl.style.display = 'none';
+      }
+    } else if (pcbEl.dataset.dataDate && pcbEl.dataset.dataDate !== cardDate) {
+      pcbEl.style.display = 'none';
+      pcbEl.dataset.dataDate = cardDate;
+    }
+  }
+
+  // Barra Online/Buscando passageiro/Em corrida — real, vinda da máquina de
+  // estados do APK (ver computeStatusBreakdown). No card da jornada ATUAL
+  // só faz sentido enquanto a sessão está rodando (é o que está sendo
+  // contado agora); ao encerrar, o dado sai daqui e já está consolidado no
+  // "Total do dia" logo abaixo — pedido do Yuri (16/08/2026), evita
+  // duplicar/deixar a mesma barra "grudada" depois de já ter encerrado.
+  // As barras são atualizadas exclusivamente pela timeline contínua V3.
+  // A rotina base não sobrescreve mais a leitura real com auto_trips.
+  const jcBd = document.getElementById('jc-breakdown');
+  const tdBdRow = document.getElementById('td-bd-row');
+
+  setText('jc-trips', day.trips.length + autoTripsHoje.length);
+  setText('jc-trips2', day.trips.length + autoTripsHoje.length);
+  const aceitasCount = day.trips.length + autoTripsHoje.length;
+  const declinedCount = (S.declined || []).length;
+  setText('jc-aceitas', aceitasCount);
+  setText('jc-recusadas', declinedCount);
+  const corridasSubEl = document.getElementById('jc-corridas-sub');
+  if (corridasSubEl) corridasSubEl.style.display = (aceitasCount>0 || declinedCount>0) ? 'flex' : 'none';
+  const kmAtivo = day.trips.reduce((s,t)=>s+(t.km||0),0)
+                + autoTripsHoje.reduce((s,t)=>s+(parseFloat(t.real_km_trip ?? t.offer_km_trip)||0),0);
+  const kmDesl = Math.max(0, totalKm - kmAtivo);
+  setText('jc-kmativo', kmAtivo.toFixed(1));
+  setText('jc-kmdesl', kmDesl.toFixed(1));
+  const ganhosDia = day.trips.reduce((s,t)=>s+(t.value||0),0)
+                  + autoTripsHoje.reduce((s,t)=>s+(t.offer_value||0),0);
+  const horasDecimal = totalElapsed > 0 ? totalElapsed/3600 : 0;
+  const rsh  = horasDecimal > 0 ? ganhosDia/horasDecimal : null;
+  const rskm = totalKm > 0 ? ganhosDia/totalKm : null;
+  setText('jc-rsh', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
+  setText('jc-rskm', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
+  setText('jc-rsh2', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
+  setText('jc-rskm2', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
+  // Cor por indicador — pedido do Yuri (23/07/2026, mockup aprovado):
+  // mesmos limiares vermelho/verde que o motorista já ajusta na régua do
+  // MōB Flash (Indicadores → R$/km e R$/hora), cada indicador troca de cor
+  // por conta própria. Sem dado ainda (sessão não rodou tempo/km) fica
+  // neutro (verde), não faz sentido alarmar antes de ter dado de verdade.
+  const rateEl = document.getElementById('jc-rate-hora');
+  const kmEl   = document.getElementById('jc-rate-km');
+  const rateEl2 = document.getElementById('jc-rate-hora2');
+  const kmEl2   = document.getElementById('jc-rate-km2');
+  const rateCls = rsh !== null ? rateColorClass('rhora', rsh) : '';
+  const kmCls   = rskm !== null ? rateColorClass('rkm', rskm) : '';
+  if (rateEl)  rateEl.className  = 'td-rcard ' + rateCls;
+  if (kmEl)    kmEl.className    = 'td-rcard ' + kmCls;
+  if (rateEl2) rateEl2.className = 'rate-cell ' + rateCls;
+  if (kmEl2)   kmEl2.className   = 'rate-cell ' + kmCls;
+
+  const actions = document.getElementById('jc-actions');
+  if (!actions) return;
+  if (!isToday) {
+    actions.innerHTML = '';
+  } else if (state === 'idle') {
+    actions.innerHTML = `<button class="j-round-btn play" onclick="gpsStart()" aria-label="Iniciar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>`;
+  } else if (state === 'running') {
+    actions.innerHTML = '<button class="j-round-btn stop" onclick="confirmStop()" aria-label="Encerrar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"/></svg></button>';
+  }
+}
+
+function agMinutesBetween(start, end) {
+  if (!start || !end) return 0;
+  const [h1,m1] = start.split(':').map(Number);
+  const [h2,m2] = end.split(':').map(Number);
+  return Math.max(0, (h2*60+m2) - (h1*60+m1));
+}
+function openMetasHojeModal() {
+  const date = S.curDate || DB.today();
+  const day = DB.day(date);
+  const dow = new Date(date+'T12:00').getDay();
+  const plan = DB.planJornada().find(p => p.days && p.days.includes(dow));
+  const meta = DB.meta();
+  const ov = day.metaOverride || null;
+  const dimMes = new Date(new Date(date+'T12:00').getFullYear(), new Date(date+'T12:00').getMonth()+1, 0).getDate();
+  const moneyGoal = (ov && ov.money) ? ov.money : ((plan && plan.moneyGoal) ? plan.moneyGoal : (meta.general ? meta.general/dimMes : 0));
+  const kmGoal = (ov && ov.km) ? ov.km : (plan && plan.kmGoal ? plan.kmGoal : 0);
+  const schedMin = (ov && ov.hours) ? ov.hours*60 : (plan ? (plan.schedules||[]).reduce((s,b)=>s+agMinutesBetween(b.start,b.end),0) : 0);
+  const mEl = document.getElementById('mh-money'); if (mEl) mEl.value = moneyGoal ? moneyGoal.toFixed(2) : '';
+  const kEl = document.getElementById('mh-km'); if (kEl) kEl.value = kmGoal || '';
+  const hEl = document.getElementById('mh-hours'); if (hEl) hEl.value = schedMin ? (schedMin/60).toFixed(1) : '';
+  const subEl = document.getElementById('mh-sub');
+  if (subEl) {
+    const isToday = date === DB.today();
+    subEl.textContent = isToday ? 'Vale só para hoje' : ('Vale só para ' + new Date(date+'T12:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}));
+  }
+  openMo('mo-metas-hoje');
+}
+function saveMetasHoje() {
+  const date = S.curDate || DB.today();
+  const day = DB.day(date);
+  const money = parseFloat((document.getElementById('mh-money')||{}).value) || 0;
+  const km = parseFloat((document.getElementById('mh-km')||{}).value) || 0;
+  const hours = parseFloat((document.getElementById('mh-hours')||{}).value) || 0;
+  day.metaOverride = { money, km, hours };
+  DB.saveDay(day);
+  closeMo('mo-metas-hoje');
+  try { renderMetasDoDia(day); } catch(e) {}
+  showToast('Metas de hoje atualizadas!', 'success');
+}
+function renderMetasDoDia(day) {
+  const stack = document.getElementById('metas-dia-stack');
+  if (!stack) return;
+  const rev = day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0)
+            + (day.autoTrips||[]).reduce((s,t)=>s+(t.offer_value||0),0);
+  const isToday = day.date === DB.today();
+  const liveOn = isToday && S.gps.st==='running';
+  const totalKm = (day.sessions||[]).reduce((s,x)=>s+(x.km||0),0) + (liveOn ? S.gps.km : 0) + (day.kmAdjust || 0);
+  const totalElapsed = Math.max(0, (day.sessions||[]).reduce((s,x)=>s+(x.elapsed||0),0) + (liveOn ? getElapsed() : 0) + (day.tempoAdjust || 0));
+  const dow = new Date(day.date+'T12:00').getDay();
+  const plan = DB.planJornada().find(p => p.days && p.days.includes(dow));
+  const meta = DB.meta();
+  const ov = day.metaOverride || null; // ajuste específico deste dia (via modal 'Metas de hoje')
+  const dimMes = new Date(new Date(day.date+'T12:00').getFullYear(), new Date(day.date+'T12:00').getMonth()+1, 0).getDate();
+  const moneyGoal = (ov && ov.money) ? ov.money : ((plan && plan.moneyGoal) ? plan.moneyGoal : (meta.general ? meta.general/dimMes : 0));
+
+  const ICO_MONEY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>';
+  const ICO_KM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>';
+  const ICO_TIME = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+
+  let html = '';
+  if (moneyGoal) {
+    const pct = Math.min(100, Math.round(rev/moneyGoal*100));
+    html += `<div class="goal-item"><div class="g-ico money">${ICO_MONEY}</div><div class="goal-body"><div class="goal-top"><strong>Financeira</strong><span>${DB.fRI(rev)} de ${DB.fRI(moneyGoal)} · ${pct}%</span></div><div class="gbar money"><i style="width:${pct}%"></i></div></div></div>`;
+  } else {
+    html += `<div class="goal-item"><div class="g-ico money">${I
+
+===== jc-breakdown @ 1731831 =====
+f(!ts&&t.accepted_at) ts=Date.parse(t.accepted_at)||0;
+    if(!ts&&t.trip_started_at) ts=Date.parse(t.trip_started_at)||0;
+    if(!ts&&t.time&&dateStr) ts=new Date(dateStr+'T'+t.time+':00').getTime();
+    return ts||0;
+  }
+
+  function currentSessionTrips(day,startMs){
+    const dateStr=day&&day.date?day.date:DB.today();
+    const manual=(day&&day.trips?day.trips:[]).filter(t=>manualTripTs(t,dateStr)>=startMs);
+    const auto=(day&&day.autoTrips?day.autoTrips:[]).filter(t=>{
+      try{ const ts=typeof autoTripTs==='function'?autoTripTs(t):Date.parse(t.trip_started_at||t.accepted_at||'')||0; return ts&&ts>=startMs; }
+      catch(e){return false;}
+    });
+    return {manual,auto};
+  }
+
+  function mergedTodaySegments(){
+    const live = (S && S.gps && S.gps.st==='running') ? nativeStatusTimeline() : [];
+    const sid = S&&S.gps ? S.gps.sessionId : null;
+    const cloud = (statusSegmentsDate===S.curDate ? statusSegments : []).filter(x=>!sid || x.session_id!==sid);
+    return cloud.concat(live);
+  }
+
+  function renderStatusTimeline(){
+    try{
+      if(!S||!DB||S.sec!=='jornada') return;
+      ensureNativeJourneySession();
+      if(S.curDate && statusSegmentsDate!==S.curDate) loadStatusSegments(S.curDate);
+
+      const day=DB.day(S.curDate||DB.today());
+      const isToday=S.curDate===DB.today();
+      const live=isToday&&S.gps&&S.gps.st==='running'&&S.gps.start;
+
+      // Card verde: somente a Jornada atual.
+      if(live){
+        const elapsed=Math.max(0,typeof getElapsed==='function'?getElapsed():0);
+        const km=Math.max(0,Number(S.gps.km)||0);
+        const trips=currentSessionTrips(day,Number(S.gps.start)||0);
+        const ganhos=trips.manual.reduce((a,t)=>a+(Number(t.value)||0),0)+trips.auto.reduce((a,t)=>a+(Number(t.offer_value)||0),0);
+        if(typeof setText==='function'){
+          setText('jc-trips2',trips.manual.length+trips.auto.length);
+          setText('jc-rsh2',elapsed>0?DB.fRI(ganhos/(elapsed/3600)):'R$0,00');
+          setText('jc-rskm2',km>0?DB.fRI(ganhos/km):'R$0,00');
+        }
+        const native=nativeStatusTimeline();
+        const bd=breakdownFromSegments(elapsed,km,native,S.gps.sessionId);
+        const jc=document.getElementById('jc-breakdown');
+        if(jc){ jc.style.display=''; setHTML('jc-bar',buildSbarHtml(bd)); setHTML('jc-blist',buildSrowsHtml(bd)); }
+      }
+
+      // Total do dia: soma trechos persistidos de TODAS as jornadas + trecho vivo.
+      const finished=(day.sessions||[]);
+      const totalElapsed=finished.reduce((a,x)=>a+(x.elapsed||0),0)+(live?getElapsed():0)+(day.tempoAdjust||0);
+      const totalKm=finished.reduce((a,x)=>a+(x.km||0),0)+(live?(Number(S.gps.km)||0):0)+(day.kmAdjust||0);
+      const td=document.getElementById('td-bd-row');
+      if(td&&totalElapsed>0){
+        const bd=breakdownFromSegments(totalElapsed,totalKm,mergedTodaySegments(),live?S.gps.sessionId:null);
+        td.style.display=''; setHTML('td-bd-bar',buildSbarHtml(bd)); setHTML('td-bd-list',buildSrowsHtml(bd));
+      }
+    }catch(e){ console.warn('[JourneyStatusTimeline]',e); }
+  }
+  // Compatibilidade apenas: V3 abaixo é o único renderizador automático.
+  // Expõe somente o vínculo da sessão nativa para o V3 poder garantir que
+  // uma Jornada recém-iniciada comece a gravar Online/Buscar/Corrida mesmo
+  // sem depender do renderizador legado da barra.
+  window.ensureNativeJourneySession=ensureNativeJourneySession;
+  window.renderStatusTimeline=renderStatusTimeline;
+})();
+</script>
+
+
+
+<!-- JOURNEY_CONTINUOUS_OPERATIONAL_V3 -->
+<script>
+(function(){
+  // ── Datas e dias operacionais ───────────────────────────────────────
+  window.localYmdFromMs = function(ms){
+    const d = new Date(Number(ms)||Date.now());
+    return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+  };
+  window.normalizeOperationalPlatform = function(p){
+    return String(p||'uber').toLowerCase() === '99' ? '99' : 'uber';
+  };
+  window.civilDayBounds = function(dateStr){
+    const start = new Date(dateStr+'T00:00:00');
+    const end = new Date(start); end.setDate(end.getDate()+1);
+    return {startMs:start.getTime(), endMs:end.getTime()};
+  };
+  window.operationalRangeForPlatform = function(plat,dateStr){
+    const p = normalizeOperationalPlatform(plat);
+    const start = new Date(dateStr+'T00:00:00');
+    if(p === 'uber') start.setHours(4,0,0,0);
+    const end = new Date(start); end.setDate(end.getDate()+1);
+    return {platform:p, operationalDate:dateStr, startMs:start.getTime(), endMs:end.getTime()};
+  };
+  window.operationalDateForTimestamp = function(plat,ts){
+    const p = normalizeOperationalPlatform(plat);
+    const d = new Date(Number(ts));
+    // Uber: tudo de 00:00 até 03:59 ainda pertence ao dia operacional anterior.
+    if(p === 'uber' && d.getHours() < 4) d.setDate(d.getDate()-1);
+    return localYmdFromMs(d.getTime());
+  };
+  window.operationalTimestampForTime = function(plat,dateStr,hhmm){
+    const p = normalizeOperationalPlatform(plat);
+    const parts = String(hhmm||'00:00').split(':').map(Number);
+    const h = Number.isFinite(parts[0]) ? parts[0] : 0;
+    const m = Number.isFinite(parts[1]) ? parts[1] : 0;
+    const d = new Date(dateStr+'T00:00:00');
+    d.setHours(h,m,0,0);
+    if(p === 'uber' && h < 4) d.setDate(d.getDate()+1);
+    return d.getTime();
+  };
+  window.loadAutoTripsForOperationalDay = async function(plat,dateStr){
+    if(!_supaUser) return [];
+    const r = operationalRangeForPlatform(plat,dateStr);
+    let q = _SUPA.from('auto_trips').select('*')
+      .eq('user_id',_supaUser.id)
+      .eq('platform',normalizeOperationalPlatform(plat))
+      .gte('trip_started_at',new Date(r.startMs).toISOString())
+      .lt('trip_started_at',new Date(r.endMs).toISOString())
+      .order('trip_started_at',{ascending:true});
+    const {data,error} = await q;
+    return error ? [] : (data||[]);
+  };
+
+  // ── Filtro da tela Corridas ────────────────────────────────────────
+  const _civilGetCorridasDays = window.getCorridasDays;
+  window.getCorridasDays = function(){
+    const plats = S.corridasPlats || new Set();
+    const onePlat = plats.size === 1 ? [...plats][0] : null;
+    if(!onePlat) return _civilGetCorridasDays();
+    const anchorStr = operationalDateForTimestamp(onePlat,Date.now());
+    const anchor = new Date(anchorStr+'T12:00:00');
+    const fmt = d => localYmdFromMs(d.getTime());
+    const p = S.corridasPeriod;
+    if(p==='date' && S.corridasDate) return [S.corridasDate];
+    if(p==='hoje') return [anchorStr];
+    if(p==='7d') { const out=[]; for(let i=0;i<7;i++){const d=new Date(anchor);d.setDate(d.getDate()-i);out.push(fmt(d));} return out; }
+    if(p==='mes') {
+      const y=anchor.getFullYear(), m=anchor.getMonth();
+      const dim=new Date(y,m+1,0).getDate(), out=[];
+      for(let day=1;day<=dim;day++) out.push(y+'-'+p2(m+1)+'-'+p2(day));
+      return out;
+    }
+    return _civilGetCorridasDays();
+  };
+  window.autoCorridasDateRange = function(){
+    const dates = getCorridasDays().slice().sort();
+    if(!dates.length) return null;
+    const plats = S.corridasPlats || new Set();
+    const onePlat = plats.size===1 ? [...plats][0] : null;
+    if(onePlat){
+      const a=operationalRangeForPlatform(onePlat,dates[0]);
+      const b=operationalRangeForPlatform(onePlat,dates[dates.length-1]);
+      return {from:new Date(a.startMs).toISOString(),to:new Date(b.endMs-1).toISOString()};
+    }
+    const a=civilDayBounds(dates[0]), b=civilDayBounds(dates[dates.length-1]);
+    return {from:new Date(a.startMs).toISOString(),to:new Date(b.endMs-1).toISOString()};
+  };
+
+  // ── Jornada contínua: nunca mais pergunta/divide à meia-noite ─────
+  window.checkMidnightCrossing = function(){ return; };
+  window.openMidnightModal = function(){ S._midnightModalOpen=false; try{closeMo('mo-midnight');}catch(e){} };
+  window.resolveMidnightSplit = async function(){ S._midnightModalOpen=false; try{closeMo('mo-midnight');}catch(e){} };
+  window.splitJourneyAtMidnight = async function(){ return; };
+  window.openPostStopMidnightModal = function(sess,onDone){
+    S._midnightIsPostStop=false; S._postStopMidnightSess=null; S._postMidnightCallback=null; S._midnightModalOpen=false;
+    try{closeMo('mo-midnight');}catch(e){}
+    if(typeof onDone==='function') onDone();
+  };
+  window.resolvePostStopMidnight = async function(){ S._midnightIsPostStop=false; S._midnightModalOpen=false; try{closeMo('mo-midnight');}catch(e){} };
+  try { if(S && S.gps) S.gps.forceDate = null; } catch(e) {}
+
+  // ── Corridas de uma Jornada: busca por INTERVALO REAL, não por data ──
+  const journeyAutoCache = new Map();
+  const journeyStatusCache = new Map();
+  const overlapSessionCache = new Map();
+  const civilStatusCache = new Map();
+
+  function journeyKey(sess){ return String(sess?.id || ((sess?.start||0)+'_'+(sess?.end||'live'))); }
+  function sessionEnd(sess){ return Number(sess?.end || ((S?.gps?.sessionId && sess?.id===S.gps.sessionId) ? Date.now() : Date.now())); }
+  function overlaps(start,end,a,b){ return Number(start||0) < b && Number(end||Date.now()) >= a; }
+
+  async function ensureJourneyAutoTrips(sess){
+    if(!_supaUser || !sess?.start) return;
+    const k=journeyKey(sess), old=journeyAutoCache.get(k);
+    const ttl=sess.end?120000:12000;
+    if(old && (old.loading || Date.now()-old.ts<ttl)) return;
+    journeyAutoCache.set(k,{loading:true,ts:Date.now(),rows:old?.rows||[]});
+    try{
+      const end=sessionEnd(sess);
+      const {data,error}=await _SUPA.from('auto_trips').select('*')
+        .eq('user_id',_supaUser.id)
+        .gte('trip_started_at',new Date(Number(sess.start)).toISOString())
+        .lte('trip_started_at',new Date(end).toISOString())
+        .order('trip_started_at',{ascending:true});
+      if(!error) journeyA
+
+===== jc-breakdown @ 1752055 =====
+empoAdjust)||0));
+      km=Math.max(0,km+(Number(day.kmAdjust)||0));
+    }catch(e){}
+    return {elapsed,km};
+  }
+
+  // ── Barra Total do dia = corte CIVIL virtual da timeline ───────────
+  async function ensureCivilStatus(dateStr){
+    if(!_supaUser||!dateStr)return;
+    const old=civilStatusCache.get(dateStr);if(old&&(old.loading||Date.now()-old.ts<8000))return;
+    civilStatusCache.set(dateStr,{loading:true,ts:Date.now(),rows:old?.rows||[]});
+    const b=civilDayBounds(dateStr);
+    try{
+      const {data,error}=await _SUPA.from('journey_status_segments').select('*').eq('user_id',_supaUser.id)
+        .lt('start_ms',b.endMs).or(`end_ms.is.null,end_ms.gte.${b.startMs}`).order('start_ms',{ascending:true});
+      if(!error)civilStatusCache.set(dateStr,{loading:false,ts:Date.now(),rows:data||[]});
+    }catch(e){civilStatusCache.set(dateStr,{loading:false,ts:Date.now(),rows:old?.rows||[]});}
+    try{if(S.sec==='jornada')setTimeout(()=>{renderContinuousSessionList();renderContinuousStatusBars();},0);}catch(e){}
+  }
+  function renderContinuousStatusBars(){
+    if(!S?.curDate)return;
+    ensureCivilStatus(S.curDate);
+    const c=civilStatusCache.get(S.curDate), rows=c?.rows||[];
+    const tdRow=document.getElementById('td-bd-row');
+    const totals=civilJourneyTotals(S.curDate);
+    if(rows.length){
+      const b=civilDayBounds(S.curDate), bd=statusBreakdownRows(rows,totals.elapsed,totals.km,b.startMs,b.endMs,(S?.gps?.st==='running'?S.gps.sessionId:null));
+      if(tdRow)tdRow.style.display='';
+      try{setHTML('td-bd-bar',buildSbarHtml(bd));setHTML('td-bd-list',buildSrowsHtml(bd));}catch(e){}
+    } else if(c && !c.loading) {
+      const day=DB.day(S.curDate);
+      const autos=(day.autoTrips&&day.autoTrips.length)?day.autoTrips:((S._autoTripsDataDate===S.curDate&&Array.isArray(S.autoTrips))?S.autoTrips:[]);
+      const bd=computeStatusBreakdown(totals.elapsed,totals.km,autos);
+      const hasJourney=totals.elapsed>0||totals.km>0||autos.length>0;
+      if(tdRow)tdRow.style.display=hasJourney?'':'none';
+      if(hasJourney){try{setHTML('td-bd-bar',buildSbarHtml(bd));setHTML('td-bd-list',buildSrowsHtml(bd));}catch(e){}}
+    }
+
+    const jcRow=document.getElementById('jc-breakdown');
+    if(S?.gps?.st==='running'&&S.gps.sessionId){
+      const sess={id:S.gps.sessionId,start:S.gps.start,end:null,km:S.gps.km||0,elapsed:getElapsed()};
+      // Garante o vínculo com JourneyStatusTracker mesmo que o renderizador
+      // legado esteja desativado. Isso faz a timeline nativa começar a gravar.
+      try{ if(typeof window.ensureNativeJourneySession==='function') window.ensureNativeJourneySession(); }catch(e){}
+      ensureJourneyStatus(sess);
+      const bd=journeyBreakdownForSession(sess,getElapsed(),S.gps.km||0,[]);
+      // Enquanto não existe trecho detalhado, o fallback acima mostra 100%
+      // Online. Jornada ativa nunca deve esconder a barra.
+      if(jcRow)jcRow.style.display='';
+      try{setHTML('jc-bar',buildSbarHtml(bd));setHTML('jc-blist',buildSrowsHtml(bd));}catch(e){}
+    } else if(jcRow) {
+      jcRow.style.display='none';
+    }
+  }
+
+  const previousRenderJornada=window.renderJornada;
+  window.renderJornada=function(){
+    previousRenderJornada();
+    try{renderContinuousSessionList();}catch(e){console.warn('[continuous journeys]',e);}
+    try{renderContinuousStatusBars();}catch(e){console.warn('[continuous status]',e);}
+  };
+
+  setInterval(()=>{try{if(S.sec==='jornada')renderContinuousStatusBars();}catch(e){}},1000);
+  setTimeout(()=>{try{if(S.sec==='jornada')renderJornada();}catch(e){}},600);
+})();
+</script>
+
+</body>
+</html>
+
+===== Iniciar Jornada @ 985516 =====
+urn 'r';
+  if (value >= green) return '';
+  return 'o';
+}
+
+// ── MōB Flash: "Recusas" — regras que recusam a corrida sozinhas, mesmo
+// com os Indicadores financeiros bons. PEDIDO (16-17/07/2026): saiu do
+// grupo de KPIs pra virar sua própria seção, com frase explicando o
+// efeito de cada uma ("Recusar ... " em vez de "Recusa se ...").
+// "parada" é bool puro (sem valor numérico); os outros 3 numéricos
+// ("num") usam o mesmo painel de edição; "endereco" é lista (embarque
+// OU destino) e abre uma tela própria.
+const FLASH_RECUSA_DEFS = [
+  { key:'parada', label:'Corrida com parada extra', type:'bool',
+    icon:'\u26A0', phrase: () => 'Recusar corrida com parada extra' },
+  { key:'nota', label:'Nota do passageiro', type:'num', unit:'', step:0.1, min:1, max:5,
+    icon:'\u2605', phrase: v => `Recusar nota do passageiro abaixo de ${flashFmtNum(v)}` },
+  { key:'passageiroNovo', label:'Passageiro novo', type:'num', unit:'corridas', step:1, min:0, max:200,
+    icon:'#', phrase: v => `Recusar passageiro com menos de ${Math.round(v)} corridas` },
+  { key:'distancia', label:'Distância deslocamento', type:'num', unit:'km', step:0.5, min:0.5, max:30,
+    icon:'KM', phrase: v => `Recusar buscar com mais de ${flashFmtNum(v)} km` },
+  { key:'endereco', label:'Endereço recusado', type:'list',
+    icon:'\u2298', phrase: () => 'Recusar embarque ou destino em locais bloqueados' },
+];
+const FLASH_RECUSA_DEFAULT = {
+  parada:  { enabled:true },
+  nota:    { enabled:false, value:4.5 },
+  passageiroNovo: { enabled:true, value:5 },
+  distancia: { enabled:false, value:3.0 },
+  endereco:  { enabled:true, list:[] },
+};
+function flashFmtNum(v) { return (Math.round(v*10)/10).toString().replace('.', ','); }
+
+let flashDraft = null;
+
+function getFlashDefaults() {
+  const kpis = {};
+  FLASH_KPI_DEFS.forEach(d => { kpis[d.key] = { enabled: FLASH_DEFAULT_ON[d.key], red: d.defRed, green: d.defGreen }; });
+  const recusas = {};
+  FLASH_RECUSA_DEFS.forEach(d => { recusas[d.key] = JSON.parse(JSON.stringify(FLASH_RECUSA_DEFAULT[d.key])); });
+  return { enabled: true, kpis, recusas };
+}
+
+// Carrega o draft (config salva + defaults) — usado tanto pelo "Mais > MōB
+// Flash" quanto pelo assistente de Iniciar Jornada, sempre o mesmo dado.
+async function _flashLoadDraft() {
+  if (!_bootPullDone) { showToast('Sincronizando seus dados...'); await _waitBootPull(); }
+  const cfg = DB.cfg();
+  const saved = cfg.flashReader;
+  const defaults = getFlashDefaults();
+  flashDraft = { enabled: saved && saved.enabled !== undefined ? saved.enabled : defaults.enabled, kpis: {}, recusas: {} };
+  FLASH_KPI_DEFS.forEach(d => {
+    const s = (saved && saved.kpis && saved.kpis[d.key]) || {};
+    flashDraft.kpis[d.key] = {
+      enabled: s.enabled !== undefined ? s.enabled : defaults.kpis[d.key].enabled,
+      red: s.red !== undefined ? s.red : defaults.kpis[d.key].red,
+      green: s.green !== undefined ? s.green : defaults.kpis[d.key].green
+    };
+  });
+  FLASH_RECUSA_DEFS.forEach(d => {
+    const s = (saved && saved.recusas && saved.recusas[d.key]) || {};
+    const def = defaults.recusas[d.key];
+    if (d.type === 'list') {
+      flashDraft.recusas[d.key] = {
+        enabled: s.enabled !== undefined ? s.enabled : def.enabled,
+        // PEDIDO (17/07/2026): cada item agora é {label, type:'rua'|'bairro'}
+        // pra dar pra mostrar a tag na lista — normaliza entradas antigas
+        // (string solta, de antes dessa mudança) na hora de carregar.
+        list: Array.isArray(s.list) ? s.list.map(_flashNormEnderecoItem).filter(Boolean) : def.list.slice()
+      };
+    } else {
+      flashDraft.recusas[d.key] = {
+        enabled: s.enabled !== undefined ? s.enabled : def.enabled,
+        value: s.value !== undefined ? s.value : def.value
+      };
+    }
+  });
+}
+
+let flashWizardMode = 'settings';   // 'settings' (Mais > MōB Flash) ou 'start' (Iniciar Jornada)
+let flashWizardOnComplete = null;   // callback chamado ao terminar/pular, só no modo 'start'
+
+// Entrada pelo "Mais" — mesma tela do assistente, só que sem o vínculo com
+// iniciar jornada. Termina com "Salvar", não com "Iniciar jornada".
+async function openFlashConfig() {
+  await _flashLoadDraft();
+  flashWizardMode = 'settings';
+  flashWizardOnComplete = null;
+  _flashWizardShowStep(1);
+  renderFlashKpiList();
+  renderFlashRecusaList();
+  renderFlashPreview();
+  renderFlashPerms();
+  openMo('mo-flash');
+}
+
+// Entrada pelo botão de Iniciar Jornada — mesmo assistente, terminando em
+// "Iniciar jornada" (ou pulando com "Iniciar sem o MōB Flash"). onComplete
+// é chamado exatamente uma vez, ao final de qualquer um dos dois caminhos.
+async function openFlashWizardForJourney(onComplete) {
+  await _flashLoadDraft();
+  flashWizardMode = 'start';
+  flashWizardOnComplete = onComplete;
+  _flashWizardShowStep(1);
+  renderFlashKpiList();
+  renderFlashRecusaList();
+  renderFlashPreview();
+  renderFlashPerms();
+  openMo('mo-flash');
+}
+
+function _flashWizardShowStep(n) {
+  document.getElementById('flash-step1').style.display = n === 1 ? '' : 'none';
+  document.getElementById('flash-step2').style.display = n === 2 ? '' : 'none';
+  document.getElementById('flash-ruler').style.display = 'none';
+  document.getElementById('flash-recusa-num').style.display = 'none';
+  document.getElementById('flash-enderecos').style.display = 'none';
+  // Pular só faz sentido quando tem uma jornada esperando pra iniciar —
+  // no modo settings (Mais > MōB Flash) esses links somem.
+  const skip1 = document.getElementById('flash-skip1');
+  const skip2 = document.getElementById('flash-skip2');
+  const primary2 = document.getElementById('flash-step2-primary');
+  if (skip1) skip1.style.display = (flashWizardMode === 'start') ? '' : 'none';
+  if (skip2) skip2.style.display = (flashWizardMode === 'start') ? '' : 'none';
+  if (primary2) primary2.textContent = (flashWizardMode === 'start') ? 'Iniciar jornada' : 'Salvar configurações';
+}
+
+function flashWizardNext() {
+  _flashWizardShowStep(2);
+  renderFlashPerms();
+}
+
+function flashWizardBack() {
+  _flashWizardShowStep(1);
+}
+
+// "Pular tudo" (passo 1) e "Iniciar sem o MōB Flash" (passo 2) — mesmo
+// efeito: desliga o Flash, salva e segue o fluxo sem exigir nada mais.
+function flashWizardSkip() {
+  flashDraft.enabled = false;
+  flashConfigSave(true);
+}
+
+// startFlash=true → veio do botão principal ("Iniciar jornada"/"Salvar").
+// startFlash=false → veio de um link de pular ("Iniciar sem o Flash").
+function flashWizardFinish(startFlash) {
+  if (startFlash) {
+    // Card pode mostrar só a recusa (17/07/2026), sem indicador nenhum —
+    // então "tem algo pra mostrar" agora conta os dois grupos.
+    const anyOn = Object.values(flashDraft.kpis).some(k => k.enabled) ||
+                  Object.values(flashDraft.recusas).some(r => r.enabled);
+    flashDraft.enabled = anyOn;
+  } else {
+    flashDraft.enabled = false;
+  }
+  flashConfigSave(true);
+}
+
+// ── Régua de limite vermelho/verde (substitui os dois campos de texto) ──
+const FLASH_RULER_BOUNDS = { rkm:[0,5], rhora:[0,100], rmin:[0,3], margem:[0,100], lucro:[0,50] };
+let flashRulerKey = null;
+let flashRulerDrag = null; // 'red' | 'green' | null
+
+function flashOpenRuler(key) {
+  flashRulerKey = key;
+  const d = FLASH_KPI_DEFS.find(x => x.key === key);
+  document.getElementById('flash-ruler-ico').textContent = d.icon;
+  document.getElementById('flash-ruler-title').textContent = d.label;
+  document.getElementById('flash-step1').style.display = 'none';
+  document.getElementById('flash-step2').style.display = 'none';
+  document.getElementById('flash-ruler').style.display = '';
+  _flashRulerRender();
+}
+
+function flashRulerClose() {
+  flashRulerKey = null;
+  _flashWizardShowStep(1); // régua só é aberta a partir do passo 1 (lista de KPIs)
+  renderFlashKpiList();
+  renderFlashRecusaList();
+  renderFlashPreview();
+}
+
+function _flashRulerPct(key, val) {
+  const [lo, hi] = FLASH_RULER_BOUNDS[key];
+  return Math.max(0, Math.min(100, ((val - lo) / (hi - lo)) * 100));
+}
+function _flashRulerVal(key, pct) {
+  const [lo, hi] = FLASH_RULER_BOUNDS[key];
+  return lo + (pct / 100) * (hi - lo);
+}
+function _flashRulerFmt(key, v) {
+  return key === 'margem' ? Math.round(v) + '%' : v.toFixed(2).replace('.', ',');
+}
+
+function _flashRulerRender() {
+  const k = flashDraft.kpis[flashRulerKey];
+  const redPct = _flashRulerPct(flashRulerKey, k.red);
+  const greenPct = _flashRulerPct(flashRulerKey, k.green);
+  const redEl = document.getElementById('flash-ruler-red');
+  const greenEl = document.getElementById('flash-ruler-green');
+  redEl.style.left = redPct + '%';
+  greenEl.style.left = greenPct + '%';
+  document.getElementById('flash-ruler-red-val').textContent = _flashRulerFmt(flashRulerKey, k.red);
+  document.getElementById('flash-ruler-green-val').textContent = _flashRulerFmt(flashRulerKey, k.green);
+}
+
+function _flashRulerPointerDown(which) {
+  return function (ev) {
+    ev.preventDefault();
+    flashRulerDrag = which;
+  };
+}
+function _flashRulerPointerMove(ev) {
+  if (!flashRulerDrag || !flashRulerKey) return;
+  const track = document.getElementById('flash-ruler-track');
+  const rect = track.getBoundingClientRect();
+  const clientX = ev.touches ? ev.touches[0].clientX : ev.clientX;
+  let pct = ((clientX - rect.left) / rect.width) * 100;
+  pct = Math.max(0, Math.min(100, pct));
+  const k = flashDraft.kpis[flashRulerKey];
+  const val = _flashRulerVal(flashRulerKey, pct);
+  const MIN_GAP_PCT = 4; // não deixa os dois pontos se cruzarem
+  if (flashRulerDrag === 'red') {
+    const maxPct = _flashRulerPct(flashRulerKey, k.green) - MIN_GAP_PCT;
+    if (pct > maxPct) pct = Math.max(0, maxPct);
+    k.red = _flashRulerVal(flashRulerKey, pct);
+  } else {
+    const minPct = _flashRulerPct(flashRulerKey, k.red) 
+
+===== Iniciar Jornada @ 987166 =====
+return (Math.round(v*10)/10).toString().replace('.', ','); }
+
+let flashDraft = null;
+
+function getFlashDefaults() {
+  const kpis = {};
+  FLASH_KPI_DEFS.forEach(d => { kpis[d.key] = { enabled: FLASH_DEFAULT_ON[d.key], red: d.defRed, green: d.defGreen }; });
+  const recusas = {};
+  FLASH_RECUSA_DEFS.forEach(d => { recusas[d.key] = JSON.parse(JSON.stringify(FLASH_RECUSA_DEFAULT[d.key])); });
+  return { enabled: true, kpis, recusas };
+}
+
+// Carrega o draft (config salva + defaults) — usado tanto pelo "Mais > MōB
+// Flash" quanto pelo assistente de Iniciar Jornada, sempre o mesmo dado.
+async function _flashLoadDraft() {
+  if (!_bootPullDone) { showToast('Sincronizando seus dados...'); await _waitBootPull(); }
+  const cfg = DB.cfg();
+  const saved = cfg.flashReader;
+  const defaults = getFlashDefaults();
+  flashDraft = { enabled: saved && saved.enabled !== undefined ? saved.enabled : defaults.enabled, kpis: {}, recusas: {} };
+  FLASH_KPI_DEFS.forEach(d => {
+    const s = (saved && saved.kpis && saved.kpis[d.key]) || {};
+    flashDraft.kpis[d.key] = {
+      enabled: s.enabled !== undefined ? s.enabled : defaults.kpis[d.key].enabled,
+      red: s.red !== undefined ? s.red : defaults.kpis[d.key].red,
+      green: s.green !== undefined ? s.green : defaults.kpis[d.key].green
+    };
+  });
+  FLASH_RECUSA_DEFS.forEach(d => {
+    const s = (saved && saved.recusas && saved.recusas[d.key]) || {};
+    const def = defaults.recusas[d.key];
+    if (d.type === 'list') {
+      flashDraft.recusas[d.key] = {
+        enabled: s.enabled !== undefined ? s.enabled : def.enabled,
+        // PEDIDO (17/07/2026): cada item agora é {label, type:'rua'|'bairro'}
+        // pra dar pra mostrar a tag na lista — normaliza entradas antigas
+        // (string solta, de antes dessa mudança) na hora de carregar.
+        list: Array.isArray(s.list) ? s.list.map(_flashNormEnderecoItem).filter(Boolean) : def.list.slice()
+      };
+    } else {
+      flashDraft.recusas[d.key] = {
+        enabled: s.enabled !== undefined ? s.enabled : def.enabled,
+        value: s.value !== undefined ? s.value : def.value
+      };
+    }
+  });
+}
+
+let flashWizardMode = 'settings';   // 'settings' (Mais > MōB Flash) ou 'start' (Iniciar Jornada)
+let flashWizardOnComplete = null;   // callback chamado ao terminar/pular, só no modo 'start'
+
+// Entrada pelo "Mais" — mesma tela do assistente, só que sem o vínculo com
+// iniciar jornada. Termina com "Salvar", não com "Iniciar jornada".
+async function openFlashConfig() {
+  await _flashLoadDraft();
+  flashWizardMode = 'settings';
+  flashWizardOnComplete = null;
+  _flashWizardShowStep(1);
+  renderFlashKpiList();
+  renderFlashRecusaList();
+  renderFlashPreview();
+  renderFlashPerms();
+  openMo('mo-flash');
+}
+
+// Entrada pelo botão de Iniciar Jornada — mesmo assistente, terminando em
+// "Iniciar jornada" (ou pulando com "Iniciar sem o MōB Flash"). onComplete
+// é chamado exatamente uma vez, ao final de qualquer um dos dois caminhos.
+async function openFlashWizardForJourney(onComplete) {
+  await _flashLoadDraft();
+  flashWizardMode = 'start';
+  flashWizardOnComplete = onComplete;
+  _flashWizardShowStep(1);
+  renderFlashKpiList();
+  renderFlashRecusaList();
+  renderFlashPreview();
+  renderFlashPerms();
+  openMo('mo-flash');
+}
+
+function _flashWizardShowStep(n) {
+  document.getElementById('flash-step1').style.display = n === 1 ? '' : 'none';
+  document.getElementById('flash-step2').style.display = n === 2 ? '' : 'none';
+  document.getElementById('flash-ruler').style.display = 'none';
+  document.getElementById('flash-recusa-num').style.display = 'none';
+  document.getElementById('flash-enderecos').style.display = 'none';
+  // Pular só faz sentido quando tem uma jornada esperando pra iniciar —
+  // no modo settings (Mais > MōB Flash) esses links somem.
+  const skip1 = document.getElementById('flash-skip1');
+  const skip2 = document.getElementById('flash-skip2');
+  const primary2 = document.getElementById('flash-step2-primary');
+  if (skip1) skip1.style.display = (flashWizardMode === 'start') ? '' : 'none';
+  if (skip2) skip2.style.display = (flashWizardMode === 'start') ? '' : 'none';
+  if (primary2) primary2.textContent = (flashWizardMode === 'start') ? 'Iniciar jornada' : 'Salvar configurações';
+}
+
+function flashWizardNext() {
+  _flashWizardShowStep(2);
+  renderFlashPerms();
+}
+
+function flashWizardBack() {
+  _flashWizardShowStep(1);
+}
+
+// "Pular tudo" (passo 1) e "Iniciar sem o MōB Flash" (passo 2) — mesmo
+// efeito: desliga o Flash, salva e segue o fluxo sem exigir nada mais.
+function flashWizardSkip() {
+  flashDraft.enabled = false;
+  flashConfigSave(true);
+}
+
+// startFlash=true → veio do botão principal ("Iniciar jornada"/"Salvar").
+// startFlash=false → veio de um link de pular ("Iniciar sem o Flash").
+function flashWizardFinish(startFlash) {
+  if (startFlash) {
+    // Card pode mostrar só a recusa (17/07/2026), sem indicador nenhum —
+    // então "tem algo pra mostrar" agora conta os dois grupos.
+    const anyOn = Object.values(flashDraft.kpis).some(k => k.enabled) ||
+                  Object.values(flashDraft.recusas).some(r => r.enabled);
+    flashDraft.enabled = anyOn;
+  } else {
+    flashDraft.enabled = false;
+  }
+  flashConfigSave(true);
+}
+
+// ── Régua de limite vermelho/verde (substitui os dois campos de texto) ──
+const FLASH_RULER_BOUNDS = { rkm:[0,5], rhora:[0,100], rmin:[0,3], margem:[0,100], lucro:[0,50] };
+let flashRulerKey = null;
+let flashRulerDrag = null; // 'red' | 'green' | null
+
+function flashOpenRuler(key) {
+  flashRulerKey = key;
+  const d = FLASH_KPI_DEFS.find(x => x.key === key);
+  document.getElementById('flash-ruler-ico').textContent = d.icon;
+  document.getElementById('flash-ruler-title').textContent = d.label;
+  document.getElementById('flash-step1').style.display = 'none';
+  document.getElementById('flash-step2').style.display = 'none';
+  document.getElementById('flash-ruler').style.display = '';
+  _flashRulerRender();
+}
+
+function flashRulerClose() {
+  flashRulerKey = null;
+  _flashWizardShowStep(1); // régua só é aberta a partir do passo 1 (lista de KPIs)
+  renderFlashKpiList();
+  renderFlashRecusaList();
+  renderFlashPreview();
+}
+
+function _flashRulerPct(key, val) {
+  const [lo, hi] = FLASH_RULER_BOUNDS[key];
+  return Math.max(0, Math.min(100, ((val - lo) / (hi - lo)) * 100));
+}
+function _flashRulerVal(key, pct) {
+  const [lo, hi] = FLASH_RULER_BOUNDS[key];
+  return lo + (pct / 100) * (hi - lo);
+}
+function _flashRulerFmt(key, v) {
+  return key === 'margem' ? Math.round(v) + '%' : v.toFixed(2).replace('.', ',');
+}
+
+function _flashRulerRender() {
+  const k = flashDraft.kpis[flashRulerKey];
+  const redPct = _flashRulerPct(flashRulerKey, k.red);
+  const greenPct = _flashRulerPct(flashRulerKey, k.green);
+  const redEl = document.getElementById('flash-ruler-red');
+  const greenEl = document.getElementById('flash-ruler-green');
+  redEl.style.left = redPct + '%';
+  greenEl.style.left = greenPct + '%';
+  document.getElementById('flash-ruler-red-val').textContent = _flashRulerFmt(flashRulerKey, k.red);
+  document.getElementById('flash-ruler-green-val').textContent = _flashRulerFmt(flashRulerKey, k.green);
+}
+
+function _flashRulerPointerDown(which) {
+  return function (ev) {
+    ev.preventDefault();
+    flashRulerDrag = which;
+  };
+}
+function _flashRulerPointerMove(ev) {
+  if (!flashRulerDrag || !flashRulerKey) return;
+  const track = document.getElementById('flash-ruler-track');
+  const rect = track.getBoundingClientRect();
+  const clientX = ev.touches ? ev.touches[0].clientX : ev.clientX;
+  let pct = ((clientX - rect.left) / rect.width) * 100;
+  pct = Math.max(0, Math.min(100, pct));
+  const k = flashDraft.kpis[flashRulerKey];
+  const val = _flashRulerVal(flashRulerKey, pct);
+  const MIN_GAP_PCT = 4; // não deixa os dois pontos se cruzarem
+  if (flashRulerDrag === 'red') {
+    const maxPct = _flashRulerPct(flashRulerKey, k.green) - MIN_GAP_PCT;
+    if (pct > maxPct) pct = Math.max(0, maxPct);
+    k.red = _flashRulerVal(flashRulerKey, pct);
+  } else {
+    const minPct = _flashRulerPct(flashRulerKey, k.red) + MIN_GAP_PCT;
+    if (pct < minPct) pct = Math.min(100, minPct);
+    k.green = _flashRulerVal(flashRulerKey, pct);
+  }
+  _flashRulerRender();
+  renderFlashPreview();
+}
+function _flashRulerPointerUp() { flashRulerDrag = null; }
+
+document.addEventListener('DOMContentLoaded', function () {
+  const redEl = document.getElementById('flash-ruler-red');
+  const greenEl = document.getElementById('flash-ruler-green');
+  if (redEl) { redEl.addEventListener('pointerdown', _flashRulerPointerDown('red')); }
+  if (greenEl) { greenEl.addEventListener('pointerdown', _flashRulerPointerDown('green')); }
+  document.addEventListener('pointermove', _flashRulerPointerMove);
+  document.addEventListener('pointerup', _flashRulerPointerUp);
+});
+
+function renderFlashPerms() {
+  const a11yWrap = document.getElementById('flash-perm-a11y');
+  const ovWrap = document.getElementById('flash-perm-overlay');
+  if (!a11yWrap || !ovWrap) return;
+  const hasA11y = (window.SmartMobiNative && typeof SmartMobiNative.isA11yEnabled === 'function') ? !!SmartMobiNative.isA11yEnabled() : null;
+  const hasOverlay = (window.SmartMobiNative && typeof SmartMobiNative.hasOverlay === 'function') ? !!SmartMobiNative.hasOverlay() : null;
+
+  function pillHtml(ok, fixCall) {
+    if (ok === null) return '<span style="font-size:11px;color:#94A3B8">— (só no app instalado)</span>';
+    if (ok) return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;padding:4px 9px;border-radius:99px;background:#F0FDF4;color:#15803D">&#10003; Ativo</span>';
+    return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:80
+
+===== Iniciar Jornada @ 987723 =====
+ Jornada, sempre o mesmo dado.
+async function _flashLoadDraft() {
+  if (!_bootPullDone) { showToast('Sincronizando seus dados...'); await _waitBootPull(); }
+  const cfg = DB.cfg();
+  const saved = cfg.flashReader;
+  const defaults = getFlashDefaults();
+  flashDraft = { enabled: saved && saved.enabled !== undefined ? saved.enabled : defaults.enabled, kpis: {}, recusas: {} };
+  FLASH_KPI_DEFS.forEach(d => {
+    const s = (saved && saved.kpis && saved.kpis[d.key]) || {};
+    flashDraft.kpis[d.key] = {
+      enabled: s.enabled !== undefined ? s.enabled : defaults.kpis[d.key].enabled,
+      red: s.red !== undefined ? s.red : defaults.kpis[d.key].red,
+      green: s.green !== undefined ? s.green : defaults.kpis[d.key].green
+    };
+  });
+  FLASH_RECUSA_DEFS.forEach(d => {
+    const s = (saved && saved.recusas && saved.recusas[d.key]) || {};
+    const def = defaults.recusas[d.key];
+    if (d.type === 'list') {
+      flashDraft.recusas[d.key] = {
+        enabled: s.enabled !== undefined ? s.enabled : def.enabled,
+        // PEDIDO (17/07/2026): cada item agora é {label, type:'rua'|'bairro'}
+        // pra dar pra mostrar a tag na lista — normaliza entradas antigas
+        // (string solta, de antes dessa mudança) na hora de carregar.
+        list: Array.isArray(s.list) ? s.list.map(_flashNormEnderecoItem).filter(Boolean) : def.list.slice()
+      };
+    } else {
+      flashDraft.recusas[d.key] = {
+        enabled: s.enabled !== undefined ? s.enabled : def.enabled,
+        value: s.value !== undefined ? s.value : def.value
+      };
+    }
+  });
+}
+
+let flashWizardMode = 'settings';   // 'settings' (Mais > MōB Flash) ou 'start' (Iniciar Jornada)
+let flashWizardOnComplete = null;   // callback chamado ao terminar/pular, só no modo 'start'
+
+// Entrada pelo "Mais" — mesma tela do assistente, só que sem o vínculo com
+// iniciar jornada. Termina com "Salvar", não com "Iniciar jornada".
+async function openFlashConfig() {
+  await _flashLoadDraft();
+  flashWizardMode = 'settings';
+  flashWizardOnComplete = null;
+  _flashWizardShowStep(1);
+  renderFlashKpiList();
+  renderFlashRecusaList();
+  renderFlashPreview();
+  renderFlashPerms();
+  openMo('mo-flash');
+}
+
+// Entrada pelo botão de Iniciar Jornada — mesmo assistente, terminando em
+// "Iniciar jornada" (ou pulando com "Iniciar sem o MōB Flash"). onComplete
+// é chamado exatamente uma vez, ao final de qualquer um dos dois caminhos.
+async function openFlashWizardForJourney(onComplete) {
+  await _flashLoadDraft();
+  flashWizardMode = 'start';
+  flashWizardOnComplete = onComplete;
+  _flashWizardShowStep(1);
+  renderFlashKpiList();
+  renderFlashRecusaList();
+  renderFlashPreview();
+  renderFlashPerms();
+  openMo('mo-flash');
+}
+
+function _flashWizardShowStep(n) {
+  document.getElementById('flash-step1').style.display = n === 1 ? '' : 'none';
+  document.getElementById('flash-step2').style.display = n === 2 ? '' : 'none';
+  document.getElementById('flash-ruler').style.display = 'none';
+  document.getElementById('flash-recusa-num').style.display = 'none';
+  document.getElementById('flash-enderecos').style.display = 'none';
+  // Pular só faz sentido quando tem uma jornada esperando pra iniciar —
+  // no modo settings (Mais > MōB Flash) esses links somem.
+  const skip1 = document.getElementById('flash-skip1');
+  const skip2 = document.getElementById('flash-skip2');
+  const primary2 = document.getElementById('flash-step2-primary');
+  if (skip1) skip1.style.display = (flashWizardMode === 'start') ? '' : 'none';
+  if (skip2) skip2.style.display = (flashWizardMode === 'start') ? '' : 'none';
+  if (primary2) primary2.textContent = (flashWizardMode === 'start') ? 'Iniciar jornada' : 'Salvar configurações';
+}
+
+function flashWizardNext() {
+  _flashWizardShowStep(2);
+  renderFlashPerms();
+}
+
+function flashWizardBack() {
+  _flashWizardShowStep(1);
+}
+
+// "Pular tudo" (passo 1) e "Iniciar sem o MōB Flash" (passo 2) — mesmo
+// efeito: desliga o Flash, salva e segue o fluxo sem exigir nada mais.
+function flashWizardSkip() {
+  flashDraft.enabled = false;
+  flashConfigSave(true);
+}
+
+// startFlash=true → veio do botão principal ("Iniciar jornada"/"Salvar").
+// startFlash=false → veio de um link de pular ("Iniciar sem o Flash").
+function flashWizardFinish(startFlash) {
+  if (startFlash) {
+    // Card pode mostrar só a recusa (17/07/2026), sem indicador nenhum —
+    // então "tem algo pra mostrar" agora conta os dois grupos.
+    const anyOn = Object.values(flashDraft.kpis).some(k => k.enabled) ||
+                  Object.values(flashDraft.recusas).some(r => r.enabled);
+    flashDraft.enabled = anyOn;
+  } else {
+    flashDraft.enabled = false;
+  }
+  flashConfigSave(true);
+}
+
+// ── Régua de limite vermelho/verde (substitui os dois campos de texto) ──
+const FLASH_RULER_BOUNDS = { rkm:[0,5], rhora:[0,100], rmin:[0,3], margem:[0,100], lucro:[0,50] };
+let flashRulerKey = null;
+let flashRulerDrag = null; // 'red' | 'green' | null
+
+function flashOpenRuler(key) {
+  flashRulerKey = key;
+  const d = FLASH_KPI_DEFS.find(x => x.key === key);
+  document.getElementById('flash-ruler-ico').textContent = d.icon;
+  document.getElementById('flash-ruler-title').textContent = d.label;
+  document.getElementById('flash-step1').style.display = 'none';
+  document.getElementById('flash-step2').style.display = 'none';
+  document.getElementById('flash-ruler').style.display = '';
+  _flashRulerRender();
+}
+
+function flashRulerClose() {
+  flashRulerKey = null;
+  _flashWizardShowStep(1); // régua só é aberta a partir do passo 1 (lista de KPIs)
+  renderFlashKpiList();
+  renderFlashRecusaList();
+  renderFlashPreview();
+}
+
+function _flashRulerPct(key, val) {
+  const [lo, hi] = FLASH_RULER_BOUNDS[key];
+  return Math.max(0, Math.min(100, ((val - lo) / (hi - lo)) * 100));
+}
+function _flashRulerVal(key, pct) {
+  const [lo, hi] = FLASH_RULER_BOUNDS[key];
+  return lo + (pct / 100) * (hi - lo);
+}
+function _flashRulerFmt(key, v) {
+  return key === 'margem' ? Math.round(v) + '%' : v.toFixed(2).replace('.', ',');
+}
+
+function _flashRulerRender() {
+  const k = flashDraft.kpis[flashRulerKey];
+  const redPct = _flashRulerPct(flashRulerKey, k.red);
+  const greenPct = _flashRulerPct(flashRulerKey, k.green);
+  const redEl = document.getElementById('flash-ruler-red');
+  const greenEl = document.getElementById('flash-ruler-green');
+  redEl.style.left = redPct + '%';
+  greenEl.style.left = greenPct + '%';
+  document.getElementById('flash-ruler-red-val').textContent = _flashRulerFmt(flashRulerKey, k.red);
+  document.getElementById('flash-ruler-green-val').textContent = _flashRulerFmt(flashRulerKey, k.green);
+}
+
+function _flashRulerPointerDown(which) {
+  return function (ev) {
+    ev.preventDefault();
+    flashRulerDrag = which;
+  };
+}
+function _flashRulerPointerMove(ev) {
+  if (!flashRulerDrag || !flashRulerKey) return;
+  const track = document.getElementById('flash-ruler-track');
+  const rect = track.getBoundingClientRect();
+  const clientX = ev.touches ? ev.touches[0].clientX : ev.clientX;
+  let pct = ((clientX - rect.left) / rect.width) * 100;
+  pct = Math.max(0, Math.min(100, pct));
+  const k = flashDraft.kpis[flashRulerKey];
+  const val = _flashRulerVal(flashRulerKey, pct);
+  const MIN_GAP_PCT = 4; // não deixa os dois pontos se cruzarem
+  if (flashRulerDrag === 'red') {
+    const maxPct = _flashRulerPct(flashRulerKey, k.green) - MIN_GAP_PCT;
+    if (pct > maxPct) pct = Math.max(0, maxPct);
+    k.red = _flashRulerVal(flashRulerKey, pct);
+  } else {
+    const minPct = _flashRulerPct(flashRulerKey, k.red) + MIN_GAP_PCT;
+    if (pct < minPct) pct = Math.min(100, minPct);
+    k.green = _flashRulerVal(flashRulerKey, pct);
+  }
+  _flashRulerRender();
+  renderFlashPreview();
+}
+function _flashRulerPointerUp() { flashRulerDrag = null; }
+
+document.addEventListener('DOMContentLoaded', function () {
+  const redEl = document.getElementById('flash-ruler-red');
+  const greenEl = document.getElementById('flash-ruler-green');
+  if (redEl) { redEl.addEventListener('pointerdown', _flashRulerPointerDown('red')); }
+  if (greenEl) { greenEl.addEventListener('pointerdown', _flashRulerPointerDown('green')); }
+  document.addEventListener('pointermove', _flashRulerPointerMove);
+  document.addEventListener('pointerup', _flashRulerPointerUp);
+});
+
+function renderFlashPerms() {
+  const a11yWrap = document.getElementById('flash-perm-a11y');
+  const ovWrap = document.getElementById('flash-perm-overlay');
+  if (!a11yWrap || !ovWrap) return;
+  const hasA11y = (window.SmartMobiNative && typeof SmartMobiNative.isA11yEnabled === 'function') ? !!SmartMobiNative.isA11yEnabled() : null;
+  const hasOverlay = (window.SmartMobiNative && typeof SmartMobiNative.hasOverlay === 'function') ? !!SmartMobiNative.hasOverlay() : null;
+
+  function pillHtml(ok, fixCall) {
+    if (ok === null) return '<span style="font-size:11px;color:#94A3B8">— (só no app instalado)</span>';
+    if (ok) return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;padding:4px 9px;border-radius:99px;background:#F0FDF4;color:#15803D">&#10003; Ativo</span>';
+    return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;padding:4px 9px;border-radius:99px;background:#FEF3C7;color:#B45309">&bull; Pendente</span>'
+      + '<button onclick="' + fixCall + '" style="font-size:11px;font-weight:800;color:#fff;background:#0A2F6B;border:0;border-radius:9px;padding:6px 11px">Ativar</button>';
+  }
+  a11yWrap.innerHTML = pillHtml(hasA11y, "SmartMobiNative.openA11ySettings()");
+  ovWrap.innerHTML = pillHtml(hasOverlay, "SmartMobiNative.openOverlaySettings()");
+  const capWrap = document.getElementById('flash-perm-capture');
+  if (capWrap) {
+    const hasCap = (window.SmartMobiNa
