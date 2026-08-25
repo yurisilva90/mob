@@ -1,0 +1,36 @@
+name: Inspect perms
+on:
+  push:
+    paths:
+      - '.github/workflows/inspect-perms.yml'
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: perm-warning-ui
+      - name: Extract snippets
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text()
+          keys=['renderFlashPerms','flashPerm','Acessibilidade','Leitura de tela','MōB Flash']
+          out=[]
+          for k in keys:
+              start=0
+              while True:
+                  i=s.find(k,start)
+                  if i<0: break
+                  out.append('\n===== %s @ %d =====\n%s' % (k,i,s[max(0,i-2500):i+5000]))
+                  start=i+len(k)
+                  if len(out)>20: break
+          Path('_perm_snippet.txt').write_text('\n'.join(out))
+          PY
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add _perm_snippet.txt
+          git commit -m 'chore: extrair trecho de permissões' || true
+          git push origin HEAD:perm-warning-ui
