@@ -321,7 +321,7 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .trip-title{font-size:12.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .li-val{text-align:right;font-size:11px;color:var(--muted);font-weight:600;flex:0 0 auto}.li-val strong{display:block;color:var(--text);font-size:13.5px;font-weight:760;font-family:'Inter',system-ui,sans-serif}.li-time{display:block;color:var(--muted2);font-size:10.5px;font-weight:600;margin-top:2px}
 .li-liq{display:block;color:#16A34A;font-size:11px;font-weight:800;margin-top:2px}
-.li-extra{display:flex;gap:6px;margin-top:5px}.chip{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px;font-family:'Inter',system-ui,sans-serif;letter-spacing:-.01em}.chip svg{flex-shrink:0}.chip-d{background:#FFF7ED;color:#F59E0B}.chip-g{background:#F5F3FF;color:#7C3AED}.chip-taxa{background:#FEF9C3;color:#854D0E;display:inline-flex;align-items:center;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px}.chip-toll{background:#F1F5F9;color:#475569;display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;border-radius:7px;flex-shrink:0}.chip-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;border-radius:7px;flex-shrink:0}.chip-cash{background:#DCFCE7;color:#15803D}.chip-auto{background:#EFF6FF;color:#0EA5E9}.auto-status{display:inline-block;font-size:9.5px;font-weight:800;padding:2.5px 7px;border-radius:99px;margin-top:4px;white-space:nowrap}.auto-status.pend{background:#FEF3C7;color:#92400E}.auto-status.estim{background:#EFF6FF;color:#0369A1}.auto-status.conf{background:#DCFCE7;color:#15803D}.auto-status.susp{background:#FEE2E2;color:#B91C1C}.trip-item-wrap{margin-bottom:9px}
+.li-extra{display:flex;gap:6px;margin-top:5px}.chip{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px;font-family:'Inter',system-ui,sans-serif;letter-spacing:-.01em}.chip svg{flex-shrink:0}.chip-d{background:#FFF7ED;color:#F59E0B}.chip-g{background:#F5F3FF;color:#7C3AED}.chip-taxa{background:#FEF9C3;color:#854D0E;display:inline-flex;align-items:center;font-size:10.5px;font-weight:800;padding:2.5px 7px;border-radius:8px}.chip-toll{background:#F1F5F9;color:#475569;display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;border-radius:7px;flex-shrink:0}.chip-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:20px;border-radius:7px;flex-shrink:0}.chip-cash{background:#DCFCE7;color:#15803D}.chip-auto{background:#EFF6FF;color:#0EA5E9}.chip-import{background:#F5F3FF;color:#7C3AED}.auto-status{display:inline-block;font-size:9.5px;font-weight:800;padding:2.5px 7px;border-radius:99px;margin-top:4px;white-space:nowrap}.auto-status.pend{background:#FEF3C7;color:#92400E}.auto-status.estim{background:#EFF6FF;color:#0369A1}.auto-status.conf{background:#DCFCE7;color:#15803D}.auto-status.susp{background:#FEE2E2;color:#B91C1C}.trip-item-wrap{margin-bottom:9px}
 .li-ico-col{display:flex;flex-direction:column;align-items:center;gap:4px;flex:0 0 38px}
 .li-ico-time{font-size:10.5px;font-weight:800;color:var(--blue);white-space:nowrap;line-height:1.3}
 /* corrida automática: card único (li-row de sempre), ícone+horário à
@@ -4714,7 +4714,8 @@ function autoTripItem(t) {
   const dest = t.dest_address ? ' → '+esc(extractBairro(t.dest_address)) : '';
   const tid = 'ta'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
   const cashSvg = `<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M2 10h20" stroke="white" stroke-width="1.2" fill="none"/><path d="M2 17h20" stroke="white" stroke-width="1.2" fill="none"/><circle cx="12" cy="13" r="2.5" fill="white"/></svg>`;
-  const extras = [`<span class="chip chip-auto">Captura automática</span>`];
+  const sourceTag = t.capture_source === 'importada' ? `<span class="chip chip-import">Importada</span>` : `<span class="chip chip-auto">Captura automática</span>`;
+  const extras = [sourceTag];
   if (t.dinheiro) extras.push(`<span class="tap-legend-wrap chip-icon chip-cash" onclick="showTapLegend(event,'Pago em dinheiro')">${cashSvg}</span>`);
   // Mesmo chip/ícone já usado nas corridas manuais (raio laranja + valor) —
   // pedido do Yuri (24/07/2026): dinâmico da 99 (base + espera longa, já
@@ -4731,8 +4732,8 @@ function autoTripItem(t) {
   } else if (t.offer_dinamico > 0) {
     extras.push(`<span class="tap-legend-wrap chip chip-d" onclick="showTapLegend(event,'Tarifa dinâmica: +${DB.fR(t.offer_dinamico).replace(/'/g,"")}')"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><strong>${DB.fR(t.offer_dinamico)}</strong></span>`);
   }
-  const statusCls = t.value_needs_review ? 'susp' : (t.status==='confirmada' ? 'conf' : (t.status==='estimada' ? 'estim' : 'pend'));
-  const statusTxt = t.value_needs_review ? 'Valor a confirmar' : (t.status==='confirmada' ? 'Confirmada' : (t.status==='estimada' ? 'Aguardando confirmação' : 'Aguardando revisão'));
+  const statusCls = t.status==='confirmada' ? 'conf' : 'estim';
+  const statusTxt = t.status==='confirmada' ? 'Confirmada' : 'Aguardando confirmação';
   const realDurTrip = (t.trip_started_at && t.trip_ended_at) ? (new Date(t.trip_ended_at)-new Date(t.trip_started_at))/60000 : null;
   const realDurPickup = (t.pickup_started_at && t.trip_started_at) ? (new Date(t.trip_started_at)-new Date(t.pickup_started_at))/60000 : null;
   const offerDurPickupMin = t.offer_duration_pickup_sec!=null ? t.offer_duration_pickup_sec/60 : null;
@@ -5060,7 +5061,7 @@ function renderJourneyCard(day, isToday) {
     // mantém o último estado visual válido do mesmo dia.
     const autoTripsReady = S._autoTripsDataDate === cardDate;
     if (autoTripsReady) {
-      const pendingCount = autoTripsHoje.filter(t => t.status === 'capturada' || t.status === 'estimada').length;
+      const pendingCount = autoTripsHoje.filter(t => t.status !== 'confirmada' || t.value_needs_review === true).length;
       pcbEl.dataset.dataDate = cardDate;
       if (pendingCount > 0) {
         pcbEl.style.display = 'flex';
@@ -8035,8 +8036,8 @@ async function confirmImport() {
       updated++;
       return;
     }
-    // Nova — nunca vista na captura ao vivo. Vira auto_trips com status
-    // 'importada' (pedido do Yuri, 16/08/2026) — unifica com o resto dos
+    // Nova — nunca vista na captura ao vivo. Vira auto_trips já Confirmada
+    // pelo vídeo; 'Importada' agora é somente a tag de origem — unifica com o resto dos
     // dados em vez de virar corrida "manual" separada. Endereço já
     // passou pela validação looksLikeAddress lá em processImportBatch
     // (se não passou, já veio vazio aqui — nunca inventa).
@@ -8058,7 +8059,10 @@ async function confirmImport() {
       origin_address: t.originFull || null,
       dest_address: t.destFull || null,
       dinheiro: !!t.dinheiro,
-      status: 'importada',
+      status: 'confirmada',
+      capture_source: 'importada',
+      value_needs_review: false,
+      data_quality_flag: null,
       import_video_id: videoId
     });
     added++;
@@ -8072,6 +8076,8 @@ async function confirmImport() {
       real_km_trip: u.km > 0 ? u.km : undefined,
       dinheiro: u.dinheiro,
       status: 'confirmada',
+      value_needs_review: false,
+      data_quality_flag: null,
       import_video_id: videoId || undefined
     }).eq('id', u.id).then(() => {}).catch(() => {});
   });
