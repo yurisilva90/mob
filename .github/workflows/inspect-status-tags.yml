@@ -19,14 +19,15 @@ jobs:
             ('autoTripItem','function autoTripItem(',-5,90),
             ('confirmImport','async function confirmImport(',-5,180),
             ('banner','const pendingCount =',-20,45),
-            ('tripItem','function tripItem(',-5,90),
-            ('importVideo','import_video_id',-10,40),
+            ('loadDay','async function loadAutoTripsForDay(',-5,65),
+            ('loadOperational','async function loadAutoTripsForOperationalDay(',-5,65),
+            ('autoTripsQueries',"from('auto_trips')",-8,24),
           ]
           out=[]
           for label,needle,before,after in needles:
               hits=[i for i,x in enumerate(lines) if needle in x]
               out.append(f'===== {label} hits={len(hits)} =====')
-              for i in hits[:8]:
+              for i in hits[:20]:
                   a=max(0,i+before); b=min(len(lines),i+after)
                   out.extend(f'{n+1}: {lines[n]}' for n in range(a,b))
           Path('.tmp-status-precise.txt').write_text('\n'.join(out),encoding='utf-8')
@@ -36,5 +37,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .tmp-status-precise.txt
-          git diff --cached --quiet || git commit -m "chore: detalhar status e tags"
+          git diff --cached --quiet || git commit -m "chore: inspecionar consultas de corridas"
           git push
