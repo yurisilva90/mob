@@ -346,113 +346,399 @@
 5105:   const rskm = totalKm > 0 ? ganhosDia/totalKm : null;
 5106:   setText('jc-rsh', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
 5107:   setText('jc-rskm', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
-===== tripItem hits=1 =====
-5798:   if (!hasCusto) {
-5799:     html += `<div class="cfg-note"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#64748B" stroke-width="2" style="flex:none"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg><span>Configure o <a onclick="event.stopPropagation();openCustoVeiculo()">custo do veículo</a> pra ver o lucro real de cada corrida.</span></div>`;
-5800:   }
-5801:   return html;
-5802: }
-5803: function tripItem(t, tripDate) {
-5804:   const plat = {uber:'Uber','99':'99',particular:'Particular'}[t.platform||'uber'] || 'Uber';
-5805:   const dest = t.dest ? ' → '+esc(t.dest) : '';
-5806:   const dur = t.duration ? ' · '+fmtDur(t.duration) : '';
-5807:   // tid sempre único por renderização (nunca reusa t.id) — evita colisão de
-5808:   // DOM id quando a mesma corrida aparece em mais de uma tela ao mesmo tempo
-5809:   // (ex: dentro da Jornada e na tela Corridas), o que fazia o clique parecer
-5810:   // não fazer nada (abria o painel de detalhe da OUTRA instância, escondida)
-5811:   const tid = 'ti'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
-5812:   const cashSvg = `<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><rect x="2" y="7" width="20" height="13" rx="2"/><path d="M2 10h20" stroke="white" stroke-width="1.2" fill="none"/><path d="M2 17h20" stroke="white" stroke-width="1.2" fill="none"/><circle cx="12" cy="13" r="2.5" fill="white"/></svg>`;
-5813:   const extras = [];
-5814:   if (t.dinamico>0) extras.push(`<span class="chip chip-d"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><strong>${DB.fR(t.dinamico)}</strong></span>`);
-5815:   if (t.tip>0)     extras.push(`<span class="chip chip-g"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.5 4.05 3 5.5l7 7Z"/></svg><strong>${DB.fR(t.tip)}</strong></span>`);
-5816:   // Taxa: só mostra quando há dado real do zip ou OCR confirmando 0%
-5817:   let _feePct = null;
-5818:   if (t.serviceFee !== undefined && t.serviceFee !== null) {
-5819:     _feePct = t.serviceFee === 0 ? '0%' : (t.serviceFee*100).toFixed(1).replace('.',',')+'%';
-5820:   } else if (t.taxaZero) { _feePct = '0%'; }
-5821:   if (_feePct !== null) extras.push(`<span class="chip chip-taxa">${_feePct}</span>`);
-5822:   if (t.pedagio)    extras.push(`<span class="chip-icon chip-toll"><svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><rect x="3" y="3" width="2" height="18" rx="1"/><rect x="19" y="3" width="2" height="18" rx="1"/><rect x="5" y="10" width="11" height="3" rx="1.5"/></svg></span>`);
-5823:   if (t.dinheiro)  extras.push(`<span class="chip-icon chip-cash">${cashSvg}</span>`);
-5824:   const extraRow = extras.length?`<div class="li-extra">${extras.join('')}</div>`:'';
-5825:   const perfStrip = perfStripHtml(t.value, t.km, t.duration);
-5826:   const detRows = [
-5827:     `<div class="det-row"><span>Plataforma</span><strong>${plat}</strong></div>`,
-5828:     t.origin?`<div class="det-row"><span>Origem</span><strong>${esc(t.originFull||t.origin)}</strong></div>`:'',
-5829:     t.dest?`<div class="det-row"><span>Destino</span><strong>${esc(t.destFull||t.dest)}</strong></div>`:'',
-5830:     t.km>0?`<div class="det-row"><span>Distância${t.kmEstimado?' (estimada)':''}</span><strong>${t.kmEstimado?'~':''}${(t.km||0).toFixed(1)} km</strong></div>`:'',
-5831:     t.pedagioValor>0?`<div class="det-row"><span>Pedágio</span><strong>${DB.fR(t.pedagioValor)}</strong></div>`:'',
-5832:     t.duration>0?`<div class="det-row"><span>Duração</span><strong>${fmtDur(t.duration)}</strong></div>`:'',
-5833:     t.dinamico>0?`<div class="det-row"><span>Preço dinâmico</span><strong style="color:#F59E0B">+ ${DB.fR(t.dinamico)}</strong></div>`:'',
-5834:     t.tip>0?`<div class="det-row"><span>Gorjeta</span><strong style="color:#7C3AED">+ ${DB.fR(t.tip)}</strong></div>`:'',
-5835:     (_feePct!==null)?`<div class="det-row"><span>Taxa Uber</span><strong style="${_feePct==='0%'?'color:#15803D':''}">${_feePct}</strong></div>`:'',
-5836:     t.pedagio?`<div class="det-row"><span>Pedágio</span><strong>Sim</strong></div>`:'',
-5837:     t.dinheiro?`<div class="det-row"><span>Pagamento</span><strong>Dinheiro</strong></div>`:'',
-5838:     tripDate?`<button class="det-del-btn" onclick="event.stopPropagation();confirmDeleteTrip('${tripDate}','${t.id}')"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> Excluir corrida</button>`:'',
-5839:   ].filter(Boolean).join('');
-5840:   const cvCfg = DB.cfg().custoVeiculo;
-5841:   let liqRow = '';
-5842:   if (cvCfg?.configurado && t.value > 0) {
-5843:     const liq = t.value - (cvCfg.custoPorKm||0) * (t.km||0);
-5844:     const pct = Math.round(liq / t.value * 100);
-5845:     liqRow = `<span class="li-liq">${DB.fR(liq)} (${pct}%)</span>`;
-5846:   }
-5847:   return `<div class="trip-item-wrap" id="tw-${tid}">
-5848:     <div class="li-row" id="tr-${tid}" onclick="toggleTripDetail('${tid}')">
-5849:       ${platIcon(t.platform)}
-5850:       <div class="li-info"><h3 class="trip-title">${t.origin?esc(t.origin):'—'}${dest}</h3><p>${plat} · ${t.kmEstimado?'~':''}${(t.km||0).toFixed(1)} km${t.kmEstimado?' (estim.)':''}${dur}</p>${extraRow}</div>
-5851:       <div class="li-val"><strong>${DB.fR(t.value)}</strong>${t.time?`<span class="li-time">${t.time}</span>`:''}${liqRow}</div>
-5852:     </div>
-5853:     <div class="trip-detail-panel" id="td-${tid}" style="display:none">${perfStrip}${detRows}</div>
-5854:   </div>`;
-5855: }
-5856: function lancItemJornada(it) {
-5857:   const isRec = it._type === 'receita';
-5858:   const catKey = (it._type || 'despesa') + '_' + (it.scope || 'operacional');
-5859:   const cats = DB.cats(catKey) || DEFAULT_CATS[catKey] || [];
-5860:   const cat = cats.find(c => c.id === it.category);
-5861:   const icoSvg = CAT_ICONS[cat?.icon] || CAT_ICONS.plus;
-5862:   // Categoria como título principal (descrição vai pro detalhe). Se o
-5863:   // lançamento estiver vinculado a uma corrida (it.platform), usa o
-5864:   // resumo do trajeto (ex: "Centro - Botafogo") em vez do nome da categoria.
-5865:   const routeTitle = (it.platform && (it.origin || it.dest))
-5866:     ? (it.origin||'—') + (it.dest ? ' - '+it.dest : '') : null;
-5867:   const categoryTitle = routeTitle || it.categoryLabel || cat?.label || it.category || (isRec ? 'Receita' : 'Despesa');
-5868:   const platBox = it.platform ? platIcon(it.platform) : `<div class="li-ico ${isRec?'green':'red'}">${icoSvg}</div>`;
-5869:   const val = isRec ? '+'+DB.fR(it.amount) : '-'+DB.fR(it.amount);
-5870:   const today = DB.today();
-5871:   const status = it.status || 'pago';
-5872:   const vencido = status === 'a_pagar' && it.date && it.date < today;
-5873:   const badgeCls = status==='pago' ? 'st-badge st-pago' : vencido ? 'st-badge st-vencido' : 'st-badge st-apagar';
-5874:   const badgeTxt = status==='pago' ? (isRec?'Recebido':'Pago') : vencido ? 'Vencido' : 'A pagar';
-5875:   const rowCls = 'li-row-j ' + (status==='pago' ? 'pago' : vencido ? 'vencido' : 'apagar');
-5876:   const fmtD = d => d ? d.split('-').slice(1).reverse().join('/') : '';
-5877:   const subTxt = (it.scope==='pessoal'?'Pessoal':'Operacional') + (it.date?' · '+fmtD(it.date):'');
-5878: 
-5879:   const rows = [
-5880:     it.desc    ? `<div class="lanc-detail-row"><span>Descrição</span><strong>${it.desc}</strong></div>` : '',
-5881:     it.date    ? `<div class="lanc-detail-row"><span>Data</span><strong>${fmtD(it.date)}</strong></div>` : '',
-5882:     `<div class="lanc-detail-row"><span>Tipo</span><strong>${isRec?'Receita':'Despesa'}</strong></div>`,
-5883:   ].filter(Boolean).join('');
-5884: 
-5885:   const refArgs = `'${it.id}','${it.date||today}','${it._type||'despesa'}'`;
-5886:   const pagarBtn = status !== 'pago'
-5887:     ? `<button class="ld-btn pago" onclick="event.stopPropagation();markLancPago(${refArgs})">
-5888:         <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Marcar pago
-5889:       </button>` : '';
-5890:   const actionsRow = `<div class="ld-actions">
-5891:       <button class="ld-btn edit" onclick="event.stopPropagation();editLanc(${refArgs})">
-5892:         <svg viewBox="0 0 24 24"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>Editar
-===== importVideo hits=2 =====
-8052:       platform: t.platform === '99' ? '99' : 'uber',
-8053:       accepted_at: new Date(startMs).toISOString(),
-8054:       trip_started_at: new Date(startMs).toISOString(),
-8055:       trip_ended_at: endMs ? new Date(endMs).toISOString() : null,
-8056:       offer_value: parseFloat(t.value)||0,
-8057:       real_km_trip: parseFloat(t.km)||0,
-8058:       origin_address: t.originFull || null,
-8059:       dest_address: t.destFull || null,
-8060:       dinheiro: !!t.dinheiro,
-8061:       status: 'importada',
+===== loadDay hits=1 =====
+4383: function toggleCmpLegend(event, id) {
+4384:   event.stopPropagation();
+4385:   const el = document.getElementById(id);
+4386:   if (el) el.style.display = el.style.display === 'none' ? '' : 'none';
+4387: }
+4388: async function loadAutoTripsForDay(dateStr) {
+4389:   if (!_supaUser) return [];
+4390:   // O dia da Jornada é o dia LOCAL do motorista. Converte meia-noite local
+4391:   // para UTC antes de consultar timestamptz — evita perder corridas após 21h
+4392:   // no Brasil quando o relógio UTC já virou para o dia seguinte.
+4393:   const fromLocal = new Date(dateStr+'T00:00:00');
+4394:   const toLocal = new Date(fromLocal); toLocal.setDate(toLocal.getDate()+1);
+4395:   const { data, error } = await _SUPA.from('auto_trips').select('*')
+4396:     .eq('user_id', _supaUser.id)
+4397:     .gte('trip_started_at', fromLocal.toISOString()).lt('trip_started_at', toLocal.toISOString())
+4398:     .order('trip_started_at', {ascending:true});
+4399:   // null = falha de rede/consulta; [] = consulta válida sem corridas.
+4400:   return error ? null : (data||[]);
+4401: }
+4402: // Recusadas do dia — mesmo padrão de loadAutoTripsForDay, pra alimentar o
+4403: // contador "X aceitas / Y recusadas" do Total do dia. Tabela já existe e já
+4404: // é usada na tela Corridas (seção expansível); aqui só reaproveita pro
+4405: // recorte de UM dia em vez do período todo.
+4406: async function loadDeclinedOffersForDay(dateStr) {
+4407:   if (!_supaUser) return [];
+4408:   const from = dateStr+'T00:00:00', to = dateStr+'T23:59:59';
+4409:   const { data, error } = await _SUPA.from('declined_offers').select('id')
+4410:     .eq('user_id', _supaUser.id)
+4411:     .gte('seen_at', from).lte('seen_at', to);
+4412:   return error ? [] : (data||[]);
+4413: }
+4414: 
+4415: // ── Corridas automáticas → alimentam a Home (pedido do Yuri, 23/07/2026) ──
+4416: // Mesmo gap da Jornada, só que espalhado pela Home inteira: valor, km,
+4417: // corridas, todos os gráficos e o insight de IA só olhavam day.trips
+4418: // (Importadas) e ficavam cegos pra qualquer dia 100% automático. Em vez de
+4419: // corrigir função por função (arriscado, muita superfície), busca TODAS as
+4420: // automáticas do período de UMA VEZ (não uma consulta por dia — helper
+4421: // abaixo cobre semana/mês/ano inteiros numa chamada só) e injeta como
+4422: // corridas "de mentira" no formato de trip normal — todo código que já lê
+4423: // day.trips corretamente passa a enxergar as automáticas de graça, sem
+4424: // precisar tocar em cada gráfico individualmente.
+4425: async function loadAutoTripsIndexed(fromDate, toDate) {
+4426:   if (!_supaUser) return {};
+4427:   const fromLocal = new Date(fromDate+'T00:00:00');
+4428:   const toLocal = new Date(toDate+'T00:00:00'); toLocal.setDate(toLocal.getDate()+1);
+4429:   const { data, error } = await _SUPA.from('auto_trips').select('*')
+4430:     .eq('user_id', _supaUser.id)
+4431:     .gte('trip_started_at', fromLocal.toISOString()).lt('trip_started_at', toLocal.toISOString())
+4432:     .order('trip_started_at', {ascending:true});
+4433:   if (error || !data) return {};
+4434:   const map = {};
+4435:   data.forEach(t => {
+4436:     const iso = t.trip_started_at || t.accepted_at;
+4437:     if (!iso) return;
+4438:     const dt = new Date(iso);
+4439:     const dateStr = dt.getFullYear()+'-'+p2(dt.getMonth()+1)+'-'+p2(dt.getDate());
+4440:     (map[dateStr] = map[dateStr] || []).push(t);
+4441:   });
+4442:   return map;
+4443: }
+4444: // Converte as automáticas de um dia (já indexadas em S.autoTripsByDate) pro
+4445: // MESMO formato de objeto que day.trips usa — value/km/time/duration/
+4446: // platform/dinheiro — assim qualquer soma/filtro que já existe funciona
+4447: // sem mudança nenhuma. NUNCA usar pra salvar (é só leitura/exibição —
+4448: // misturar isso em day.trips de verdade duplicaria dado no Supabase).
+4449: function autoTripsAsTrips(date) {
+4450:   const list = (S.autoTripsByDate && S.autoTripsByDate[date]) || [];
+4451:   return list.map(at => {
+4452:     const start = at.trip_started_at ? new Date(at.trip_started_at) : null;
+===== loadOperational hits=0 =====
+===== autoTripsQueries hits=15 =====
+4199:   return { texts: best, reason: null };
+4200: }
+4201: // Lógica central, sem toast/spinner — usada tanto pelo botão manual quanto
+4202: // pela rotina automática (24/07/2026). Só CALCULA, não salva — quem chama
+4203: // decide se aplica direto ou pede confirmação primeiro (ver
+4204: // refreshAutoTripFromLog, 16/08/2026: mudança de valor grande demais pra
+4205: // aplicar sem avisar).
+4206: async function _computeAutoTripRefresh(tripId) {
+4207:   const { data: rows, error: e1 } = await _SUPA.from('auto_trips').select('*').eq('id', tripId).limit(1);
+4208:   if (e1 || !rows || !rows.length) return { ok:false, reason:'corrida não encontrada' };
+4209:   const t = rows[0];
+4210:   const { texts, reason } = await fetchBestOfferTexts(t);
+4211:   if (!texts) return { ok:false, reason };
+4212:   const parsed = parseOfferJS(texts);
+4213:   if (parsed.valor == null) return { ok:false, reason:'texto insuficiente pra reconferir' };
+4214:   // Só os campos NUMÉRICOS — testado contra casos reais, o valor sai
+4215:   // confiável em várias leituras diferentes da mesma oferta, mas o
+4216:   // endereço às vezes sai lixo ("% LUCRO" etc) mesmo na leitura mais
+4217:   // completa. Melhor não arriscar sobrescrever um endereço bom.
+4218:   const patch = { offer_value: parsed.valor, status: 'confirmada' };
+4219:   if (parsed.dinamico != null) patch.offer_dinamico = parsed.dinamico;
+4220:   if (parsed.kmPickup != null) patch.offer_km_pickup = parsed.kmPickup;
+4221:   if (parsed.kmTrip != null) patch.offer_km_trip = parsed.kmTrip;
+4222:   if (parsed.minPickup != null) patch.offer_duration_pickup_sec = Math.round(parsed.minPickup*60);
+4223:   if (parsed.minTrip != null) patch.offer_duration_trip_sec = Math.round(parsed.minTrip*60);
+4224:   // Compara ANTES de salvar — pedido do Yuri (24/07/2026): mensagem
+4225:   // precisa dizer o que de fato mudou, não só "reconferida" genérico.
+4226:   const numEq = (a,b,tol) => (a==null && b==null) || (a!=null && b!=null && Math.abs(a-b) <= (tol||0.005));
+4227:   const changes = [];
+4228:   if (!numEq(t.offer_value, patch.offer_value, 0.005)) changes.push('valor '+DB.fR(patch.offer_value));
+4229:   if (patch.offer_dinamico != null && !numEq(t.offer_dinamico, patch.offer_dinamico, 0.005)) changes.push('dinâmico '+DB.fR(patch.offer_dinamico));
+4230:   if (patch.offer_km_trip != null && !numEq(t.offer_km_trip, patch.offer_km_trip, 0.05)) changes.push('km previsto');
+4239:   let valueBigChange = false;
+4240:   if (oldVal != null && oldVal > 0) {
+4241:     const diff = Math.abs(newVal - oldVal);
+4242:     valueBigChange = diff > 5 && (diff / oldVal) > 0.15;
+4243:   }
+4244:   return { ok:true, tripId, patch, changes, oldVal, newVal, valueBigChange };
+4245: }
+4246: async function _applyAutoTripRefresh(tripId, patch) {
+4247:   const { error } = await _SUPA.from('auto_trips').update({ ...patch, value_needs_review: false }).eq('id', tripId);
+4248:   return !error;
+4249: }
+4250: async function refreshAutoTripFromLog(tripId, btnEl) {
+4251:   if (btnEl) btnEl.classList.add('spinning');
+4252:   try {
+4253:     const r = await _computeAutoTripRefresh(tripId);
+4254:     if (!r.ok) { showToast('Não achei: '+r.reason, 'error'); return; }
+4255:     if (!r.changes.length) { showToast('Corrida atualizada com sucesso', 'success'); return; }
+4256:     const finish = async () => {
+4257:       const saved = await _applyAutoTripRefresh(r.tripId, r.patch);
+4258:       if (!saved) { showToast('Erro ao salvar.', 'error'); return; }
+4259:       showToast('Corrigido: '+r.changes.join(', '), 'success');
+4260:       S.autoTripsDate = null; S.autoTripsHomeRange = null;
+4261:       if (S.sec === 'jornada') renderJornada();
+4262:       if (S.sec === 'relatorios') renderHomeGraphs();
+4263:       if (S.sec === 'corridas') renderCorridasActive();
+4264:     };
+4265:     if (r.valueBigChange) {
+4266:       showConfirm(
+4267:         `O valor dessa corrida vai mudar de ${DB.fR(r.oldVal)} para ${DB.fR(r.newVal)} — uma diferença grande.\n\nConfirma que ${DB.fR(r.newVal)} é o valor certo?`,
+4268:         finish,
+4269:         { danger: false, confirmLabel: 'Sim, corrigir', cancelLabel: 'Cancelar' }
+4270:       );
+4281: // Rotina automática (24/07/2026, pedido do Yuri) — a cada 5min, tenta
+4282: // reconferir sozinho corridas "Aguardando revisão" (status='capturada')
+4283: // das últimas 48h. Silenciosa por corrida (não interrompe com toast a
+4284: // cada uma) — só avisa se corrigiu alguma, no total. Nunca mexe em
+4285: // corrida já confirmada, só nas que ainda não têm valor nenhum.
+4286: async function _autoRefreshPendingTrips() {
+4287:   if (!_supaUser) return;
+4288:   try {
+4289:     const { data, error } = await _SUPA.from('auto_trips').select('id')
+4290:       .eq('user_id', _supaUser.id).eq('status', 'capturada')
+4291:       .gte('accepted_at', new Date(Date.now() - 48*60*60*1000).toISOString())
+4292:       .limit(15);
+4293:     if (error || !data || !data.length) return;
+4294:     let fixed = 0;
+4295:     for (const row of data) {
+4296:       try {
+4297:         const r = await _computeAutoTripRefresh(row.id);
+4298:         if (r.ok && r.changes.length) { await _applyAutoTripRefresh(r.tripId, r.patch); fixed++; }
+4299:       } catch(e) {}
+4300:     }
+4301:     if (fixed > 0) {
+4302:       showToast(fixed===1 ? '1 corrida corrigida sozinha' : fixed+' corridas corrigidas sozinhas', 'success');
+4303:       S.autoTripsDate = null; S.autoTripsHomeRange = null;
+4304:       if (S.sec === 'jornada') renderJornada();
+4305:       if (S.sec === 'relatorios') renderHomeGraphs();
+4306:       if (S.sec === 'corridas') renderCorridasActive();
+4307:     }
+4308:   } catch (e) { console.error('_autoRefreshPendingTrips', e); }
+4309: }
+4310: setTimeout(()=>{ _autoRefreshPendingTrips(); setInterval(_autoRefreshPendingTrips, 5*60*1000); }, 6000);
+4311: 
+4312: // Rotina automática nº2 (16/08/2026, pedido do Yuri: "não quero usuário
+4327: // confirmImport()) — reconferir isso aqui não faz mais sentido, vídeo já
+4328: // É a fonte mais confiável que existe. Passa a mirar em 'estimada' (ciclo
+4329: // da captura ao vivo completo, só com valor da oferta) — mesmo espírito
+4330: // de antes, refinando o valor com a melhor leitura do log disponível
+4331: // enquanto o vídeo de confirmação não chega.
+4332: async function _autoReconcileConfirmedTrips() {
+4333:   if (!_supaUser) return;
+4334:   try {
+4335:     const { data, error } = await _SUPA.from('auto_trips').select('id')
+4336:       .eq('user_id', _supaUser.id).eq('status', 'estimada')
+4337:       .is('data_quality_flag', null)
+4338:       .gte('accepted_at', new Date(Date.now() - 24*60*60*1000).toISOString())
+4339:       .limit(15);
+4340:     if (error || !data || !data.length) return;
+4341:     let fixedQuiet = 0, flaggedForReview = 0;
+4342:     for (const row of data) {
+4343:       try {
+4344:         const r = await _computeAutoTripRefresh(row.id);
+4345:         if (!r.ok || !r.changes.length) continue;
+4346:         if (r.valueBigChange) {
+4347:           await _SUPA.from('auto_trips').update({ value_needs_review: true }).eq('id', row.id);
+4348:           flaggedForReview++;
+4349:         } else {
+4350:           await _applyAutoTripRefresh(r.tripId, r.patch);
+4351:           fixedQuiet++;
+4352:         }
+4353:       } catch(e) {}
+4354:     }
+4355:     if (fixedQuiet > 0 || flaggedForReview > 0) {
+4356:       S.autoTripsDate = null; S.autoTripsHomeRange = null;
+4357:       if (S.sec === 'jornada') renderJornada();
+4358:       if (S.sec === 'relatorios') renderHomeGraphs();
+4339:       .limit(15);
+4340:     if (error || !data || !data.length) return;
+4341:     let fixedQuiet = 0, flaggedForReview = 0;
+4342:     for (const row of data) {
+4343:       try {
+4344:         const r = await _computeAutoTripRefresh(row.id);
+4345:         if (!r.ok || !r.changes.length) continue;
+4346:         if (r.valueBigChange) {
+4347:           await _SUPA.from('auto_trips').update({ value_needs_review: true }).eq('id', row.id);
+4348:           flaggedForReview++;
+4349:         } else {
+4350:           await _applyAutoTripRefresh(r.tripId, r.patch);
+4351:           fixedQuiet++;
+4352:         }
+4353:       } catch(e) {}
+4354:     }
+4355:     if (fixedQuiet > 0 || flaggedForReview > 0) {
+4356:       S.autoTripsDate = null; S.autoTripsHomeRange = null;
+4357:       if (S.sec === 'jornada') renderJornada();
+4358:       if (S.sec === 'relatorios') renderHomeGraphs();
+4359:       if (S.sec === 'corridas') renderCorridasActive();
+4360:     }
+4361:     // Silenciosa de propósito — mudança pequena não precisa de aviso, e
+4362:     // mudança grande já fica visível pelo badge "Valor a confirmar" na
+4363:     // tela Corridas, sem precisar interromper com toast.
+4364:   } catch (e) { console.error('_autoReconcileConfirmedTrips', e); }
+4365: }
+4366: setTimeout(()=>{ _autoReconcileConfirmedTrips(); setInterval(_autoReconcileConfirmedTrips, 10*60*1000); }, 9000);
+4367: // Balãozinho discreto ao tocar num símbolo (dinâmico, vínculo à jornada,
+4368: // dinheiro) — pedido do Yuri (24/07/2026). Some sozinho, não navega nem
+4369: // abre nada.
+4370: function showTapLegend(event, text) {
+4387: }
+4388: async function loadAutoTripsForDay(dateStr) {
+4389:   if (!_supaUser) return [];
+4390:   // O dia da Jornada é o dia LOCAL do motorista. Converte meia-noite local
+4391:   // para UTC antes de consultar timestamptz — evita perder corridas após 21h
+4392:   // no Brasil quando o relógio UTC já virou para o dia seguinte.
+4393:   const fromLocal = new Date(dateStr+'T00:00:00');
+4394:   const toLocal = new Date(fromLocal); toLocal.setDate(toLocal.getDate()+1);
+4395:   const { data, error } = await _SUPA.from('auto_trips').select('*')
+4396:     .eq('user_id', _supaUser.id)
+4397:     .gte('trip_started_at', fromLocal.toISOString()).lt('trip_started_at', toLocal.toISOString())
+4398:     .order('trip_started_at', {ascending:true});
+4399:   // null = falha de rede/consulta; [] = consulta válida sem corridas.
+4400:   return error ? null : (data||[]);
+4401: }
+4402: // Recusadas do dia — mesmo padrão de loadAutoTripsForDay, pra alimentar o
+4403: // contador "X aceitas / Y recusadas" do Total do dia. Tabela já existe e já
+4404: // é usada na tela Corridas (seção expansível); aqui só reaproveita pro
+4405: // recorte de UM dia em vez do período todo.
+4406: async function loadDeclinedOffersForDay(dateStr) {
+4407:   if (!_supaUser) return [];
+4408:   const from = dateStr+'T00:00:00', to = dateStr+'T23:59:59';
+4409:   const { data, error } = await _SUPA.from('declined_offers').select('id')
+4410:     .eq('user_id', _supaUser.id)
+4411:     .gte('seen_at', from).lte('seen_at', to);
+4412:   return error ? [] : (data||[]);
+4413: }
+4414: 
+4415: // ── Corridas automáticas → alimentam a Home (pedido do Yuri, 23/07/2026) ──
+4416: // Mesmo gap da Jornada, só que espalhado pela Home inteira: valor, km,
+4417: // corridas, todos os gráficos e o insight de IA só olhavam day.trips
+4418: // (Importadas) e ficavam cegos pra qualquer dia 100% automático. Em vez de
+4421: // abaixo cobre semana/mês/ano inteiros numa chamada só) e injeta como
+4422: // corridas "de mentira" no formato de trip normal — todo código que já lê
+4423: // day.trips corretamente passa a enxergar as automáticas de graça, sem
+4424: // precisar tocar em cada gráfico individualmente.
+4425: async function loadAutoTripsIndexed(fromDate, toDate) {
+4426:   if (!_supaUser) return {};
+4427:   const fromLocal = new Date(fromDate+'T00:00:00');
+4428:   const toLocal = new Date(toDate+'T00:00:00'); toLocal.setDate(toLocal.getDate()+1);
+4429:   const { data, error } = await _SUPA.from('auto_trips').select('*')
+4430:     .eq('user_id', _supaUser.id)
+4431:     .gte('trip_started_at', fromLocal.toISOString()).lt('trip_started_at', toLocal.toISOString())
+4432:     .order('trip_started_at', {ascending:true});
+4433:   if (error || !data) return {};
+4434:   const map = {};
+4435:   data.forEach(t => {
+4436:     const iso = t.trip_started_at || t.accepted_at;
+4437:     if (!iso) return;
+4438:     const dt = new Date(iso);
+4439:     const dateStr = dt.getFullYear()+'-'+p2(dt.getMonth()+1)+'-'+p2(dt.getDate());
+4440:     (map[dateStr] = map[dateStr] || []).push(t);
+4441:   });
+4442:   return map;
+4443: }
+4444: // Converte as automáticas de um dia (já indexadas em S.autoTripsByDate) pro
+4445: // MESMO formato de objeto que day.trips usa — value/km/time/duration/
+4446: // platform/dinheiro — assim qualquer soma/filtro que já existe funciona
+4447: // sem mudança nenhuma. NUNCA usar pra salvar (é só leitura/exibição —
+4448: // misturar isso em day.trips de verdade duplicaria dado no Supabase).
+4449: function autoTripsAsTrips(date) {
+4450:   const list = (S.autoTripsByDate && S.autoTripsByDate[date]) || [];
+4451:   return list.map(at => {
+4452:     const start = at.trip_started_at ? new Date(at.trip_started_at) : null;
+4491:   if (_finAuto.key === key && (Date.now() - _finAuto.ts) < 120000) return;
+4492:   _finAuto.loading = true;
+4493:   try {
+4494:     const fromIso = new Date(new Date(from+'T00:00:00').getTime() - 86400000).toISOString();
+4495:     const toIso   = new Date(new Date(to+'T23:59:59').getTime() + 86400000).toISOString();
+4496:     const rows = [];
+4497:     let off = 0;
+4498:     while (true) {
+4499:       const { data, error } = await _SUPA.from('auto_trips')
+4500:         .select('id,trip_started_at,accepted_at,offer_value,platform')
+4501:         .eq('user_id', _supaUser.id)
+4502:         .gte('trip_started_at', fromIso).lte('trip_started_at', toIso)
+4503:         .order('trip_started_at', {ascending:true})
+4504:         .range(off, off + 999);
+4505:       if (error || !data || !data.length) break;
+4506:       rows.push(...data);
+4507:       if (data.length < 1000) break;
+4508:       off += 1000;
+4509:     }
+4510:     const byDate = {};
+4511:     rows.forEach(t => {
+4512:       const ts = autoTripTs(t); if (!ts) return;
+4513:       const d = new Date(ts);
+4514:       const ds = d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+4515:       const b = byDate[ds] || (byDate[ds] = { sum:0, count:0, items:[] });
+4516:       b.sum += (t.offer_value || 0);
+4517:       b.count++;
+4518:       b.items.push(t);
+4519:     });
+4520:     _finAuto = { key, byDate, loading:false, ts: Date.now() };
+4521:     if (S.sec === 'financeiro') { try { renderFin(); } catch(e) {} }
+4522:   } catch(e) { _finAuto.loading = false; console.warn('[loadFinAutoTrips]', e); }
+4529:   const dates = getCorridasDays().slice().sort().reverse(); // mais recente primeiro
+4530:   const plats = S.corridasPlats || new Set();
+4531:   const platFilter = t => plats.size === 0 || plats.has(t.platform||'uber');
+4532: 
+4533:   // Automáticas do mesmo intervalo — busca uma vez só, agrupa por data local.
+4534:   let autoByDate = {};
+4535:   if (_supaUser) {
+4536:     const range = autoCorridasDateRange();
+4537:     let q = _SUPA.from('auto_trips').select('*').eq('user_id', _supaUser.id).order('trip_started_at', {ascending:false});
+4538:     if (range) q = q.gte('trip_started_at', range.from).lte('trip_started_at', range.to);
+4539:     if (plats.size === 1) q = q.eq('platform', [...plats][0]);
+4540:     const { data, error } = await q;
+4541:     (error ? [] : (data||[])).forEach(t => {
+4542:       const ts = autoTripTs(t);
+4543:       if (!ts) return;
+4544:       const d = new Date(ts);
+4545:       const onePlat = plats.size === 1 ? [...plats][0] : null;
+4546:       const dateStr = onePlat ? operationalDateForTimestamp(onePlat, ts) : localYmdFromMs(ts);
+4547:       (autoByDate[dateStr] = autoByDate[dateStr] || []).push(t);
+4548:     });
+4549:   }
+4550: 
+4551:   let totalVal = 0, totalKm = 0, totalN = 0, totalMin = 0;
+4552:   const groups = [];
+4553:   dates.forEach(d => {
+4554:     const day = DB.day(d);
+4555:     const manual = (day.trips||[]).filter(platFilter)
+4556:       .map(t => ({ kind:'manual', ts: t.ts || (t.time?new Date(d+'T'+t.time+':00').getTime():0), t }));
+4557:     const auto = (autoByDate[d]||[]).filter(platFilter)
+4558:       .map(t => ({ kind:'auto', ts: autoTripTs(t), t }));
+4559:     const merged = [...manual, ...auto].sort((a,b)=>b.ts-a.ts);
+4560:     if (!merged.length) return;
+6886: }
+6887: async function saveAutoTripValueEdit() {
+6888:   const inp = document.getElementById('autotripval-val');
+6889:   const newVal = parseFloat(inp?.value);
+6890:   if (isNaN(newVal) || newVal < 0) { showToast('Valor inválido', 'error'); return; }
+6891:   if (!autoTripValEditId) { closeMo('mo-autotrip-value'); return; }
+6892:   if (!_supaUser) { showToast('Sem conexão com a nuvem.', 'error'); return; }
+6893:   try {
+6894:     const { error } = await _SUPA.from('auto_trips')
+6895:       .update({ offer_value: newVal, status: 'confirmada' })
+6896:       .eq('id', autoTripValEditId);
+6897:     if (error) throw error;
+6898:     closeMo('mo-autotrip-value');
+6899:     showToast('Valor atualizado.');
+6900:     // Cache de automáticas fica potencialmente desatualizado em 3 telas —
+6901:     // força recarregar todas que dependem dela, só a que está ativa
+6902:     // agora re-renderiza na hora (mesmo padrão do refresh de 60s/25s).
+6903:     S.autoTripsDate = null; S.autoTripsHomeRange = null;
+6904:     if (S.sec === 'jornada') renderJornada();
+6905:     if (S.sec === 'relatorios') renderHomeGraphs();
+6906:     if (S.sec === 'corridas') renderCorridasActive();
+6907:   } catch (e) {
+6908:     console.error('saveAutoTripValueEdit', e);
+6909:     showToast('Erro ao salvar. Tente de novo.', 'error');
+6910:   }
+6911: }
+6912: function openKmAdjust() {
+6913:   const day = DB.day(S.curDate);
+6914:   const isToday = S.curDate === DB.today();
+6915:   const live = isToday && S.gps.st === 'running';
+6916:   const liveKm = live ? S.gps.km : 0;
+6917:   const finishedKm = (day.sessions || []).reduce((s,x)=>s+(x.km||0),0);
 8062:       import_video_id: videoId
 8063:     });
 8064:     added++;
@@ -485,21 +771,6 @@
 8091:   const dateHint = S.curDate !== DB.today()
 8092:     ? ` (data: ${S.curDate.split('-').reverse().slice(0,2).join('/')})` : '';
 8093:   const parts = [];
-8094:   if (added > 0) parts.push(`${added} corrida${added!==1?'s':''} nova${added!==1?'s':''} importada${added!==1?'s':''}${dateHint}`);
-8095:   if (updated > 0) parts.push(`${updated} já capturada${updated!==1?'s':''} automaticamente, valor confirmado`);
-8096:   if (skipped > 0) parts.push(`${skipped} ignorada${skipped!==1?'s':''} (já existente${skipped!==1?'s':''})`);
-8097:   const baseMsg = parts.length ? parts.join('. ')+'.' : 'Nenhuma corrida nova.';
-8098: 
-8099:   try{renderJornada();}catch(e){}
-8100:   try{renderHome();}catch(e){}
-8101:   // Garantir que Corridas mostra a data certa independente do filtro
-8065:   });
-8066:   // Aplica as atualizações nas automáticas casadas — valor real por cima do
-8067:   // estimado, km real quando a importação trouxe (senão mantém o que já
-8068:   // tinha), status vira confirmada (agora tem valor confirmado de verdade).
-8069:   toUpdateAuto.forEach(u => {
-8070:     _SUPA.from('auto_trips').update({
-8071:       offer_value: u.value,
 8072:       real_km_trip: u.km > 0 ? u.km : undefined,
 8073:       dinheiro: u.dinheiro,
 8074:       status: 'confirmada',
@@ -532,14 +803,99 @@
 8101:   // Garantir que Corridas mostra a data certa independente do filtro
 8102:   if (S.curDate !== DB.today()) S.corridasPeriod = 'tudo';
 8103:   try{renderCorridasActive();}catch(e){}
-8104:   showToast(baseMsg, skipped > 0 ? 'info' : 'success');
-8105: }
-8106: 
-8107: // ══════════════════════════════════════════════
-8108: // IMPORTAÇÃO: histórico oficial do Uber (.zip)
-8109: // driver_lifetime_trips-0.csv já traz, por corrida, o valor líquido
-8110: // (driver_upfront_fare_local), km e duração — usamos direto daí, sem
-8111: // tentar casar com driver_payments por horário (testado com um export
-8112: // real: o casamento por horário troca valores entre corridas vizinhas).
-8113: // driver_payments-0.csv só é usado pra somar gorjeta/incentivo do
-8114: // período inteiro, como informação, sem tentar atribuir por corrida.
+9814: }
+9815: 
+9816: async function perfilLoadStats() {
+9817:   const setStat = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = (v == null ? '—' : v); };
+9818:   if (!_SUPA || !_supaUser) return;
+9819:   try {
+9820:     const [tripsRes, autoRes, postsRes] = await Promise.all([
+9821:       _SUPA.from('trips').select('id', { count:'exact', head:true }).eq('user_id', _supaUser.id),
+9822:       _SUPA.from('auto_trips').select('id', { count:'exact', head:true }).eq('user_id', _supaUser.id),
+9823:       _SUPA.from('feed_posts').select('votes_up').eq('user_id', _supaUser.id)
+9824:     ]);
+9825:     const corridas = (tripsRes.count || 0) + (autoRes.count || 0);
+9826:     const posts = postsRes.data || [];
+9827:     const conf = posts.reduce((s,p) => s + (p.votes_up || 0), 0);
+9828:     setStat('p-stat-corridas', corridas);
+9829:     setStat('p-stat-alertas', posts.length);
+9830:     setStat('p-stat-conf', conf);
+9831:   } catch (e) { console.warn('perfil stats', e); }
+9832: }
+9833: 
+9834: function openPerfil() {
+9835:   const cfg = DB.cfg();
+9836:   if (cfg.name) {const el=document.getElementById('p-nome');if(el)el.value=cfg.name;}
+9837:   if (cfg.plate) {const el=document.getElementById('p-placa');if(el)el.value=cfg.plate;}
+9838:   const cidEl = document.getElementById('p-cidade'); if (cidEl) cidEl.value = cfg.city || '';
+9839:   const vTxt = document.getElementById('p-veiculo-txt');
+9840:   if (vTxt) vTxt.textContent = cfg.vehicle || 'Selecionar veículo';
+9841: 
+9842:   const nameEl = document.getElementById('p-av-name');
+9843:   if (nameEl) nameEl.textContent = cfg.name || 'Motorista MōB';
+9844:   const MESES_CURTO = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+9845:   const created = (_supaUser && _supaUser.created_at) ? new Date(_supaUser.created_at) : null;
+14297:     const d = new Date(dateStr+'T00:00:00');
+14298:     d.setHours(h,m,0,0);
+14299:     if(p === 'uber' && h < 4) d.setDate(d.getDate()+1);
+14300:     return d.getTime();
+14301:   };
+14302:   window.loadAutoTripsForOperationalDay = async function(plat,dateStr){
+14303:     if(!_supaUser) return [];
+14304:     const r = operationalRangeForPlatform(plat,dateStr);
+14305:     let q = _SUPA.from('auto_trips').select('*')
+14306:       .eq('user_id',_supaUser.id)
+14307:       .eq('platform',normalizeOperationalPlatform(plat))
+14308:       .gte('trip_started_at',new Date(r.startMs).toISOString())
+14309:       .lt('trip_started_at',new Date(r.endMs).toISOString())
+14310:       .order('trip_started_at',{ascending:true});
+14311:     const {data,error} = await q;
+14312:     return error ? [] : (data||[]);
+14313:   };
+14314: 
+14315:   // ── Filtro da tela Corridas ────────────────────────────────────────
+14316:   const _civilGetCorridasDays = window.getCorridasDays;
+14317:   window.getCorridasDays = function(){
+14318:     const plats = S.corridasPlats || new Set();
+14319:     const onePlat = plats.size === 1 ? [...plats][0] : null;
+14320:     if(!onePlat) return _civilGetCorridasDays();
+14321:     const anchorStr = operationalDateForTimestamp(onePlat,Date.now());
+14322:     const anchor = new Date(anchorStr+'T12:00:00');
+14323:     const fmt = d => localYmdFromMs(d.getTime());
+14324:     const p = S.corridasPeriod;
+14325:     if(p==='date' && S.corridasDate) return [S.corridasDate];
+14326:     if(p==='hoje') return [anchorStr];
+14327:     if(p==='7d') { const out=[]; for(let i=0;i<7;i++){const d=new Date(anchor);d.setDate(d.getDate()-i);out.push(fmt(d));} return out; }
+14328:     if(p==='mes') {
+14373:   async function ensureJourneyAutoTrips(sess){
+14374:     if(!_supaUser || !sess?.start) return;
+14375:     const k=journeyKey(sess), old=journeyAutoCache.get(k);
+14376:     const ttl=sess.end?120000:12000;
+14377:     if(old && (old.loading || Date.now()-old.ts<ttl)) return;
+14378:     journeyAutoCache.set(k,{loading:true,ts:Date.now(),rows:old?.rows||[]});
+14379:     try{
+14380:       const end=sessionEnd(sess);
+14381:       const {data,error}=await _SUPA.from('auto_trips').select('*')
+14382:         .eq('user_id',_supaUser.id)
+14383:         .gte('trip_started_at',new Date(Number(sess.start)).toISOString())
+14384:         .lte('trip_started_at',new Date(end).toISOString())
+14385:         .order('trip_started_at',{ascending:true});
+14386:       if(!error) journeyAutoCache.set(k,{loading:false,ts:Date.now(),rows:data||[]});
+14387:     }catch(e){ journeyAutoCache.set(k,{loading:false,ts:Date.now(),rows:old?.rows||[]}); }
+14388:     try{ if(S.sec==='jornada') setTimeout(()=>{renderContinuousSessionList();renderContinuousStatusBars();},0); }catch(e){}
+14389:   }
+14390:   function journeyAutoTrips(sess,fallback){
+14391:     const k=journeyKey(sess), c=journeyAutoCache.get(k);
+14392:     ensureJourneyAutoTrips(sess);
+14393:     const rows=(c&&Array.isArray(c.rows)&&c.rows.length)?c.rows:(fallback||[]);
+14394:     const a=Number(sess?.start||0), b=sessionEnd(sess);
+14395:     const seen=new Set();
+14396:     return rows.filter(t=>{const ts=autoTripTs(t); if(!ts||ts<a||ts>b)return false; const id=t.id||ts+'_'+t.offer_value; if(seen.has(id))return false; seen.add(id); return true;});
+14397:   }
+14398:   function journeyManualTrips(sess){
+14399:     const a=Number(sess?.start||0), b=sessionEnd(sess), out=[], seen=new Set();
+14400:     (DB.allDates?DB.allDates():[]).forEach(ds=>{
+14401:       const d=DB.day(ds);
+14402:       (d.trips||[]).forEach(t=>{
+14403:         let ts=Number(t.ts)||0;
+14404:         if(!ts&&t.time) ts=new Date(ds+'T'+t.time+':00').getTime();
