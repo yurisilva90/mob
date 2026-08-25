@@ -14,136 +14,39 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          import re
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-
           def one(old,new,label):
-            global s
-            n=s.count(old)
-            if n != 1:
-              raise SystemExit(f'{label}: esperado 1, encontrado {n}')
-            s=s.replace(old,new,1)
-
-          # 1) Mostrar progresso enquanto os quadros ainda estao sendo preparados.
-          one(
-            "      updateRing('Analisando vídeo ' + dot, false);\n      const frames = await extractVideoFrames(videos[v]);",
-            "      updateRing('Preparando vídeo ' + dot, false);\n      const frames = await extractVideoFrames(videos[v], (done, total) => {\n        updateRing('Preparando vídeo · ' + done + '/' + total + ' quadros ' + dot, false);\n      });",
-            'progresso preparacao'
-          )
-
-          one(
-            "        updateRing('Analisando vídeo ' + dot, false);",
-            "        updateRing('Analisando vídeo · ' + (i+1) + '/' + frames.length + ' quadros ' + dot, false);",
-            'progresso analise'
-          )
-
-          # 2) Callback de progresso no extrator.
-          one(
-            'async function extractVideoFrames(file) {',
-            'async function extractVideoFrames(file, onProgress) {',
-            'assinatura extrator'
-          )
-
-          # Metadata nao pode deixar a Promise eterna.
-          anchor="""    video.preload    = 'auto';
-
-    video.onloadedmetadata = async () => {"""
-          replacement="""    video.preload    = 'auto';
-
-    const metadataTimer = setTimeout(() => {
-      try{document.body.removeChild(video);}catch(e){}
-      URL.revokeObjectURL(url);
-      reject(new Error('O vídeo demorou demais para ser preparado. Tente novamente.'));
-    }, 15000);
-
-    video.onloadedmetadata = async () => {
-      clearTimeout(metadataTimer);"""
-          one(anchor,replacement,'timeout metadata')
-
-          # O bug principal: instalar onseeked ANTES de mudar currentTime.
-          old_seek="""            // Timeout fallback — some browsers never fire onseeked
-            const timer = setTimeout(() => {
-              try { ctx.drawImage(video, 0, 0, canvas.width, canvas.height); } catch(e) {}
-              res();
-            }, 4000);
-            video.currentTime = time;
-            video.onseeked = () => {
-              clearTimeout(timer);
-              try { ctx.drawImage(video, 0, 0, canvas.width, canvas.height); } catch(e) {}
-              res();
-            };"""
-          new_seek="""            // Registra o handler ANTES do seek. Em arquivos locais o seek
-            // pode terminar imediatamente; antes o evento era perdido e cada
-            // quadro aguardava o fallback inteiro de 4 segundos.
-            let done = false;
-            const finishSeek = () => {
-              if (done) return;
-              done = true;
-              clearTimeout(timer);
-              video.onseeked = null;
-              try { ctx.drawImage(video, 0, 0, canvas.width, canvas.height); } catch(e) {}
-              res();
-            };
-            const timer = setTimeout(finishSeek, 1500);
-            video.onseeked = finishSeek;
-            video.currentTime = time;"""
+              global s
+              n=s.count(old)
+              if n != 1: raise SystemExit(f'{label}: esperado 1, encontrado {n}')
+              s=s.replace(old,new,1)
+          one("      updateRing('Analisando vídeo ' + dot, false);\n      const frames = await extractVideoFrames(videos[v]);", "      updateRing('Preparando vídeo ' + dot, false);\n      const frames = await extractVideoFrames(videos[v], (done, total) => {\n        updateRing('Preparando vídeo · ' + done + '/' + total + ' quadros ' + dot, false);\n      });", 'progresso preparacao')
+          one("        updateRing('Analisando vídeo ' + dot, false);", "        updateRing('Analisando vídeo · ' + (i+1) + '/' + frames.length + ' quadros ' + dot, false);", 'progresso analise')
+          one('async function extractVideoFrames(file) {', 'async function extractVideoFrames(file, onProgress) {', 'assinatura')
+          one("    video.preload    = 'auto';\n\n    video.onloadedmetadata = async () => {", "    video.preload    = 'auto';\n\n    const metadataTimer = setTimeout(() => {\n      try{document.body.removeChild(video);}catch(e){}\n      URL.revokeObjectURL(url);\n      reject(new Error('O vídeo demorou demais para ser preparado. Tente novamente.'));\n    }, 15000);\n\n    video.onloadedmetadata = async () => {\n      clearTimeout(metadataTimer);", 'metadata timeout')
+          old_seek = "            // Timeout fallback — some browsers never fire onseeked\n            const timer = setTimeout(() => {\n              try { ctx.drawImage(video, 0, 0, canvas.width, canvas.height); } catch(e) {}\n              res();\n            }, 4000);\n            video.currentTime = time;\n            video.onseeked = () => {\n              clearTimeout(timer);\n              try { ctx.drawImage(video, 0, 0, canvas.width, canvas.height); } catch(e) {}\n              res();\n            };"
+          new_seek = "            // Handler precisa existir antes do seek: em arquivo local o evento pode ser imediato.\n            let done = false;\n            const finishSeek = () => {\n              if (done) return;\n              done = true;\n              clearTimeout(timer);\n              video.onseeked = null;\n              try { ctx.drawImage(video, 0, 0, canvas.width, canvas.height); } catch(e) {}\n              res();\n            };\n            const timer = setTimeout(finishSeek, 1500);\n            video.onseeked = finishSeek;\n            video.currentTime = time;"
           one(old_seek,new_seek,'ordem seek')
-
-          # Transformar loop para permitir callback X/Y.
-          one(
-            '      for (const time of times) {',
-            '      if (typeof onProgress === \'function\') onProgress(0, times.length);\n      for (let timeIndex = 0; timeIndex < times.length; timeIndex++) {\n        const time = times[timeIndex];',
-            'loop progresso'
-          )
-          one(
-            "        } catch(e) { console.warn('Frame t='+time, e); }\n      }",
-            "        } catch(e) { console.warn('Frame t='+time, e); }\n        if (typeof onProgress === 'function') onProgress(timeIndex + 1, times.length);\n      }",
-            'callback progresso'
-          )
-
-          # Limpar timer de metadata tambem no erro nativo.
-          one(
-            "    video.onerror = (e) => {\n      try{document.body.removeChild(video);}catch(e2){}",
-            "    video.onerror = (e) => {\n      clearTimeout(metadataTimer);\n      try{document.body.removeChild(video);}catch(e2){}",
-            'limpeza metadata'
-          )
-
-          # 3) A chamada de IA tambem nao pode aguardar rede indefinidamente.
-          pattern=re.compile(r"  const resp = await fetch\('https://smartmobi-proxy\.yurisilva1990\.workers\.dev', \{\n    method:'POST', headers:\{'Content-Type':'application/json'\},\n    body: JSON\.stringify\(\{model:'claude-haiku-4-5-20251001', max_tokens:1500,\n      messages:\[\{role:'user', content:\[\{type:'image',source:\{type:'base64',media_type:mt,data:b64\}\},\{type:'text',text:prompt\}\]\}\]\}\)\n  \}\);")
-          m=pattern.search(s)
-          if not m:
-            raise SystemExit('fetch da IA nao encontrado')
-          new_fetch="""  const requestController = new AbortController();
-  const requestTimer = setTimeout(() => requestController.abort(), 25000);
-  let resp;
-  try {
-    resp = await fetch('https://smartmobi-proxy.yurisilva1990.workers.dev', {
-      method:'POST', headers:{'Content-Type':'application/json'}, signal:requestController.signal,
-      body: JSON.stringify({model:'claude-haiku-4-5-20251001', max_tokens:1500,
-        messages:[{role:'user', content:[{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:prompt}]}]})
-    });
-  } catch(e) {
-    if (e && e.name === 'AbortError') throw new Error('Tempo esgotado ao analisar quadro');
-    throw e;
-  } finally {
-    clearTimeout(requestTimer);
-  }"""
-          s=s[:m.start()]+new_fetch+s[m.end():]
-
+          one('      for (const time of times) {', "      if (typeof onProgress === 'function') onProgress(0, times.length);\n      for (let timeIndex = 0; timeIndex < times.length; timeIndex++) {\n        const time = times[timeIndex];", 'loop progresso')
+          one("        } catch(e) { console.warn('Frame t='+time, e); }\n      }", "        } catch(e) { console.warn('Frame t='+time, e); }\n        if (typeof onProgress === 'function') onProgress(timeIndex + 1, times.length);\n      }", 'callback progresso')
+          one("    video.onerror = (e) => {\n      try{document.body.removeChild(video);}catch(e2){}", "    video.onerror = (e) => {\n      clearTimeout(metadataTimer);\n      try{document.body.removeChild(video);}catch(e2){}", 'limpeza metadata')
+          old_fetch = "  const resp = await fetch('https://smartmobi-proxy.yurisilva1990.workers.dev', {\n    method:'POST', headers:{'Content-Type':'application/json'},\n    body: JSON.stringify({model:'claude-haiku-4-5-20251001', max_tokens:1500,\n      messages:[{role:'user', content:[{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:prompt}]}]})\n  });"
+          new_fetch = "  const requestController = new AbortController();\n  const requestTimer = setTimeout(() => requestController.abort(), 25000);\n  let resp;\n  try {\n    resp = await fetch('https://smartmobi-proxy.yurisilva1990.workers.dev', {\n      method:'POST', headers:{'Content-Type':'application/json'}, signal:requestController.signal,\n      body: JSON.stringify({model:'claude-haiku-4-5-20251001', max_tokens:1500,\n        messages:[{role:'user', content:[{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:prompt}]}]})\n    });\n  } catch(e) {\n    if (e && e.name === 'AbortError') throw new Error('Tempo esgotado ao analisar quadro');\n    throw e;\n  } finally {\n    clearTimeout(requestTimer);\n  }"
+          one(old_fetch,new_fetch,'timeout IA')
           p.write_text(s,encoding='utf-8')
           PY
       - name: Validar e publicar
         run: |
           grep -q "async function extractVideoFrames(file, onProgress)" index.html
           grep -q "video.onseeked = finishSeek" index.html
-          grep -q "video.currentTime = time" index.html
           grep -q "Preparando vídeo ·" index.html
           grep -q "requestController.abort(), 25000" index.html
           python3 - <<'PY'
           from pathlib import Path
           s=Path('index.html').read_text(encoding='utf-8')
-          assert s.index('video.onseeked = finishSeek') < s.index('video.currentTime = time', s.index('video.onseeked = finishSeek'))
+          pos=s.index('video.onseeked = finishSeek')
+          assert pos < s.index('video.currentTime = time', pos)
           Path('.tmp-video-import.txt').unlink(missing_ok=True)
           Path('.github/workflows/inspect-video-import.yml').unlink(missing_ok=True)
           Path('.github/workflows/fix-video-import-stall.yml').unlink(missing_ok=True)
