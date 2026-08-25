@@ -1,0 +1,19 @@
+name: Inspecionar jornada operacional 2
+on:
+  push:
+    paths:
+      - '.github/workflows/inspect-operational-day-2.yml'
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trechos exatos
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          l=Path('index.html').read_text(encoding='utf-8').splitlines()
+          for a,b in [(9220,9292),(9325,9371),(9460,9565),(7030,7086),(7119,7331),(8023,8090),(4950,5045),(5318,5440),(4440,4505),(9700,9790)]:
+              print(f'\n===== {a}-{b} =====')
+              for n in range(a-1,min(b,len(l))): print(f'{n+1}: {l[n]}')
+          PY
