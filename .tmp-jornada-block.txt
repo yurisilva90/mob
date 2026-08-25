@@ -1,0 +1,531 @@
+4870:       await SYNC.pullAll();
+4871:       renderCorridasActive();
+4872:       if (S.sec === 'jornada') renderJornada();
+4873:       if (S.sec === 'relatorios') renderHome();
+4874:       showToast('Sincronizado com a nuvem.');
+4875:     } catch (e) {
+4876:       console.error('resyncCorridasFromCloud', e);
+4877:       showToast('Erro ao recarregar da nuvem.');
+4878:     }
+4879:   }, { confirmLabel: 'Recarregar' });
+4880: }
+4881: function confirmDeleteTrip(date, id) {
+4882:   const day = DB.day(date);
+4883:   const t = (day.trips||[]).find(x => x.id === id);
+4884:   if (!t) return;
+4885:   const dest = t.dest ? ' → '+esc(t.dest) : '';
+4886:   showConfirm(`Excluir essa corrida?\n${DB.fR(t.value)} · ${t.origin?esc(t.origin):'—'}${dest}`, () => {
+4887:     day.trips = day.trips.filter(x => x.id !== id);
+4888:     DB.saveDay(day);
+4889:     SYNC.del('trips', { id });
+4890:     renderCorridasActive();
+4891:     if (date === S.curDate) { renderJornada(); }
+4892:     showToast('Corrida excluída.');
+4893:   }, { confirmLabel: 'Excluir' });
+4894: }
+4895: function toggleSessionsView() { S.sessionsExpanded = !S.sessionsExpanded; renderJornada(); }
+4896: function toggleLancView() { S.lancExpanded = !S.lancExpanded; renderJornada(); }
+4897: 
+4898: function renderJornada() {
+4899:   if (!S || !DB) return;
+4900:   try { updateCustoBanner(); } catch(e) {}
+4901:   if (!S.curDate) S.curDate = DB.today();
+4902:   const today = DB.today(), d = S.curDate, isToday = d === today;
+4903:   const dt    = new Date(d+'T12:00');
+4904:   const dows  = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+4905:   const ms    = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+4906:   const msLong= ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+4907:   const dateEl = document.getElementById('dn-date');
+4908:   // Formato compacto: "23 jun 2026" — cabe em 1 linha
+4909:   if (dateEl) dateEl.textContent = isToday ? 'Hoje' : (dt.getDate()+' de '+msLong[dt.getMonth()]+' de '+dt.getFullYear());
+4910:   const dowEl = document.getElementById('dn-dow');
+4911:   // Dia da semana + badge "Hoje" na mesma linha
+4912:   if (dowEl) dowEl.innerHTML = dows[dt.getDay()];
+4913:   const day = DB.day(d);
+4914:   // Corridas automáticas do dia — busca assíncrona, cacheada por data (não
+4915:   // refaz a busca em toda chamada de renderJornada, que roda com frequência
+4916:   // inclusive a cada tick do timer da jornada ativa). Refresh periódico via
+4917:   // _syncTick (a cada 1min) cobre corridas novas capturadas durante o dia.
+4918:   if (S.autoTripsDate !== d) {
+4919:     const keepCurrent = S._autoTripsDataDate === d ? (S.autoTrips || []) : [];
+4920:     S.autoTripsDate = d;
+4921:     S.autoTrips = keepCurrent;
+4922:     loadAutoTripsForDay(d).then(list => {
+4923:       if (S.autoTripsDate !== d || !Array.isArray(list)) return; // erro mantém último dado válido
+4924:       S.autoTrips = list;
+4925:       S._autoTripsDataDate = d;
+4926:       renderJornada();
+4927:     });
+4928:   }
+4929:   day.autoTrips = S.autoTrips || [];
+4930:   // Recusadas do dia — mesmo padrão de cache do autoTrips acima. Lida aqui
+4931:   // (S.declined) e usada dentro de renderJourneyCard(), que roda logo a
+4932:   // seguir e populate o card "Total do dia".
+4933:   if (S.declinedDate !== d) {
+4934:     S.declinedDate = d;
+4935:     S.declined = [];
+4936:     loadDeclinedOffersForDay(d).then(list => {
+4937:       if (S.declinedDate !== d) return;
+4938:       S.declined = list;
+4939:       renderJornada();
+4940:     });
+4941:   }
+4942:   const rev = day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0)
+4943:             + day.autoTrips.reduce((s,t)=>s+(t.offer_value||0),0);
+4944:   const exp = day.expenses.reduce((s,e)=>s+(e.amount||0),0);
+4945:   setText('d-rev', DB.fRI(rev));
+4946:   setText('d-exp', DB.fRI(exp));
+4947:   const netEl = document.getElementById('d-net');
+4948:   if (netEl) { netEl.textContent = DB.fRI(rev-exp); netEl.className = 'v ' + (rev-exp>=0 ? 'green' : 'red'); }
+4949: 
+4950:   renderJourneyCard(day, isToday);
+4951:   renderMetasDoDia(day);
+4952: 
+4953:   // Sessões do dia (3 mais recentes, ou todas — sessão atual sempre aparece)
+4954:   const sessEl = document.getElementById('sessions-list');
+4955:   const sessToggleBtn = document.getElementById('sessions-toggle');
+4956:   if (sessEl) {
+4957:     const total = (day.sessions||[]).length;
+4958:     // Numera pela ORDEM DE HORÁRIO real (start), não pela ordem em que foi
+4959:     // salva/sincronizada no aparelho — evita "Jornada 2" mostrar um horário
+4960:     // mais tarde que "Jornada 3". origIdx continua apontando pro índice
+4961:     // verdadeiro em day.sessions, então editar/apagar continua certo.
+4962:     const byTime = (day.sessions||[]).map((s,i)=>i)
+4963:       .sort((a,b) => (day.sessions[a].start||0) - (day.sessions[b].start||0));
+4964:     const finishedAll = byTime.slice().reverse()
+4965:       .map((origIdx,ri)=>sessionItem('Jornada '+(total-ri), day.sessions[origIdx], origIdx, S.curDate, day, false));
+4966:     const finishedShown = S.sessionsExpanded ? finishedAll : finishedAll.slice(0,3);
+4967:     const liveRow = (isToday && S.gps.st==='running') ? [sessionItem('Jornada atual', {start:S.gps.start,end:null,km:S.gps.km,elapsed:getElapsed()}, -1, S.curDate, day, true)] : [];
+4968:     const rows = [...liveRow, ...finishedShown];
+4969:     sessEl.innerHTML = rows.length ? rows.join('') : '<div class="empty">Nenhuma sessão registrada</div>';
+4970:   }
+4971:   if (sessToggleBtn) {
+4972:     sessToggleBtn.style.display = (day.sessions||[]).length > 3 ? '' : 'none';
+4973:     sessToggleBtn.innerHTML = S.sessionsExpanded ? 'Ver menos' : 'Ver todas &#8250;';
+4974:   }
+4975:   // Corridas: removido daqui (23/07/2026, pedido do Yuri) — já ficam
+4976:   // acessíveis dentro do detalhe de cada jornada (seta expande e lista via
+4977:   // sessionItem, que já mescla Importadas + Automáticas). Lista de
+4978:   // Importadas ainda mora na tela Corridas separada (navTo('corridas')).
+4979:   // Lançamentos (5 mais recentes, ou todos)
+4980:   const lEl = document.getElementById('jorn-lanc-list');
+4981:   const lancToggleBtn = document.getElementById('lanc-toggle');
+4982:   if (lEl) {
+4983:     const today = DB.today();
+4984:     const allItems = [
+4985:       ...day.revenues.map(r=>Object.assign({},r,{_type:'receita'})),
+4986:       ...day.expenses.map(e=>Object.assign({},e,{_type:'despesa'}))
+4987:     ];
+4988:     // Mostrar todos os lançamentos do dia sem filtro de tab
+4989:     const items = allItems;
+4990:     const show = S.lancExpanded ? items : items.slice(0,5);
+4991:     lEl.innerHTML = show.length ? show.map(it => lancItemJornada(it)).join('') : '<div class="empty">Nenhum lançamento registrado</div>';
+4992:     if (lancToggleBtn) {
+4993:       lancToggleBtn.style.display = items.length > 5 ? '' : 'none';
+4994:       lancToggleBtn.innerHTML = S.lancExpanded ? 'Ver menos' : 'Ver todas &#8250;';
+4995:     }
+4996:   }
+4997:   reapplyOpenTripDetail();
+4998:   reapplyOpenJss();
+4999: }
+5000: 
+5001: function renderJourneyCard(day, isToday) {
+5002:   const jc = document.getElementById('journey-card');
+5003:   if (!jc) return;
+5004:   // Card de sessão atual (timer/km/botão) só faz sentido em "hoje" — em dia
+5005:   // passado não existe jornada "em andamento" possível, então esse card
+5006:   // some por completo. O restante da função continua rodando igual: os
+5007:   // valores que ela calcula (jc-trips, jc-total, jc-kmtotal, jc-kmativo,
+5008:   // jc-kmdesl, jc-rsh, jc-rskm) agora moram no card "Total do dia" — que é
+5009:   // um elemento IRMÃO de journey-card, não um filho, e precisa continuar
+5010:   // sendo populado em qualquer dia, passado ou presente.
+5011:   const jcWrap = document.getElementById('journey-wrap');
+5012:   if (jcWrap) jcWrap.style.display = isToday ? '' : 'none';
+5013:   const g = S.gps;
+5014:   const finished = day.sessions || [];
+5015:   const finishedElapsed = finished.reduce((s,x)=>s+(x.elapsed||0),0);
+5016:   const finishedKm = finished.reduce((s,x)=>s+(x.km||0),0);
+5017:   const live = isToday && g.st === 'running';
+5018:   const liveElapsed = live ? getElapsed() : 0;
+5019:   const liveKm = live ? g.km : 0;
+5020:   const totalElapsed = Math.max(0, finishedElapsed + liveElapsed + (day.tempoAdjust || 0));
+5021:   const totalKm = finishedKm + liveKm + (day.kmAdjust || 0);
+5022:   const state = isToday ? g.st : 'idle';
+5023: 
+5024:   let cls = 'idle';
+5025:   if (state === 'running') cls = 'running';
+5026:   else if (finished.length > 0) cls = 'ended';
+5027:   jc.className = 'journey ' + cls;
+5028: 
+5029:   setText('jc-status-text',
+5030:     state === 'running' ? 'Online' :
+5031:     finished.length > 0 ? 'Concluído' : 'Iniciar'
+5032:   );
+5033:   const th = Math.floor(liveElapsed/3600), tm = Math.floor(liveElapsed%3600/60), ts = liveElapsed%60;
+5034:   setText('jc-timer', p2(th)+':'+p2(tm)+':'+p2(ts));
+5035:   setText('jc-sub',
+5036:     state === 'running' ? 'Sessão atual · iniciada '+fmtHM(g.start) :
+5037:     finished.length > 0 ? finished.length+(finished.length===1?' jornada hoje':' jornadas hoje') :
+5038:     'Nenhuma sessão iniciada'
+5039:   );
+5040:   setText('jc-km', liveKm.toFixed(1));
+5041:   const tth = Math.floor(totalElapsed/3600), ttm = Math.floor(totalElapsed%3600/60);
+5042:   setText('jc-total', tth+'h'+p2(ttm)+'m');
+5043:   setText('jc-kmtotal', totalKm.toFixed(1)+' km');
+5044:   // CORRIGIDO (23/07/2026, confirmado com dado real pelo Yuri): esses 4
+5045:   // KPIs do card principal (corridas, km ativo, R$/h, R$/km) só somavam
+5046:   // day.trips (Importadas) — sessão só com automáticas mostrava tudo
+5047:   // zerado mesmo com corridas de verdade rodando. Mesma correção que já
+5048:   // tinha sido feita em rev/sessionItem/renderMetasDoDia, faltava aqui.
+5049:   const autoTripsHoje = day.autoTrips || [];
+5050: 
+5051:   // Banner "aguardando confirmação" — pedido do Yuri (16/08/2026), substitui
+5052:   // o botão fixo "Importar corridas". Conta corridas que ainda não foram
+5053:   // confirmadas por vídeo do histórico (status 'capturada' ou 'estimada') —
+5054:   // 'confirmada' só existe depois do vídeo, então isso mede exatamente o
+5055:   // que falta conferir naquele dia. Aparece em qualquer dia navegado, some
+5056:   // sozinho quando não sobra pendência.
+5057:   const pcbEl = document.getElementById('pending-confirm-banner');
+5058:   if (pcbEl) {
+5059:     // Não interpreta cache ainda carregando como zero corridas. Durante refresh,
+5060:     // mantém o último estado visual válido do mesmo dia.
+5061:     const autoTripsReady = S._autoTripsDataDate === d;
+5062:     if (autoTripsReady) {
+5063:       const pendingCount = autoTripsHoje.filter(t => t.status === 'capturada' || t.status === 'estimada').length;
+5064:       pcbEl.dataset.dataDate = d;
+5065:       if (pendingCount > 0) {
+5066:         pcbEl.style.display = 'flex';
+5067:         setText('pcb-title', pendingCount + (pendingCount===1 ? ' corrida aguardando confirmação' : ' corridas aguardando confirmação'));
+5068:       } else {
+5069:         pcbEl.style.display = 'none';
+5070:       }
+5071:     } else if (pcbEl.dataset.dataDate && pcbEl.dataset.dataDate !== d) {
+5072:       pcbEl.style.display = 'none';
+5073:       pcbEl.dataset.dataDate = d;
+5074:     }
+5075:   }
+5076: 
+5077:   // Barra Online/Buscando passageiro/Em corrida — real, vinda da máquina de
+5078:   // estados do APK (ver computeStatusBreakdown). No card da jornada ATUAL
+5079:   // só faz sentido enquanto a sessão está rodando (é o que está sendo
+5080:   // contado agora); ao encerrar, o dado sai daqui e já está consolidado no
+5081:   // "Total do dia" logo abaixo — pedido do Yuri (16/08/2026), evita
+5082:   // duplicar/deixar a mesma barra "grudada" depois de já ter encerrado.
+5083:   // As barras são atualizadas exclusivamente pela timeline contínua V3.
+5084:   // A rotina base não sobrescreve mais a leitura real com auto_trips.
+5085:   const jcBd = document.getElementById('jc-breakdown');
+5086:   const tdBdRow = document.getElementById('td-bd-row');
+5087: 
+5088:   setText('jc-trips', day.trips.length + autoTripsHoje.length);
+5089:   setText('jc-trips2', day.trips.length + autoTripsHoje.length);
+5090:   const aceitasCount = day.trips.length + autoTripsHoje.length;
+5091:   const declinedCount = (S.declined || []).length;
+5092:   setText('jc-aceitas', aceitasCount);
+5093:   setText('jc-recusadas', declinedCount);
+5094:   const corridasSubEl = document.getElementById('jc-corridas-sub');
+5095:   if (corridasSubEl) corridasSubEl.style.display = (aceitasCount>0 || declinedCount>0) ? 'flex' : 'none';
+5096:   const kmAtivo = day.trips.reduce((s,t)=>s+(t.km||0),0)
+5097:                 + autoTripsHoje.reduce((s,t)=>s+(parseFloat(t.real_km_trip ?? t.offer_km_trip)||0),0);
+5098:   const kmDesl = Math.max(0, totalKm - kmAtivo);
+5099:   setText('jc-kmativo', kmAtivo.toFixed(1));
+5100:   setText('jc-kmdesl', kmDesl.toFixed(1));
+5101:   const ganhosDia = day.trips.reduce((s,t)=>s+(t.value||0),0)
+5102:                   + autoTripsHoje.reduce((s,t)=>s+(t.offer_value||0),0);
+5103:   const horasDecimal = totalElapsed > 0 ? totalElapsed/3600 : 0;
+5104:   const rsh  = horasDecimal > 0 ? ganhosDia/horasDecimal : null;
+5105:   const rskm = totalKm > 0 ? ganhosDia/totalKm : null;
+5106:   setText('jc-rsh', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
+5107:   setText('jc-rskm', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
+5108:   setText('jc-rsh2', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
+5109:   setText('jc-rskm2', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
+5110:   // Cor por indicador — pedido do Yuri (23/07/2026, mockup aprovado):
+5111:   // mesmos limiares vermelho/verde que o motorista já ajusta na régua do
+5112:   // MōB Flash (Indicadores → R$/km e R$/hora), cada indicador troca de cor
+5113:   // por conta própria. Sem dado ainda (sessão não rodou tempo/km) fica
+5114:   // neutro (verde), não faz sentido alarmar antes de ter dado de verdade.
+5115:   const rateEl = document.getElementById('jc-rate-hora');
+5116:   const kmEl   = document.getElementById('jc-rate-km');
+5117:   const rateEl2 = document.getElementById('jc-rate-hora2');
+5118:   const kmEl2   = document.getElementById('jc-rate-km2');
+5119:   const rateCls = rsh !== null ? rateColorClass('rhora', rsh) : '';
+5120:   const kmCls   = rskm !== null ? rateColorClass('rkm', rskm) : '';
+5121:   if (rateEl)  rateEl.className  = 'td-rcard ' + rateCls;
+5122:   if (kmEl)    kmEl.className    = 'td-rcard ' + kmCls;
+5123:   if (rateEl2) rateEl2.className = 'rate-cell ' + rateCls;
+5124:   if (kmEl2)   kmEl2.className   = 'rate-cell ' + kmCls;
+5125: 
+5126:   const actions = document.getElementById('jc-actions');
+5127:   if (!actions) return;
+5128:   if (!isToday) {
+5129:     actions.innerHTML = '';
+5130:   } else if (state === 'idle') {
+5131:     actions.innerHTML = `<button class="j-round-btn play" onclick="gpsStart()" aria-label="Iniciar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>`;
+5132:   } else if (state === 'running') {
+5133:     actions.innerHTML = '<button class="j-round-btn stop" onclick="confirmStop()" aria-label="Encerrar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"/></svg></button>';
+5134:   }
+5135: }
+5136: 
+5137: function agMinutesBetween(start, end) {
+5138:   if (!start || !end) return 0;
+5139:   const [h1,m1] = start.split(':').map(Number);
+5140:   const [h2,m2] = end.split(':').map(Number);
+5141:   return Math.max(0, (h2*60+m2) - (h1*60+m1));
+5142: }
+5143: function openMetasHojeModal() {
+5144:   const date = S.curDate || DB.today();
+5145:   const day = DB.day(date);
+5146:   const dow = new Date(date+'T12:00').getDay();
+5147:   const plan = DB.planJornada().find(p => p.days && p.days.includes(dow));
+5148:   const meta = DB.meta();
+5149:   const ov = day.metaOverride || null;
+5150:   const dimMes = new Date(new Date(date+'T12:00').getFullYear(), new Date(date+'T12:00').getMonth()+1, 0).getDate();
+5151:   const moneyGoal = (ov && ov.money) ? ov.money : ((plan && plan.moneyGoal) ? plan.moneyGoal : (meta.general ? meta.general/dimMes : 0));
+5152:   const kmGoal = (ov && ov.km) ? ov.km : (plan && plan.kmGoal ? plan.kmGoal : 0);
+5153:   const schedMin = (ov && ov.hours) ? ov.hours*60 : (plan ? (plan.schedules||[]).reduce((s,b)=>s+agMinutesBetween(b.start,b.end),0) : 0);
+5154:   const mEl = document.getElementById('mh-money'); if (mEl) mEl.value = moneyGoal ? moneyGoal.toFixed(2) : '';
+5155:   const kEl = document.getElementById('mh-km'); if (kEl) kEl.value = kmGoal || '';
+5156:   const hEl = document.getElementById('mh-hours'); if (hEl) hEl.value = schedMin ? (schedMin/60).toFixed(1) : '';
+5157:   const subEl = document.getElementById('mh-sub');
+5158:   if (subEl) {
+5159:     const isToday = date === DB.today();
+5160:     subEl.textContent = isToday ? 'Vale só para hoje' : ('Vale só para ' + new Date(date+'T12:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}));
+5161:   }
+5162:   openMo('mo-metas-hoje');
+5163: }
+5164: function saveMetasHoje() {
+5165:   const date = S.curDate || DB.today();
+5166:   const day = DB.day(date);
+5167:   const money = parseFloat((document.getElementById('mh-money')||{}).value) || 0;
+5168:   const km = parseFloat((document.getElementById('mh-km')||{}).value) || 0;
+5169:   const hours = parseFloat((document.getElementById('mh-hours')||{}).value) || 0;
+5170:   day.metaOverride = { money, km, hours };
+5171:   DB.saveDay(day);
+5172:   closeMo('mo-metas-hoje');
+5173:   try { renderMetasDoDia(day); } catch(e) {}
+5174:   showToast('Metas de hoje atualizadas!', 'success');
+5175: }
+5176: function renderMetasDoDia(day) {
+5177:   const stack = document.getElementById('metas-dia-stack');
+5178:   if (!stack) return;
+5179:   const rev = day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0)
+5180:             + (day.autoTrips||[]).reduce((s,t)=>s+(t.offer_value||0),0);
+5181:   const isToday = day.date === DB.today();
+5182:   const liveOn = isToday && S.gps.st==='running';
+5183:   const totalKm = (day.sessions||[]).reduce((s,x)=>s+(x.km||0),0) + (liveOn ? S.gps.km : 0) + (day.kmAdjust || 0);
+5184:   const totalElapsed = Math.max(0, (day.sessions||[]).reduce((s,x)=>s+(x.elapsed||0),0) + (liveOn ? getElapsed() : 0) + (day.tempoAdjust || 0));
+5185:   const dow = new Date(day.date+'T12:00').getDay();
+5186:   const plan = DB.planJornada().find(p => p.days && p.days.includes(dow));
+5187:   const meta = DB.meta();
+5188:   const ov = day.metaOverride || null; // ajuste específico deste dia (via modal 'Metas de hoje')
+5189:   const dimMes = new Date(new Date(day.date+'T12:00').getFullYear(), new Date(day.date+'T12:00').getMonth()+1, 0).getDate();
+5190:   const moneyGoal = (ov && ov.money) ? ov.money : ((plan && plan.moneyGoal) ? plan.moneyGoal : (meta.general ? meta.general/dimMes : 0));
+5191: 
+5192:   const ICO_MONEY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>';
+5193:   const ICO_KM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>';
+5194:   const ICO_TIME = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+5195: 
+5196:   let html = '';
+5197:   if (moneyGoal) {
+5198:     const pct = Math.min(100, Math.round(rev/moneyGoal*100));
+5199:     html += `<div class="goal-item"><div class="g-ico money">${ICO_MONEY}</div><div class="goal-body"><div class="goal-top"><strong>Financeira</strong><span>${DB.fRI(rev)} de ${DB.fRI(moneyGoal)} · ${pct}%</span></div><div class="gbar money"><i style="width:${pct}%"></i></div></div></div>`;
+5200:   } else {
+5201:     html += `<div class="goal-item"><div class="g-ico money">${ICO_MONEY}</div><div class="goal-locked" onclick="openPlanJornada()"><span>Financeira — meta não definida</span><b>Planejar</b></div></div>`;
+5202:   }
+5203:   const kmGoal = (ov && ov.km) ? ov.km : (plan && plan.kmGoal ? plan.kmGoal : 0);
+5204:   if (kmGoal) {
+5205:     const pct = Math.min(100, Math.round(totalKm/kmGoal*100));
+5206:     html += `<div class="goal-item"><div class="g-ico km">${ICO_KM}</div><div class="goal-body"><div class="goal-top"><strong>Km</strong><span>${totalKm.toFixed(1)} de ${kmGoal} km · ${pct}%</span></div><div class="gbar km"><i style="width:${pct}%"></i></div></div></div>`;
+5207:   } else {
+5208:     html += `<div class="goal-item"><div class="g-ico km">${ICO_KM}</div><div class="goal-locked" onclick="openPlanJornada()"><span>Km — meta não definida</span><b>Planejar</b></div></div>`;
+5209:   }
+5210:   const schedMin = (ov && ov.hours) ? ov.hours*60 : (plan ? (plan.schedules||[]).reduce((s,b)=>s+agMinutesBetween(b.start,b.end),0) : 0);
+5211:   if (schedMin > 0) {
+5212:     const liveMin = Math.round(totalElapsed/60);
+5213:     const pct = Math.min(100, Math.round(liveMin/schedMin*100));
+5214:     html += `<div class="goal-item"><div class="g-ico time">${ICO_TIME}</div><div class="goal-body"><div class="goal-top"><strong>Tempo online</strong><span>${Math.floor(liveMin/60)}h${p2(liveMin%60)} de ${Math.floor(schedMin/60)}h${p2(schedMin%60)} · ${pct}%</span></div><div class="gbar time"><i style="width:${pct}%"></i></div></div></div>`;
+5215:   } else {
+5216:     html += `<div class="goal-item"><div class="g-ico time">${ICO_TIME}</div><div class="goal-locked" onclick="openPlanJornada()"><span>Tempo online — meta não definida</span><b>Planejar</b></div></div>`;
+5217:   }
+5218:   stack.innerHTML = html;
+5219: }
+5220: 
+5221: // ── Planejar Jornada ─────────────────────────────────────────
+5222: let pjSelDays = [];
+5223: let pjSchedules = [];
+5224: const PJ_DOW = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+5225: function openPlanJornada() {
+5226:   pjSelDays = []; pjSchedules = [];
+5227:   document.querySelectorAll('.pj-day').forEach(b => b.classList.remove('on'));
+5228:   const mEl = document.getElementById('pj-money'); if (mEl) mEl.value = '';
+5229:   const kEl = document.getElementById('pj-km'); if (kEl) kEl.value = '';
+5230:   renderPjSchedules();
+5231:   renderPjList();
+5232:   navTo('planejar-jornada');
+5233: }
+5234: function pjToggleDay(d) {
+5235:   const i = pjSelDays.indexOf(d);
+5236:   if (i === -1) pjSelDays.push(d); else pjSelDays.splice(i,1);
+5237:   const btn = document.querySelector('.pj-day[data-d="'+d+'"]');
+5238:   if (btn) btn.classList.toggle('on', pjSelDays.includes(d));
+5239: }
+5240: function pjAddSchedule() { pjSchedules.push({start:'', end:''}); renderPjSchedules(); }
+5241: function pjRemoveSchedule(idx) { pjSchedules.splice(idx, 1); renderPjSchedules(); }
+5242: function renderPjSchedules() {
+5243:   const el = document.getElementById('pj-schedules');
+5244:   if (!el) return;
+5245:   if (!pjSchedules.length) { el.innerHTML = '<p style="font-size:12px;color:var(--muted);margin:2px 0">Nenhum horário adicionado</p>'; return; }
+5246:   el.innerHTML = pjSchedules.map((s,i) => `
+5247:     <div class="pj-sched-row">
+5248:       <input type="time" class="ag-input" value="${s.start}" onchange="pjSchedules[${i}].start=this.value">
+5249:       <span>→</span>
+5250:       <input type="time" class="ag-input" value="${s.end}" onchange="pjSchedules[${i}].end=this.value">
+5251:       <button class="pj-sched-del" onclick="pjRemoveSchedule(${i})">&#x2715;</button>
+5252:     </div>
+5253:   `).join('');
+5254: }
+5255: function pjSaveEntry() {
+5256:   if (!pjSelDays.length) { showToast('Selecione ao menos um dia', 'error'); return; }
+5257:   const validSched = pjSchedules.filter(s => s.start && s.end);
+5258:   const moneyGoal = parseFloat(document.getElementById('pj-money')?.value||0) || null;
+5259:   const kmGoal = parseFloat(document.getElementById('pj-km')?.value||0) || null;
+5260:   const plans = DB.planJornada();
+5261:   const entry = { id: DB.uid(), days: pjSelDays.slice(), moneyGoal, kmGoal, schedules: validSched };
+5262:   plans.push(entry);
+5263:   DB.savePlanJornada(plans);
+5264:   SYNC.push('plan_jornada', { id: entry.id, days: entry.days, money_goal: entry.moneyGoal,
+5265:     km_goal: entry.kmGoal, schedules: entry.schedules });
+5266:   pjSelDays = []; pjSchedules = [];
+5267:   document.querySelectorAll('.pj-day').forEach(b => b.classList.remove('on'));
+5268:   const mEl = document.getElementById('pj-money'); if (mEl) mEl.value = '';
+5269:   const kEl = document.getElementById('pj-km'); if (kEl) kEl.value = '';
+5270:   renderPjSchedules();
+5271:   renderPjList();
+5272:   renderMetasDoDia(DB.day(S.curDate));
+5273:   showToast('Jornada planejada salva!');
+5274: }
+5275: function pjRemoveEntry(id) {
+5276:   showConfirm('Remover essa jornada planejada?', () => {
+5277:     DB.savePlanJornada(DB.planJornada().filter(p => p.id !== id));
+5278:     SYNC.del('plan_jornada', { id });
+5279:     renderPjList();
+5280:     renderMetasDoDia(DB.day(S.curDate));
+5281:   });
+5282: }
+5283: function renderPjList() {
+5284:   const el = document.getElementById('pj-list');
+5285:   if (!el) return;
+5286:   const plans = DB.planJornada();
+5287:   if (!plans.length) { el.innerHTML = '<div class="empty">Nenhuma jornada planejada ainda</div>'; return; }
+5288:   el.innerHTML = plans.map(p => {
+5289:     const daysTxt = (p.days||[]).slice().sort().map(d=>PJ_DOW[d]).join(' · ');
+5290:     const goalParts = [];
+5291:     if (p.moneyGoal) goalParts.push(DB.fRI(p.moneyGoal));
+5292:     if (p.kmGoal) goalParts.push(p.kmGoal+' km');
+5293:     const goalTxt = goalParts.length ? goalParts.join(' · ') : 'Sem meta definida';
+5294:     const chips = (p.schedules||[]).map(s => `<span class="pj-chip">${s.start} → ${s.end}</span>`).join('');
+5295:     return `<div class="pj-card">
+5296:       <div class="pj-card-top"><div class="pj-card-days">${daysTxt}</div><button class="pj-card-del" onclick="pjRemoveEntry('${p.id}')">&#x2715;</button></div>
+5297:       <div class="pj-card-goal">${goalTxt}</div>
+5298:       <div class="pj-card-times">${chips}</div>
+5299:     </div>`;
+5300:   }).join('');
+5301: }
+5302: 
+5303: function sessionItem(label, sess, origIdx, dateStr, day, live) {
+5304:   const startMs = sess.start || 0, endMs = sess.end || 0;
+5305:   const km = sess.km || 0, elapsedSecs = sess.elapsed || 0;
+5306:   const dur = fmtDur((elapsedSecs||0)/60);
+5307:   const range = fmtHM(startMs) + '–' + (endMs ? fmtHM(endMs) : (live ? 'Agora' : '—'));
+5308:   const status = live ? 'Online' : 'Encerrada';
+5309:   const badgeCls = live ? 'live' : 'end';
+5310:   const cardId = 'jss-' + dateStr + '-' + origIdx;
+5311: 
+5312:   // Corridas desta sessão — filtrar por horário (suporta t.ts e t.time HH:MM)
+5313:   const trips = (day?.trips||[]).filter(t => {
+5314:     let ts = t.ts || 0;
+5315:     if (!ts && t.time && dateStr) {
+5316:       // Construir timestamp a partir de "HH:MM" + data da sessão
+5317:       ts = new Date(dateStr + 'T' + t.time + ':00').getTime();
+5318:     }
+5319:     if (!ts) return false;
+5320:     return ts >= startMs && (!endMs || ts <= endMs);
+5321:   });
+5322:   // Corridas automáticas desta sessão — mesmo filtro por horário, usando
+5323:   // trip_started_at/accepted_at (autoTripTs, ver loadAutoTripsForDay).
+5324:   const autoTrips = (day?.autoTrips||[]).filter(t => {
+5325:     const ts = autoTripTs(t);
+5326:     if (!ts) return false;
+5327:     return ts >= startMs && (!endMs || ts <= endMs);
+5328:   });
+5329:   const corridas = trips.length + autoTrips.length;
+5330:   const ganhos = trips.reduce((s,t)=>s+(t.value||0),0) + autoTrips.reduce((s,t)=>s+(t.offer_value||0),0);
+5331:   // Km ativo = soma do km de cada corrida realizada (tempo 'em corrida')
+5332:   // Km deslocamento = km total do GPS MENOS o km ativo (tempo rodando sem
+5333:   // corrida — indo pro ponto, retornando pra casa, esperando chamado etc.)
+5334:   const kmAtivo = trips.reduce((s,t)=>s+(parseFloat(t.km)||0),0)
+5335:                 + autoTrips.reduce((s,t)=>s+(parseFloat(t.real_km_trip ?? t.offer_km_trip)||0),0);
+5336:   const kmDesloc = Math.max(0, km - kmAtivo);
+5337: 
+5338:   const horasDecimal = elapsedSecs > 0 ? elapsedSecs/3600 : 0;
+5339:   const rshVal = horasDecimal > 0 ? ganhos/horasDecimal : null;
+5340:   const rskmVal = km > 0 ? ganhos/km : null;
+5341:   const rsPorHora = rshVal !== null ? DB.fR(rshVal) : '—';
+5342:   const rsPorKm = rskmVal !== null ? DB.fR(rskmVal) : '—';
+5343:   const rshCls = rshVal !== null ? rateColorClass('rhora', rshVal) : '';
+5344:   const rskmCls = rskmVal !== null ? rateColorClass('rkm', rskmVal) : '';
+5345:   // Lucro da sessão = soma do lucro de cada corrida (mesmo cálculo do
+5346:   // perfStripHtml/detalhe de corrida: valor - custoPorKm*km), só quando o
+5347:   // custo do veículo está configurado — igual já vale por corrida.
+5348:   const cvCfg = DB.cfg().custoVeiculo;
+5349:   const hasCusto = !!(cvCfg && cvCfg.configurado);
+5350:   const lucroVal = hasCusto ? ganhos - (cvCfg.custoPorKm||0) * kmAtivo : null;
+5351:   const lucroCls = lucroVal !== null ? rateColorClass('lucro', lucroVal) : '';
+5352:   // Barra Online/Buscando passageiro/Em corrida desta sessão — mesma fonte
+5353:   // real da máquina de estados do APK, agora escopada só às autoTrips que
+5354:   // caem dentro do horário desta sessão (já filtradas acima).
+5355:   const sessBd = (typeof journeyBreakdownForSession === 'function')
+5356:     ? journeyBreakdownForSession(sess, elapsedSecs, km, autoTrips)
+5357:     : computeStatusBreakdown(elapsedSecs, km, autoTrips);
+5358:   const bdListId = 'bl-' + cardId;
+5359:   const editBtn = !live ? `<button class="jss-act" onclick="event.stopPropagation();editJss('${dateStr}',${origIdx})" title="Editar"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+5360:         <button class="jss-act del" onclick="event.stopPropagation();deleteJss('${dateStr}',${origIdx})" title="Excluir"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>` : '';
+5361: 
+5362:   return `<div class="jss-card ${badgeCls}" id="${cardId}">
+5363:     <div class="jss-row" onclick="toggleJss('${cardId}')">
+5364:       <div class="jss-info">
+5365:         <div class="jss-top"><span class="jss-name">${label}</span><span class="jss-badge ${badgeCls}">${status}</span>${editBtn}</div>
+5366:         <div class="jss-sub">${range} · ${dur}</div>
+5367:       </div>
+5368:       <div style="text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+5369:         <span style="font-size:14px;font-weight:800;color:var(--text)">${(sess.km||0).toFixed(1)} km</span>
+5370:         <span class="jss-ganhos">${DB.fR(ganhos)}</span>
+5371:       </div>
+5372:       <div class="jss-chev"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"/></svg></div>
+5373:     </div>
+5374:     <div class="jss-rate-row">
+5375:       <div class="jss-rcard ${rshCls}"><strong>${rsPorHora}</strong><span>R$/hora</span></div>
+5376:       <div class="jss-rcard ${rskmCls}"><strong>${rsPorKm}</strong><span>R$/km</span></div>
+5377:       ${hasCusto ? `<div class="jss-rcard ${lucroCls}"><strong>${DB.fR(lucroVal)}</strong><span>Lucro</span></div>` : `<div class="jss-rcard"><strong>—</strong><span>Lucro</span></div>`}
+5378:     </div>
+5379:     ${elapsedSecs > 0 ? `<div class="jss-statusbar">
+5380:       <div class="sbar-wrap" onclick="event.stopPropagation();toggleBar('${bdListId}')"><div class="sbar">${buildSbarHtml(sessBd)}</div></div>
+5381:       <div class="sbar-list" id="${bdListId}">${buildSrowsHtml(sessBd)}</div>
+5382:     </div>` : ''}
+5383:     <div class="jss-trips">
+5384:       <div class="jss-trips-head">
+5385:         <h4>Corridas desta jornada</h4>
+5386:         ${corridas > 0 ? `<span>${corridas} corrida${corridas !== 1 ? 's' : ''}</span>` : ''}
+5387:       </div>
+5388:       ${corridas > 0
+5389:         ? [
+5390:             ...trips.map(t => ({ ts: t.ts || (t.time?new Date(dateStr+'T'+t.time+':00').getTime():0), html: tripItem(t) })),
+5391:             ...autoTrips.map(t => ({ ts: autoTripTs(t), html: autoTripItem(t) })),
+5392:           ].sort((a,b)=>b.ts-a.ts).map(x=>x.html).join('')
+5393:         : '<div class="jss-trips-empty">Nenhuma corrida nesta jornada</div>'}
+5394:     </div>
+5395:   </div>`;
+5396: 
+5397: }
+5398: // ── Editar sessão ─────────────────────────────────────────────────────────
+5399: function editJss(dateStr, idx) {
+5400:   const day = DB.day(dateStr);

@@ -1,0 +1,321 @@
+14280:     const start = new Date(dateStr+'T00:00:00');
+14281:     if(p === 'uber') start.setHours(4,0,0,0);
+14282:     const end = new Date(start); end.setDate(end.getDate()+1);
+14283:     return {platform:p, operationalDate:dateStr, startMs:start.getTime(), endMs:end.getTime()};
+14284:   };
+14285:   window.operationalDateForTimestamp = function(plat,ts){
+14286:     const p = normalizeOperationalPlatform(plat);
+14287:     const d = new Date(Number(ts));
+14288:     // Uber: tudo de 00:00 até 03:59 ainda pertence ao dia operacional anterior.
+14289:     if(p === 'uber' && d.getHours() < 4) d.setDate(d.getDate()-1);
+14290:     return localYmdFromMs(d.getTime());
+14291:   };
+14292:   window.operationalTimestampForTime = function(plat,dateStr,hhmm){
+14293:     const p = normalizeOperationalPlatform(plat);
+14294:     const parts = String(hhmm||'00:00').split(':').map(Number);
+14295:     const h = Number.isFinite(parts[0]) ? parts[0] : 0;
+14296:     const m = Number.isFinite(parts[1]) ? parts[1] : 0;
+14297:     const d = new Date(dateStr+'T00:00:00');
+14298:     d.setHours(h,m,0,0);
+14299:     if(p === 'uber' && h < 4) d.setDate(d.getDate()+1);
+14300:     return d.getTime();
+14301:   };
+14302:   window.loadAutoTripsForOperationalDay = async function(plat,dateStr){
+14303:     if(!_supaUser) return [];
+14304:     const r = operationalRangeForPlatform(plat,dateStr);
+14305:     let q = _SUPA.from('auto_trips').select('*')
+14306:       .eq('user_id',_supaUser.id)
+14307:       .is('data_quality_flag',null)
+14308:       .eq('platform',normalizeOperationalPlatform(plat))
+14309:       .gte('trip_started_at',new Date(r.startMs).toISOString())
+14310:       .lt('trip_started_at',new Date(r.endMs).toISOString())
+14311:       .order('trip_started_at',{ascending:true});
+14312:     const {data,error} = await q;
+14313:     return error ? [] : (data||[]);
+14314:   };
+14315: 
+14316:   // ── Filtro da tela Corridas ────────────────────────────────────────
+14317:   const _civilGetCorridasDays = window.getCorridasDays;
+14318:   window.getCorridasDays = function(){
+14319:     const plats = S.corridasPlats || new Set();
+14320:     const onePlat = plats.size === 1 ? [...plats][0] : null;
+14321:     if(!onePlat) return _civilGetCorridasDays();
+14322:     const anchorStr = operationalDateForTimestamp(onePlat,Date.now());
+14323:     const anchor = new Date(anchorStr+'T12:00:00');
+14324:     const fmt = d => localYmdFromMs(d.getTime());
+14325:     const p = S.corridasPeriod;
+14326:     if(p==='date' && S.corridasDate) return [S.corridasDate];
+14327:     if(p==='hoje') return [anchorStr];
+14328:     if(p==='7d') { const out=[]; for(let i=0;i<7;i++){const d=new Date(anchor);d.setDate(d.getDate()-i);out.push(fmt(d));} return out; }
+14329:     if(p==='mes') {
+14330:       const y=anchor.getFullYear(), m=anchor.getMonth();
+14331:       const dim=new Date(y,m+1,0).getDate(), out=[];
+14332:       for(let day=1;day<=dim;day++) out.push(y+'-'+p2(m+1)+'-'+p2(day));
+14333:       return out;
+14334:     }
+14335:     return _civilGetCorridasDays();
+14336:   };
+14337:   window.autoCorridasDateRange = function(){
+14338:     const dates = getCorridasDays().slice().sort();
+14339:     if(!dates.length) return null;
+14340:     const plats = S.corridasPlats || new Set();
+14341:     const onePlat = plats.size===1 ? [...plats][0] : null;
+14342:     if(onePlat){
+14343:       const a=operationalRangeForPlatform(onePlat,dates[0]);
+14344:       const b=operationalRangeForPlatform(onePlat,dates[dates.length-1]);
+14345:       return {from:new Date(a.startMs).toISOString(),to:new Date(b.endMs-1).toISOString()};
+14346:     }
+14347:     const a=civilDayBounds(dates[0]), b=civilDayBounds(dates[dates.length-1]);
+14348:     return {from:new Date(a.startMs).toISOString(),to:new Date(b.endMs-1).toISOString()};
+14349:   };
+14350: 
+14351:   // ── Jornada contínua: nunca mais pergunta/divide à meia-noite ─────
+14352:   window.checkMidnightCrossing = function(){ return; };
+14353:   window.openMidnightModal = function(){ S._midnightModalOpen=false; try{closeMo('mo-midnight');}catch(e){} };
+14354:   window.resolveMidnightSplit = async function(){ S._midnightModalOpen=false; try{closeMo('mo-midnight');}catch(e){} };
+14355:   window.splitJourneyAtMidnight = async function(){ return; };
+14356:   window.openPostStopMidnightModal = function(sess,onDone){
+14357:     S._midnightIsPostStop=false; S._postStopMidnightSess=null; S._postMidnightCallback=null; S._midnightModalOpen=false;
+14358:     try{closeMo('mo-midnight');}catch(e){}
+14359:     if(typeof onDone==='function') onDone();
+14360:   };
+14361:   window.resolvePostStopMidnight = async function(){ S._midnightIsPostStop=false; S._midnightModalOpen=false; try{closeMo('mo-midnight');}catch(e){} };
+14362:   try { if(S && S.gps) S.gps.forceDate = null; } catch(e) {}
+14363: 
+14364:   // ── Corridas de uma Jornada: busca por INTERVALO REAL, não por data ──
+14365:   const journeyAutoCache = new Map();
+14366:   const journeyStatusCache = new Map();
+14367:   const overlapSessionCache = new Map();
+14368:   const civilStatusCache = new Map();
+14369: 
+14370:   function journeyKey(sess){ return String(sess?.id || ((sess?.start||0)+'_'+(sess?.end||'live'))); }
+14371:   function sessionEnd(sess){ return Number(sess?.end || ((S?.gps?.sessionId && sess?.id===S.gps.sessionId) ? Date.now() : Date.now())); }
+14372:   function overlaps(start,end,a,b){ return Number(start||0) < b && Number(end||Date.now()) >= a; }
+14373: 
+14374:   async function ensureJourneyAutoTrips(sess){
+14375:     if(!_supaUser || !sess?.start) return;
+14376:     const k=journeyKey(sess), old=journeyAutoCache.get(k);
+14377:     const ttl=sess.end?120000:12000;
+14378:     if(old && (old.loading || Date.now()-old.ts<ttl)) return;
+14379:     journeyAutoCache.set(k,{loading:true,ts:Date.now(),rows:old?.rows||[]});
+14380:     try{
+14381:       const end=sessionEnd(sess);
+14382:       const {data,error}=await _SUPA.from('auto_trips').select('*')
+14383:         .eq('user_id',_supaUser.id).is('data_quality_flag',null)
+14384:         .gte('trip_started_at',new Date(Number(sess.start)).toISOString())
+14385:         .lte('trip_started_at',new Date(end).toISOString())
+14386:         .order('trip_started_at',{ascending:true});
+14387:       if(!error) journeyAutoCache.set(k,{loading:false,ts:Date.now(),rows:data||[]});
+14388:     }catch(e){ journeyAutoCache.set(k,{loading:false,ts:Date.now(),rows:old?.rows||[]}); }
+14389:     try{ if(S.sec==='jornada') setTimeout(()=>{renderContinuousSessionList();renderContinuousStatusBars();},0); }catch(e){}
+14390:   }
+14391:   function journeyAutoTrips(sess,fallback){
+14392:     const k=journeyKey(sess), c=journeyAutoCache.get(k);
+14393:     ensureJourneyAutoTrips(sess);
+14394:     const rows=(c&&Array.isArray(c.rows)&&c.rows.length)?c.rows:(fallback||[]);
+14395:     const a=Number(sess?.start||0), b=sessionEnd(sess);
+14396:     const seen=new Set();
+14397:     return rows.filter(t=>{const ts=autoTripTs(t); if(!ts||ts<a||ts>b)return false; const id=t.id||ts+'_'+t.offer_value; if(seen.has(id))return false; seen.add(id); return true;});
+14398:   }
+14399:   function journeyManualTrips(sess){
+14400:     const a=Number(sess?.start||0), b=sessionEnd(sess), out=[], seen=new Set();
+14401:     (DB.allDates?DB.allDates():[]).forEach(ds=>{
+14402:       const d=DB.day(ds);
+14403:       (d.trips||[]).forEach(t=>{
+14404:         let ts=Number(t.ts)||0;
+14405:         if(!ts&&t.time) ts=new Date(ds+'T'+t.time+':00').getTime();
+14406:         if(!ts||ts<a||ts>b)return;
+14407:         const id=t.id||ts+'_'+(t.value||0); if(seen.has(id))return; seen.add(id);
+14408:         out.push(Object.assign({},t,{ts,_ts:ts}));
+14409:       });
+14410:     });
+14411:     return out;
+14412:   }
+14413: 
+14414:   // ── Timeline real Online/Buscar/Corrida por Jornada ────────────────
+14415:   async function ensureJourneyStatus(sess){
+14416:     if(!_supaUser || !sess?.id) return;
+14417:     const k=journeyKey(sess), old=journeyStatusCache.get(k), ttl=sess.end?120000:8000;
+14418:     if(old && (old.loading || Date.now()-old.ts<ttl)) return;
+14419:     journeyStatusCache.set(k,{loading:true,ts:Date.now(),rows:old?.rows||[]});
+14420:     try{
+14421:       const {data,error}=await _SUPA.from('journey_status_segments').select('*')
+14422:         .eq('user_id',_supaUser.id).eq('session_id',sess.id).order('start_ms',{ascending:true});
+14423:       if(!error) journeyStatusCache.set(k,{loading:false,ts:Date.now(),rows:data||[]});
+14424:     }catch(e){ journeyStatusCache.set(k,{loading:false,ts:Date.now(),rows:old?.rows||[]}); }
+14425:     try{ if(S.sec==='jornada') setTimeout(()=>{renderContinuousSessionList();renderContinuousStatusBars();},0); }catch(e){}
+14426:   }
+14427:   function statusBreakdownRows(rows,elapsedSec,kmTotal,clipStart,clipEnd,liveSessionId){
+14428:     const out={total:Math.max(0,Number(elapsedSec)||0),online:{sec:0,km:0,pct:0},buscando:{sec:0,km:0,pct:0},corrida:{sec:0,km:0,pct:0}};
+14429:     (rows||[]).forEach(seg=>{
+14430:       const key=seg.status==='buscar'?'buscando':seg.status; if(!out[key])return;
+14431:       const rawStart=Number(seg.start_ms)||0;
+14432:       const isLive=!!liveSessionId&&seg.session_id===liveSessionId&&seg.end_ms==null;
+14433:       const rawEnd=Number(seg.end_ms||(isLive?Date.now():seg.last_seen_ms)||rawStart);
+14434:       if(rawEnd<=rawStart)return;
+14435:       const a=Math.max(rawStart,clipStart==null?rawStart:clipStart);
+14436:       const b=Math.min(rawEnd,clipEnd==null?rawEnd:clipEnd);
+14437:       if(b<=a)return;
+14438:       const sec=(b-a)/1000;
+14439:       let sk=Number(seg.start_km)||0;
+14440:       let ek=Number(seg.end_km!=null?seg.end_km:(isLive&&S?.gps?S.gps.km:seg.last_km))||sk;
+14441:       const frac=(b-a)/(rawEnd-rawStart);
+14442:       const km=Math.max(0,(ek-sk)*frac);
+14443:       out[key].sec+=sec; out[key].km+=km;
+14444:     });
+14445:     const tracked=out.online.sec+out.buscando.sec+out.corrida.sec;
+14446:     const trackedKm=out.online.km+out.buscando.km+out.corrida.km;
+14447:     if(out.total<=0) out.total=tracked;
+14448:     else if(clipStart==null && clipEnd==null){
+14449:       out.online.sec+=Math.max(0,out.total-tracked);
+14450:       out.online.km+=Math.max(0,(Number(kmTotal)||0)-trackedKm);
+14451:     }
+14452:     const pct=v=>out.total>0?Math.round(Math.max(0,v)/out.total*100):0;
+14453:     out.online.pct=pct(out.online.sec);out.buscando.pct=pct(out.buscando.sec);out.corrida.pct=pct(out.corrida.sec);
+14454:     return out;
+14455:   }
+14456:   window.journeyBreakdownForSession = function(sess,elapsedSec,kmTotal,fallbackAuto){
+14457:     if(!sess?.id) return computeStatusBreakdown(elapsedSec,kmTotal,fallbackAuto||[]);
+14458:     ensureJourneyStatus(sess);
+14459:     const c=journeyStatusCache.get(journeyKey(sess));
+14460:     if(c&&c.rows&&c.rows.length) return statusBreakdownRows(c.rows,elapsedSec,kmTotal,null,null,(S?.gps?.st==='running'?S.gps.sessionId:null));
+14461:     if(!c || c.loading) return {total:0,online:{sec:0,km:0,pct:0},buscando:{sec:0,km:0,pct:0},corrida:{sec:0,km:0,pct:0}};
+14462:     return computeStatusBreakdown(elapsedSec,kmTotal,fallbackAuto||[]);
+14463:   };
+14464: 
+14465:   // ── Jornadas que atravessam a data selecionada ────────────────────
+14466:   async function ensureOverlapSessions(dateStr){
+14467:     if(!_supaUser||!dateStr)return;
+14468:     const old=overlapSessionCache.get(dateStr);
+14469:     if(old&&(old.loading||Date.now()-old.ts<30000))return;
+14470:     overlapSessionCache.set(dateStr,{loading:true,ts:Date.now(),rows:old?.rows||[]});
+14471:     const b=civilDayBounds(dateStr);
+14472:     try{
+14473:       const {data,error}=await _SUPA.from('sessions').select('*').eq('user_id',_supaUser.id)
+14474:         .lt('start_ms',b.endMs).or(`end_ms.is.null,end_ms.gte.${b.startMs}`).order('start_ms',{ascending:true});
+14475:       if(!error){
+14476:         const rows=data||[];
+14477:         overlapSessionCache.set(dateStr,{loading:false,ts:Date.now(),rows});
+14478:         // Hidratamos o cache local no DIA DE INÍCIO; nunca criamos uma segunda Jornada na virada.
+14479:         rows.filter(r=>r.end_ms).forEach(r=>{
+14480:           const ds=localYmdFromMs(r.start_ms), day=DB.day(ds); if(!day.sessions)day.sessions=[];
+14481:           const item={id:r.id,start:Number(r.start_ms),end:Number(r.end_ms),km:parseFloat(r.km)||0,elapsed:r.elapsed_secs||0};
+14482:           const i=day.sessions.findIndex(x=>x.id===item.id); if(i>=0)day.sessions[i]=item; else day.sessions.push(item); DB.saveDay(day);
+14483:         });
+14484:       }
+14485:     }catch(e){overlapSessionCache.set(dateStr,{loading:false,ts:Date.now(),rows:old?.rows||[]});}
+14486:     try{if(S.sec==='jornada')setTimeout(()=>{renderContinuousSessionList();renderContinuousStatusBars();},0);}catch(e){}
+14487:   }
+14488:   function overlappingJourneyDescriptors(dateStr){
+14489:     const b=civilDayBounds(dateStr), map=new Map();
+14490:     (DB.allDates?DB.allDates():[]).forEach(ds=>{
+14491:       const day=DB.day(ds);(day.sessions||[]).forEach((sess,idx)=>{
+14492:         if(!overlaps(sess.start,sess.end,b.startMs,b.endMs))return;
+14493:         map.set(String(sess.id||sess.start),{sess,sourceDate:ds,origIdx:idx});
+14494:       });
+14495:     });
+14496:     const remote=overlapSessionCache.get(dateStr)?.rows||[];
+14497:     remote.forEach(r=>{
+14498:       if(!overlaps(r.start_ms,r.end_ms,b.startMs,b.endMs))return;
+14499:       const id=String(r.id||r.start_ms);if(map.has(id))return;
+14500:       const ds=localYmdFromMs(r.start_ms), d=DB.day(ds), idx=(d.sessions||[]).findIndex(x=>x.id===r.id);
+14501:       map.set(id,{sess:{id:r.id,start:Number(r.start_ms),end:r.end_ms?Number(r.end_ms):null,km:parseFloat(r.km)||0,elapsed:r.elapsed_secs||0},sourceDate:ds,origIdx:idx});
+14502:     });
+14503:     if(S?.gps?.st==='running'&&S.gps.start&&overlaps(S.gps.start,null,b.startMs,b.endMs)){
+14504:       const id=String(S.gps.sessionId||S.gps.start);
+14505:       map.set(id,{sess:{id:S.gps.sessionId,start:S.gps.start,end:null,km:S.gps.km||0,elapsed:getElapsed()},sourceDate:localYmdFromMs(S.gps.start),origIdx:-1,live:true});
+14506:     }
+14507:     return [...map.values()].sort((a,b)=>(a.sess.start||0)-(b.sess.start||0));
+14508:   }
+14509:   function journeyLabel(desc,dateStr){
+14510:     const sess=desc.sess, src=desc.sourceDate||localYmdFromMs(sess.start);
+14511:     if(desc.live) return src===dateStr?'Jornada atual':'Jornada atual · continuação';
+14512:     const srcSessions=(DB.day(src).sessions||[]).slice().sort((a,b)=>(a.start||0)-(b.start||0));
+14513:     const pos=Math.max(0,srcSessions.findIndex(x=>x.id===sess.id));
+14514:     let label='Jornada '+(pos+1);
+14515:     const endDate=sess.end?localYmdFromMs(sess.end):src;
+14516:     if(src<dateStr) label+=' · continuação'; else if(endDate>dateStr) label+=' · continua';
+14517:     return label;
+14518:   }
+14519:   function renderContinuousSessionList(){
+14520:     const el=document.getElementById('sessions-list'), toggle=document.getElementById('sessions-toggle');
+14521:     if(!el||!S?.curDate)return;
+14522:     ensureOverlapSessions(S.curDate);
+14523:     const desc=overlappingJourneyDescriptors(S.curDate).sort((a,b)=>(b.sess.start||0)-(a.sess.start||0));
+14524:     const shown=S.sessionsExpanded?desc:desc.slice(0,3);
+14525:     const html=shown.map(x=>{
+14526:       ensureJourneyAutoTrips(x.sess);ensureJourneyStatus(x.sess);
+14527:       const synthetic={date:x.sourceDate,trips:journeyManualTrips(x.sess),autoTrips:journeyAutoTrips(x.sess,DB.day(x.sourceDate).autoTrips||[])};
+14528:       return sessionItem(journeyLabel(x,S.curDate),x.sess,x.origIdx,x.sourceDate,synthetic,!!x.live);
+14529:     });
+14530:     el.innerHTML=html.length?html.join(''):'<div class="empty">Nenhuma sessão registrada</div>';
+14531:     if(toggle){toggle.style.display=desc.length>3?'':'none';toggle.innerHTML=S.sessionsExpanded?'Ver menos':'Ver todas &#8250;';}
+14532:   }
+14533: 
+14534:   // Link de corrida ↔ Jornada agora procura TODAS as sessões; uma corrida de 01:30
+14535:   // pode pertencer à Jornada iniciada no dia anterior.
+14536:   window.isAutoTripLinkedToSession = function(t){
+14537:     const ts=autoTripTs(t);if(!ts)return false;
+14538:     for(const ds of (DB.allDates?DB.allDates():[])){
+14539:       if((DB.day(ds).sessions||[]).some(sess=>ts>=(sess.start||0)&&(!sess.end||ts<=sess.end)))return true;
+14540:     }
+14541:     return !!(S?.gps?.st==='running'&&S.gps.start&&ts>=S.gps.start);
+14542:   };
+14543: 
+14544:   // ── Barra Total do dia = corte CIVIL virtual da timeline ───────────
+14545:   async function ensureCivilStatus(dateStr){
+14546:     if(!_supaUser||!dateStr)return;
+14547:     const old=civilStatusCache.get(dateStr);if(old&&(old.loading||Date.now()-old.ts<8000))return;
+14548:     civilStatusCache.set(dateStr,{loading:true,ts:Date.now(),rows:old?.rows||[]});
+14549:     const b=civilDayBounds(dateStr);
+14550:     try{
+14551:       const {data,error}=await _SUPA.from('journey_status_segments').select('*').eq('user_id',_supaUser.id)
+14552:         .lt('start_ms',b.endMs).or(`end_ms.is.null,end_ms.gte.${b.startMs}`).order('start_ms',{ascending:true});
+14553:       if(!error)civilStatusCache.set(dateStr,{loading:false,ts:Date.now(),rows:data||[]});
+14554:     }catch(e){civilStatusCache.set(dateStr,{loading:false,ts:Date.now(),rows:old?.rows||[]});}
+14555:     try{if(S.sec==='jornada')setTimeout(()=>{renderContinuousSessionList();renderContinuousStatusBars();},0);}catch(e){}
+14556:   }
+14557:   function renderContinuousStatusBars(){
+14558:     if(!S?.curDate)return;
+14559:     ensureCivilStatus(S.curDate);
+14560:     const c=civilStatusCache.get(S.curDate), rows=c?.rows||[];
+14561:     const tdRow=document.getElementById('td-bd-row');
+14562:     if(rows.length){
+14563:       const b=civilDayBounds(S.curDate), bd=statusBreakdownRows(rows,0,0,b.startMs,b.endMs,(S?.gps?.st==='running'?S.gps.sessionId:null));
+14564:       if(tdRow)tdRow.style.display='';
+14565:       try{setHTML('td-bd-bar',buildSbarHtml(bd));setHTML('td-bd-list',buildSrowsHtml(bd));}catch(e){}
+14566:     } else if(c && !c.loading && tdRow) {
+14567:       tdRow.style.display='none';
+14568:     }
+14569: 
+14570:     const jcRow=document.getElementById('jc-breakdown');
+14571:     if(S?.gps?.st==='running'&&S.gps.sessionId){
+14572:       const sess={id:S.gps.sessionId,start:S.gps.start,end:null,km:S.gps.km||0,elapsed:getElapsed()};
+14573:       ensureJourneyStatus(sess);
+14574:       const c2=journeyStatusCache.get(journeyKey(sess));
+14575:       if(c2?.rows?.length){
+14576:         const bd=journeyBreakdownForSession(sess,getElapsed(),S.gps.km||0,[]);
+14577:         if(jcRow)jcRow.style.display='';
+14578:         try{setHTML('jc-bar',buildSbarHtml(bd));setHTML('jc-blist',buildSrowsHtml(bd));}catch(e){}
+14579:       } else if(c2 && !c2.loading && jcRow) {
+14580:         jcRow.style.display='none';
+14581:       }
+14582:     } else if(jcRow) {
+14583:       jcRow.style.display='none';
+14584:     }
+14585:   }
+14586: 
+14587:   const previousRenderJornada=window.renderJornada;
+14588:   window.renderJornada=function(){
+14589:     previousRenderJornada();
+14590:     try{renderContinuousSessionList();}catch(e){console.warn('[continuous journeys]',e);}
+14591:     try{renderContinuousStatusBars();}catch(e){console.warn('[continuous status]',e);}
+14592:   };
+14593: 
+14594:   setInterval(()=>{try{if(S.sec==='jornada')renderContinuousStatusBars();}catch(e){}},1000);
+14595:   setTimeout(()=>{try{if(S.sec==='jornada')renderJornada();}catch(e){}},600);
+14596: })();
+14597: </script>
+14598: 
+14599: </body>
+14600: </html>
