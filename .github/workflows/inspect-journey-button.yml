@@ -15,13 +15,13 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           lines=Path('index.html').read_text(encoding='utf-8').splitlines()
-          keys=['jc-actions','j-round-btn','journey-wrap','journey-card','gpsStart()','confirmStop()']
+          keys=['S.gps','gps:{','gps =','st:','st =','gpsStart','gpsStop','confirmStop','jc-actions','j-actions']
           out=[]
           for key in keys:
             hits=[i for i,x in enumerate(lines) if key in x]
             out.append(f'===== {key} hits={len(hits)} =====')
-            for i in hits[:20]:
-              a=max(0,i-25); b=min(len(lines),i+35)
+            for i in hits[:80]:
+              a=max(0,i-8); b=min(len(lines),i+16)
               out.append(f'--- {a+1}-{b} ---')
               out.extend(f'{n+1}: {lines[n]}' for n in range(a,b))
           Path('.tmp-journey-button.txt').write_text('\n'.join(out),encoding='utf-8')
@@ -31,5 +31,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .tmp-journey-button.txt
-          git diff --cached --quiet || git commit -m "chore: inspecionar botão da Jornada"
+          git diff --cached --quiet || git commit -m "chore: inspecionar estado do botão da Jornada"
           git push
