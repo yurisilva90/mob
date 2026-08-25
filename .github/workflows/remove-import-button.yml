@@ -1,0 +1,40 @@
+name: Remover botao fixo importar corridas
+on:
+  push:
+    paths:
+      - '.github/workflows/remove-import-button.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Remover somente botao fixo
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          old='<div class="section" style="padding:16px 16px 8px"><h2>Total do dia</h2><button class="add" onclick="openImportPrecheck()"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="vertical-align:-1px;margin-right:3px"><path d="M12 5v14M5 12h14"/></svg>Importar corridas</button></div>'
+          new='<div class="section" style="padding:16px 16px 8px"><h2>Total do dia</h2></div>'
+          n=s.count(old)
+          if n != 1:
+              raise SystemExit(f'botao fixo esperado 1x, encontrado {n}')
+          s=s.replace(old,new,1)
+          # garante que o banner laranja continua presente
+          if 'id="pending-confirm-banner"' not in s or 'openImportPrecheck()' not in s:
+              raise SystemExit('banner/fluxo de video ausente; abortando')
+          p.write_text(s,encoding='utf-8')
+          Path('.github/workflows/remove-import-button.yml').unlink(missing_ok=True)
+          PY
+      - name: Validar e publicar
+        run: |
+          ! grep -q '>Importar corridas</button></div>' index.html
+          grep -q 'id="pending-confirm-banner"' index.html
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && exit 1
+          git commit -m "fix: manter apenas aviso laranja para importar video"
+          git push
