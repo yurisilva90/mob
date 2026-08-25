@@ -1,0 +1,432 @@
+===== async function processImportBatch =====
+
+async function processImportBatch(images, videos, plat) {
+  const operationalDate = S.curDate || DB.today();
+  const operationalPlat = normalizeOperationalPlatform(plat);
+  window._pendingImportOperationalDate = operationalDate;
+  window._pendingImportPlatform = operationalPlat;
+  const targetCount = (importPrecheck.uberCount||0) + (importPrecheck.p99Count||0);
+  const targetValue = (importPrecheck.uberValue||0) + (importPrecheck.p99Value||0);
+  const totalImgs = images.length, totalVids = videos.length;
+  const label = [totalImgs?`${totalImgs} print${totalImgs>1?'s':''}`:'', totalVids?`${totalVids} vídeo${totalVids>1?'s':''}`:''].filter(Boolean).join(' + ');
+  document.getElementById('ic-title').textContent = 'Analisando ' + label;
+  document.getElementById('ic-btn').style.display = 'none';
+  openMo('mo-import-confirm');
+
+  const unique = [];
+  const details = [];
+  const seen = new Set();
+  let foundCount = 0, foundVal = 0;
+  let curDetail = null; // acumulador do fragmento de detalhe em aberto
+  const flushDetail = () => { if (curDetail) { details.push(curDetail); curDetail = null; } };
+  const mergeDetailFrag = (t) => {
+    // Decide se é o MESMO cartão de detalhe (outro pedaço do mesmo scroll)
+    // usando horário e endereço — nunca valor. Valor podia vir ligeiramente
+    // diferente entre frames ("Você ganhou" vs "Total") e isso fazia o
+    // mesmo cartão virar DOIS fragmentos, que depois viravam duas corridas
+    // (uma real + uma fantasma) no import.
+    const conflicts = (a, b) => a != null && b != null && a !== b;
+    const sameRide = curDetail && (
+      (t.time && curDetail.time) ? t.time === curDetail.time
+        : (!conflicts(curDetail.originFull, t.originFull) && !conflicts(curDetail.destFull, t.destFull))
+    );
+    if (sameRide) {
+      // mesmo cartão — preenche só o que esse fragmento ainda não tinha
+      if (curDetail.km == null && t.km != null) curDetail.km = t.km;
+      if (curDetail.duration == null && t.duration != null) curDetail.duration = t.duration;
+      if (!curDetail.time && t.time) curDetail.time = t.time;
+      if (!curDetail.originFull && t.originFull) { curDetail.originFull = t.originFull; curDetail.origin = t.origin; }
+      if (!curDetail.destFull && t.destFull) { curDetail.destFull = t.destFull; curDetail.dest = t.dest; }
+    } else {
+      // horário ou endereço batendo diferente do acumulador — é outra
+      // corrida: fecha o anterior e abre um novo
+      flushDetail();
+      curDetail = t;
+    }
+  };
+  // Valida e deduplica NA HORA, frame a frame — o contador do anel só sobe
+  // com corrida nova validada. Antes somava a extração bruta de cada frame,
+  // e como os frames de vídeo se sobrepõem, a mesma corrida contava várias
+  // vezes (ex: 37/17 na tela sendo que eram 17 corridas reais).
+  const absorb = (trips) => {
+    let sawList = false;
+    (trips||[]).forEach(t => {
+      if (t.screen === 'detail') {
+        // Tela de detalhe: só km/tempo/endereço interessam — sem valor.
+        // Se o fragmento não trouxe NENHUM desses três, não vale a pena.
+        if (t.km == null && t.duration == null && !t.originFull && !t.destFull) return;
+        mergeDetailFrag(t); return;
+      }
+      if (!(t.value > 0)) return; // fusão/cartão cortado gera R$0,00 — nunca é corrida real
+      sawList = true;
+      t.time = normTime(t.time);
+      const key = t.time+'_'+(t.value||0).toFixed(2);
+      if (seen.has(key)) return;
+      seen.add(key);
+      unique.push(t);
+      foundCount++; foundVal += (t.value||0);
+    });
+    if (sawList) flushDetail(); // voltou pra tela de lista — fecha o detalhe que tava em aberto
+  };
+  const dot = '<span style="width:6px;height:6px;border-radius:50%;background:#22C55E;display:inline-block;animation:pulseDot 1s infinite ease-in-out"></span>';
+  const retryIcon = '<svg style="animation:vspin 1s linear infinite" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#D97706" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-2.6-6.4"/></svg>';
+  const updateRing = (statusHtml, isWarn) => {
+    document.getElementById('ic-body').innerHTML = renderImportRing(foundCount, targetCount, foundVal, targetValue, statusHtml, isWarn);
+  };
+  updateRing('Iniciando ' + dot, false);
+
+  for (let i = 0; i < images.length; i++) {
+    try {
+      const trips = await extractWithRetry(
+        () => extractTripsFromImage(images[i], plat),
+        () => updateRing(retryIcon + ' Processando novamente...', true)
+      );
+      absorb(trips);
+    } catch(e) { console.warn('Erro print '+(i+1)+' (desistiu após 3 tentativas):', e); }
+    updateRing('Analisando print' + (totalImgs>1 ? ' ' + Math.min(i+2,totalImgs) + ' de ' + totalImgs : '') + ' ' + dot, false);
+  }
+  const videoUploads = [];
+  for (let v = 0; v < videos.length; v++) {
+    videoUploads.push(uploadImportVideo(videos[v], operationalPlat, operationalDate));
+    try {
+      updateRing('Preparando vídeo ' + dot, false);
+      const frames = await extractVideoFrames(videos[v], (done, total) => {
+        updateRing('Preparando vídeo · ' + done + '/' + total + ' quadros ' + dot, false);
+      });
+      for (let i = 0; i < frames.length; i++) {
+        try {
+          const trips = await extractWithRetry(
+            () => extractTripsFromBase64(frames[i], 'image/jpeg', plat),
+            () => updateRing(retryIcon + ' Processando novamente...', true)
+          );
+          absorb(trips);
+        } catch(e) { console.warn('Frame erro (desistiu após 3 tentativas):', e); }
+        updateRing('Analisando vídeo · ' + (i+1) + '/' + frames.length + ' quadros ' + dot, false);
+      }
+    } catch(e) { console.warn('Erro vídeo '+(v+1)+':', e); }
+  }
+  // Guarda o(s) id(s) do(s) vídeo(s) já salvos no Storage — usado em
+  // confirmImport() pra vincular cada corrida ao vídeo que a confirmou
+  // (auditoria manual futura, retenção de 180 dias).
+  const _videoUploadResults = await Promise.all(videoUploads);
+  window._pendingImportVideoIds = _videoUploadResults.filter(Boolean);
+  if (videos.length && window._pendingImportVideoIds.length < videos.length) {
+    showToast('Corridas importadas, mas o vídeo de auditoria não pôde ser salvo — confira sua conexão.', 'error');
+  }
+  flushDetail(); // fragmento de detalhe que ficou aberto no fim do vídeo
+
+  // Resolve conflitos de horário: a regra pedida pra IA é "cada horário =
+  // uma corrida só", mas o dedup acima só barra repetição idêntica
+  // (mesmo horário E mesmo valor) — se o mesmo horário veio com valores
+  // DIFERENTES em frames diferentes (mistura de cartão vizinho num frame
+  // só), os dois passavam pra lista como corridas separadas, inflando a
+  // contagem e o total. Aqui, pra cada (plataforma, horário), fica só a
+  // leitura de valor que mais se repetiu entre os frames — a leitura
+  // certa tende a se confirmar igual em vários frames seguidos (o vídeo
+  // se sobrepõe), enquanto uma leitura errada por mistura de cartão
+  // costuma aparecer uma vez só.
+  function resolveTimeConflicts(list) {
+    const groups = new Map();
+    list.forEach(t => {
+      const k = (t.platform || '') + '_' + t.time;
+      (groups.get(k) || groups.set(k, []).get(k)).push(t);
+    });
+    const resolved = [];
+    groups.forEach(items => {
+      if (items.length === 1) { resolved.push(items[0]); return; }
+      const byValue = new Map();
+      items.forEach(t => {
+        const vk = (t.value || 0).toFixed(2);
+        (byValue.get(vk) || byValue.set(vk, []).get(vk)).push(t);
+      });
+      let best = null;
+      byValue.forEach(arr => { if (!best || arr.length > best.length) best = arr; });
+      // dentro do grupo vencedor, prefere o item com endereço mais completo
+      let rep = best[0];
+      best.forEach(t => {
+        const len = (t.originFull || '').length + (t.destFull || '').length;
+        const repLen = (rep.originFull || '').length + (rep.destFull || '').length;
+        if (len > repLen) rep = t;
+      });
+      resolved.push(rep);
+    });
+    return resolved;
+  }
+  const resolvedUnique = resolveTimeConflicts(unique);
+  unique.length = 0;
+  unique.push(...resolvedUnique);
+
+  // Funde os detalhes nas corridas da lista — SÓ completa km/tempo/endereço
+  // de uma corrida que a LISTA já confirmou (com valor de verdade). Nunca
+  // cria corrida nova a partir de detalhe sozinho: sem valor, não tem como
+  // confirmar que é real, e foi exatamente isso que gerava corrida fantasma
+  // no import (fragmento de detalhe virando corrida "avulsa" por engano).
+  details.forEach(d => {
+    let cand = null;
+    if (d.time) cand = unique.find(u => u.time === d.time && !u._enriched);
+    if (!cand && (d.originFull || d.destFull)) {
+      cand = unique.find(u => !u._enriched &&
+        ((d.originFull && u.originFull === d.originFull) || (d.destFull && u.destFull === d.destFull)));
+    }
+    if (cand) {
+      cand._enriched = true;
+      if (d.km != null && d.km > 0)       { cand.km = d.km; cand.kmEstimado = false; }
+      if (d.duration != null && d.duration > 0) cand.duration = d.duration;
+      // Endereço do detalhe é a linha inteira, sem truncar — prefere ele.
+      if (d.originFull) { cand.originFull = d.originFull; cand.origin = d.origin; }
+      if (d.destFull)   { cand.destFull = d.destFull; cand.dest = d.dest; }
+    }
+  });
+
+  const day = DB.day(S.curDate);
+
+  // Casa cada corrida do vídeo com auto_trips do dia ANTES de mostrar a
+  // tela (pedido do Yuri, 16/08/2026) — permite separar "vai só corrigir
+  // valor" de "é corrida nova" já na seleção, e esconder o que não muda
+  // nada em vez de mostrar tudo misturado.
+  const autoTripsPool = (await loadAutoTripsForOperationalDay(operationalPlat, operationalDate)) || [];
+  const numEq = (a,b,tol) => Math.abs((a||0)-(b||0)) <= (tol||0.02);
+  const annotated = unique.map((t,i) => {
+    const matched = matchAutoTrip(t, autoTripsPool);
+    if (matched) autoTripsPool.splice(autoTripsPool.indexOf(matched), 1); // consumido — nunca casa duas vezes
+    const base = {...t, _sel:true, _idx:i,
+      platform: t.platform === '99' ? '99' : 'uber',
+      _exists: isTripDuplicate(t, day.trips)};
+    if (matched) {
+      const newVal = parseFloat(t.value)||0;
+      return {...base, _matchedAutoTripId: matched.id, _isNew: false,
+        _oldValue: matched.offer_value, _changed: !numEq(matched.offer_value, newVal, 0.02)};
+    }
+    return {...base, _matchedAutoTripId: null, _isNew: true, _changed: true};
+  });
+  // Só mostra o que de fato vai mudar algo — casada sem diferença de valor
+  // não aparece (nada a fazer), nova sem valor legível também não aparece
+  // (sem valor não dá pra confirmar que é corrida de verdade).
+  window._pendingTrips = annotated.filter(t => t._isNew ? (parseFloat(t.value)||0) > 0 : t._changed);
+  // Corrida NOVA nunca confia no endereço do vídeo sem validar — mesma
+  // regra do Kotlin (looksLikeAddress). Sem validação, fica sem endereço
+  // em vez de arriscar lixo/mensagem de chat virando corrida (pedido
+  // explícito do Yuri: "nunca endereço, a não ser que garanta").
+  window._pendingTrips.forEach(t => {
+    if (!t._isNew) return;
+    if (t.originFull && !looksLikeAddress(t.originFull)) { t.originFull = ''; t.origin = ''; }
+    if (t.destFull && !looksLikeAddress(t.destFull)) { t.destFull = ''; t.dest = ''; }
+  });
+
+  // Se algo foi declarado no pre-check, mostra a conferencia antes da lista.
+  // Se pulou (tudo null), vai direto pra lista de confirmacao de sempre.
+  const hasPrecheck = importPrecheck.uberCount != null || importPrecheck.p99Count != null;
+  if (hasPrecheck) showImportMatch(unique); else showImportConfirm();
+}
+
+
+===== async function extractVideoFrames =====
+
+async function extractVideoFrames(file, onProgress) {
+  return new Promise((resolve, reject) => {
+    const video  = document.createElement('video');
+    const url    = URL.createObjectURL(file);
+    const canvas = document.createElement('canvas');
+    const ctx    = canvas.getContext('2d');
+    video.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;opacity:0';
+    document.body.appendChild(video);
+    video.src        = url;
+    video.muted      = true;
+    video.playsInline = true;
+    video.preload    = 'auto';
+
+    const metadataTimer = setTimeout(() => {
+      try{document.body.removeChild(video);}catch(e){}
+      URL.revokeObjectURL(url);
+      reject(new Error('O vídeo demorou demais para ser preparado. Tente novamente.'));
+    }, 15000);
+
+    video.onloadedmetadata = async () => {
+      clearTimeout(metadataTimer);
+      // Limit canvas size for performance
+      const MAX = 1080;
+      const ratio = Math.min(MAX / video.videoWidth, MAX / video.videoHeight, 1);
+      canvas.width  = Math.round(video.videoWidth  * ratio);
+      canvas.height = Math.round(video.videoHeight * ratio);
+
+      const duration = video.duration;
+      if (!isFinite(duration) || isNaN(duration) || duration <= 0) {
+        // Duration unknown — try capturing current frame
+        try {
+          await new Promise(r => setTimeout(r, 500));
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const frame = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+          try{document.body.removeChild(video);}catch(e2){}
+          URL.revokeObjectURL(url);
+          resolve([frame]);
+        } catch(e) {
+          try{document.body.removeChild(video);}catch(e2){}
+          URL.revokeObjectURL(url);
+          reject(new Error('Não foi possível ler o vídeo. Tente em formato MP4.'));
+        }
+        return;
+      }
+
+      const INTERVAL = 0.6; // frame a cada 0.6s (era 1s) — menos distância de
+      // rolagem entre frames reduz a chance de misturar campos de cartões
+      // vizinhos, e dá mais leituras repetidas por corrida real pra
+      // resolveTimeConflicts() escolher a leitura certa por maioria
+      const times = [];
+      for (let t = 0.5; t < duration; t += INTERVAL) times.push(parseFloat(t.toFixed(2)));
+      if (!times.length) times.push(0);
+
+      // Fingerprint pequeno (32x32 grayscale) pra comparar frames e pular
+      // quando o scroll tá parado/lento — evita mandar quase-o-mesmo-frame
+      // pra IA, que é a causa de valores "fantasma" (leitura funde 2 frames
+      // parecidos com corrida cortada/sobreposta).
+      const FP = 32;
+      const fpCanvas = document.createElement('canvas');
+      fpCanvas.width = FP; fpCanvas.height = FP;
+      const fpCtx = fpCanvas.getContext('2d');
+      function frameFingerprint() {
+        fpCtx.drawImage(canvas, 0, 0, FP, FP);
+        const d = fpCtx.getImageData(0, 0, FP, FP).data;
+        const g = new Float32Array(FP*FP);
+        for (let i = 0; i < g.length; i++) {
+          const o = i*4;
+          g[i] = (d[o] + d[o+1] + d[o+2]) / 3;
+        }
+        return g;
+      }
+      function fpDiff(a, b) {
+        let sum = 0;
+        for (let i = 0; i < a.length; i++) sum += Math.abs(a[i]-b[i]);
+        return sum / (a.length * 255); // normalizado 0..1
+      }
+      const SIMILARITY_THRESHOLD = 0.02; // <2% de mudança = frame quase idêntico, pula
+
+      const frames = [];
+      let lastFp = null;
+      let skipped = 0;
+      if (typeof onProgress === 'function') onProgress(0, times.length);
+      for (let timeIndex = 0; timeIndex < times.length; timeIndex++) {
+        const time = times[timeIndex];
+        try {
+          await new Promise((res) => {
+            // Handler precisa existir antes do seek: em arquivo local o evento pode ser imediato.
+            let done = false;
+            const finishSeek = () => {
+              if (done) return;
+              done = true;
+              clearTimeout(timer);
+              video.onseeked = null;
+              try { ctx.drawImage(video, 0, 0, canvas.width, canvas.height); } catch(e) {}
+              res();
+            };
+            const timer = setTimeout(finishSeek, 1500);
+            video.onseeked = finishSeek;
+            video.currentTime = time;
+          });
+          // Only keep frames with content (not blank/black)
+          const px = ctx.getImageData(0, 0, 20, 20).data;
+          const hasContent = Array.from(px).some(v => v > 10);
+          if (!hasContent) continue;
+          const fp = frameFingerprint();
+          if (lastFp && fpDiff(fp, lastFp) < SIMILARITY_THRESHOLD) {
+            skipped++;
+            continue; // scroll parado/lento — quase igual ao frame anterior mantido
+          }
+          lastFp = fp;
+          frames.push(canvas.toDataURL('image/jpeg', 0.7).split(',')[1]);
+        } catch(e) { console.warn('Frame t='+time, e); }
+        if (typeof onProgress === 'function') onProgress(timeIndex + 1, times.length);
+      }
+      if (skipped) console.log('[extractVideoFrames] frames quase-duplicados pulados:', skipped);
+
+      try{document.body.removeChild(video);}catch(e){}
+      URL.revokeObjectURL(url);
+      resolve(frames.length > 0 ? frames : []);
+    };
+
+    video.onerror = (e) => {
+      clearTimeout(metadataTimer);
+      try{document.body.removeChild(video);}catch(e2){}
+      URL.revokeObjectURL(url);
+      const msg = e?.target?.error?.message || '';
+      reject(new Error('Formato de vídeo não suportado. Use MP4 gravado pelo celular.\n' + msg));
+    };
+    video.load();
+  });
+}
+
+
+===== async function extractFromImage =====
+
+NAO ENCONTRADO
+
+===== async function extractWithRetry =====
+
+async function extractWithRetry(fn, onRetry, maxAttempts) {
+  maxAttempts = maxAttempts || 3;
+  let lastErr;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try { return await fn(); }
+    catch(e) {
+      lastErr = e;
+      if (attempt < maxAttempts) { onRetry(attempt+1, maxAttempts); await new Promise(r => setTimeout(r, 800)); }
+    }
+  }
+  throw lastErr;
+}
+
+// Sobe o vídeo original pro Storage (bucket import-videos, retenção de
+// 180 dias) e registra em import_videos — pedido do Yuri (16/08/2026):
+// base pra confirmação de valor real (campeonatos/incentivos futuros) e
+// pra dar dá pra conferir manualmente qualquer corrida em disputa. Falha
+// de upload NUNCA trava o import (retorna null, segue sem vínculo) — o
+// vídeo é auditoria extra, não pode ser bloqueio de fluxo.
+
+===== function showImportMatch =====
+
+function showImportMatch(unique) {
+  const uberFound = unique.filter(t => t.platform === 'uber');
+  const p99Found  = unique.filter(t => t.platform === '99');
+  const uberFoundCount = uberFound.length, uberFoundVal = uberFound.reduce((s,t)=>s+(t.value||0),0);
+  const p99FoundCount  = p99Found.length,  p99FoundVal  = p99Found.reduce((s,t)=>s+(t.value||0),0);
+
+  const checks = [];
+  let anyMissing = false, anyExtra = false;
+  // Checagem EXATA: encontrar MAIS do que o declarado é tão errado quanto
+  // encontrar menos (significa corrida lida em dobro/fundida). 18/17 não
+  // pode aparecer como 'bateu certinho'. Valor com tolerância de 1 centavo.
+  const evalPlat = (label, foundCount, foundVal, decCount, decVal) => {
+    let ok = foundCount === decCount;
+    if (ok && decVal != null) ok = Math.abs(foundVal - decVal) < 0.01;
+    if (!ok) { if (foundCount > decCount || (decVal != null && foundVal > decVal + 0.009)) anyExtra = true; else anyMissing = true; }
+    checks.push({label, ok, txt: `${foundCount}/${decCount} · ${DB.fRI(foundVal)}${decVal != null ? ' de ' + DB.fRI(decVal) : ''}`});
+  };
+  if (importPrecheck.uberCount != null) evalPlat('Uber', uberFoundCount, uberFoundVal, importPrecheck.uberCount, importPrecheck.uberValue);
+  if (importPrecheck.p99Count != null) evalPlat('99', p99FoundCount, p99FoundVal, importPrecheck.p99Count, importPrecheck.p99Value);
+  const allOk = !anyMissing && !anyExtra;
+  const pillsHtml = checks.map(c => `<span style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:${c.ok?'#DCFCE7':'#FEE2E2'};color:${c.ok?'#16A34A':'#DC2626'}">${c.label} ${c.txt} ${c.ok?'✓':'✗'}</span>`).join('');
+
+  const warnTitle = anyExtra ? 'Achei corridas a mais' : 'Faltou alguma coisa';
+  const warnMsg = anyExtra
+    ? 'Alguma corrida foi lida em dobro ou misturada. Na lista, desmarque as que estiverem repetidas ou com dados estranhos antes de importar.'
+    : 'Confira se subiu todos os prints/vídeos desse app';
+  const cardHtml = allOk
+    ? `<div style="border-radius:16px;padding:16px;text-align:center;margin-bottom:14px;background:#ECFDF3;border:1.5px solid #BBF7D0">
+        <div style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;background:#DCFCE7;color:#16A34A"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <b style="display:block;font-size:14px;color:#0F172A;margin-bottom:4px">Importação validada</b>
+        <span style="font-size:12px;color:#64748B;line-height:1.5">Os valores conferem com o que você informou</span>
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap">${pillsHtml}</div>
+      </div>`
+    : `<div style="border-radius:16px;padding:16px;text-align:center;margin-bottom:14px;background:#FFFBEB;border:1.5px solid #FDE68A">
+        <div style="width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;background:#FEF3C7;color:#D97706"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg></div>
+        <b style="display:block;font-size:14px;color:#0F172A;margin-bottom:4px">${warnTitle}</b>
+        <span style="font-size:12px;color:#64748B;line-height:1.5">${warnMsg}</span>
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap">${pillsHtml}</div>
+      </div>`;
+
+  document.getElementById('ic-title').textContent = 'Conferência';
+  document.getElementById('ic-body').innerHTML = cardHtml;
+  const btn = document.getElementById('ic-btn');
+  btn.style.display = 'block';
+  btn.textContent = allOk ? 'Ver corridas encontradas' : 'Ver o que encontrei';
+  btn.onclick = () => { showImportConfirm(); btn.onclick = confirmImport; };
+}
