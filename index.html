@@ -4887,7 +4887,7 @@ async function resyncCorridasFromCloud() {
       renderCorridasActive();
       if (S.sec === 'jornada') renderJornada();
       if (S.sec === 'relatorios') renderHome();
-      showToast('Sincronizado com a nuvem.');
+      /* sincronização silenciosa: sem toast de sucesso */
     } catch (e) {
       console.error('resyncCorridasFromCloud', e);
       showToast('Erro ao recarregar da nuvem.');
