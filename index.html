@@ -7196,6 +7196,7 @@ async function processImportBatch(images, videos, plat) {
     updateRing('Analisando print' + (totalImgs>1 ? ' ' + Math.min(i+2,totalImgs) + ' de ' + totalImgs : '') + ' ' + dot, false);
   }
   const videoUploads = [];
+  let videoFrameReadFailed = false;
   for (let v = 0; v < videos.length; v++) {
     videoUploads.push(uploadImportVideo(videos[v], operationalPlat, operationalDate));
     try {
@@ -7213,8 +7214,14 @@ async function processImportBatch(images, videos, plat) {
         } catch(e) { console.warn('Frame erro (desistiu após 3 tentativas):', e); }
         updateRing('Analisando vídeo · ' + (i+1) + '/' + frames.length + ' quadros ' + dot, false);
       }
-    } catch(e) { console.warn('Erro vídeo '+(v+1)+':', e); }
+    } catch(e) { videoFrameReadFailed = true; console.warn('Erro vídeo '+(v+1)+':', e); }
   }
+  if (videos.length && videoFrameReadFailed && unique.length === 0) {
+    showToast('Não consegui ler os quadros do vídeo. Tente novamente; se persistir, envie outro formato.', 'error');
+    closeMo('mo-import-confirm');
+    return;
+  }
+
   // Guarda o(s) id(s) do(s) vídeo(s) já salvos no Storage — usado em
   // confirmImport() pra vincular cada corrida ao vídeo que a confirmou
   // (auditoria manual futura, retenção de 180 dias).
@@ -7541,23 +7548,43 @@ async function extractVideoFrames(file, onProgress) {
         const time = times[timeIndex];
         try {
           await new Promise((res) => {
-            // Handler precisa existir antes do seek: em arquivo local o evento pode ser imediato.
+            // O handler entra antes do seek, mas damos tempo real para o WebView
+            // decodificar o quadro. Em alguns Androids 1,5 s era curto e o
+            // fallback desenhava um frame preto, fazendo o vídeo inteiro zerar.
             let done = false;
-            const finishSeek = () => {
+            const finishSeek = (fromEvent) => {
               if (done) return;
-              done = true;
-              clearTimeout(timer);
-              video.onseeked = null;
-              try { ctx.drawImage(video, 0, 0, canvas.width, canvas.height); } catch(e) {}
-              res();
+              const draw = () => {
+                if (done) return;
+                done = true;
+                clearTimeout(timer);
+                video.onseeked = null;
+                try {
+                  if (video.readyState >= 2) ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                } catch(e) {}
+                res();
+              };
+              if (fromEvent) setTimeout(draw, 80); else draw();
             };
-            const timer = setTimeout(finishSeek, 1500);
-            video.onseeked = finishSeek;
-            video.currentTime = time;
+            const timer = setTimeout(() => finishSeek(false), 4000);
+            video.onseeked = () => finishSeek(true);
+            video.currentTime = Math.min(time, Math.max(0, duration - 0.03));
           });
-          // Only keep frames with content (not blank/black)
-          const px = ctx.getImageData(0, 0, 20, 20).data;
-          const hasContent = Array.from(px).some(v => v > 10);
+          // Detecta conteúdo no QUADRO INTEIRO. Antes olhava só 20x20 px do
+          // canto superior esquerdo; em screen recording esse canto pode ser
+          // preto (status bar/recorte) e todos os frames reais eram descartados.
+          const probe = document.createElement('canvas');
+          probe.width = 24; probe.height = 24;
+          const pctx = probe.getContext('2d');
+          pctx.drawImage(canvas, 0, 0, probe.width, probe.height);
+          const px = pctx.getImageData(0, 0, probe.width, probe.height).data;
+          let lit = 0, maxLum = 0;
+          for (let pi = 0; pi < px.length; pi += 4) {
+            const lum = (px[pi] + px[pi+1] + px[pi+2]) / 3;
+            if (lum > 12) lit++;
+            if (lum > maxLum) maxLum = lum;
+          }
+          const hasContent = maxLum > 18 && lit >= 3;
           if (!hasContent) continue;
           const fp = frameFingerprint();
           if (lastFp && fpDiff(fp, lastFp) < SIMILARITY_THRESHOLD) {
@@ -7573,7 +7600,8 @@ async function extractVideoFrames(file, onProgress) {
 
       try{document.body.removeChild(video);}catch(e){}
       URL.revokeObjectURL(url);
-      resolve(frames.length > 0 ? frames : []);
+      if (frames.length > 0) resolve(frames);
+      else reject(new Error('Nenhum quadro legível foi extraído do vídeo.'));
     };
 
     video.onerror = (e) => {
