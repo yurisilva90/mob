@@ -2805,6 +2805,10 @@ h1.hd-title{font-family:var(--font-brand)!important}
       </div>
       <div style="font-size:12px;color:#64748B;line-height:1.5;margin-bottom:14px">O card mostra até 4 indicadores quando a oferta chega. As recusas funcionam sozinhas — mesmo que os indicadores estejam bons.</div>
 
+      <div id="flash-perm-warning" onclick="openFlashPermissionSetup()" style="display:none;align-items:flex-start;justify-content:space-between;gap:10px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:14px;padding:11px 12px;margin-bottom:12px;cursor:pointer">
+        <div style="min-width:0"><div style="font-size:12.5px;font-weight:800;color:#9A3412">⚠ MōB Flash precisa de ajustes</div><div id="flash-perm-warning-text" style="font-size:11px;color:#C2410C;line-height:1.35;margin-top:2px"></div></div>
+        <span style="font-size:11px;font-weight:800;color:#9A3412;white-space:nowrap">Revisar ›</span>
+      </div>
       <div id="flash-preview-wrap" style="background:#111318;border-radius:14px;padding:16px 10px;display:flex;justify-content:center;margin-bottom:14px"></div>
 
       <div style="font-size:11px;font-weight:800;color:#94A3B8;text-transform:uppercase;letter-spacing:.06em;margin:4px 0 2px 2px">Indicadores</div>
@@ -2832,23 +2836,35 @@ h1.hd-title{font-family:var(--font-brand)!important}
 
       <div style="border:1px solid #E2E8F0;border-radius:14px;padding:4px 14px" id="flash-perms">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #F1F5F9">
+          <div style="flex:1"><div style="font-size:13.5px;font-weight:600;color:#0F172A">Localização</div><div style="font-size:11px;color:#94A3B8;margin-top:1px">Mede km e registra os pontos reais de embarque e destino</div></div>
+          <div id="flash-perm-location" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"></div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #F1F5F9">
+          <div style="flex:1"><div style="font-size:13.5px;font-weight:600;color:#0F172A">Bateria</div><div style="font-size:11px;color:#94A3B8;margin-top:1px">Evita que o Android interrompa GPS e leitura em segundo plano</div></div>
+          <div id="flash-perm-battery" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"></div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #F1F5F9">
           <div style="flex:1">
             <div style="font-size:13.5px;font-weight:600;color:#0F172A">Acessibilidade</div>
-            <div style="font-size:11px;color:#94A3B8;margin-top:1px">Lê a tela da 99/Uber quando a oferta chega</div>
+            <div style="font-size:11px;color:#94A3B8;margin-top:1px">Identifica telas e estados da corrida na Uber/99</div>
           </div>
           <div id="flash-perm-a11y" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"></div>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #F1F5F9">
           <div style="flex:1">
             <div style="font-size:13.5px;font-weight:600;color:#0F172A">Sobrepor outros apps</div>
-            <div style="font-size:11px;color:#94A3B8;margin-top:1px">Permite o card aparecer por cima da 99/Uber</div>
+            <div style="font-size:11px;color:#94A3B8;margin-top:1px">Mostra o Flash e o status por cima da Uber/99</div>
           </div>
           <div id="flash-perm-overlay" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"></div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #F1F5F9">
+          <div style="flex:1"><div style="font-size:13.5px;font-weight:600;color:#0F172A">Acesso às notificações</div><div style="font-size:11px;color:#94A3B8;margin-top:1px">Lê eventos oficiais da Uber/99 e identifica a plataforma da oferta</div></div>
+          <div id="flash-perm-notification" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"></div>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0">
           <div style="flex:1">
             <div style="font-size:13.5px;font-weight:600;color:#0F172A">Leitura da tela</div>
-            <div style="font-size:11px;color:#94A3B8;margin-top:1px">A 99 mostra a oferta como imagem — precisa reativar a cada abertura do app</div>
+            <div style="font-size:11px;color:#94A3B8;margin-top:1px">Completa dados da oferta que não vierem pelos eventos oficiais</div>
           </div>
           <div id="flash-perm-capture" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"></div>
         </div>
@@ -5001,6 +5017,14 @@ function renderJornada() {
 function renderJourneyCard(day, isToday) {
   const jc = document.getElementById('journey-card');
   if (!jc) return;
+  let permWarn = document.getElementById('journey-perm-warning');
+  if (!permWarn && jc.parentNode) {
+    permWarn = document.createElement('div'); permWarn.id = 'journey-perm-warning'; permWarn.onclick = openFlashPermissionSetup;
+    permWarn.style.cssText = 'display:none;align-items:flex-start;justify-content:space-between;gap:10px;background:#FFF7ED;border:1px solid #FDBA74;border-radius:14px;padding:11px 12px;margin:0 0 10px;cursor:pointer';
+    permWarn.innerHTML = '<div style="min-width:0"><div style="font-size:12.5px;font-weight:800;color:#9A3412">⚠ Funções do MōB incompletas</div><div id="journey-perm-warning-text" style="font-size:11px;color:#C2410C;line-height:1.35;margin-top:2px"></div></div><span style="font-size:11px;font-weight:800;color:#9A3412;white-space:nowrap">Ativar ›</span>';
+    jc.parentNode.insertBefore(permWarn, jc);
+  }
+  renderFlashPermissionWarnings();
   const cardDate = day?.date || S.curDate || DB.today();
   // Card de sessão atual (timer/km/botão) só faz sentido em "hoje" — em dia
   // passado não existe jornada "em andamento" possível, então esse card
@@ -11143,26 +11167,35 @@ document.addEventListener('DOMContentLoaded', function () {
   document.addEventListener('pointerup', _flashRulerPointerUp);
 });
 
+function mobFlashPermissionSnapshot() {
+  const n = window.SmartMobiNative;
+  function read(name) { if (!n || typeof n[name] !== 'function') return null; try { return !!n[name](); } catch (_) { return null; } }
+  return {location:read('isLocationReady'),battery:read('isBatteryExempt'),a11y:read('isA11yEnabled'),overlay:read('hasOverlay'),notification:read('isNotificationAccessEnabled'),capture:read('isScreenCaptureActive')};
+}
+function mobMissingFlashPermissions() {
+  const st=mobFlashPermissionSnapshot();
+  const defs=[['location','Localização'],['battery','Bateria'],['a11y','Acessibilidade'],['overlay','Sobrepor outros apps'],['notification','Acesso às notificações'],['capture','Leitura da tela']];
+  return defs.filter(x=>st[x[0]]===false).map(x=>x[1]);
+}
+function _mobPermissionWarningHtml(missing) {
+  if (!missing.length) return '';
+  const shown=missing.slice(0,3).join(', '), extra=missing.length>3?' e +'+(missing.length-3):'';
+  return (missing.length===1?'1 autorização pendente':missing.length+' autorizações pendentes')+': '+shown+extra+'.';
+}
+function renderFlashPermissionWarnings() {
+  const missing=mobMissingFlashPermissions(), txt=_mobPermissionWarningHtml(missing);
+  const fw=document.getElementById('flash-perm-warning');
+  if (fw) { fw.style.display=missing.length?'flex':'none'; const ft=document.getElementById('flash-perm-warning-text'); if(ft) ft.textContent=txt; }
+  const jw=document.getElementById('journey-perm-warning');
+  if (jw) { jw.style.display=missing.length?'flex':'none'; const jt=document.getElementById('journey-perm-warning-text'); if(jt) jt.textContent=txt+' Toque para ativar antes da próxima oferta.'; }
+}
+async function openFlashPermissionSetup() { await openFlashConfig(); _flashWizardShowStep(2); renderFlashPerms(); }
 function renderFlashPerms() {
-  const a11yWrap = document.getElementById('flash-perm-a11y');
-  const ovWrap = document.getElementById('flash-perm-overlay');
-  if (!a11yWrap || !ovWrap) return;
-  const hasA11y = (window.SmartMobiNative && typeof SmartMobiNative.isA11yEnabled === 'function') ? !!SmartMobiNative.isA11yEnabled() : null;
-  const hasOverlay = (window.SmartMobiNative && typeof SmartMobiNative.hasOverlay === 'function') ? !!SmartMobiNative.hasOverlay() : null;
-
-  function pillHtml(ok, fixCall) {
-    if (ok === null) return '<span style="font-size:11px;color:#94A3B8">— (só no app instalado)</span>';
-    if (ok) return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;padding:4px 9px;border-radius:99px;background:#F0FDF4;color:#15803D">&#10003; Ativo</span>';
-    return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;padding:4px 9px;border-radius:99px;background:#FEF3C7;color:#B45309">&bull; Pendente</span>'
-      + '<button onclick="' + fixCall + '" style="font-size:11px;font-weight:800;color:#fff;background:#0A2F6B;border:0;border-radius:9px;padding:6px 11px">Ativar</button>';
-  }
-  a11yWrap.innerHTML = pillHtml(hasA11y, "SmartMobiNative.openA11ySettings()");
-  ovWrap.innerHTML = pillHtml(hasOverlay, "SmartMobiNative.openOverlaySettings()");
-  const capWrap = document.getElementById('flash-perm-capture');
-  if (capWrap) {
-    const hasCap = (window.SmartMobiNative && typeof SmartMobiNative.isScreenCaptureActive === 'function') ? !!SmartMobiNative.isScreenCaptureActive() : null;
-    capWrap.innerHTML = pillHtml(hasCap, "SmartMobiNative.requestScreenCapture()");
-  }
+  const ids={location:['flash-perm-location','isLocationReady','openLocationSettings'],battery:['flash-perm-battery','isBatteryExempt','openBatterySettings'],a11y:['flash-perm-a11y','isA11yEnabled','openA11ySettings'],overlay:['flash-perm-overlay','hasOverlay','openOverlaySettings'],notification:['flash-perm-notification','isNotificationAccessEnabled','openNotificationAccessSettings'],capture:['flash-perm-capture','isScreenCaptureActive','requestScreenCapture']};
+  const n=window.SmartMobiNative;
+  function pillHtml(ok,fixCall){if(ok===null)return '<span style="font-size:11px;color:#94A3B8">— (app precisa atualizar)</span>';if(ok)return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;padding:4px 9px;border-radius:99px;background:#F0FDF4;color:#15803D">&#10003; Ativo</span>';return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;padding:4px 9px;border-radius:99px;background:#FEF3C7;color:#B45309">&bull; Pendente</span><button onclick="'+fixCall+'" style="font-size:11px;font-weight:800;color:#fff;background:#0A2F6B;border:0;border-radius:9px;padding:6px 11px">Ativar</button>';}
+  Object.values(ids).forEach(v=>{const el=document.getElementById(v[0]);if(!el)return;let ok=null;if(n&&typeof n[v[1]]==='function'){try{ok=!!n[v[1]]();}catch(_){}}el.innerHTML=pillHtml(ok,'SmartMobiNative.'+v[2]+'()');});
+  renderFlashPermissionWarnings();
 }
 
 // Ao voltar do Android Settings (permissão concedida/negada), atualiza os pills
@@ -11170,6 +11203,7 @@ document.addEventListener('visibilitychange', function () {
   if (document.visibilityState === 'visible') {
     const mo = document.getElementById('mo-flash');
     if (mo && mo.classList.contains('on')) renderFlashPerms();
+    renderFlashPermissionWarnings();
   }
 });
 
