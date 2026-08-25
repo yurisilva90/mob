@@ -17,14 +17,13 @@ jobs:
           lines=Path('index.html').read_text(encoding='utf-8').splitlines()
           def block(path,a,b):
             Path(path).write_text('\n'.join(f'{i}: {lines[i-1]}' for i in range(a,min(b,len(lines))+1)),encoding='utf-8')
-          block('.tmp-status-block.txt',14280,14610)
-          block('.tmp-jornada-block.txt',4870,5400)
-          block('.tmp-operational-block.txt',7265,7325)
+          block('.tmp-jornada-detail.txt',5070,5405)
+          block('.tmp-status-detail.txt',14535,14610)
           PY
       - name: Commit da inspeção
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .tmp-status-block.txt .tmp-jornada-block.txt .tmp-operational-block.txt
-          git diff --cached --quiet || git commit -m "chore: registrar blocos temporários"
+          git add .tmp-jornada-detail.txt .tmp-status-detail.txt
+          git diff --cached --quiet || git commit -m "chore: registrar detalhes temporários"
           git push
