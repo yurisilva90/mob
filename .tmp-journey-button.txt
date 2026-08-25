@@ -1,0 +1,1409 @@
+===== jc-actions hits=2 =====
+--- 1509-1568 ---
+1509:     <div class="pcb-ico">
+1510:       <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+1511:     </div>
+1512:     <div class="pcb-txt">
+1513:       <div class="pcb-title" id="pcb-title">corridas aguardando confirmação</div>
+1514:       <div class="pcb-sub">Toque para enviar o vídeo do histórico</div>
+1515:     </div>
+1516:     <svg class="pcb-chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+1517:   </div>
+1518: 
+1519:   <div class="journey-wrap" id="journey-wrap">
+1520:   <div class="journey idle" id="journey-card">
+1521:     <div class="j-status" style="display:none"><i></i><span id="jc-status-text">Iniciar</span></div>
+1522:     <div class="j-toprow">
+1523:       <div class="j-current" style="grid-template-columns:1.3fr 1fr 1fr;flex:1">
+1524:         <div><h2 id="jc-timer">00:00:00</h2><p id="jc-sub">Nenhuma sessão iniciada</p></div>
+1525:         <div class="j-km"><strong id="jc-km">0,0</strong><span>Km</span></div>
+1526:         <div class="j-km"><strong id="jc-trips2">0</strong><span>Corridas</span></div>
+1527:       </div>
+1528:     </div>
+1529:     <div class="j-bottomrow">
+1530:       <div class="j-rates2">
+1531:         <div class="rate-cell" id="jc-rate-hora2"><strong id="jc-rsh2">R$0,00</strong><span>R$ / hora</span></div>
+1532:         <div class="rate-cell" id="jc-rate-km2"><strong id="jc-rskm2">R$0,00</strong><span>R$ / km</span></div>
+1533:       </div>
+1534:       <div class="j-actions" id="jc-actions"></div>
+1535:     </div>
+1536:   </div>
+1537:   <div class="journey-breakdown" id="jc-breakdown" style="display:none">
+1538:     <div class="sbar-wrap" onclick="toggleBar('jc-blist')"><div class="sbar" id="jc-bar"></div></div>
+1539:     <div class="sbar-list" id="jc-blist"></div>
+1540:   </div>
+1541:   </div>
+1542: 
+1543:   <div class="section" style="padding:16px 16px 8px"><h2>Total do dia</h2></div>
+1544:   <div style="padding:0 16px 14px">
+1545:     <div class="td-card">
+1546: 
+1547:       <div class="td-row">
+1548:         <svg class="td-wm right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l1.5-4.5A2 2 0 0 1 6.4 7h11.2a2 2 0 0 1 1.9 1.5L21 13"/><path d="M3 13h18v4a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4z"/><circle cx="7.5" cy="17" r="1.3"/><circle cx="16.5" cy="17" r="1.3"/></svg>
+1549:         <div class="td-corridas"><strong id="jc-trips">0</strong><span>Corridas</span></div>
+1550:         <div class="td-sub" id="jc-corridas-sub" style="display:none">
+1551:           <span class="td-chip ok"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span id="jc-aceitas">0</span> aceitas</span>
+1552:           <span class="td-vline"></span>
+1553:           <span class="td-chip no"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg><span id="jc-recusadas">0</span> recusadas</span>
+1554:         </div>
+1555:       </div>
+1556: 
+1557:       <div class="td-row">
+1558:         <div class="tk-split">
+1559:           <div class="tk-half left">
+1560:             <svg class="td-wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 6.5v5.5l4 2.3"/></svg>
+1561:             <div style="display:flex;align-items:center;justify-content:center;gap:6px;position:relative;z-index:1">
+1562:               <strong id="jc-total">0h00</strong>
+1563:               <button class="km-edit-btn" onclick="openTempoAdjust()" aria-label="Editar tempo total">
+1564:                 <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+1565:               </button>
+1566:             </div>
+1567:             <span>Tempo total</span>
+1568:           </div>
+--- 5100-5159 ---
+5100:   const ganhosDia = day.trips.reduce((s,t)=>s+(t.value||0),0)
+5101:                   + autoTripsHoje.reduce((s,t)=>s+(t.offer_value||0),0);
+5102:   const horasDecimal = totalElapsed > 0 ? totalElapsed/3600 : 0;
+5103:   const rsh  = horasDecimal > 0 ? ganhosDia/horasDecimal : null;
+5104:   const rskm = totalKm > 0 ? ganhosDia/totalKm : null;
+5105:   setText('jc-rsh', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
+5106:   setText('jc-rskm', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
+5107:   setText('jc-rsh2', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
+5108:   setText('jc-rskm2', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
+5109:   // Cor por indicador — pedido do Yuri (23/07/2026, mockup aprovado):
+5110:   // mesmos limiares vermelho/verde que o motorista já ajusta na régua do
+5111:   // MōB Flash (Indicadores → R$/km e R$/hora), cada indicador troca de cor
+5112:   // por conta própria. Sem dado ainda (sessão não rodou tempo/km) fica
+5113:   // neutro (verde), não faz sentido alarmar antes de ter dado de verdade.
+5114:   const rateEl = document.getElementById('jc-rate-hora');
+5115:   const kmEl   = document.getElementById('jc-rate-km');
+5116:   const rateEl2 = document.getElementById('jc-rate-hora2');
+5117:   const kmEl2   = document.getElementById('jc-rate-km2');
+5118:   const rateCls = rsh !== null ? rateColorClass('rhora', rsh) : '';
+5119:   const kmCls   = rskm !== null ? rateColorClass('rkm', rskm) : '';
+5120:   if (rateEl)  rateEl.className  = 'td-rcard ' + rateCls;
+5121:   if (kmEl)    kmEl.className    = 'td-rcard ' + kmCls;
+5122:   if (rateEl2) rateEl2.className = 'rate-cell ' + rateCls;
+5123:   if (kmEl2)   kmEl2.className   = 'rate-cell ' + kmCls;
+5124: 
+5125:   const actions = document.getElementById('jc-actions');
+5126:   if (!actions) return;
+5127:   if (!isToday) {
+5128:     actions.innerHTML = '';
+5129:   } else if (state === 'idle') {
+5130:     actions.innerHTML = `<button class="j-round-btn play" onclick="gpsStart()" aria-label="Iniciar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>`;
+5131:   } else if (state === 'running') {
+5132:     actions.innerHTML = '<button class="j-round-btn stop" onclick="confirmStop()" aria-label="Encerrar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"/></svg></button>';
+5133:   }
+5134: }
+5135: 
+5136: function agMinutesBetween(start, end) {
+5137:   if (!start || !end) return 0;
+5138:   const [h1,m1] = start.split(':').map(Number);
+5139:   const [h2,m2] = end.split(':').map(Number);
+5140:   return Math.max(0, (h2*60+m2) - (h1*60+m1));
+5141: }
+5142: function openMetasHojeModal() {
+5143:   const date = S.curDate || DB.today();
+5144:   const day = DB.day(date);
+5145:   const dow = new Date(date+'T12:00').getDay();
+5146:   const plan = DB.planJornada().find(p => p.days && p.days.includes(dow));
+5147:   const meta = DB.meta();
+5148:   const ov = day.metaOverride || null;
+5149:   const dimMes = new Date(new Date(date+'T12:00').getFullYear(), new Date(date+'T12:00').getMonth()+1, 0).getDate();
+5150:   const moneyGoal = (ov && ov.money) ? ov.money : ((plan && plan.moneyGoal) ? plan.moneyGoal : (meta.general ? meta.general/dimMes : 0));
+5151:   const kmGoal = (ov && ov.km) ? ov.km : (plan && plan.kmGoal ? plan.kmGoal : 0);
+5152:   const schedMin = (ov && ov.hours) ? ov.hours*60 : (plan ? (plan.schedules||[]).reduce((s,b)=>s+agMinutesBetween(b.start,b.end),0) : 0);
+5153:   const mEl = document.getElementById('mh-money'); if (mEl) mEl.value = moneyGoal ? moneyGoal.toFixed(2) : '';
+5154:   const kEl = document.getElementById('mh-km'); if (kEl) kEl.value = kmGoal || '';
+5155:   const hEl = document.getElementById('mh-hours'); if (hEl) hEl.value = schedMin ? (schedMin/60).toFixed(1) : '';
+5156:   const subEl = document.getElementById('mh-sub');
+5157:   if (subEl) {
+5158:     const isToday = date === DB.today();
+5159:     subEl.textContent = isToday ? 'Vale só para hoje' : ('Vale só para ' + new Date(date+'T12:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}));
+===== j-round-btn hits=6 =====
+--- 202-261 ---
+202: .j-status i{width:8px;height:8px;border-radius:50%;background:#fff;flex-shrink:0}
+203: .journey.running .j-status i{animation:pulse2 2s infinite}
+204: @keyframes pulse2{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.5)}50%{box-shadow:0 0 0 5px rgba(255,255,255,0)}}
+205: .j-import{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:6px 11px;font-size:11px;font-weight:760;color:#fff;display:inline-flex;align-items:center;gap:5px;cursor:pointer;border:0;touch-action:manipulation;margin-left:auto}
+206: .j-import svg{width:13px;height:13px}
+207: .j-toprow{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+208: .j-current{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;flex:1;min-width:0}
+209: .j-current h2{font-family:'Inter',system-ui,sans-serif;font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1}
+210: .j-current p{font-size:10.5px;font-weight:600;opacity:.85;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+211: .j-km{font-size:12px;font-weight:620}
+212: .j-km strong{display:block;font-family:'Inter',system-ui,sans-serif;font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1}
+213: .j-km span{display:block;margin-top:4px;opacity:.85;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+214: .j-rates2{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;min-width:0}
+215: .j-bottomrow{display:flex;align-items:center;gap:10px}
+216: .j-metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px}
+217: .j-mini{background:transparent;border:none;border-radius:0;padding:6px 4px;text-align:center}
+218: .j-mini strong{display:block;font-family:'Inter',system-ui,sans-serif;font-size:22px;font-weight:800;text-align:center}
+219: .j-mini span{display:block;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;opacity:.78;margin-top:3px}
+220: .j-metrics2{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px}
+221: .j-mini.sm{padding:6px 5px;background:rgba(255,255,255,.12);border-radius:12px}
+222: .j-mini.sm strong{font-size:13px}
+223: .j-mini.sm span{font-size:8.5px}
+224: .km-edit-btn{width:18px;height:18px;border-radius:50%;border:0;background:rgba(255,255,255,.22);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;flex-shrink:0;padding:0}
+225: .val-edit-btn{width:20px;height:20px;border-radius:7px;border:0;background:#F1F5F9;color:#0A2F6B;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;flex-shrink:0;padding:0}
+226: .j-actions{flex-shrink:0}
+227: .j-round-btn{width:76px;height:76px;border-radius:50%;background:#fff;border:0;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+228: .j-round-btn svg{width:61px;height:61px}
+229: .j-round-btn.play svg{color:#22C55E}
+230: .j-round-btn.stop svg{color:#EF4444}
+231: .j-btn{height:52px;border:0;border-radius:16px;font-size:14px;font-weight:780;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;touch-action:manipulation;width:100%;position:relative;z-index:2}
+232: .j-btn svg{width:17px;height:17px}
+233: .j-btn.solid-light{background:#fff;color:var(--green2)}
+234: .j-btn.solid-light.danger{color:var(--red)}
+235: .j-btn.ghost{background:rgba(15,23,42,.22);border:1px solid rgba(255,255,255,.25);color:#fff}
+236: .j-btn.go{background:#fff;color:var(--green2);width:auto;display:inline-flex;padding:0 32px;font-size:15px}
+237: 
+238: /* ── Total do dia (redesenho 15/08/2026) ── */
+239: .td-card{background:#0D3A7D;border-radius:22px;overflow:hidden;box-shadow:0 4px 18px rgba(15,23,42,.08)}
+240: .td-row{position:relative;overflow:hidden;padding:15px 16px;border-top:1px solid rgba(255,255,255,.14)}
+241: .td-row:first-child{border-top:0}
+242: .td-wm{position:absolute;color:#fff;opacity:.09;pointer-events:none;z-index:0;top:-18%;height:136%;aspect-ratio:1/1}
+243: .td-wm.left{left:-36px}
+244: .td-wm.right{right:-40px}
+245: .td-row>*:not(.td-wm){position:relative;z-index:1}
+246: .td-corridas{display:flex;align-items:baseline;gap:9px}
+247: .td-corridas strong{font-size:32px;font-weight:800;color:#fff;letter-spacing:-.03em;line-height:1}
+248: .td-corridas span{font-size:12px;font-weight:800;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.04em}
+249: .td-sub{display:flex;align-items:center;gap:8px;margin-top:8px}
+250: .td-chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800}
+251: .td-chip.ok{color:#4ADE80}
+252: .td-chip.no{color:#F87171}
+253: .td-vline{width:1px;height:12px;background:rgba(255,255,255,.2)}
+254: .td-grid1{text-align:center}
+255: .td-grid1 strong{display:block;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.02em}
+256: .td-grid1 span{display:block;font-size:9.5px;font-weight:800;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.04em;margin-top:5px}
+257: .tk-split{display:flex;align-items:stretch}
+258: .tk-half{flex:1;position:relative;overflow:hidden;min-width:0;text-align:center;padding:2px 0}
+259: .tk-half.left{padding-left:8px}
+260: .tk-half.right{padding-right:8px}
+261: .tk-divider{width:1px;background:rgba(255,255,255,.18);align-self:stretch;margin:0 4px}
+--- 203-262 ---
+203: .journey.running .j-status i{animation:pulse2 2s infinite}
+204: @keyframes pulse2{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.5)}50%{box-shadow:0 0 0 5px rgba(255,255,255,0)}}
+205: .j-import{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:6px 11px;font-size:11px;font-weight:760;color:#fff;display:inline-flex;align-items:center;gap:5px;cursor:pointer;border:0;touch-action:manipulation;margin-left:auto}
+206: .j-import svg{width:13px;height:13px}
+207: .j-toprow{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+208: .j-current{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;flex:1;min-width:0}
+209: .j-current h2{font-family:'Inter',system-ui,sans-serif;font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1}
+210: .j-current p{font-size:10.5px;font-weight:600;opacity:.85;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+211: .j-km{font-size:12px;font-weight:620}
+212: .j-km strong{display:block;font-family:'Inter',system-ui,sans-serif;font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1}
+213: .j-km span{display:block;margin-top:4px;opacity:.85;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+214: .j-rates2{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;min-width:0}
+215: .j-bottomrow{display:flex;align-items:center;gap:10px}
+216: .j-metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px}
+217: .j-mini{background:transparent;border:none;border-radius:0;padding:6px 4px;text-align:center}
+218: .j-mini strong{display:block;font-family:'Inter',system-ui,sans-serif;font-size:22px;font-weight:800;text-align:center}
+219: .j-mini span{display:block;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;opacity:.78;margin-top:3px}
+220: .j-metrics2{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px}
+221: .j-mini.sm{padding:6px 5px;background:rgba(255,255,255,.12);border-radius:12px}
+222: .j-mini.sm strong{font-size:13px}
+223: .j-mini.sm span{font-size:8.5px}
+224: .km-edit-btn{width:18px;height:18px;border-radius:50%;border:0;background:rgba(255,255,255,.22);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;flex-shrink:0;padding:0}
+225: .val-edit-btn{width:20px;height:20px;border-radius:7px;border:0;background:#F1F5F9;color:#0A2F6B;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;flex-shrink:0;padding:0}
+226: .j-actions{flex-shrink:0}
+227: .j-round-btn{width:76px;height:76px;border-radius:50%;background:#fff;border:0;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+228: .j-round-btn svg{width:61px;height:61px}
+229: .j-round-btn.play svg{color:#22C55E}
+230: .j-round-btn.stop svg{color:#EF4444}
+231: .j-btn{height:52px;border:0;border-radius:16px;font-size:14px;font-weight:780;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;touch-action:manipulation;width:100%;position:relative;z-index:2}
+232: .j-btn svg{width:17px;height:17px}
+233: .j-btn.solid-light{background:#fff;color:var(--green2)}
+234: .j-btn.solid-light.danger{color:var(--red)}
+235: .j-btn.ghost{background:rgba(15,23,42,.22);border:1px solid rgba(255,255,255,.25);color:#fff}
+236: .j-btn.go{background:#fff;color:var(--green2);width:auto;display:inline-flex;padding:0 32px;font-size:15px}
+237: 
+238: /* ── Total do dia (redesenho 15/08/2026) ── */
+239: .td-card{background:#0D3A7D;border-radius:22px;overflow:hidden;box-shadow:0 4px 18px rgba(15,23,42,.08)}
+240: .td-row{position:relative;overflow:hidden;padding:15px 16px;border-top:1px solid rgba(255,255,255,.14)}
+241: .td-row:first-child{border-top:0}
+242: .td-wm{position:absolute;color:#fff;opacity:.09;pointer-events:none;z-index:0;top:-18%;height:136%;aspect-ratio:1/1}
+243: .td-wm.left{left:-36px}
+244: .td-wm.right{right:-40px}
+245: .td-row>*:not(.td-wm){position:relative;z-index:1}
+246: .td-corridas{display:flex;align-items:baseline;gap:9px}
+247: .td-corridas strong{font-size:32px;font-weight:800;color:#fff;letter-spacing:-.03em;line-height:1}
+248: .td-corridas span{font-size:12px;font-weight:800;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.04em}
+249: .td-sub{display:flex;align-items:center;gap:8px;margin-top:8px}
+250: .td-chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800}
+251: .td-chip.ok{color:#4ADE80}
+252: .td-chip.no{color:#F87171}
+253: .td-vline{width:1px;height:12px;background:rgba(255,255,255,.2)}
+254: .td-grid1{text-align:center}
+255: .td-grid1 strong{display:block;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.02em}
+256: .td-grid1 span{display:block;font-size:9.5px;font-weight:800;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.04em;margin-top:5px}
+257: .tk-split{display:flex;align-items:stretch}
+258: .tk-half{flex:1;position:relative;overflow:hidden;min-width:0;text-align:center;padding:2px 0}
+259: .tk-half.left{padding-left:8px}
+260: .tk-half.right{padding-right:8px}
+261: .tk-divider{width:1px;background:rgba(255,255,255,.18);align-self:stretch;margin:0 4px}
+262: .tk-half strong{display:block;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1;position:relative;z-index:1}
+--- 204-263 ---
+204: @keyframes pulse2{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.5)}50%{box-shadow:0 0 0 5px rgba(255,255,255,0)}}
+205: .j-import{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:6px 11px;font-size:11px;font-weight:760;color:#fff;display:inline-flex;align-items:center;gap:5px;cursor:pointer;border:0;touch-action:manipulation;margin-left:auto}
+206: .j-import svg{width:13px;height:13px}
+207: .j-toprow{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+208: .j-current{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;flex:1;min-width:0}
+209: .j-current h2{font-family:'Inter',system-ui,sans-serif;font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1}
+210: .j-current p{font-size:10.5px;font-weight:600;opacity:.85;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+211: .j-km{font-size:12px;font-weight:620}
+212: .j-km strong{display:block;font-family:'Inter',system-ui,sans-serif;font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1}
+213: .j-km span{display:block;margin-top:4px;opacity:.85;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+214: .j-rates2{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;min-width:0}
+215: .j-bottomrow{display:flex;align-items:center;gap:10px}
+216: .j-metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px}
+217: .j-mini{background:transparent;border:none;border-radius:0;padding:6px 4px;text-align:center}
+218: .j-mini strong{display:block;font-family:'Inter',system-ui,sans-serif;font-size:22px;font-weight:800;text-align:center}
+219: .j-mini span{display:block;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;opacity:.78;margin-top:3px}
+220: .j-metrics2{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px}
+221: .j-mini.sm{padding:6px 5px;background:rgba(255,255,255,.12);border-radius:12px}
+222: .j-mini.sm strong{font-size:13px}
+223: .j-mini.sm span{font-size:8.5px}
+224: .km-edit-btn{width:18px;height:18px;border-radius:50%;border:0;background:rgba(255,255,255,.22);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;flex-shrink:0;padding:0}
+225: .val-edit-btn{width:20px;height:20px;border-radius:7px;border:0;background:#F1F5F9;color:#0A2F6B;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;flex-shrink:0;padding:0}
+226: .j-actions{flex-shrink:0}
+227: .j-round-btn{width:76px;height:76px;border-radius:50%;background:#fff;border:0;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+228: .j-round-btn svg{width:61px;height:61px}
+229: .j-round-btn.play svg{color:#22C55E}
+230: .j-round-btn.stop svg{color:#EF4444}
+231: .j-btn{height:52px;border:0;border-radius:16px;font-size:14px;font-weight:780;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;touch-action:manipulation;width:100%;position:relative;z-index:2}
+232: .j-btn svg{width:17px;height:17px}
+233: .j-btn.solid-light{background:#fff;color:var(--green2)}
+234: .j-btn.solid-light.danger{color:var(--red)}
+235: .j-btn.ghost{background:rgba(15,23,42,.22);border:1px solid rgba(255,255,255,.25);color:#fff}
+236: .j-btn.go{background:#fff;color:var(--green2);width:auto;display:inline-flex;padding:0 32px;font-size:15px}
+237: 
+238: /* ── Total do dia (redesenho 15/08/2026) ── */
+239: .td-card{background:#0D3A7D;border-radius:22px;overflow:hidden;box-shadow:0 4px 18px rgba(15,23,42,.08)}
+240: .td-row{position:relative;overflow:hidden;padding:15px 16px;border-top:1px solid rgba(255,255,255,.14)}
+241: .td-row:first-child{border-top:0}
+242: .td-wm{position:absolute;color:#fff;opacity:.09;pointer-events:none;z-index:0;top:-18%;height:136%;aspect-ratio:1/1}
+243: .td-wm.left{left:-36px}
+244: .td-wm.right{right:-40px}
+245: .td-row>*:not(.td-wm){position:relative;z-index:1}
+246: .td-corridas{display:flex;align-items:baseline;gap:9px}
+247: .td-corridas strong{font-size:32px;font-weight:800;color:#fff;letter-spacing:-.03em;line-height:1}
+248: .td-corridas span{font-size:12px;font-weight:800;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.04em}
+249: .td-sub{display:flex;align-items:center;gap:8px;margin-top:8px}
+250: .td-chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800}
+251: .td-chip.ok{color:#4ADE80}
+252: .td-chip.no{color:#F87171}
+253: .td-vline{width:1px;height:12px;background:rgba(255,255,255,.2)}
+254: .td-grid1{text-align:center}
+255: .td-grid1 strong{display:block;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.02em}
+256: .td-grid1 span{display:block;font-size:9.5px;font-weight:800;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.04em;margin-top:5px}
+257: .tk-split{display:flex;align-items:stretch}
+258: .tk-half{flex:1;position:relative;overflow:hidden;min-width:0;text-align:center;padding:2px 0}
+259: .tk-half.left{padding-left:8px}
+260: .tk-half.right{padding-right:8px}
+261: .tk-divider{width:1px;background:rgba(255,255,255,.18);align-self:stretch;margin:0 4px}
+262: .tk-half strong{display:block;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1;position:relative;z-index:1}
+263: .tk-half span{display:block;font-size:9.5px;font-weight:800;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.04em;margin-top:6px;position:relative;z-index:1}
+--- 205-264 ---
+205: .j-import{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:6px 11px;font-size:11px;font-weight:760;color:#fff;display:inline-flex;align-items:center;gap:5px;cursor:pointer;border:0;touch-action:manipulation;margin-left:auto}
+206: .j-import svg{width:13px;height:13px}
+207: .j-toprow{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+208: .j-current{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;flex:1;min-width:0}
+209: .j-current h2{font-family:'Inter',system-ui,sans-serif;font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1}
+210: .j-current p{font-size:10.5px;font-weight:600;opacity:.85;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+211: .j-km{font-size:12px;font-weight:620}
+212: .j-km strong{display:block;font-family:'Inter',system-ui,sans-serif;font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1}
+213: .j-km span{display:block;margin-top:4px;opacity:.85;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+214: .j-rates2{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;min-width:0}
+215: .j-bottomrow{display:flex;align-items:center;gap:10px}
+216: .j-metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px}
+217: .j-mini{background:transparent;border:none;border-radius:0;padding:6px 4px;text-align:center}
+218: .j-mini strong{display:block;font-family:'Inter',system-ui,sans-serif;font-size:22px;font-weight:800;text-align:center}
+219: .j-mini span{display:block;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;opacity:.78;margin-top:3px}
+220: .j-metrics2{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px}
+221: .j-mini.sm{padding:6px 5px;background:rgba(255,255,255,.12);border-radius:12px}
+222: .j-mini.sm strong{font-size:13px}
+223: .j-mini.sm span{font-size:8.5px}
+224: .km-edit-btn{width:18px;height:18px;border-radius:50%;border:0;background:rgba(255,255,255,.22);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;flex-shrink:0;padding:0}
+225: .val-edit-btn{width:20px;height:20px;border-radius:7px;border:0;background:#F1F5F9;color:#0A2F6B;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;flex-shrink:0;padding:0}
+226: .j-actions{flex-shrink:0}
+227: .j-round-btn{width:76px;height:76px;border-radius:50%;background:#fff;border:0;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+228: .j-round-btn svg{width:61px;height:61px}
+229: .j-round-btn.play svg{color:#22C55E}
+230: .j-round-btn.stop svg{color:#EF4444}
+231: .j-btn{height:52px;border:0;border-radius:16px;font-size:14px;font-weight:780;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;touch-action:manipulation;width:100%;position:relative;z-index:2}
+232: .j-btn svg{width:17px;height:17px}
+233: .j-btn.solid-light{background:#fff;color:var(--green2)}
+234: .j-btn.solid-light.danger{color:var(--red)}
+235: .j-btn.ghost{background:rgba(15,23,42,.22);border:1px solid rgba(255,255,255,.25);color:#fff}
+236: .j-btn.go{background:#fff;color:var(--green2);width:auto;display:inline-flex;padding:0 32px;font-size:15px}
+237: 
+238: /* ── Total do dia (redesenho 15/08/2026) ── */
+239: .td-card{background:#0D3A7D;border-radius:22px;overflow:hidden;box-shadow:0 4px 18px rgba(15,23,42,.08)}
+240: .td-row{position:relative;overflow:hidden;padding:15px 16px;border-top:1px solid rgba(255,255,255,.14)}
+241: .td-row:first-child{border-top:0}
+242: .td-wm{position:absolute;color:#fff;opacity:.09;pointer-events:none;z-index:0;top:-18%;height:136%;aspect-ratio:1/1}
+243: .td-wm.left{left:-36px}
+244: .td-wm.right{right:-40px}
+245: .td-row>*:not(.td-wm){position:relative;z-index:1}
+246: .td-corridas{display:flex;align-items:baseline;gap:9px}
+247: .td-corridas strong{font-size:32px;font-weight:800;color:#fff;letter-spacing:-.03em;line-height:1}
+248: .td-corridas span{font-size:12px;font-weight:800;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.04em}
+249: .td-sub{display:flex;align-items:center;gap:8px;margin-top:8px}
+250: .td-chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800}
+251: .td-chip.ok{color:#4ADE80}
+252: .td-chip.no{color:#F87171}
+253: .td-vline{width:1px;height:12px;background:rgba(255,255,255,.2)}
+254: .td-grid1{text-align:center}
+255: .td-grid1 strong{display:block;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.02em}
+256: .td-grid1 span{display:block;font-size:9.5px;font-weight:800;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.04em;margin-top:5px}
+257: .tk-split{display:flex;align-items:stretch}
+258: .tk-half{flex:1;position:relative;overflow:hidden;min-width:0;text-align:center;padding:2px 0}
+259: .tk-half.left{padding-left:8px}
+260: .tk-half.right{padding-right:8px}
+261: .tk-divider{width:1px;background:rgba(255,255,255,.18);align-self:stretch;margin:0 4px}
+262: .tk-half strong{display:block;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1;position:relative;z-index:1}
+263: .tk-half span{display:block;font-size:9.5px;font-weight:800;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.04em;margin-top:6px;position:relative;z-index:1}
+264: .tk-half .td-wm{top:50%;transform:translateY(-50%);height:150px;width:150px}
+--- 5105-5164 ---
+5105:   setText('jc-rsh', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
+5106:   setText('jc-rskm', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
+5107:   setText('jc-rsh2', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
+5108:   setText('jc-rskm2', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
+5109:   // Cor por indicador — pedido do Yuri (23/07/2026, mockup aprovado):
+5110:   // mesmos limiares vermelho/verde que o motorista já ajusta na régua do
+5111:   // MōB Flash (Indicadores → R$/km e R$/hora), cada indicador troca de cor
+5112:   // por conta própria. Sem dado ainda (sessão não rodou tempo/km) fica
+5113:   // neutro (verde), não faz sentido alarmar antes de ter dado de verdade.
+5114:   const rateEl = document.getElementById('jc-rate-hora');
+5115:   const kmEl   = document.getElementById('jc-rate-km');
+5116:   const rateEl2 = document.getElementById('jc-rate-hora2');
+5117:   const kmEl2   = document.getElementById('jc-rate-km2');
+5118:   const rateCls = rsh !== null ? rateColorClass('rhora', rsh) : '';
+5119:   const kmCls   = rskm !== null ? rateColorClass('rkm', rskm) : '';
+5120:   if (rateEl)  rateEl.className  = 'td-rcard ' + rateCls;
+5121:   if (kmEl)    kmEl.className    = 'td-rcard ' + kmCls;
+5122:   if (rateEl2) rateEl2.className = 'rate-cell ' + rateCls;
+5123:   if (kmEl2)   kmEl2.className   = 'rate-cell ' + kmCls;
+5124: 
+5125:   const actions = document.getElementById('jc-actions');
+5126:   if (!actions) return;
+5127:   if (!isToday) {
+5128:     actions.innerHTML = '';
+5129:   } else if (state === 'idle') {
+5130:     actions.innerHTML = `<button class="j-round-btn play" onclick="gpsStart()" aria-label="Iniciar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>`;
+5131:   } else if (state === 'running') {
+5132:     actions.innerHTML = '<button class="j-round-btn stop" onclick="confirmStop()" aria-label="Encerrar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"/></svg></button>';
+5133:   }
+5134: }
+5135: 
+5136: function agMinutesBetween(start, end) {
+5137:   if (!start || !end) return 0;
+5138:   const [h1,m1] = start.split(':').map(Number);
+5139:   const [h2,m2] = end.split(':').map(Number);
+5140:   return Math.max(0, (h2*60+m2) - (h1*60+m1));
+5141: }
+5142: function openMetasHojeModal() {
+5143:   const date = S.curDate || DB.today();
+5144:   const day = DB.day(date);
+5145:   const dow = new Date(date+'T12:00').getDay();
+5146:   const plan = DB.planJornada().find(p => p.days && p.days.includes(dow));
+5147:   const meta = DB.meta();
+5148:   const ov = day.metaOverride || null;
+5149:   const dimMes = new Date(new Date(date+'T12:00').getFullYear(), new Date(date+'T12:00').getMonth()+1, 0).getDate();
+5150:   const moneyGoal = (ov && ov.money) ? ov.money : ((plan && plan.moneyGoal) ? plan.moneyGoal : (meta.general ? meta.general/dimMes : 0));
+5151:   const kmGoal = (ov && ov.km) ? ov.km : (plan && plan.kmGoal ? plan.kmGoal : 0);
+5152:   const schedMin = (ov && ov.hours) ? ov.hours*60 : (plan ? (plan.schedules||[]).reduce((s,b)=>s+agMinutesBetween(b.start,b.end),0) : 0);
+5153:   const mEl = document.getElementById('mh-money'); if (mEl) mEl.value = moneyGoal ? moneyGoal.toFixed(2) : '';
+5154:   const kEl = document.getElementById('mh-km'); if (kEl) kEl.value = kmGoal || '';
+5155:   const hEl = document.getElementById('mh-hours'); if (hEl) hEl.value = schedMin ? (schedMin/60).toFixed(1) : '';
+5156:   const subEl = document.getElementById('mh-sub');
+5157:   if (subEl) {
+5158:     const isToday = date === DB.today();
+5159:     subEl.textContent = isToday ? 'Vale só para hoje' : ('Vale só para ' + new Date(date+'T12:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}));
+5160:   }
+5161:   openMo('mo-metas-hoje');
+5162: }
+5163: function saveMetasHoje() {
+5164:   const date = S.curDate || DB.today();
+--- 5107-5166 ---
+5107:   setText('jc-rsh2', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
+5108:   setText('jc-rskm2', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
+5109:   // Cor por indicador — pedido do Yuri (23/07/2026, mockup aprovado):
+5110:   // mesmos limiares vermelho/verde que o motorista já ajusta na régua do
+5111:   // MōB Flash (Indicadores → R$/km e R$/hora), cada indicador troca de cor
+5112:   // por conta própria. Sem dado ainda (sessão não rodou tempo/km) fica
+5113:   // neutro (verde), não faz sentido alarmar antes de ter dado de verdade.
+5114:   const rateEl = document.getElementById('jc-rate-hora');
+5115:   const kmEl   = document.getElementById('jc-rate-km');
+5116:   const rateEl2 = document.getElementById('jc-rate-hora2');
+5117:   const kmEl2   = document.getElementById('jc-rate-km2');
+5118:   const rateCls = rsh !== null ? rateColorClass('rhora', rsh) : '';
+5119:   const kmCls   = rskm !== null ? rateColorClass('rkm', rskm) : '';
+5120:   if (rateEl)  rateEl.className  = 'td-rcard ' + rateCls;
+5121:   if (kmEl)    kmEl.className    = 'td-rcard ' + kmCls;
+5122:   if (rateEl2) rateEl2.className = 'rate-cell ' + rateCls;
+5123:   if (kmEl2)   kmEl2.className   = 'rate-cell ' + kmCls;
+5124: 
+5125:   const actions = document.getElementById('jc-actions');
+5126:   if (!actions) return;
+5127:   if (!isToday) {
+5128:     actions.innerHTML = '';
+5129:   } else if (state === 'idle') {
+5130:     actions.innerHTML = `<button class="j-round-btn play" onclick="gpsStart()" aria-label="Iniciar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>`;
+5131:   } else if (state === 'running') {
+5132:     actions.innerHTML = '<button class="j-round-btn stop" onclick="confirmStop()" aria-label="Encerrar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"/></svg></button>';
+5133:   }
+5134: }
+5135: 
+5136: function agMinutesBetween(start, end) {
+5137:   if (!start || !end) return 0;
+5138:   const [h1,m1] = start.split(':').map(Number);
+5139:   const [h2,m2] = end.split(':').map(Number);
+5140:   return Math.max(0, (h2*60+m2) - (h1*60+m1));
+5141: }
+5142: function openMetasHojeModal() {
+5143:   const date = S.curDate || DB.today();
+5144:   const day = DB.day(date);
+5145:   const dow = new Date(date+'T12:00').getDay();
+5146:   const plan = DB.planJornada().find(p => p.days && p.days.includes(dow));
+5147:   const meta = DB.meta();
+5148:   const ov = day.metaOverride || null;
+5149:   const dimMes = new Date(new Date(date+'T12:00').getFullYear(), new Date(date+'T12:00').getMonth()+1, 0).getDate();
+5150:   const moneyGoal = (ov && ov.money) ? ov.money : ((plan && plan.moneyGoal) ? plan.moneyGoal : (meta.general ? meta.general/dimMes : 0));
+5151:   const kmGoal = (ov && ov.km) ? ov.km : (plan && plan.kmGoal ? plan.kmGoal : 0);
+5152:   const schedMin = (ov && ov.hours) ? ov.hours*60 : (plan ? (plan.schedules||[]).reduce((s,b)=>s+agMinutesBetween(b.start,b.end),0) : 0);
+5153:   const mEl = document.getElementById('mh-money'); if (mEl) mEl.value = moneyGoal ? moneyGoal.toFixed(2) : '';
+5154:   const kEl = document.getElementById('mh-km'); if (kEl) kEl.value = kmGoal || '';
+5155:   const hEl = document.getElementById('mh-hours'); if (hEl) hEl.value = schedMin ? (schedMin/60).toFixed(1) : '';
+5156:   const subEl = document.getElementById('mh-sub');
+5157:   if (subEl) {
+5158:     const isToday = date === DB.today();
+5159:     subEl.textContent = isToday ? 'Vale só para hoje' : ('Vale só para ' + new Date(date+'T12:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}));
+5160:   }
+5161:   openMo('mo-metas-hoje');
+5162: }
+5163: function saveMetasHoje() {
+5164:   const date = S.curDate || DB.today();
+5165:   const day = DB.day(date);
+5166:   const money = parseFloat((document.getElementById('mh-money')||{}).value) || 0;
+===== journey-wrap hits=3 =====
+--- 150-209 ---
+150: .stats-cards .stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 6px;text-align:center;box-shadow:0 3px 14px rgba(15,23,42,.06)}
+151: .stats-cards .v{font-size:15px;font-weight:800;line-height:1}
+152: .stats-cards .v.green{color:var(--green2)}
+153: .stats-cards .v.red{color:#EF4444}
+154: .stats-cards .l{font-size:9.5px;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-top:6px}
+155: /* R$/h e R$/km — largura total, preenchendo até as bordas do card */
+156: /* Faixa de destaque R$/h + R$/km (23/07/2026, mockup aprovado — Opção A).
+157:    Cor dinâmica POR INDICADOR (independente um do outro — R$/h pode estar
+158:    verde com R$/km em vermelho ao mesmo tempo): compara com os mesmos
+159:    limiares vermelho/verde que o MōB Flash já usa
+160:    (DB.cfg().flashReader.kpis.rhora/.rkm), aplicada em renderJourneyCard(). */
+161: .rate-strip{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+162: .rate-cell{text-align:center;border-radius:14px;padding:11px 6px;background:rgba(34,197,94,.16);border:1px solid rgba(34,197,94,.4);transition:background .3s,border-color .3s}
+163: .rate-cell.o{background:rgba(245,158,11,.18);border-color:rgba(245,158,11,.45)}
+164: .rate-cell.r{background:rgba(239,68,68,.20);border-color:rgba(239,68,68,.5)}
+165: .rate-cell strong{display:block;font-size:21px;font-weight:800;color:#fff;letter-spacing:-.02em}
+166: .rate-cell span{display:block;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#86efac;margin-top:2px}
+167: .rate-cell.o span{color:#fde68a}
+168: .rate-cell.r span{color:#fca5a5}
+169: /* Metas do dia: CSS movido pra seção solta (ver .goal-item/.gbar mais
+170:    abaixo, estilo "grande" já existente) — removido daqui em 23/07/2026,
+171:    não fica mais embutido no fundo escuro do card da jornada. */
+172: .stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px 8px;text-align:center;box-shadow:0 3px 14px rgba(15,23,42,.06)}.stat .v{font-family:'Inter',system-ui,sans-serif;font-size:15px;font-weight:700;white-space:nowrap}.stat .l{font-size:9px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-top:5px}.green{color:var(--green2)}.red{color:var(--red)}.blue{color:#0A2F6B}
+173: 
+174: /* ── Journey card (controles embutidos) ── */
+175: .journey-wrap{margin:0 16px 12px;border-radius:26px;overflow:hidden;box-shadow:0 10px 30px rgba(15,23,42,.10)}
+176: .journey{padding:16px;color:#fff;transition:background .25s;box-sizing:border-box}
+177: .journey.idle{background:var(--blue)}
+178: .journey.ended{background:var(--blue)}
+179: .journey.running{background:#15803D}
+180: .journey-breakdown{background:#fff;padding:14px}
+181: .sbar-wrap{cursor:pointer;touch-action:manipulation}
+182: .sbar{height:22px;border-radius:8px;overflow:hidden;display:flex;background:#F1F5F9;margin:0;pointer-events:none}
+183: .sbar i{display:flex;align-items:center;justify-content:center;height:100%;font-size:9.5px;font-weight:800;color:#fff}
+184: .sbar-list{max-height:0;overflow:hidden;transition:max-height .3s ease}
+185: .sbar-list.open{max-height:220px;margin-top:10px}
+186: .sbar-list .srow{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line)}
+187: .sbar-list .srow:first-child{border-top:0}
+188: .sbar-list .sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+189: .sbar-list .srow b{flex:1;font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.03em}
+190: .sbar-list .srow .pct{font-size:10px;font-weight:800;color:var(--muted);width:28px;text-align:right}
+191: .sbar-list .srow .stempo{font-size:10.5px;font-weight:800;color:var(--text);width:48px;text-align:right}
+192: .sbar-list .srow .skm{font-size:10.5px;font-weight:700;color:var(--muted);width:56px;text-align:right}
+193: .td-row.bd .sbar{background:rgba(255,255,255,.10)}
+194: .td-row.bd .sbar-list.open{margin-top:12px}
+195: .td-row.bd .sbar-list .srow{border-top:1px solid rgba(255,255,255,.14)}
+196: .td-row.bd .sbar-list .srow b,.td-row.bd .sbar-list .srow .stempo{color:#fff}
+197: .td-row.bd .sbar-list .srow .pct,.td-row.bd .sbar-list .srow .skm{color:rgba(255,255,255,.6)}
+198: .jss-statusbar{padding:2px 14px 12px}
+199: /* .journey.paused removido */
+200: .j-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px}
+201: .j-status{display:none}
+202: .j-status i{width:8px;height:8px;border-radius:50%;background:#fff;flex-shrink:0}
+203: .journey.running .j-status i{animation:pulse2 2s infinite}
+204: @keyframes pulse2{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.5)}50%{box-shadow:0 0 0 5px rgba(255,255,255,0)}}
+205: .j-import{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:6px 11px;font-size:11px;font-weight:760;color:#fff;display:inline-flex;align-items:center;gap:5px;cursor:pointer;border:0;touch-action:manipulation;margin-left:auto}
+206: .j-import svg{width:13px;height:13px}
+207: .j-toprow{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+208: .j-current{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px;flex:1;min-width:0}
+209: .j-current h2{font-family:'Inter',system-ui,sans-serif;font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1}
+--- 1494-1553 ---
+1494:     <div class="daybar">
+1495:       <button class="arrow" onclick="chgDay(-1)">&#8249;</button>
+1496:       <div class="datebox" onclick="document.getElementById('jorn-date-input').showPicker ? document.getElementById('jorn-date-input').showPicker() : document.getElementById('jorn-date-input').click()">
+1497:         <div style="display:flex;align-items:center;justify-content:center;gap:5px">
+1498:           <h1 id="dn-date">Hoje</h1>
+1499:           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+1500:         </div>
+1501:         <p id="dn-dow"></p>
+1502:       </div>
+1503:       <button class="arrow" onclick="chgDay(1)">&#8250;</button>
+1504:       <input type="date" id="jorn-date-input" onchange="setJornadaDate(this.value)" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px">
+1505:     </div>
+1506:   </div>
+1507: 
+1508:   <div id="pending-confirm-banner" class="pending-confirm-banner" style="display:none" onclick="openImportPrecheck()">
+1509:     <div class="pcb-ico">
+1510:       <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+1511:     </div>
+1512:     <div class="pcb-txt">
+1513:       <div class="pcb-title" id="pcb-title">corridas aguardando confirmação</div>
+1514:       <div class="pcb-sub">Toque para enviar o vídeo do histórico</div>
+1515:     </div>
+1516:     <svg class="pcb-chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+1517:   </div>
+1518: 
+1519:   <div class="journey-wrap" id="journey-wrap">
+1520:   <div class="journey idle" id="journey-card">
+1521:     <div class="j-status" style="display:none"><i></i><span id="jc-status-text">Iniciar</span></div>
+1522:     <div class="j-toprow">
+1523:       <div class="j-current" style="grid-template-columns:1.3fr 1fr 1fr;flex:1">
+1524:         <div><h2 id="jc-timer">00:00:00</h2><p id="jc-sub">Nenhuma sessão iniciada</p></div>
+1525:         <div class="j-km"><strong id="jc-km">0,0</strong><span>Km</span></div>
+1526:         <div class="j-km"><strong id="jc-trips2">0</strong><span>Corridas</span></div>
+1527:       </div>
+1528:     </div>
+1529:     <div class="j-bottomrow">
+1530:       <div class="j-rates2">
+1531:         <div class="rate-cell" id="jc-rate-hora2"><strong id="jc-rsh2">R$0,00</strong><span>R$ / hora</span></div>
+1532:         <div class="rate-cell" id="jc-rate-km2"><strong id="jc-rskm2">R$0,00</strong><span>R$ / km</span></div>
+1533:       </div>
+1534:       <div class="j-actions" id="jc-actions"></div>
+1535:     </div>
+1536:   </div>
+1537:   <div class="journey-breakdown" id="jc-breakdown" style="display:none">
+1538:     <div class="sbar-wrap" onclick="toggleBar('jc-blist')"><div class="sbar" id="jc-bar"></div></div>
+1539:     <div class="sbar-list" id="jc-blist"></div>
+1540:   </div>
+1541:   </div>
+1542: 
+1543:   <div class="section" style="padding:16px 16px 8px"><h2>Total do dia</h2></div>
+1544:   <div style="padding:0 16px 14px">
+1545:     <div class="td-card">
+1546: 
+1547:       <div class="td-row">
+1548:         <svg class="td-wm right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l1.5-4.5A2 2 0 0 1 6.4 7h11.2a2 2 0 0 1 1.9 1.5L21 13"/><path d="M3 13h18v4a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4z"/><circle cx="7.5" cy="17" r="1.3"/><circle cx="16.5" cy="17" r="1.3"/></svg>
+1549:         <div class="td-corridas"><strong id="jc-trips">0</strong><span>Corridas</span></div>
+1550:         <div class="td-sub" id="jc-corridas-sub" style="display:none">
+1551:           <span class="td-chip ok"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span id="jc-aceitas">0</span> aceitas</span>
+1552:           <span class="td-vline"></span>
+1553:           <span class="td-chip no"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg><span id="jc-recusadas">0</span> recusadas</span>
+--- 4985-5044 ---
+4985:       ...day.expenses.map(e=>Object.assign({},e,{_type:'despesa'}))
+4986:     ];
+4987:     // Mostrar todos os lançamentos do dia sem filtro de tab
+4988:     const items = allItems;
+4989:     const show = S.lancExpanded ? items : items.slice(0,5);
+4990:     lEl.innerHTML = show.length ? show.map(it => lancItemJornada(it)).join('') : '<div class="empty">Nenhum lançamento registrado</div>';
+4991:     if (lancToggleBtn) {
+4992:       lancToggleBtn.style.display = items.length > 5 ? '' : 'none';
+4993:       lancToggleBtn.innerHTML = S.lancExpanded ? 'Ver menos' : 'Ver todas &#8250;';
+4994:     }
+4995:   }
+4996:   reapplyOpenTripDetail();
+4997:   reapplyOpenJss();
+4998: }
+4999: 
+5000: function renderJourneyCard(day, isToday) {
+5001:   const jc = document.getElementById('journey-card');
+5002:   if (!jc) return;
+5003:   // Card de sessão atual (timer/km/botão) só faz sentido em "hoje" — em dia
+5004:   // passado não existe jornada "em andamento" possível, então esse card
+5005:   // some por completo. O restante da função continua rodando igual: os
+5006:   // valores que ela calcula (jc-trips, jc-total, jc-kmtotal, jc-kmativo,
+5007:   // jc-kmdesl, jc-rsh, jc-rskm) agora moram no card "Total do dia" — que é
+5008:   // um elemento IRMÃO de journey-card, não um filho, e precisa continuar
+5009:   // sendo populado em qualquer dia, passado ou presente.
+5010:   const jcWrap = document.getElementById('journey-wrap');
+5011:   if (jcWrap) jcWrap.style.display = isToday ? '' : 'none';
+5012:   const g = S.gps;
+5013:   const finished = day.sessions || [];
+5014:   const finishedElapsed = finished.reduce((s,x)=>s+(x.elapsed||0),0);
+5015:   const finishedKm = finished.reduce((s,x)=>s+(x.km||0),0);
+5016:   const live = isToday && g.st === 'running';
+5017:   const liveElapsed = live ? getElapsed() : 0;
+5018:   const liveKm = live ? g.km : 0;
+5019:   const totalElapsed = Math.max(0, finishedElapsed + liveElapsed + (day.tempoAdjust || 0));
+5020:   const totalKm = finishedKm + liveKm + (day.kmAdjust || 0);
+5021:   const state = isToday ? g.st : 'idle';
+5022: 
+5023:   let cls = 'idle';
+5024:   if (state === 'running') cls = 'running';
+5025:   else if (finished.length > 0) cls = 'ended';
+5026:   jc.className = 'journey ' + cls;
+5027: 
+5028:   setText('jc-status-text',
+5029:     state === 'running' ? 'Online' :
+5030:     finished.length > 0 ? 'Concluído' : 'Iniciar'
+5031:   );
+5032:   const th = Math.floor(liveElapsed/3600), tm = Math.floor(liveElapsed%3600/60), ts = liveElapsed%60;
+5033:   setText('jc-timer', p2(th)+':'+p2(tm)+':'+p2(ts));
+5034:   setText('jc-sub',
+5035:     state === 'running' ? 'Sessão atual · iniciada '+fmtHM(g.start) :
+5036:     finished.length > 0 ? finished.length+(finished.length===1?' jornada hoje':' jornadas hoje') :
+5037:     'Nenhuma sessão iniciada'
+5038:   );
+5039:   setText('jc-km', liveKm.toFixed(1));
+5040:   const tth = Math.floor(totalElapsed/3600), ttm = Math.floor(totalElapsed%3600/60);
+5041:   setText('jc-total', tth+'h'+p2(ttm)+'m');
+5042:   setText('jc-kmtotal', totalKm.toFixed(1)+' km');
+5043:   // CORRIGIDO (23/07/2026, confirmado com dado real pelo Yuri): esses 4
+5044:   // KPIs do card principal (corridas, km ativo, R$/h, R$/km) só somavam
+===== journey-card hits=4 =====
+--- 1495-1554 ---
+1495:       <button class="arrow" onclick="chgDay(-1)">&#8249;</button>
+1496:       <div class="datebox" onclick="document.getElementById('jorn-date-input').showPicker ? document.getElementById('jorn-date-input').showPicker() : document.getElementById('jorn-date-input').click()">
+1497:         <div style="display:flex;align-items:center;justify-content:center;gap:5px">
+1498:           <h1 id="dn-date">Hoje</h1>
+1499:           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+1500:         </div>
+1501:         <p id="dn-dow"></p>
+1502:       </div>
+1503:       <button class="arrow" onclick="chgDay(1)">&#8250;</button>
+1504:       <input type="date" id="jorn-date-input" onchange="setJornadaDate(this.value)" style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px">
+1505:     </div>
+1506:   </div>
+1507: 
+1508:   <div id="pending-confirm-banner" class="pending-confirm-banner" style="display:none" onclick="openImportPrecheck()">
+1509:     <div class="pcb-ico">
+1510:       <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+1511:     </div>
+1512:     <div class="pcb-txt">
+1513:       <div class="pcb-title" id="pcb-title">corridas aguardando confirmação</div>
+1514:       <div class="pcb-sub">Toque para enviar o vídeo do histórico</div>
+1515:     </div>
+1516:     <svg class="pcb-chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+1517:   </div>
+1518: 
+1519:   <div class="journey-wrap" id="journey-wrap">
+1520:   <div class="journey idle" id="journey-card">
+1521:     <div class="j-status" style="display:none"><i></i><span id="jc-status-text">Iniciar</span></div>
+1522:     <div class="j-toprow">
+1523:       <div class="j-current" style="grid-template-columns:1.3fr 1fr 1fr;flex:1">
+1524:         <div><h2 id="jc-timer">00:00:00</h2><p id="jc-sub">Nenhuma sessão iniciada</p></div>
+1525:         <div class="j-km"><strong id="jc-km">0,0</strong><span>Km</span></div>
+1526:         <div class="j-km"><strong id="jc-trips2">0</strong><span>Corridas</span></div>
+1527:       </div>
+1528:     </div>
+1529:     <div class="j-bottomrow">
+1530:       <div class="j-rates2">
+1531:         <div class="rate-cell" id="jc-rate-hora2"><strong id="jc-rsh2">R$0,00</strong><span>R$ / hora</span></div>
+1532:         <div class="rate-cell" id="jc-rate-km2"><strong id="jc-rskm2">R$0,00</strong><span>R$ / km</span></div>
+1533:       </div>
+1534:       <div class="j-actions" id="jc-actions"></div>
+1535:     </div>
+1536:   </div>
+1537:   <div class="journey-breakdown" id="jc-breakdown" style="display:none">
+1538:     <div class="sbar-wrap" onclick="toggleBar('jc-blist')"><div class="sbar" id="jc-bar"></div></div>
+1539:     <div class="sbar-list" id="jc-blist"></div>
+1540:   </div>
+1541:   </div>
+1542: 
+1543:   <div class="section" style="padding:16px 16px 8px"><h2>Total do dia</h2></div>
+1544:   <div style="padding:0 16px 14px">
+1545:     <div class="td-card">
+1546: 
+1547:       <div class="td-row">
+1548:         <svg class="td-wm right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l1.5-4.5A2 2 0 0 1 6.4 7h11.2a2 2 0 0 1 1.9 1.5L21 13"/><path d="M3 13h18v4a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4z"/><circle cx="7.5" cy="17" r="1.3"/><circle cx="16.5" cy="17" r="1.3"/></svg>
+1549:         <div class="td-corridas"><strong id="jc-trips">0</strong><span>Corridas</span></div>
+1550:         <div class="td-sub" id="jc-corridas-sub" style="display:none">
+1551:           <span class="td-chip ok"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span id="jc-aceitas">0</span> aceitas</span>
+1552:           <span class="td-vline"></span>
+1553:           <span class="td-chip no"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg><span id="jc-recusadas">0</span> recusadas</span>
+1554:         </div>
+--- 4976-5035 ---
+4976:   // sessionItem, que já mescla Importadas + Automáticas). Lista de
+4977:   // Importadas ainda mora na tela Corridas separada (navTo('corridas')).
+4978:   // Lançamentos (5 mais recentes, ou todos)
+4979:   const lEl = document.getElementById('jorn-lanc-list');
+4980:   const lancToggleBtn = document.getElementById('lanc-toggle');
+4981:   if (lEl) {
+4982:     const today = DB.today();
+4983:     const allItems = [
+4984:       ...day.revenues.map(r=>Object.assign({},r,{_type:'receita'})),
+4985:       ...day.expenses.map(e=>Object.assign({},e,{_type:'despesa'}))
+4986:     ];
+4987:     // Mostrar todos os lançamentos do dia sem filtro de tab
+4988:     const items = allItems;
+4989:     const show = S.lancExpanded ? items : items.slice(0,5);
+4990:     lEl.innerHTML = show.length ? show.map(it => lancItemJornada(it)).join('') : '<div class="empty">Nenhum lançamento registrado</div>';
+4991:     if (lancToggleBtn) {
+4992:       lancToggleBtn.style.display = items.length > 5 ? '' : 'none';
+4993:       lancToggleBtn.innerHTML = S.lancExpanded ? 'Ver menos' : 'Ver todas &#8250;';
+4994:     }
+4995:   }
+4996:   reapplyOpenTripDetail();
+4997:   reapplyOpenJss();
+4998: }
+4999: 
+5000: function renderJourneyCard(day, isToday) {
+5001:   const jc = document.getElementById('journey-card');
+5002:   if (!jc) return;
+5003:   // Card de sessão atual (timer/km/botão) só faz sentido em "hoje" — em dia
+5004:   // passado não existe jornada "em andamento" possível, então esse card
+5005:   // some por completo. O restante da função continua rodando igual: os
+5006:   // valores que ela calcula (jc-trips, jc-total, jc-kmtotal, jc-kmativo,
+5007:   // jc-kmdesl, jc-rsh, jc-rskm) agora moram no card "Total do dia" — que é
+5008:   // um elemento IRMÃO de journey-card, não um filho, e precisa continuar
+5009:   // sendo populado em qualquer dia, passado ou presente.
+5010:   const jcWrap = document.getElementById('journey-wrap');
+5011:   if (jcWrap) jcWrap.style.display = isToday ? '' : 'none';
+5012:   const g = S.gps;
+5013:   const finished = day.sessions || [];
+5014:   const finishedElapsed = finished.reduce((s,x)=>s+(x.elapsed||0),0);
+5015:   const finishedKm = finished.reduce((s,x)=>s+(x.km||0),0);
+5016:   const live = isToday && g.st === 'running';
+5017:   const liveElapsed = live ? getElapsed() : 0;
+5018:   const liveKm = live ? g.km : 0;
+5019:   const totalElapsed = Math.max(0, finishedElapsed + liveElapsed + (day.tempoAdjust || 0));
+5020:   const totalKm = finishedKm + liveKm + (day.kmAdjust || 0);
+5021:   const state = isToday ? g.st : 'idle';
+5022: 
+5023:   let cls = 'idle';
+5024:   if (state === 'running') cls = 'running';
+5025:   else if (finished.length > 0) cls = 'ended';
+5026:   jc.className = 'journey ' + cls;
+5027: 
+5028:   setText('jc-status-text',
+5029:     state === 'running' ? 'Online' :
+5030:     finished.length > 0 ? 'Concluído' : 'Iniciar'
+5031:   );
+5032:   const th = Math.floor(liveElapsed/3600), tm = Math.floor(liveElapsed%3600/60), ts = liveElapsed%60;
+5033:   setText('jc-timer', p2(th)+':'+p2(tm)+':'+p2(ts));
+5034:   setText('jc-sub',
+5035:     state === 'running' ? 'Sessão atual · iniciada '+fmtHM(g.start) :
+--- 4983-5042 ---
+4983:     const allItems = [
+4984:       ...day.revenues.map(r=>Object.assign({},r,{_type:'receita'})),
+4985:       ...day.expenses.map(e=>Object.assign({},e,{_type:'despesa'}))
+4986:     ];
+4987:     // Mostrar todos os lançamentos do dia sem filtro de tab
+4988:     const items = allItems;
+4989:     const show = S.lancExpanded ? items : items.slice(0,5);
+4990:     lEl.innerHTML = show.length ? show.map(it => lancItemJornada(it)).join('') : '<div class="empty">Nenhum lançamento registrado</div>';
+4991:     if (lancToggleBtn) {
+4992:       lancToggleBtn.style.display = items.length > 5 ? '' : 'none';
+4993:       lancToggleBtn.innerHTML = S.lancExpanded ? 'Ver menos' : 'Ver todas &#8250;';
+4994:     }
+4995:   }
+4996:   reapplyOpenTripDetail();
+4997:   reapplyOpenJss();
+4998: }
+4999: 
+5000: function renderJourneyCard(day, isToday) {
+5001:   const jc = document.getElementById('journey-card');
+5002:   if (!jc) return;
+5003:   // Card de sessão atual (timer/km/botão) só faz sentido em "hoje" — em dia
+5004:   // passado não existe jornada "em andamento" possível, então esse card
+5005:   // some por completo. O restante da função continua rodando igual: os
+5006:   // valores que ela calcula (jc-trips, jc-total, jc-kmtotal, jc-kmativo,
+5007:   // jc-kmdesl, jc-rsh, jc-rskm) agora moram no card "Total do dia" — que é
+5008:   // um elemento IRMÃO de journey-card, não um filho, e precisa continuar
+5009:   // sendo populado em qualquer dia, passado ou presente.
+5010:   const jcWrap = document.getElementById('journey-wrap');
+5011:   if (jcWrap) jcWrap.style.display = isToday ? '' : 'none';
+5012:   const g = S.gps;
+5013:   const finished = day.sessions || [];
+5014:   const finishedElapsed = finished.reduce((s,x)=>s+(x.elapsed||0),0);
+5015:   const finishedKm = finished.reduce((s,x)=>s+(x.km||0),0);
+5016:   const live = isToday && g.st === 'running';
+5017:   const liveElapsed = live ? getElapsed() : 0;
+5018:   const liveKm = live ? g.km : 0;
+5019:   const totalElapsed = Math.max(0, finishedElapsed + liveElapsed + (day.tempoAdjust || 0));
+5020:   const totalKm = finishedKm + liveKm + (day.kmAdjust || 0);
+5021:   const state = isToday ? g.st : 'idle';
+5022: 
+5023:   let cls = 'idle';
+5024:   if (state === 'running') cls = 'running';
+5025:   else if (finished.length > 0) cls = 'ended';
+5026:   jc.className = 'journey ' + cls;
+5027: 
+5028:   setText('jc-status-text',
+5029:     state === 'running' ? 'Online' :
+5030:     finished.length > 0 ? 'Concluído' : 'Iniciar'
+5031:   );
+5032:   const th = Math.floor(liveElapsed/3600), tm = Math.floor(liveElapsed%3600/60), ts = liveElapsed%60;
+5033:   setText('jc-timer', p2(th)+':'+p2(tm)+':'+p2(ts));
+5034:   setText('jc-sub',
+5035:     state === 'running' ? 'Sessão atual · iniciada '+fmtHM(g.start) :
+5036:     finished.length > 0 ? finished.length+(finished.length===1?' jornada hoje':' jornadas hoje') :
+5037:     'Nenhuma sessão iniciada'
+5038:   );
+5039:   setText('jc-km', liveKm.toFixed(1));
+5040:   const tth = Math.floor(totalElapsed/3600), ttm = Math.floor(totalElapsed%3600/60);
+5041:   setText('jc-total', tth+'h'+p2(ttm)+'m');
+5042:   setText('jc-kmtotal', totalKm.toFixed(1)+' km');
+--- 13991-14050 ---
+13991: (function(){
+13992:   function isJourneyFlashNative(){
+13993:     try { return typeof isNativeApp === 'function' && isNativeApp() && typeof SmartMobiNative !== 'undefined'; }
+13994:     catch(e){ return false; }
+13995:   }
+13996: 
+13997:   function journeyFlashPermissionState(){
+13998:     if(!isJourneyFlashNative()) return null;
+13999:     try{
+14000:       const state = {
+14001:         a11y: !!SmartMobiNative.isA11yEnabled(),
+14002:         overlay: !!SmartMobiNative.hasOverlay(),
+14003:         capture: !!SmartMobiNative.isScreenCaptureActive()
+14004:       };
+14005:       state.missing = [];
+14006:       if(!state.a11y) state.missing.push('Acessibilidade');
+14007:       if(!state.overlay) state.missing.push('Sobrepor outros apps');
+14008:       if(!state.capture) state.missing.push('Leitura da tela');
+14009:       return state;
+14010:     }catch(e){ return null; }
+14011:   }
+14012: 
+14013:   function ensureJourneyFlashWarning(){
+14014:     let el = document.getElementById('journey-flash-warning');
+14015:     if(el) return el;
+14016:     const card = document.getElementById('journey-card');
+14017:     if(!card || !card.parentNode) return null;
+14018: 
+14019:     el = document.createElement('button');
+14020:     el.type = 'button';
+14021:     el.id = 'journey-flash-warning';
+14022:     el.setAttribute('aria-label','Abrir permissões do MōB Flash');
+14023:     el.style.cssText = 'display:none;width:calc(100% - 32px);margin:0 16px 12px;padding:12px 14px;border:1px solid #FDBA74;border-radius:16px;background:#FFF7ED;box-shadow:0 3px 12px rgba(154,52,18,.08);text-align:left;cursor:pointer;touch-action:manipulation;font-family:inherit;align-items:center;gap:11px;color:#9A3412';
+14024:     el.innerHTML = '<span style="width:34px;height:34px;border-radius:11px;background:#FFEDD5;display:flex;align-items:center;justify-content:center;flex:0 0 34px">'+
+14025:       '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.6 2.6 17a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 3.6a2 2 0 0 0-3.4 0Z"/></svg></span>'+
+14026:       '<span style="flex:1;min-width:0"><strong style="display:block;font-size:12.5px;font-weight:800;line-height:1.35;color:#9A3412">MōB Flash precisa de atenção</strong><span id="journey-flash-warning-sub" style="display:block;font-size:10.8px;font-weight:600;line-height:1.4;color:#C2410C;margin-top:2px"></span></span>'+
+14027:       '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto;opacity:.7"><path d="M9 18l6-6-6-6"/></svg>';
+14028:     el.addEventListener('click', openJourneyFlashPermissions);
+14029:     card.parentNode.insertBefore(el, card);
+14030:     return el;
+14031:   }
+14032: 
+14033:   async function openJourneyFlashPermissions(){
+14034:     try{
+14035:       if(typeof _flashLoadDraft === 'function') await _flashLoadDraft();
+14036:       if(typeof flashWizardMode !== 'undefined') flashWizardMode = 'settings';
+14037:       if(typeof flashWizardOnComplete !== 'undefined') flashWizardOnComplete = null;
+14038:       if(typeof _flashWizardShowStep === 'function') _flashWizardShowStep(2);
+14039:       if(typeof renderFlashKpiList === 'function') renderFlashKpiList();
+14040:       if(typeof renderFlashPreview === 'function') renderFlashPreview();
+14041:       if(typeof renderFlashPerms === 'function') renderFlashPerms();
+14042:       if(typeof openMo === 'function') openMo('mo-flash');
+14043:     }catch(e){
+14044:       try{
+14045:         if(typeof openFlashConfig === 'function'){
+14046:           await openFlashConfig();
+14047:           if(typeof _flashWizardShowStep === 'function') _flashWizardShowStep(2);
+14048:           if(typeof renderFlashPerms === 'function') renderFlashPerms();
+14049:         }
+14050:       }catch(_e){}
+===== gpsStart() hits=6 =====
+--- 5105-5164 ---
+5105:   setText('jc-rsh', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
+5106:   setText('jc-rskm', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
+5107:   setText('jc-rsh2', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
+5108:   setText('jc-rskm2', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
+5109:   // Cor por indicador — pedido do Yuri (23/07/2026, mockup aprovado):
+5110:   // mesmos limiares vermelho/verde que o motorista já ajusta na régua do
+5111:   // MōB Flash (Indicadores → R$/km e R$/hora), cada indicador troca de cor
+5112:   // por conta própria. Sem dado ainda (sessão não rodou tempo/km) fica
+5113:   // neutro (verde), não faz sentido alarmar antes de ter dado de verdade.
+5114:   const rateEl = document.getElementById('jc-rate-hora');
+5115:   const kmEl   = document.getElementById('jc-rate-km');
+5116:   const rateEl2 = document.getElementById('jc-rate-hora2');
+5117:   const kmEl2   = document.getElementById('jc-rate-km2');
+5118:   const rateCls = rsh !== null ? rateColorClass('rhora', rsh) : '';
+5119:   const kmCls   = rskm !== null ? rateColorClass('rkm', rskm) : '';
+5120:   if (rateEl)  rateEl.className  = 'td-rcard ' + rateCls;
+5121:   if (kmEl)    kmEl.className    = 'td-rcard ' + kmCls;
+5122:   if (rateEl2) rateEl2.className = 'rate-cell ' + rateCls;
+5123:   if (kmEl2)   kmEl2.className   = 'rate-cell ' + kmCls;
+5124: 
+5125:   const actions = document.getElementById('jc-actions');
+5126:   if (!actions) return;
+5127:   if (!isToday) {
+5128:     actions.innerHTML = '';
+5129:   } else if (state === 'idle') {
+5130:     actions.innerHTML = `<button class="j-round-btn play" onclick="gpsStart()" aria-label="Iniciar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>`;
+5131:   } else if (state === 'running') {
+5132:     actions.innerHTML = '<button class="j-round-btn stop" onclick="confirmStop()" aria-label="Encerrar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"/></svg></button>';
+5133:   }
+5134: }
+5135: 
+5136: function agMinutesBetween(start, end) {
+5137:   if (!start || !end) return 0;
+5138:   const [h1,m1] = start.split(':').map(Number);
+5139:   const [h2,m2] = end.split(':').map(Number);
+5140:   return Math.max(0, (h2*60+m2) - (h1*60+m1));
+5141: }
+5142: function openMetasHojeModal() {
+5143:   const date = S.curDate || DB.today();
+5144:   const day = DB.day(date);
+5145:   const dow = new Date(date+'T12:00').getDay();
+5146:   const plan = DB.planJornada().find(p => p.days && p.days.includes(dow));
+5147:   const meta = DB.meta();
+5148:   const ov = day.metaOverride || null;
+5149:   const dimMes = new Date(new Date(date+'T12:00').getFullYear(), new Date(date+'T12:00').getMonth()+1, 0).getDate();
+5150:   const moneyGoal = (ov && ov.money) ? ov.money : ((plan && plan.moneyGoal) ? plan.moneyGoal : (meta.general ? meta.general/dimMes : 0));
+5151:   const kmGoal = (ov && ov.km) ? ov.km : (plan && plan.kmGoal ? plan.kmGoal : 0);
+5152:   const schedMin = (ov && ov.hours) ? ov.hours*60 : (plan ? (plan.schedules||[]).reduce((s,b)=>s+agMinutesBetween(b.start,b.end),0) : 0);
+5153:   const mEl = document.getElementById('mh-money'); if (mEl) mEl.value = moneyGoal ? moneyGoal.toFixed(2) : '';
+5154:   const kEl = document.getElementById('mh-km'); if (kEl) kEl.value = kmGoal || '';
+5155:   const hEl = document.getElementById('mh-hours'); if (hEl) hEl.value = schedMin ? (schedMin/60).toFixed(1) : '';
+5156:   const subEl = document.getElementById('mh-sub');
+5157:   if (subEl) {
+5158:     const isToday = date === DB.today();
+5159:     subEl.textContent = isToday ? 'Vale só para hoje' : ('Vale só para ' + new Date(date+'T12:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}));
+5160:   }
+5161:   openMo('mo-metas-hoje');
+5162: }
+5163: function saveMetasHoje() {
+5164:   const date = S.curDate || DB.today();
+--- 8354-8413 ---
+8354:       SYNC.push('trips', { id: trip.id, date, platform: trip.platform, time: trip.time || null,
+8355:         duration: trip.duration, origin: trip.origin, dest: trip.dest, value: trip.value, km: trip.km,
+8356:         category: trip.category, surge: trip.surge, airport: trip.airport, dinamico: trip.dinamico,
+8357:         source: trip.source, dinheiro: trip.dinheiro, pedagio: trip.pedagio,
+8358:         serviceFee: trip.serviceFee, taxaZero: trip.taxaZero });
+8359:     });
+8360:     DB.saveDay(day);
+8361:     if (i % 15 === 0) await new Promise(r => setTimeout(r, 0));
+8362:   }
+8363: 
+8364:   // Enriquecer corridas OCR existentes com dados do zip
+8365:   const _enriched = enrichExistingTrips(res.allTrips || []);
+8366:   if (_enriched > 0) showToast(`${_enriched} corrida${_enriched!==1?'s':''} enriquecida${_enriched!==1?'s':''} com dados da Uber`);
+8367: 
+8368:   closeMo('mo-uberzip');
+8369:   closeMo('mo-import');
+8370:   _uzResult = null;
+8371:   setTimeout(() => {
+8372:     try { renderJornada(); } catch(e) {}
+8373:     try { renderHome(); } catch(e) {}
+8374:   }, 80);
+8375:   showToast(res.added + ' corrida' + (res.added !== 1 ? 's' : '') + ' importada' + (res.added !== 1 ? 's' : '') + ' do histórico do Uber!', 'success');
+8376: }
+8377: 
+8378: function gpsAction() {
+8379:   if (S.gps.st === 'idle') { gpsStart(); return; }
+8380:   // pausar removido
+8381: }
+8382: function gpsOnPosition(pos) {
+8383:   const g = S.gps;
+8384:   if (g.st === 'paused') return; // pausado nao conta km nem avanca referencia
+8385:   const { latitude: la, longitude: lo, accuracy } = pos.coords;
+8386:   const now = Date.now();
+8387:   // Fix de baixa precisão (comum em túnel, garagem, prédios altos) — ignora totalmente,
+8388:   // não usa como referência pra não distorcer a próxima medição.
+8389:   if (accuracy != null && accuracy > 25) return;
+8390:   const ref = g.pts.length ? g.pts[g.pts.length - 1] : null;
+8391:   if (ref) {
+8392:     const d = hav(ref[0], ref[1], la, lo); // km
+8393:     const distM = d * 1000;
+8394:     // Piso de ruído: GPS "tremido" parado ou no trânsito não pode contar como deslocamento.
+8395:     // Quanto pior a precisão do fix, maior o movimento exigido pra confiar nele.
+8396:     const noiseFloorM = Math.max(10, accuracy || 15);
+8397:     if (distM >= noiseFloorM) {
+8398:       // Rejeita saltos com velocidade implausível (glitch/teleporte de GPS)
+8399:       const dtH = g.lastFixTime ? (now - g.lastFixTime) / 3600000 : null;
+8400:       const speedKmh = dtH && dtH > 0 ? d / dtH : 0;
+8401:       if (!dtH || speedKmh < 180) g.km += d;
+8402:       // Só avança a referência quando o movimento foi validado — assim deslocamento
+8403:       // lento (trânsito parado andando aos poucos) ainda acumula corretamente.
+8404:       g.pts.push([la, lo]);
+8405:       g.lastFixTime = now;
+8406:     }
+8407:   } else {
+8408:     g.pts.push([la, lo]);
+8409:     g.lastFixTime = now;
+8410:   }
+8411:   setText('jc-km', g.km.toFixed(1));
+8412:   setText('jc-kmtotal', (g.baseKm + g.km).toFixed(1) + ' km');
+8413:   persistGps();
+--- 8853-8912 ---
+8853:     if (!orphans.length) return null;
+8854:     for (const o of orphans) {
+8855:       const estEnd = o.start_ms + (o.elapsed_secs||0)*1000;
+8856:       await _SUPA.from("sessions").upsert({
+8857:         id: o.id, user_id: _supaUser.id, end_ms: Math.max(estEnd, o.start_ms+60000),
+8858:         is_paused: false, paused_ms: 0
+8859:       }, {onConflict:"id"}).catch(()=>{});
+8860:       // Atualiza também o histórico local do dia, se existir
+8861:       try {
+8862:         const day = DB.day(o.date);
+8863:         if (day.sessions) {
+8864:           const idx = day.sessions.findIndex(s => s.id === o.id);
+8865:           const sess = { id:o.id, start:o.start_ms, end:estEnd, km:parseFloat(o.km)||0, elapsed:o.elapsed_secs||0 };
+8866:           if (idx >= 0) day.sessions[idx] = sess; else day.sessions.push(sess);
+8867:           DB.saveDay(day);
+8868:         }
+8869:       } catch(e) {}
+8870:     }
+8871:     console.warn(`[_closeOrphanSessions] ${orphans.length} jornada(s) órfã(s) encerrada(s) automaticamente`);
+8872:     return orphans.length;
+8873:   } catch(e) { console.error("[_closeOrphanSessions]", e); return null; }
+8874: }
+8875: 
+8876: // Ponto de entrada real de "iniciar jornada" — agora passa pelo assistente
+8877: // (métricas + permissões) antes de chamar a lógica de verdade. Os dois
+8878: // lugares que chamavam gpsStart() direto (botão "Iniciar" e o toque no
+8879: // ícone central quando idle) não precisaram mudar nada — ganham o
+8880: // assistente de graça só por causa dessa troca aqui.
+8881: function gpsStart() {
+8882:   if (S.gps.st === 'running' || S.gps.st === 'paused') return;
+8883:   _gpsStartCore();
+8884: }
+8885: 
+8886: async function _gpsStartCore() {
+8887:   // Guard: impede reentrada — clique duplo/rápido não pode criar uma
+8888:   // segunda jornada sobrepondo a que acabou de iniciar
+8889:   if (S.gps.st === 'running' || S.gps.st === 'paused') return;
+8890:   // Feedback visual IMEDIATO: o card e o botão do menu ficam verdes no
+8891:   // instante do clique, sem esperar a checagem de continuidade no Supabase
+8892:   // (que tem um await de rede e antes atrasava a virada do card pra verde —
+8893:   // só mudava depois de tocar no menu). Se a checagem abaixo encontrar uma
+8894:   // sessão em aberto, ela apenas reaproveita o mesmo estado 'running'.
+8895:   S.gps.st = 'running';
+8896:   try { syncNavButton(); } catch(e) {}
+8897:   try { if (S.sec === 'jornada') renderJornada(); } catch(e) {}
+8898:   // ═══ CONTINUIDADE: antes de criar uma jornada nova do zero, verifica
+8899:   // se já existe uma sessão em aberto (sem end_ms) nas últimas 12h. Se
+8900:   // existir, RETOMA ela em vez de começar outra — protege contra perda
+8901:   // de km quando gpsStart() é chamado de forma inesperada (ex: toque no
+8902:   // botão flutuante nativo) enquanto uma jornada anterior ainda deveria
+8903:   // estar rodando mas o app local perdeu o estado dela.
+8904:   if (_supaUser && navigator.onLine) {
+8905:     try {
+8906:       const cutoff = Date.now() - 12*3600*1000;
+8907:       const { data: open } = await _SUPA.from('sessions').select('*')
+8908:         .eq('user_id', _supaUser.id).is('end_ms', null)
+8909:         .gte('start_ms', cutoff).order('start_ms', {ascending:false}).limit(1);
+8910:       if (open && open.length) {
+8911:         const s = open[0];
+8912:         const g2 = S.gps;
+--- 8856-8915 ---
+8856:       await _SUPA.from("sessions").upsert({
+8857:         id: o.id, user_id: _supaUser.id, end_ms: Math.max(estEnd, o.start_ms+60000),
+8858:         is_paused: false, paused_ms: 0
+8859:       }, {onConflict:"id"}).catch(()=>{});
+8860:       // Atualiza também o histórico local do dia, se existir
+8861:       try {
+8862:         const day = DB.day(o.date);
+8863:         if (day.sessions) {
+8864:           const idx = day.sessions.findIndex(s => s.id === o.id);
+8865:           const sess = { id:o.id, start:o.start_ms, end:estEnd, km:parseFloat(o.km)||0, elapsed:o.elapsed_secs||0 };
+8866:           if (idx >= 0) day.sessions[idx] = sess; else day.sessions.push(sess);
+8867:           DB.saveDay(day);
+8868:         }
+8869:       } catch(e) {}
+8870:     }
+8871:     console.warn(`[_closeOrphanSessions] ${orphans.length} jornada(s) órfã(s) encerrada(s) automaticamente`);
+8872:     return orphans.length;
+8873:   } catch(e) { console.error("[_closeOrphanSessions]", e); return null; }
+8874: }
+8875: 
+8876: // Ponto de entrada real de "iniciar jornada" — agora passa pelo assistente
+8877: // (métricas + permissões) antes de chamar a lógica de verdade. Os dois
+8878: // lugares que chamavam gpsStart() direto (botão "Iniciar" e o toque no
+8879: // ícone central quando idle) não precisaram mudar nada — ganham o
+8880: // assistente de graça só por causa dessa troca aqui.
+8881: function gpsStart() {
+8882:   if (S.gps.st === 'running' || S.gps.st === 'paused') return;
+8883:   _gpsStartCore();
+8884: }
+8885: 
+8886: async function _gpsStartCore() {
+8887:   // Guard: impede reentrada — clique duplo/rápido não pode criar uma
+8888:   // segunda jornada sobrepondo a que acabou de iniciar
+8889:   if (S.gps.st === 'running' || S.gps.st === 'paused') return;
+8890:   // Feedback visual IMEDIATO: o card e o botão do menu ficam verdes no
+8891:   // instante do clique, sem esperar a checagem de continuidade no Supabase
+8892:   // (que tem um await de rede e antes atrasava a virada do card pra verde —
+8893:   // só mudava depois de tocar no menu). Se a checagem abaixo encontrar uma
+8894:   // sessão em aberto, ela apenas reaproveita o mesmo estado 'running'.
+8895:   S.gps.st = 'running';
+8896:   try { syncNavButton(); } catch(e) {}
+8897:   try { if (S.sec === 'jornada') renderJornada(); } catch(e) {}
+8898:   // ═══ CONTINUIDADE: antes de criar uma jornada nova do zero, verifica
+8899:   // se já existe uma sessão em aberto (sem end_ms) nas últimas 12h. Se
+8900:   // existir, RETOMA ela em vez de começar outra — protege contra perda
+8901:   // de km quando gpsStart() é chamado de forma inesperada (ex: toque no
+8902:   // botão flutuante nativo) enquanto uma jornada anterior ainda deveria
+8903:   // estar rodando mas o app local perdeu o estado dela.
+8904:   if (_supaUser && navigator.onLine) {
+8905:     try {
+8906:       const cutoff = Date.now() - 12*3600*1000;
+8907:       const { data: open } = await _SUPA.from('sessions').select('*')
+8908:         .eq('user_id', _supaUser.id).is('end_ms', null)
+8909:         .gte('start_ms', cutoff).order('start_ms', {ascending:false}).limit(1);
+8910:       if (open && open.length) {
+8911:         const s = open[0];
+8912:         const g2 = S.gps;
+8913:         g2.st = 'running'; g2.sessionId = s.id; g2.start = s.start_ms;
+8914:         g2.km = parseFloat(s.km)||0; g2.pa = null;
+8915:         // Trata o intervalo em que o app ficou sem rastrear (entre o último
+--- 8876-8935 ---
+8876: // Ponto de entrada real de "iniciar jornada" — agora passa pelo assistente
+8877: // (métricas + permissões) antes de chamar a lógica de verdade. Os dois
+8878: // lugares que chamavam gpsStart() direto (botão "Iniciar" e o toque no
+8879: // ícone central quando idle) não precisaram mudar nada — ganham o
+8880: // assistente de graça só por causa dessa troca aqui.
+8881: function gpsStart() {
+8882:   if (S.gps.st === 'running' || S.gps.st === 'paused') return;
+8883:   _gpsStartCore();
+8884: }
+8885: 
+8886: async function _gpsStartCore() {
+8887:   // Guard: impede reentrada — clique duplo/rápido não pode criar uma
+8888:   // segunda jornada sobrepondo a que acabou de iniciar
+8889:   if (S.gps.st === 'running' || S.gps.st === 'paused') return;
+8890:   // Feedback visual IMEDIATO: o card e o botão do menu ficam verdes no
+8891:   // instante do clique, sem esperar a checagem de continuidade no Supabase
+8892:   // (que tem um await de rede e antes atrasava a virada do card pra verde —
+8893:   // só mudava depois de tocar no menu). Se a checagem abaixo encontrar uma
+8894:   // sessão em aberto, ela apenas reaproveita o mesmo estado 'running'.
+8895:   S.gps.st = 'running';
+8896:   try { syncNavButton(); } catch(e) {}
+8897:   try { if (S.sec === 'jornada') renderJornada(); } catch(e) {}
+8898:   // ═══ CONTINUIDADE: antes de criar uma jornada nova do zero, verifica
+8899:   // se já existe uma sessão em aberto (sem end_ms) nas últimas 12h. Se
+8900:   // existir, RETOMA ela em vez de começar outra — protege contra perda
+8901:   // de km quando gpsStart() é chamado de forma inesperada (ex: toque no
+8902:   // botão flutuante nativo) enquanto uma jornada anterior ainda deveria
+8903:   // estar rodando mas o app local perdeu o estado dela.
+8904:   if (_supaUser && navigator.onLine) {
+8905:     try {
+8906:       const cutoff = Date.now() - 12*3600*1000;
+8907:       const { data: open } = await _SUPA.from('sessions').select('*')
+8908:         .eq('user_id', _supaUser.id).is('end_ms', null)
+8909:         .gte('start_ms', cutoff).order('start_ms', {ascending:false}).limit(1);
+8910:       if (open && open.length) {
+8911:         const s = open[0];
+8912:         const g2 = S.gps;
+8913:         g2.st = 'running'; g2.sessionId = s.id; g2.start = s.start_ms;
+8914:         g2.km = parseFloat(s.km)||0; g2.pa = null;
+8915:         // Trata o intervalo em que o app ficou sem rastrear (entre o último
+8916:         // elapsed salvo e agora) como se fosse uma pausa automática — preserva
+8917:         // o horário real de início na tela, mas NÃO conta esse gap como tempo
+8918:         // online de verdade (senão o 'Tempo total' fica inflado com tempo em
+8919:         // que o app estava fechado, não rodando de fato).
+8920:         const expectedNowMs = s.start_ms + (s.elapsed_secs||0)*1000 + (s.paused_ms||0);
+8921:         const gapMs = Math.max(0, Date.now() - expectedNowMs);
+8922:         g2.pausedMs = (s.paused_ms||0) + gapMs;
+8923:         g2.pts = []; g2.lastFixTime = null;
+8924:         const day1 = DB.day(s.date || DB.today());
+8925:         g2.baseKm = (day1.sessions||[]).reduce((sum,x)=>sum+(x.km||0),0);
+8926:         g2.baseElapsed = (day1.sessions||[]).reduce((sum,x)=>sum+(x.elapsed||0),0);
+8927:         if (g2.ti) { try{ clearInterval(g2.ti); }catch(e){} }
+8928:         if (g2.wid) { try{ navigator.geolocation.clearWatch(g2.wid); }catch(e){} }
+8929:         persistGps();
+8930:         syncNavButton();
+8931:         g2.ti = setInterval(gpsUpdate, 1000);
+8932:         if (navigator.geolocation) {
+8933:           g2.wid = navigator.geolocation.watchPosition(gpsOnPosition, null, {enableHighAccuracy:true, maximumAge:3000, timeout:10000});
+8934:         }
+8935:         requestWakeLock();
+--- 9668-9727 ---
+9668:           if (S.gps.st !== 'idle') {
+9669:             S.gps.st = 'idle'; S.gps.start = null;
+9670:             if (S.gps.wid) { try{navigator.geolocation.clearWatch(S.gps.wid);}catch(e){} }
+9671:             if (S.gps.ti) clearInterval(S.gps.ti);
+9672:             try { renderJornada(); renderHome(); } catch(e) {}
+9673:           }
+9674:         }
+9675:       }).catch(()=>{});
+9676:   }
+9677:   // Limpeza defensiva — garante que não sobra nenhum watcher/timer órfão
+9678:   if (g.wid) { try{ navigator.geolocation.clearWatch(g.wid); }catch(e){} }
+9679:   if (g.ti) clearInterval(g.ti);
+9680:   g.st = saved.st; g.start = saved.start; g.pausedMs = saved.pausedMs || 0; g.pa = saved.pa || null;
+9681:   g.km = saved.km || 0; g.pts = saved.lastPt ? [saved.lastPt] : [];
+9682:   g.baseKm = saved.baseKm || 0; g.baseElapsed = saved.baseElapsed || 0;
+9683:   g.sessionId = saved.sessionId || null; // restaura ID para continuar o upsert correto
+9684:   g.forceDate = saved.forceDate || null;
+9685:   // O snapshot acima é só o último valor salvo antes do app ir pra segundo plano (o
+9686:   // watchPosition do JS para quando o app não está em foreground). Se o app nativo
+9687:   // tiver um GpsService rodando, ele é a fonte mais atual — corrige aqui, antes do
+9688:   // primeiro render, pra não mostrar um km/tempo defasado por um instante na tela.
+9689:   if (window.SmartMobiNative && typeof SmartMobiNative.isGpsRunning === 'function') {
+9690:     try {
+9691:       if (SmartMobiNative.isGpsRunning()) {
+9692:         // So confia no km nativo se a sessao ja estiver rodando ha mais de alguns
+9693:         // segundos. Logo apos um gpsStart(), o sinal de reset enviado pro servico
+9694:         // nativo pode ainda nao ter sido processado — ler o km nesse instante corre
+9695:         // o risco de pegar um valor antigo (de antes do reset), fazendo o numero
+9696:         // "pular" pra um valor maior por um instante ate se corrigir sozinho.
+9697:         const sessionAgeMs = Date.now() - (g.start || 0);
+9698:         if (sessionAgeMs > 8000) {
+9699:           const nativeKm = SmartMobiNative.getGpsKm();
+9700:           const nativeStart = SmartMobiNative.getGpsStartTime();
+9701:           const nativePaused = SmartMobiNative.getGpsPausedMs();
+9702:           // Mesmo guard de plausibilidade do nativeSyncGps — protege contra
+9703:           // herdar km de uma sessão fantasma anterior que o nativo nunca zerou
+9704:           const elapsedMinR = sessionAgeMs / 60000;
+9705:           const maxPlausibleR = (elapsedMinR * 3) + 0.5;
+9706:           if (typeof nativeKm === 'number' && nativeKm > maxPlausibleR) {
+9707:             console.warn('[restoreGpsSession] km nativo implausível ignorado:', nativeKm, 'em', elapsedMinR.toFixed(1), 'min');
+9708:           } else
+9709:           // So adota o km nativo se ele for MAIOR que o que a sessao web ja tem.
+9710:           // Nunca deixa essa reconciliacao DIMINUIR o km exibido — isso e o que
+9711:           // causava o "pulo pra baixo" quando havia uma correcao manual (kmAdjust)
+9712:           // aplicada: o servico nativo nao sabe nada sobre essa correcao, entao
+9713:           // confiar nele sem essa guarda jogava o numero de volta pro valor cru,
+9714:           // descartando a edicao do usuario.
+9715:           if (typeof nativeKm === 'number' && nativeKm > g.km) {
+9716:             g.km = nativeKm;
+9717:             // Limpa referencia JS para evitar dupla contagem no primeiro fix
+9718:             g.pts = [];
+9719:             g.lastFixTime = null;
+9720:           }
+9721:           // GUARD: só adota o start nativo se for ANTERIOR ao que já temos.
+9722:           // Se o Android matou e reiniciou o GpsService (START_STICKY), o
+9723:           // start nativo vira a hora do RESTART — adotar ele fazia a jornada
+9724:           // "recomeçar" e o upsert (mesmo sessionId) sobrescrevia o start_ms
+9725:           // da sessão no Supabase, perdendo todo o histórico do dia.
+9726:           if (nativeStart && nativeStart < g.start) g.start = nativeStart;
+9727:           else if (nativeStart && nativeStart > g.start + 60000) {
+===== confirmStop() hits=2 =====
+--- 5107-5166 ---
+5107:   setText('jc-rsh2', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
+5108:   setText('jc-rskm2', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
+5109:   // Cor por indicador — pedido do Yuri (23/07/2026, mockup aprovado):
+5110:   // mesmos limiares vermelho/verde que o motorista já ajusta na régua do
+5111:   // MōB Flash (Indicadores → R$/km e R$/hora), cada indicador troca de cor
+5112:   // por conta própria. Sem dado ainda (sessão não rodou tempo/km) fica
+5113:   // neutro (verde), não faz sentido alarmar antes de ter dado de verdade.
+5114:   const rateEl = document.getElementById('jc-rate-hora');
+5115:   const kmEl   = document.getElementById('jc-rate-km');
+5116:   const rateEl2 = document.getElementById('jc-rate-hora2');
+5117:   const kmEl2   = document.getElementById('jc-rate-km2');
+5118:   const rateCls = rsh !== null ? rateColorClass('rhora', rsh) : '';
+5119:   const kmCls   = rskm !== null ? rateColorClass('rkm', rskm) : '';
+5120:   if (rateEl)  rateEl.className  = 'td-rcard ' + rateCls;
+5121:   if (kmEl)    kmEl.className    = 'td-rcard ' + kmCls;
+5122:   if (rateEl2) rateEl2.className = 'rate-cell ' + rateCls;
+5123:   if (kmEl2)   kmEl2.className   = 'rate-cell ' + kmCls;
+5124: 
+5125:   const actions = document.getElementById('jc-actions');
+5126:   if (!actions) return;
+5127:   if (!isToday) {
+5128:     actions.innerHTML = '';
+5129:   } else if (state === 'idle') {
+5130:     actions.innerHTML = `<button class="j-round-btn play" onclick="gpsStart()" aria-label="Iniciar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>`;
+5131:   } else if (state === 'running') {
+5132:     actions.innerHTML = '<button class="j-round-btn stop" onclick="confirmStop()" aria-label="Encerrar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"/></svg></button>';
+5133:   }
+5134: }
+5135: 
+5136: function agMinutesBetween(start, end) {
+5137:   if (!start || !end) return 0;
+5138:   const [h1,m1] = start.split(':').map(Number);
+5139:   const [h2,m2] = end.split(':').map(Number);
+5140:   return Math.max(0, (h2*60+m2) - (h1*60+m1));
+5141: }
+5142: function openMetasHojeModal() {
+5143:   const date = S.curDate || DB.today();
+5144:   const day = DB.day(date);
+5145:   const dow = new Date(date+'T12:00').getDay();
+5146:   const plan = DB.planJornada().find(p => p.days && p.days.includes(dow));
+5147:   const meta = DB.meta();
+5148:   const ov = day.metaOverride || null;
+5149:   const dimMes = new Date(new Date(date+'T12:00').getFullYear(), new Date(date+'T12:00').getMonth()+1, 0).getDate();
+5150:   const moneyGoal = (ov && ov.money) ? ov.money : ((plan && plan.moneyGoal) ? plan.moneyGoal : (meta.general ? meta.general/dimMes : 0));
+5151:   const kmGoal = (ov && ov.km) ? ov.km : (plan && plan.kmGoal ? plan.kmGoal : 0);
+5152:   const schedMin = (ov && ov.hours) ? ov.hours*60 : (plan ? (plan.schedules||[]).reduce((s,b)=>s+agMinutesBetween(b.start,b.end),0) : 0);
+5153:   const mEl = document.getElementById('mh-money'); if (mEl) mEl.value = moneyGoal ? moneyGoal.toFixed(2) : '';
+5154:   const kEl = document.getElementById('mh-km'); if (kEl) kEl.value = kmGoal || '';
+5155:   const hEl = document.getElementById('mh-hours'); if (hEl) hEl.value = schedMin ? (schedMin/60).toFixed(1) : '';
+5156:   const subEl = document.getElementById('mh-sub');
+5157:   if (subEl) {
+5158:     const isToday = date === DB.today();
+5159:     subEl.textContent = isToday ? 'Vale só para hoje' : ('Vale só para ' + new Date(date+'T12:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}));
+5160:   }
+5161:   openMo('mo-metas-hoje');
+5162: }
+5163: function saveMetasHoje() {
+5164:   const date = S.curDate || DB.today();
+5165:   const day = DB.day(date);
+5166:   const money = parseFloat((document.getElementById('mh-money')||{}).value) || 0;
+--- 8975-9034 ---
+8975:     _SUPA.from('sessions').upsert({
+8976:       id: g.sessionId, user_id: _supaUser.id, date: DB.today(),
+8977:       start_ms: g.start, end_ms: null, km: 0, elapsed_secs: 0,
+8978:       paused_ms: 0, is_paused: false
+8979:     }, { onConflict: 'id' }).catch(()=>{});
+8980:   }
+8981:   g.ti = setInterval(gpsUpdate, 1000);
+8982:   if (navigator.geolocation) {
+8983:     g.wid = navigator.geolocation.watchPosition(gpsOnPosition, null, {enableHighAccuracy:true, maximumAge:3000, timeout:10000});
+8984:   }
+8985:   // Verifica permissão overlay
+8986:   if (window.SmartMobiNative && typeof SmartMobiNative.hasOverlay === 'function') {
+8987:     if (!SmartMobiNative.hasOverlay()) {
+8988:       setTimeout(() => showToast('Para ver a bolinha flutuante sobre o Uber:\nConfigurações → Apps → MōB → Aparecer sobre outros apps → Ativar', 'info'), 500);
+8989:     }
+8990:   }
+8991:   requestWakeLock();
+8992:   // Render forçado, sem depender de qual tela está ativa no momento do
+8993:   // clique — mesmo padrão robusto já usado no gpsStop()
+8994:   setTimeout(() => {
+8995:     try { renderJornada(); } catch(e) {}
+8996:     try { renderHome(); } catch(e) {}
+8997:   }, 80);
+8998: }
+8999: 
+9000: function confirmStop() {
+9001:   showConfirm('Encerrar a jornada agora?', gpsStop, { confirmLabel: 'Encerrar', cancelLabel: 'Cancelar' });
+9002: }
+9003: function showToast(msg, type) {
+9004:   const existing = document.getElementById('app-toast-center'); if (existing) existing.remove();
+9005:   const icons = {
+9006:     success: { bg: '#ECFDF3', color: '#16A34A', svg: '<path d="M20 6 9 17l-5-5"/>' },
+9007:     error:   { bg: '#FEF2F2', color: '#EF4444', svg: '<circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>' },
+9008:     info:    { bg: '#EFF6FF', color: '#0A2F6B', svg: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>' },
+9009:   };
+9010:   const ic = icons[type] || icons.success;
+9011:   const el = document.createElement('div');
+9012:   el.id = 'app-toast-center';
+9013:   el.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(15,23,42,.35)';
+9014:   el.innerHTML = `
+9015:     <div style="background:#fff;border-radius:26px;padding:32px 26px;max-width:320px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(15,23,42,.25)">
+9016:       <div style="width:60px;height:60px;border-radius:50%;background:${ic.bg};color:${ic.color};display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+9017:         <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">${ic.svg}</svg>
+9018:       </div>
+9019:       <div style="font-size:15.5px;font-weight:700;color:#0F172A;line-height:1.45;white-space:pre-line">${msg}</div>
+9020:     </div>`;
+9021:   document.body.appendChild(el);
+9022:   el.addEventListener('click', () => el.remove());
+9023:   setTimeout(() => { if (document.getElementById('app-toast-center') === el) el.remove(); }, 3400);
+9024: }
+9025: function showEndJourneyToast(km) {
+9026:   const existing = document.getElementById('app-toast-center'); if (existing) existing.remove();
+9027:   const el = document.createElement('div');
+9028:   el.id = 'app-toast-center';
+9029:   el.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(15,23,42,.35)';
+9030:   el.innerHTML = `
+9031:     <div style="background:#fff;border-radius:26px;padding:36px 28px;max-width:320px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(15,23,42,.25)">
+9032:       <div style="width:68px;height:68px;border-radius:50%;background:#ECFDF3;color:#16A34A;display:flex;align-items:center;justify-content:center;margin:0 auto 18px">
+9033:         <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+9034:       </div>
