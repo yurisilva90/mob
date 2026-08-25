@@ -23,3 +23,4 @@ jobs:
           git diff --cached --quiet && exit 1
           git commit -m "fix: restaurar botão de iniciar Jornada"
           git push
+          # execução final após ajuste de validação
