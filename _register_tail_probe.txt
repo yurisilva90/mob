@@ -1,0 +1,149 @@
+async function loginRegister() {
+  const name  = document.getElementById('r-name')?.value?.trim();
+  const email = document.getElementById('r-email')?.value?.trim();
+  const phone = document.getElementById('r-phone')?.value?.trim();
+  const pass  = document.getElementById('r-pass')?.value;
+  lsErr('r-err','');
+  if (!name)  { lsErr('r-err','Digite seu nome');       return; }
+  if (!email) { lsErr('r-err','Digite seu email');      return; }
+  if (!pass||pass.length<10) { lsErr('r-err','Use uma senha com pelo menos 10 caracteres'); return; }
+  lsBtn('l-btn-reg','Criando conta...',true);
+  const { data, error } = await _SUPA.auth.signUp({
+    email, password: pass,
+    options: { data: { name, phone } }
+  });
+  lsBtn('l-btn-reg','Criar conta',false);
+  if (error) {
+    const em = error.message || '';
+    if (em.includes('already registered') || em.includes('already been registered')) {
+      lsErr('r-err', 'Não foi possível criar a conta com esses dados. Se você já possui cadastro, use Entrar ou Esqueci minha senha.');
+    } else if (em.includes('Password') || em.includes('password')) {
+      lsErr('r-err', 'Use uma senha com pelo menos 10 caracteres.');
+    } else {
+      lsErr('r-err', em || 'Erro ao criar conta. Tente novamente.');
+    }
+    return;
+  }
+  // Sucesso: atualiza perfil e navega
+  if (data?.user) {
+    const cfg=DB.cfg(); cfg.name=name; cfg.phone=phone; DB.saveCfg(cfg);
+    try {
+      await _SUPA.from('profiles').upsert(
+        { id:data.user.id, name, phone },
+        { onConflict:'id' }
+      );
+    } catch(e) { console.warn('Profile upsert:', e); }
+    // Navega direto — não espera o onAuthStateChange
+    _supaUser = data.user;
+    showApp();
+  } else {
+    // Sem sessão: usuário pode precisar confirmar email
+    lsErr('r-err', 'Conta criada! Verifique seu email para confirmar.');
+  }
+}
+
+async function loadProfile() {
+  if(!_supaUser) return;
+  const { data } = await _SUPA.from('profiles').select('*').eq('id',_supaUser.id).single();
+  if (!data) return;
+  const cfg = DB.cfg();
+  let changed = false;
+  // Só preenche o que estiver vazio local — não sobrescreve edição que o
+  // usuário já tinha feito antes deste campo existir/sincronizar direito.
+  if (data.name    && !cfg.name)    { cfg.name = data.name; changed = true; }
+  if (data.city     && !cfg.city)    { cfg.city = data.city; changed = true; }
+  if (data.plate    && !cfg.plate)   { cfg.plate = data.plate; changed = true; }
+  if (data.vehicle  && !cfg.vehicle) { cfg.vehicle = data.vehicle; changed = true; }
+  // Avatar é campo novo, sem edição local legada pra proteger — nuvem manda.
+  if ((data.avatar_url || null) !== (cfg.avatarUrl || null)) { cfg.avatarUrl = data.avatar_url || null; changed = true; }
+  if (changed) DB.saveCfg(cfg);
+}
+
+async function authSignOut() { await _SUPA.auth.signOut(); }
+function toggleRegister() {}
+
+function getCurrentUser() { return _supaUser; }
+
+
+
+
+
+
+async function loginForgot() {
+  const email = document.getElementById('f-email')?.value?.trim();
+  const msgEl = document.getElementById('f-msg');
+  const btn   = document.getElementById('l-btn-forgot');
+  if (!email) { if(msgEl){msgEl.style.color='#EF4444';msgEl.textContent='Digite seu email.';msgEl.style.display='block';} return; }
+  if(btn){btn.textContent='Enviando...';btn.disabled=true;}
+  const { error } = await _SUPA.auth.resetPasswordForEmail(email, {
+    redirectTo: 'https://yurisilva90.github.io/smartmobi/'
+  });
+  if(btn){btn.textContent='Enviar link';btn.disabled=false;}
+  if (msgEl) {
+    msgEl.style.display = 'block';
+    if (error) {
+      msgEl.style.color = '#EF4444';
+      msgEl.textContent = 'Erro ao enviar. Verifique o email digitado.';
+    } else {
+      msgEl.style.color = '#22C55E';
+      msgEl.textContent = 'Link enviado! Verifique seu email ' + email + ' e clique no link para redefinir a senha.';
+    }
+  }
+}
+
+
+
+// Chamada pelo nativo ao voltar ao foreground — sincroniza GPS
+function nativeSyncGps(km, startMs, pausedMs) {
+  if (!S || !S.gps || S.gps.st === 'idle') return;
+
+  // GUARD: nunca deixa o sync nativo DIMINUIR o km acumulado.
+  // Se o GpsService foi morto e reiniciado pelo Android, ele pode chamar
+  // nativeSyncGps com km < do que ja temos em memoria. Nesse caso mantemos
+  // o valor maior (o que estava em S.gps.km ou no nativo, o que for maior).
+  const kmNat = (typeof km === 'number' && isFinite(km)) ? km : S.gps.km;
+  // GUARD DE PLAUSIBILIDADE: se o serviço nativo Android nunca for
+  // efetivamente resetado entre uma jornada e outra (não existe um comando
+  // nativo pra isso hoje), ele pode reportar o km ACUMULADO de uma jornada
+  // ANTERIOR logo no início de uma jornada NOVA — e como o guard acima
+  // nunca deixa diminuir, esse km 'órfão' seria herdado silenciosamente.
+  // Rejeita qualquer salto que implique velocidade fisicamente impossível
+  // (>180km/h) dado o tempo decorrido desde o início desta sessão.
+  const elapsedMin = S.gps.start ? (Date.now() - S.gps.start) / 60000 : 0;
+  const maxPlausibleKm = (elapsedMin * 3) + 0.5; // 180km/h + margem
+  if (kmNat > maxPlausibleKm) {
+    console.warn('[nativeSyncGps] Ignorado — km implausível pro tempo decorrido:', kmNat.toFixed(1), 'km em', elapsedMin.toFixed(1), 'min (provável km órfão do serviço nativo)');
+  } else if (kmNat > (S.gps.km || 0)) {
+    S.gps.km = kmNat;
+  }
+  if (startMs && !S.gps.start) S.gps.start = startMs;
+  // GUARD: nunca deixa o sync nativo DIMINUIR o pausedMs acumulado.
+  // Se o GpsService reiniciou com pausedMs=0, mantemos o valor JS que é maior.
+  const pauseNat = (typeof pausedMs === 'number' && isFinite(pausedMs)) ? pausedMs : 0;
+  if (pauseNat >= (S.gps.pausedMs || 0)) { S.gps.pausedMs = pauseNat; }
+
+  // LIMPA pontos de referencia JS para evitar dupla contagem.
+  // Quando o app volta ao foreground, restoreSession recarrega o ultimo ponto
+  // GPS salvo (g.pts = [lastPt]). Se o carro se deslocou no background, o
+  // proximo disparo do watchPosition calcularia essa distancia E SOMARIA em
+  // cima do km ja atualizado pelo nativo -> inflaria o total momentaneamente.
+  // Zerando g.pts e lastFixTime, o proximo fix apenas registra a posicao atual
+  // como nova referencia sem contar nenhuma distancia extra.
+  S.gps.pts = [];
+  S.gps.lastFixTime = null;
+
+  const kmFinal = S.gps.km;
+  // Só atualiza DOM se o usuário estiver vendo hoje
+  if (S.curDate === DB.today()) {
+    setText('jc-km', kmFinal.toFixed(1));
+    const dayNow = DB.day(DB.today());
+    const finKm = (dayNow.sessions||[]).reduce((a,x)=>a+(x.km||0),0);
+    setText('jc-kmtotal', (finKm + kmFinal + (dayNow.kmAdjust||0)).toFixed(1)+' km');
+  }
+
+  // Recria a bolinha flutuante se o Android tiver matado o overlay.
+  // startFloating e seguro de chamar de novo: se ja existe, so atualiza o km.
+  if (window.SmartMobiNative && DB.cfg().overlayEnabled !== false) {
+    try {
+      if (typeof SmartMobiNative.startFloating === 'function') SmartMobiNative.startFloating(S.gps.start, kmFinal);
+      if (typeof SmartMobiNative.updateFloatingStatus === 'f
