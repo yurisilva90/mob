@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - '.github/workflows/inspect-video-review-card.yml'
+# retrigger 2026-08-26
 jobs:
   inspect:
     runs-on: ubuntu-latest
