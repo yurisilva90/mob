@@ -1,0 +1,20 @@
+name: Emergency revert broken Journey JS
+on:
+  push:
+    paths:
+      - '.github/workflows/emergency-revert-broken-journey.yml'
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
+      - name: Revert broken commit
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git revert 932a440dda816cef50518e04208ac13bc7f7c59b --no-edit
+          git push
