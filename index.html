@@ -1411,11 +1411,11 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <h2 style="font-size:22px;font-weight:700;color:#0A2F6B;margin-bottom:4px;font-family:var(--font-brand)">Bem-vindo a MōB</h2>
       <p style="font-size:13px;color:#94A3B8;margin-bottom:24px;font-family:var(--font-app)">Faça login para continuar</p>
       <div style="margin-bottom:14px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Email</label>
-        <input id="l-email" type="email" inputmode="email" placeholder="seuemail@gmail.com" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'">
+        <input id="l-email" type="email" inputmode="email" autocomplete="email" placeholder="seuemail@gmail.com" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'">
       </div>
       <div style="margin-bottom:6px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Senha</label>
         <div style="position:relative">
-          <input id="l-pass" type="password" placeholder="Sua senha" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 48px 0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'" onkeydown="if(event.key==='Enter')loginEnter()">
+          <input id="l-pass" type="password" autocomplete="current-password" placeholder="Sua senha" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 48px 0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'" onkeydown="if(event.key==='Enter')loginEnter()">
           <button type="button" onclick="togglePass('l-pass',this)" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;color:#94A3B8;display:flex;align-items:center;padding:4px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
         </div>
       </div>
@@ -1989,7 +1989,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <button class="inf-search-toggle" id="inf-search-toggle" onclick="infToggleSearch()" aria-label="Buscar local">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       </button>
-      <div class="inf-city" id="inf-city-btn" onclick="infAbrirCidade()"><div class="inf-city-dot"></div><span id="inf-city-name">Rio de Janeiro</span><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#94A3B8;margin-left:1px"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="inf-city" id="inf-city-btn" onclick="infAbrirCidade()"><div class="inf-city-dot"></div><span id="inf-city-name">Localizando…</span><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#94A3B8;margin-left:1px"><path d="M6 9l6 6 6-6"/></svg></div>
     </div>
     <div class="inf-search-fixed" id="inf-search-fixed" style="display:none">
       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -12213,36 +12213,63 @@ async function _bootPullBg() {
 function lsErr(id, msg) { const el=document.getElementById(id);if(el){el.textContent=msg;el.style.display=msg?'block':'none';} }
 function lsBtn(id, txt, disabled) { const el=document.getElementById(id);if(el){el.textContent=txt;el.disabled=disabled;} }
 
+const _MOB_LOGIN_GUARD_KEY='mob_login_guard_v1';
+function mobLoginGuardLoad(){
+  try{return JSON.parse(localStorage.getItem(_MOB_LOGIN_GUARD_KEY)||'{"fails":[],"blockedUntil":0}')}catch(e){return{fails:[],blockedUntil:0}}
+}
+function mobLoginGuardSave(g){try{localStorage.setItem(_MOB_LOGIN_GUARD_KEY,JSON.stringify(g))}catch(e){}}
+function mobLoginBlockedSeconds(){const g=mobLoginGuardLoad();return Math.max(0,Math.ceil(((g.blockedUntil||0)-Date.now())/1000));}
+function mobLoginGuardFail(){
+  const now=Date.now(),g=mobLoginGuardLoad();
+  g.fails=(g.fails||[]).filter(t=>now-t<10*60*1000);g.fails.push(now);
+  if(g.fails.length>=5){g.blockedUntil=now+15*60*1000;g.fails=[];}
+  mobLoginGuardSave(g);return mobLoginBlockedSeconds();
+}
+function mobLoginGuardClear(){try{localStorage.removeItem(_MOB_LOGIN_GUARD_KEY)}catch(e){}}
+
 async function loginEnter() {
   const email=document.getElementById('l-email')?.value?.trim();
-  const pass =document.getElementById('l-pass')?.value;
+  const pass=document.getElementById('l-pass')?.value;
   lsErr('l-err','');
-  if (!email||!pass) { lsErr('l-err','Preencha email e senha'); return; }
+  if(!email||!pass){lsErr('l-err','Preencha email e senha');return;}
+  const blocked=mobLoginBlockedSeconds();
+  if(blocked>0){lsErr('l-err',`Muitas tentativas. Aguarde ${Math.ceil(blocked/60)} min e tente novamente.`);return;}
   lsBtn('l-btn-enter','Entrando...',true);
-  let signInResult;
-  try {
-    signInResult = await Promise.race([
-      _SUPA.auth.signInWithPassword({ email, password: pass }),
-      new Promise((_,rej) => setTimeout(() => rej(new Error('Tempo esgotado. Verifique sua conexão.')), 12000))
-    ]);
-  } catch(err) {
-    lsBtn('l-btn-enter','Entrar',false);
-    lsErr('l-err', err.message);
-    return;
-  }
-  const { error } = signInResult;
-  lsBtn('l-btn-enter','Entrar',false);
-  if (error) {
-    const m = error.message || '';
-    let msg = 'Erro ao entrar. Tente novamente.';
-    if (m.includes('Invalid login credentials') || m.includes('invalid_credentials'))
-      msg = 'Email ou senha incorretos. Verifique seus dados ou use "Esqueci minha senha".';
-    else if (m.includes('Email not confirmed'))
-      msg = 'Email não confirmado. Use "Esqueci minha senha" para acessar.';
-    else if (m.includes('Too many requests'))
-      msg = 'Muitas tentativas. Aguarde alguns minutos.';
-    lsErr('l-err', msg);
-  }
+  try{
+    if(_MOB_IS_TEST_ENV){
+      const result=await Promise.race([
+        _SUPA.auth.signInWithPassword({email,password:pass}),
+        new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),12000))
+      ]);
+      if(result.error) throw new Error('invalid_credentials');
+    }else{
+      const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),12000);let resp;
+      try{
+        resp=await fetch(`${_MOB_SUPA_CONFIG.url}/functions/v1/auth-login-gate`,{
+          method:'POST',signal:ctl.signal,
+          headers:{'Content-Type':'application/json','apikey':_MOB_SUPA_CONFIG.key},
+          body:JSON.stringify({email,password:pass})
+        });
+      }finally{clearTimeout(to);}
+      const data=await resp.json().catch(()=>({}));
+      if(!resp.ok){
+        if(resp.status===429){
+          const mins=Math.max(1,Math.ceil((Number(data.retry_after)||900)/60));
+          lsErr('l-err',`Muitas tentativas. Aguarde ${mins} min e tente novamente.`);
+          return;
+        }
+        mobLoginGuardFail();
+        lsErr('l-err','Email ou senha inválidos.');
+        return;
+      }
+      const set=await _SUPA.auth.setSession({access_token:data.access_token,refresh_token:data.refresh_token});
+      if(set.error)throw new Error('session_error');
+    }
+    mobLoginGuardClear();
+  }catch(err){
+    if(String(err?.message||'').includes('invalid_credentials'))mobLoginGuardFail();
+    lsErr('l-err',err?.name==='AbortError'?'Tempo esgotado. Verifique sua conexão.':'Não foi possível entrar. Verifique seus dados e tente novamente.');
+  }finally{lsBtn('l-btn-enter','Entrar',false);}
 }
 
 async function loginRegister() {
@@ -12253,7 +12280,7 @@ async function loginRegister() {
   lsErr('r-err','');
   if (!name)  { lsErr('r-err','Digite seu nome');       return; }
   if (!email) { lsErr('r-err','Digite seu email');      return; }
-  if (!pass||pass.length<6) { lsErr('r-err','Senha deve ter pelo menos 6 caracteres'); return; }
+  if (!pass||pass.length<10) { lsErr('r-err','Use uma senha com pelo menos 10 caracteres'); return; }
   lsBtn('l-btn-reg','Criando conta...',true);
   const { data, error } = await _SUPA.auth.signUp({
     email, password: pass,
@@ -12263,9 +12290,9 @@ async function loginRegister() {
   if (error) {
     const em = error.message || '';
     if (em.includes('already registered') || em.includes('already been registered')) {
-      lsErr('r-err', 'Este email já possui conta. Use "← Voltar" → "Entrar". Se esqueceu a senha, toque em "Esqueci minha senha".');
+      lsErr('r-err', 'Não foi possível criar a conta com esses dados. Se você já possui cadastro, use Entrar ou Esqueci minha senha.');
     } else if (em.includes('Password') || em.includes('password')) {
-      lsErr('r-err', 'Senha deve ter pelo menos 6 caracteres.');
+      lsErr('r-err', 'Use uma senha com pelo menos 10 caracteres.');
     } else {
       lsErr('r-err', em || 'Erro ao criar conta. Tente novamente.');
     }
@@ -12694,16 +12721,88 @@ const INF_SDBDB = [
 let _infLoc=null,_infTipoKey=null,_infMinutos=60,_infRepTipo=null,_infRepValor=null,_infRepDetalhe=null,_infPanelVenue=null;
 // Cidade do Informes (16/08/2026, pedido do Yuri) — antes fixa "Rio de
 // Janeiro" no HTML, agora clicável e persistida.
-let _infCity = JSON.parse(localStorage.getItem('sm_inf_city') || '{"name":"Rio de Janeiro","uf":"RJ"}');
+let _infCity = JSON.parse(localStorage.getItem('sm_inf_city') || '{"name":"Localizando…","uf":""}');
+let _infGps=null;
 let _infFavs=JSON.parse(localStorage.getItem('sm_inf_favs')||'[]');
 const INF_AVC=['#6D28D9','#0369A1','#B45309','#0F766E','#15803D','#BE123C','#7C3AED','#0284C7'];
 const INF_BADGE={dinamico:'infbd',transito:'infbt',fiscalizacao:'infbf',fila:'infbfi',demanda:'infbde',lotacao:'infblo',acidente:'infbac'};
 
 function renderInformes(){
+  const cityEl=document.getElementById('inf-city-name');
+  if(cityEl)cityEl.textContent=(_infCity?.name&&_infCity.name!=='Rio de Janeiro')?_infCity.name:'Localizando…';
   infCarregarContagens();
   infRenderBairrosTab();
   infRenderVenueLists();
   infCarregarFeedAgora();
+  infSyncCidadeAtual();
+}
+
+function infCityKey(name){
+  const n=(name||'').trim();
+  if(/^rio de janeiro$/i.test(n))return'rio';
+  return n.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||null;
+}
+
+async function infReverseCidade(lat,lon){
+  try{
+    const u=`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&zoom=10&addressdetails=1&accept-language=pt-BR`;
+    const r=await fetch(u,{headers:{Accept:'application/json'}});if(!r.ok)throw new Error('reverse');
+    const d=await r.json(),a=d.address||{};
+    const name=a.city||a.town||a.municipality||a.village||a.county;
+    const iso=a['ISO3166-2-lvl4']||a['ISO3166-2-lvl6']||'';
+    return name?{name,uf:(iso.split('-')[1]||'').toUpperCase()}:null;
+  }catch(e){return null;}
+}
+
+async function infSyncCidadeAtual(){
+  if(!navigator.geolocation)return;
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const lat=pos.coords.latitude,lon=pos.coords.longitude;_infGps={lat,lon,at:Date.now()};
+    const city=await infReverseCidade(lat,lon);
+    if(city){_infCity=city;localStorage.setItem('sm_inf_city',JSON.stringify(_infCity));const el=document.getElementById('inf-city-name');if(el)el.textContent=city.name;}
+    else{const el=document.getElementById('inf-city-name');if(el&&_infCity?.name)el.textContent=_infCity.name;}
+    try{await _SUPA?.rpc('ensure_venues_for_region',{p_lat:lat,p_lng:lon});}catch(e){}
+    infRenderNearbyVenueLists(lat,lon);
+  },()=>{const el=document.getElementById('inf-city-name');if(el)el.textContent=_infCity?.name||'Escolher cidade';},{enableHighAccuracy:true,timeout:10000,maximumAge:60000});
+}
+
+async function infRenderNearbyVenueLists(lat,lon){
+  const q=`[out:json][timeout:18];(`+
+    `nwr(around:7000,${lat},${lon})[shop=mall][name];`+
+    `nwr(around:1800,${lat},${lon})[amenity~"^(bar|pub|restaurant|cafe|nightclub)$"][name];`+
+    `nwr(around:6000,${lat},${lon})[tourism~"^(hotel|hostel|motel|guest_house)$"][name];`+
+    `nwr(around:10000,${lat},${lon})[amenity~"^(theatre|cinema|arts_centre|events_venue)$"][name];`+
+    `nwr(around:10000,${lat},${lon})[leisure=stadium][name];`+
+    `nwr(around:7000,${lat},${lon})[tourism~"^(museum|attraction|viewpoint|gallery)$"][name];`+
+    `);out center 300;`;
+  try{
+    const r=await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`);if(!r.ok)throw new Error('overpass');
+    const d=await r.json(),groups={shoppings:[],bares:[],hoteis:[],eventos:[],turistico:[]};
+    const R=6371,toRad=x=>x*Math.PI/180;
+    const dist=(a,b,c,dd)=>{const dl=toRad(c-a),dn=toRad(dd-b),x=Math.sin(dl/2)**2+Math.cos(toRad(a))*Math.cos(toRad(c))*Math.sin(dn/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));};
+    for(const e of(d.elements||[])){
+      const t=e.tags||{},n=t.name;if(!n)continue;const elat=e.lat??e.center?.lat,elon=e.lon??e.center?.lon;if(elat==null||elon==null)continue;
+      let cat=null;
+      if(t.shop==='mall')cat='shoppings';
+      else if(/^(bar|pub|restaurant|cafe|nightclub)$/.test(t.amenity||''))cat='bares';
+      else if(/^(hotel|hostel|motel|guest_house)$/.test(t.tourism||''))cat='hoteis';
+      else if(/^(theatre|cinema|arts_centre|events_venue)$/.test(t.amenity||'')||t.leisure==='stadium')cat='eventos';
+      else if(/^(museum|attraction|viewpoint|gallery)$/.test(t.tourism||''))cat='turistico';
+      if(!cat)continue;const km=dist(lat,lon,elat,elon);
+      groups[cat].push({n,sub:t['addr:suburb']||t['addr:city']||(km<1?`${Math.round(km*1000)} m`:`${km.toFixed(1)} km`),km});
+    }
+    for(const[cat,items0]of Object.entries(groups)){
+      const items=[...new Map(items0.sort((a,b)=>a.km-b.km).map(x=>[x.n.toLowerCase(),x])).values()].slice(0,12);
+      infRenderNearbyVenueTab(cat,items);
+    }
+    infCarregarBadgesListagem();
+  }catch(e){console.warn('locais próximos',e);}
+}
+
+function infRenderNearbyVenueTab(cat,items){
+  const el=document.getElementById('inf-vlist-'+cat);if(!el)return;const v=INF_VENUES[cat];if(!v)return;const t=INF_TIPOS[v.tipo]||INF_TIPOS.bairro;
+  if(!items.length){el.innerHTML='<div class="inf-empty">Nenhum local próximo encontrado</div>';return;}
+  el.innerHTML=items.map(item=>`<div class="inf-vitem" onclick="infAbrirLocal(this,'${item.n.replace(/'/g,"\\'")}','${v.tipo}')"><div class="inf-vitem-ic" style="background:${t.bg}">${infIconSvg(v.tipo,t.cor,15)}</div><div><div class="inf-vitem-name">${item.n}</div><div class="inf-vitem-sub">${item.sub||''}</div></div><div class="inf-vitem-badges" data-vname="${esc(item.n)}"></div><div class="inf-vitem-ct z">–</div></div>`).join('');
 }
 
 function infTab(id){
@@ -13489,7 +13588,7 @@ async function infEnviarReporte(){
     if(_SUPA){
       const sess=await _SUPA.auth.getSession();const uid=sess?.data?.session?.user?.id;
       if(uid){
-        const{error}=await _SUPA.from('informes').insert({user_id:uid,location_name:_infLoc,location_type:_infTipoKey,city:'rio',param_type:_infRepTipo,param_value:_infRepValor,param_detail:_infRepDetalhe||null,expires_at:expiresAt,votes_up:1,votes_dn:0,is_active:true});
+        const{error}=await _SUPA.from('informes').insert({user_id:uid,location_name:_infLoc,location_type:_infTipoKey,city:infCityKey(_infCity?.name),param_type:_infRepTipo,param_value:_infRepValor,param_detail:_infRepDetalhe||null,expires_at:expiresAt,votes_up:1,votes_dn:0,is_active:true});
         if(error){
           // Trigger de spam ativo — informa o usuário sem travar o app
           if(error.message?.includes('duplicate_report')||error.code==='P0001'){
@@ -13578,14 +13677,14 @@ function infBuscarCidade(q){
     } catch(e) { console.warn('busca cidade', e); }
   }, 400);
 }
-function infEscolherCidade(name, uf){
-  _infCity = {name, uf};
-  localStorage.setItem('sm_inf_city', JSON.stringify(_infCity));
-  document.getElementById('inf-city-name').textContent = name;
-  closeMo('mo-inf-cidade');
-  showToast('Cidade alterada para '+name);
-  // Recarrega o que depender da cidade — feed "Agora" e listas de venue.
-  try { infCarregarFeedAgora?.(); } catch(e){}
+async function infEscolherCidade(name, uf){
+  _infCity={name,uf};localStorage.setItem('sm_inf_city',JSON.stringify(_infCity));document.getElementById('inf-city-name').textContent=name;closeMo('mo-inf-cidade');
+  try{
+    const u=`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=br&q=${encodeURIComponent(name+', '+uf+', Brasil')}`;
+    const r=await fetch(u,{headers:{Accept:'application/json'}}),d=await r.json();
+    if(d?.[0]){const lat=Number(d[0].lat),lon=Number(d[0].lon);_infGps={lat,lon,at:Date.now()};infRenderNearbyVenueLists(lat,lon);}
+  }catch(e){}
+  try{infCarregarFeedAgora?.();}catch(e){}
 }
 function infToggleSearch(){
   const el = document.getElementById('inf-search-fixed');
