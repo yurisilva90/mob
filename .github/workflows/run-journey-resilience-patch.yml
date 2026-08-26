@@ -1,0 +1,26 @@
+name: Run journey resilience patch
+on:
+  push:
+    paths:
+      - '.github/workflows/run-journey-resilience-patch.yml'
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply patch
+        run: python3 .github/scripts/patch_journey_resilience.py
+      - name: Validate patch markers
+        run: |
+          grep -q "recoverOpenJourneyFromCloud" index.html
+          grep -q "a cada 30s: local + nuvem" index.html
+          grep -q "NUNCA transforma o tempo fora da WebView" index.html
+      - name: Commit
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add index.html
+          git commit -m 'Make active journey resilient to WebView restarts' || exit 0
+          git push
