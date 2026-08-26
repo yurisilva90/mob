@@ -1,0 +1,957 @@
+
+===== let _infCity @ 1627589 =====
+rand',t:'hotel'},{n:'Ibis Copacabana',t:'hotel'},
+];
+let _infLoc=null,_infTipoKey=null,_infMinutos=60,_infRepTipo=null,_infRepValor=null,_infRepDetalhe=null,_infPanelVenue=null;
+// Cidade do Informes (16/08/2026, pedido do Yuri) — antes fixa "Rio de
+// Janeiro" no HTML, agora clicável e persistida.
+let _infCity = JSON.parse(localStorage.getItem('sm_inf_city') || '{"name":"Rio de Janeiro","uf":"RJ"}');
+let _infFavs=JSON.parse(localStorage.getItem('sm_inf_favs')||'[]');
+const INF_AVC=['#6D28D9','#0369A1','#B45309','#0F766E','#15803D','#BE123C','#7C3AED','#0284C7'];
+const INF_BADGE={dinamico:'infbd',transito:'infbt',fiscalizacao:'infbf',fila:'infbfi',demanda:'infbde',lotacao:'infblo',acidente:'infbac'};
+
+function renderInformes(){
+  infCarregarContagens();
+  infRenderBairrosTab();
+  infRenderVenueLists();
+  infCarregarFeedAgora();
+}
+
+function infTab(id){
+  document.querySelectorAll('.inf-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));
+  document.querySelectorAll('#inf-scroll-content > .inf-panelbody').forEach(p=>p.classList.add('hide'));
+  const p=document.getElementById('inf-tab-'+id);if(p)p.classList.remove('hide');
+}
+
+function infRenderBairrosTab(){
+  const bic=`<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#475569" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.333-8 14-8 14S4 15.333 4 10a8 8 0 0 1 8-8z"/></svg>`;
+  const chip=b=>`<div class="inf-bchip" onclick="infAbrirLocal(this,'${b}','bairro')"><div class="inf-bchip-ct z">–</div><div class="inf-bchip-ic">${bic}</div><div class="inf-bchip-name">${b}</div></div>`;
+  const sulEl=document.getElementById('inf-bchip-sul');if(sulEl)sulEl.innerHTML=INF_BAIRROS.sul.map(chip).join('');
+  const barraEl=document.getElementById('inf-bchip-barra');if(barraEl)barraEl.innerHTML=INF_BAIRROS.barra.map(chip).join('');
+  infCarregarContagens();
+}
+
+function infRenderVenueLists(){
+  Object.entries({shoppings:'shoppings',bares:'bares',hoteis:'hoteis',eventos:'eventos',turistico:'turistico'}).forEach(([tabKey,venueKey])=>{
+    const el=document.getElementById('inf-vlist-'+tabKey);if(!el)return;
+    const v=INF_VENUES[venueKey];if(!v)return;
+    const t=INF_TIPOS[v.tipo]||INF_TIPOS.bairro;
+    el.innerHTML=v.itens.map(item=>`<div class="inf-vitem" onclick="infAbrirLocal(this,'${item.n.replace(/'/g,"\\'")}','${v.tipo}')">
+      <div class="inf-vitem-ic" style="background:${t.bg}">${infIconSvg(v.tipo,t.cor,15)}</div>
+      <div><div class="inf-vitem-name">${item.n}</div><div class="inf-vitem-sub">${item.sub||''}</div></div>
+      <div class="inf-vitem-badges" data-vname="${esc(item.n)}"></div>
+      <div class="inf-vitem-ct z">–</div>
+    </div>`).join('');
+  });
+  infCarregarContagens();
+  infCarregarBadgesListagem();
+}
+
+// Badges "Alta demanda"/"Tarifa dinâmica" nos itens da listagem —
+// mesmo visual do header (ícone+texto), some quando não há dado.
+// Reaproveita venue_cache (já resolvido em lote pela infCarregarContagens
+// não; aqui cada item pede seu próprio lat/lng, mas em paralelo/Promise.all
+// pra não travar a UI — listas são pequenas, 6-7 itens por aba).
+async function infCarregarBadgesListagem(){
+  if(!_SUPA) return;
+  const els=[...document.querySelectorAll('.inf-vitem-badges[data-vname]')];
+  if(!els.length) return;
+  await Promise.all(els.map(async el=>{
+    const nome=el.getAttribute('data-vname');
+    try{
+      const {data:vc}=await _SUPA.from('venue_cache').select('id,lat,lng').ilike('name',nome).limit(1);
+      if(!vc||!vc.length) return;
+      const venue=vc[0];
+      const d=0.003;
+      const [{data:stats},{data:posts}]=await Promise.all([
+        _SUPA.rpc('venue_collab_stats',{p_venue_id:venue.id}),
+        _SUPA.from('feed_posts').select('param_value,param_detail,created_at')
+          .eq('type','dinamico').eq('status','ativo').gt('expires_at',new Date().toISOString())
+          .gte('lat',venue.lat-d).lte('lat',venue.lat+d).gte('lng',venue.lng-d).lte('lng',venue.lng+d)
+          .order('created_at',{ascending:false}).limit(10)
+      ]);
+      let html='';
+      if(stats && stats.alta_demanda_agora){
+        html+=`<div class="inf-badge-btn peak"><svg viewBox="0 0 24 24" width="14" height="14" fill="#fff" stroke="none"><path d="M12 2c1 3-2 4-2 7a4 4 0 0 0 8 0c0-1-.5-2-1-2 1 3-1 4-2 4a2 2 0 0 1-2-2c0-2 2-3 2-5-2 0-4 1-5 3-1 2-1 4 0 6a6 6 0 0 0 12-2c0-4-3-6-4-9-1 1-3 3-3 5-1-2-1-3-1-5-2 1-2 3-2 5z"/></svg><span>ALTA</span></div>`;
+      }
+      const dyn99=(posts||[]).find(p=>p.param_value==='99');
+      if(dyn99){
+        html+=`<div class="inf-badge-btn dyn"><svg viewBox="0 0 24 24" width="14" height="14" fill="#fff" stroke="none"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><span>99: ${esc(dyn99.param_detail||'ativo')}</span></div>`;
+      }
+      el.innerHTML=html;
+    }catch(e){ /* silencioso — badge é acessório, não pode travar a lista */ }
+  }));
+}
+
+function infHaversineM(lat1,lon1,lat2,lon2){
+  const R=6371000, toRad=x=>x*Math.PI/180;
+  const dLat=toRad(lat2-lat1), dLon=toRad(lon2-lon1);
+  const a=Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+// Feed unificado da aba "Agora" (16/08/2026) — substitui os antigos
+// "Informe da área" + "Últimos informes" (2 listas separadas, tabela
+// informes) por 1 lista só, ordenada por proximidade real via GPS,
+// direto de feed_posts.
+async function infCarregarFeedAgora(){
+  infRenderFavs();
+  const wrap=document.getElementById('inf-feed-agora');
+  if(!wrap)return;
+  if(!navigator.geolocation){wrap.innerHTML='<div class="inf-empty-feed">GPS não disponível</div>';return;}
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    try{
+      const{latitude:lat,longitude:lon}=pos.coords;
+      if(!_SUPA){wrap.innerHTML='<div class="inf-empty-feed">Sem conexão</div>';return;}
+      const d=0.02; // ~2km — feed geral da região, mais largo que o painel de 1 local
+      const{data}=await _SUPA.from('feed_posts').select('*')
+        .eq('status','ativo').gt('expires_at',new Date().toISOString())
+        .gte('lat',lat-d).lte('lat',lat+d)
+        .gte('lng',lon-d).lte('lng',lon+d)
+        .order('created_at',{ascending:false}).limit(30);
+      const posts=(data||[]).map(p=>{p._distM=infHaversineM(lat,lon,p.lat,p.lng);return p;})
+        .sort((a,b)=>a._distM-b._distM);
+      wrap.innerHTML = posts.length ? await infBuildPostCardsHtml(posts) : '<div class="inf-empty-feed">Nenhum informe recente por perto · seja o primeiro a reportar!</div>';
+    }catch(e){console.warn('feed agora',e);wrap.innerHTML='<div class="inf-empty-feed">Erro ao carregar</div>';}
+  },()=>{wrap.innerHTML='<div class="inf-empty-feed">Ative o GPS pra ver os informes perto de você</div>';},{timeout:10000,enableHighAccuracy:true});
+}
+
+async funct
+
+===== function renderInformes @ 1628000 =====
+nfFavs=JSON.parse(localStorage.getItem('sm_inf_favs')||'[]');
+const INF_AVC=['#6D28D9','#0369A1','#B45309','#0F766E','#15803D','#BE123C','#7C3AED','#0284C7'];
+const INF_BADGE={dinamico:'infbd',transito:'infbt',fiscalizacao:'infbf',fila:'infbfi',demanda:'infbde',lotacao:'infblo',acidente:'infbac'};
+
+function renderInformes(){
+  infCarregarContagens();
+  infRenderBairrosTab();
+  infRenderVenueLists();
+  infCarregarFeedAgora();
+}
+
+function infTab(id){
+  document.querySelectorAll('.inf-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));
+  document.querySelectorAll('#inf-scroll-content > .inf-panelbody').forEach(p=>p.classList.add('hide'));
+  const p=document.getElementById('inf-tab-'+id);if(p)p.classList.remove('hide');
+}
+
+function infRenderBairrosTab(){
+  const bic=`<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#475569" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.333-8 14-8 14S4 15.333 4 10a8 8 0 0 1 8-8z"/></svg>`;
+  const chip=b=>`<div class="inf-bchip" onclick="infAbrirLocal(this,'${b}','bairro')"><div class="inf-bchip-ct z">–</div><div class="inf-bchip-ic">${bic}</div><div class="inf-bchip-name">${b}</div></div>`;
+  const sulEl=document.getElementById('inf-bchip-sul');if(sulEl)sulEl.innerHTML=INF_BAIRROS.sul.map(chip).join('');
+  const barraEl=document.getElementById('inf-bchip-barra');if(barraEl)barraEl.innerHTML=INF_BAIRROS.barra.map(chip).join('');
+  infCarregarContagens();
+}
+
+function infRenderVenueLists(){
+  Object.entries({shoppings:'shoppings',bares:'bares',hoteis:'hoteis',eventos:'eventos',turistico:'turistico'}).forEach(([tabKey,venueKey])=>{
+    const el=document.getElementById('inf-vlist-'+tabKey);if(!el)return;
+    const v=INF_VENUES[venueKey];if(!v)return;
+    const t=INF_TIPOS[v.tipo]||INF_TIPOS.bairro;
+    el.innerHTML=v.itens.map(item=>`<div class="inf-vitem" onclick="infAbrirLocal(this,'${item.n.replace(/'/g,"\\'")}','${v.tipo}')">
+      <div class="inf-vitem-ic" style="background:${t.bg}">${infIconSvg(v.tipo,t.cor,15)}</div>
+      <div><div class="inf-vitem-name">${item.n}</div><div class="inf-vitem-sub">${item.sub||''}</div></div>
+      <div class="inf-vitem-badges" data-vname="${esc(item.n)}"></div>
+      <div class="inf-vitem-ct z">–</div>
+    </div>`).join('');
+  });
+  infCarregarContagens();
+  infCarregarBadgesListagem();
+}
+
+// Badges "Alta demanda"/"Tarifa dinâmica" nos itens da listagem —
+// mesmo visual do header (ícone+texto), some quando não há dado.
+// Reaproveita venue_cache (já resolvido em lote pela infCarregarContagens
+// não; aqui cada item pede seu próprio lat/lng, mas em paralelo/Promise.all
+// pra não travar a UI — listas são pequenas, 6-7 itens por aba).
+async function infCarregarBadgesListagem(){
+  if(!_SUPA) return;
+  const els=[...document.querySelectorAll('.inf-vitem-badges[data-vname]')];
+  if(!els.length) return;
+  await Promise.all(els.map(async el=>{
+    const nome=el.getAttribute('data-vname');
+    try{
+      const {data:vc}=await _SUPA.from('venue_cache').select('id,lat,lng').ilike('name',nome).limit(1);
+      if(!vc||!vc.length) return;
+      const venue=vc[0];
+      const d=0.003;
+      const [{data:stats},{data:posts}]=await Promise.all([
+        _SUPA.rpc('venue_collab_stats',{p_venue_id:venue.id}),
+        _SUPA.from('feed_posts').select('param_value,param_detail,created_at')
+          .eq('type','dinamico').eq('status','ativo').gt('expires_at',new Date().toISOString())
+          .gte('lat',venue.lat-d).lte('lat',venue.lat+d).gte('lng',venue.lng-d).lte('lng',venue.lng+d)
+          .order('created_at',{ascending:false}).limit(10)
+      ]);
+      let html='';
+      if(stats && stats.alta_demanda_agora){
+        html+=`<div class="inf-badge-btn peak"><svg viewBox="0 0 24 24" width="14" height="14" fill="#fff" stroke="none"><path d="M12 2c1 3-2 4-2 7a4 4 0 0 0 8 0c0-1-.5-2-1-2 1 3-1 4-2 4a2 2 0 0 1-2-2c0-2 2-3 2-5-2 0-4 1-5 3-1 2-1 4 0 6a6 6 0 0 0 12-2c0-4-3-6-4-9-1 1-3 3-3 5-1-2-1-3-1-5-2 1-2 3-2 5z"/></svg><span>ALTA</span></div>`;
+      }
+      const dyn99=(posts||[]).find(p=>p.param_value==='99');
+      if(dyn99){
+        html+=`<div class="inf-badge-btn dyn"><svg viewBox="0 0 24 24" width="14" height="14" fill="#fff" stroke="none"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><span>99: ${esc(dyn99.param_detail||'ativo')}</span></div>`;
+      }
+      el.innerHTML=html;
+    }catch(e){ /* silencioso — badge é acessório, não pode travar a lista */ }
+  }));
+}
+
+function infHaversineM(lat1,lon1,lat2,lon2){
+  const R=6371000, toRad=x=>x*Math.PI/180;
+  const dLat=toRad(lat2-lat1), dLon=toRad(lon2-lon1);
+  const a=Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+// Feed unificado da aba "Agora" (16/08/2026) — substitui os antigos
+// "Informe da área" + "Últimos informes" (2 listas separadas, tabela
+// informes) por 1 lista só, ordenada por proximidade real via GPS,
+// direto de feed_posts.
+async function infCarregarFeedAgora(){
+  infRenderFavs();
+  const wrap=document.getElementById('inf-feed-agora');
+  if(!wrap)return;
+  if(!navigator.geolocation){wrap.innerHTML='<div class="inf-empty-feed">GPS não disponível</div>';return;}
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    try{
+      const{latitude:lat,longitude:lon}=pos.coords;
+      if(!_SUPA){wrap.innerHTML='<div class="inf-empty-feed">Sem conexão</div>';return;}
+      const d=0.02; // ~2km — feed geral da região, mais largo que o painel de 1 local
+      const{data}=await _SUPA.from('feed_posts').select('*')
+        .eq('status','ativo').gt('expires_at',new Date().toISOString())
+        .gte('lat',lat-d).lte('lat',lat+d)
+        .gte('lng',lon-d).lte('lng',lon+d)
+        .order('created_at',{ascending:false}).limit(30);
+      const posts=(data||[]).map(p=>{p._distM=infHaversineM(lat,lon,p.lat,p.lng);return p;})
+        .sort((a,b)=>a._distM-b._distM);
+      wrap.innerHTML = posts.length ? await infBuildPostCardsHtml(posts) : '<div class="inf-empty-feed">Nenhum informe recente por perto · seja o primeiro a reportar!</div>';
+    }catch(e){console.warn('feed agora',e);wrap.innerHTML='<div class="inf-empty-feed">Erro ao carregar</div>';}
+  },()=>{wrap.innerHTML='<div class="inf-empty-feed">Ative o GPS pra ver os informes perto de você</div>';},{timeout:10000,enableHighAccuracy:true});
+}
+
+async function infCarregarContagens(){
+  if(!_SUPA)return;
+  try{
+    // Migrado de 'informes' (tabela legada, sem post novo desde a
+    // reformulação de 16/08/2026 — segue existindo só pro cron de
+    // expiração antigo) pra feed_posts. feed_posts não tem location_name
+    // (é geolocalizado, não por local nomeado), então a contagem vira
+    // match textual no endereço geocodificado — aproximado, não é mais
+    /
+
+===== function infRenderVenueLists @ 1629178 =====
+hip-name">${b}</div></div>`;
+  const sulEl=document.getElementById('inf-bchip-sul');if(sulEl)sulEl.innerHTML=INF_BAIRROS.sul.map(chip).join('');
+  const barraEl=document.getElementById('inf-bchip-barra');if(barraEl)barraEl.innerHTML=INF_BAIRROS.barra.map(chip).join('');
+  infCarregarContagens();
+}
+
+function infRenderVenueLists(){
+  Object.entries({shoppings:'shoppings',bares:'bares',hoteis:'hoteis',eventos:'eventos',turistico:'turistico'}).forEach(([tabKey,venueKey])=>{
+    const el=document.getElementById('inf-vlist-'+tabKey);if(!el)return;
+    const v=INF_VENUES[venueKey];if(!v)return;
+    const t=INF_TIPOS[v.tipo]||INF_TIPOS.bairro;
+    el.innerHTML=v.itens.map(item=>`<div class="inf-vitem" onclick="infAbrirLocal(this,'${item.n.replace(/'/g,"\\'")}','${v.tipo}')">
+      <div class="inf-vitem-ic" style="background:${t.bg}">${infIconSvg(v.tipo,t.cor,15)}</div>
+      <div><div class="inf-vitem-name">${item.n}</div><div class="inf-vitem-sub">${item.sub||''}</div></div>
+      <div class="inf-vitem-badges" data-vname="${esc(item.n)}"></div>
+      <div class="inf-vitem-ct z">–</div>
+    </div>`).join('');
+  });
+  infCarregarContagens();
+  infCarregarBadgesListagem();
+}
+
+// Badges "Alta demanda"/"Tarifa dinâmica" nos itens da listagem —
+// mesmo visual do header (ícone+texto), some quando não há dado.
+// Reaproveita venue_cache (já resolvido em lote pela infCarregarContagens
+// não; aqui cada item pede seu próprio lat/lng, mas em paralelo/Promise.all
+// pra não travar a UI — listas são pequenas, 6-7 itens por aba).
+async function infCarregarBadgesListagem(){
+  if(!_SUPA) return;
+  const els=[...document.querySelectorAll('.inf-vitem-badges[data-vname]')];
+  if(!els.length) return;
+  await Promise.all(els.map(async el=>{
+    const nome=el.getAttribute('data-vname');
+    try{
+      const {data:vc}=await _SUPA.from('venue_cache').select('id,lat,lng').ilike('name',nome).limit(1);
+      if(!vc||!vc.length) return;
+      const venue=vc[0];
+      const d=0.003;
+      const [{data:stats},{data:posts}]=await Promise.all([
+        _SUPA.rpc('venue_collab_stats',{p_venue_id:venue.id}),
+        _SUPA.from('feed_posts').select('param_value,param_detail,created_at')
+          .eq('type','dinamico').eq('status','ativo').gt('expires_at',new Date().toISOString())
+          .gte('lat',venue.lat-d).lte('lat',venue.lat+d).gte('lng',venue.lng-d).lte('lng',venue.lng+d)
+          .order('created_at',{ascending:false}).limit(10)
+      ]);
+      let html='';
+      if(stats && stats.alta_demanda_agora){
+        html+=`<div class="inf-badge-btn peak"><svg viewBox="0 0 24 24" width="14" height="14" fill="#fff" stroke="none"><path d="M12 2c1 3-2 4-2 7a4 4 0 0 0 8 0c0-1-.5-2-1-2 1 3-1 4-2 4a2 2 0 0 1-2-2c0-2 2-3 2-5-2 0-4 1-5 3-1 2-1 4 0 6a6 6 0 0 0 12-2c0-4-3-6-4-9-1 1-3 3-3 5-1-2-1-3-1-5-2 1-2 3-2 5z"/></svg><span>ALTA</span></div>`;
+      }
+      const dyn99=(posts||[]).find(p=>p.param_value==='99');
+      if(dyn99){
+        html+=`<div class="inf-badge-btn dyn"><svg viewBox="0 0 24 24" width="14" height="14" fill="#fff" stroke="none"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><span>99: ${esc(dyn99.param_detail||'ativo')}</span></div>`;
+      }
+      el.innerHTML=html;
+    }catch(e){ /* silencioso — badge é acessório, não pode travar a lista */ }
+  }));
+}
+
+function infHaversineM(lat1,lon1,lat2,lon2){
+  const R=6371000, toRad=x=>x*Math.PI/180;
+  const dLat=toRad(lat2-lat1), dLon=toRad(lon2-lon1);
+  const a=Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+// Feed unificado da aba "Agora" (16/08/2026) — substitui os antigos
+// "Informe da área" + "Últimos informes" (2 listas separadas, tabela
+// informes) por 1 lista só, ordenada por proximidade real via GPS,
+// direto de feed_posts.
+async function infCarregarFeedAgora(){
+  infRenderFavs();
+  const wrap=document.getElementById('inf-feed-agora');
+  if(!wrap)return;
+  if(!navigator.geolocation){wrap.innerHTML='<div class="inf-empty-feed">GPS não disponível</div>';return;}
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    try{
+      const{latitude:lat,longitude:lon}=pos.coords;
+      if(!_SUPA){wrap.innerHTML='<div class="inf-empty-feed">Sem conexão</div>';return;}
+      const d=0.02; // ~2km — feed geral da região, mais largo que o painel de 1 local
+      const{data}=await _SUPA.from('feed_posts').select('*')
+        .eq('status','ativo').gt('expires_at',new Date().toISOString())
+        .gte('lat',lat-d).lte('lat',lat+d)
+        .gte('lng',lon-d).lte('lng',lon+d)
+        .order('created_at',{ascending:false}).limit(30);
+      const posts=(data||[]).map(p=>{p._distM=infHaversineM(lat,lon,p.lat,p.lng);return p;})
+        .sort((a,b)=>a._distM-b._distM);
+      wrap.innerHTML = posts.length ? await infBuildPostCardsHtml(posts) : '<div class="inf-empty-feed">Nenhum informe recente por perto · seja o primeiro a reportar!</div>';
+    }catch(e){console.warn('feed agora',e);wrap.innerHTML='<div class="inf-empty-feed">Erro ao carregar</div>';}
+  },()=>{wrap.innerHTML='<div class="inf-empty-feed">Ative o GPS pra ver os informes perto de você</div>';},{timeout:10000,enableHighAccuracy:true});
+}
+
+async function infCarregarContagens(){
+  if(!_SUPA)return;
+  try{
+    // Migrado de 'informes' (tabela legada, sem post novo desde a
+    // reformulação de 16/08/2026 — segue existindo só pro cron de
+    // expiração antigo) pra feed_posts. feed_posts não tem location_name
+    // (é geolocalizado, não por local nomeado), então a contagem vira
+    // match textual no endereço geocodificado — aproximado, não é mais
+    // igualdade exata como era com location_name. Efeito prático: alguns
+    // locais podem subcontar se o endereço reverso não citar o nome
+    // exatamente (ex.: aeroporto que geocodifica só como rua) — degrada
+    // pra "–" nesse caso, nunca quebra a tela.
+    const{data}=await _SUPA.from('feed_posts')
+      .select('address')
+      .eq('status','ativo')
+      .gt('expires_at',new Date().toISOString())
+      .not('address','is',null);
+    if(!data)return;
+    const countFor=(nome)=>{
+      const needle=(nome||'').toLowerCase().trim();
+      if(!needle) return 0;
+      return data.filter(r=>(r.address||'').toLowerCase().includes(needle)).length;
+    };
+    // Atualiza contagem individual dos bairros quando inline
+    document.querySelectorAll('.inf-bchip-ct').forEach(el=>{
+      const nome=el.closest('.inf-bchip')?.querySelector('.inf-bchip-name')?.textContent||'';
+      const n=countFor(nome);
+      el.textContent=n;el.className='inf-bchip-ct'+(n===0?' z':'');
+    });
+    [['gig','Galeão (GIG)'],['sdu','Santos Dumont (SDU)'],['rod','Rodoviária Novo Rio']].forEach(([id,n])=>{
+      const el=document.getElementById('inf-ct-'+id);if(el)el.textContent=countFor(n
+
+===== function infCarregarVenuesGPS @ 1679176 =====
+gar via GPS primeiro; fallback para lista fixa
+  infAbrirVenueSheet(cat, v.itens);
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(pos=>{
+      infCarregarVenuesGPS(cat, pos.coords.latitude, pos.coords.longitude);
+    }, null, {timeout:5000, maximumAge:30000});
+  }
+}
+async function infCarregarVenuesGPS(cat, lat, lon){
+  const queries = {
+    bares: `node(around:800,${lat},${lon})[amenity~"^(bar|pub|restaurant|cafe|nightclub)$"][name];`,
+    hoteis:`node(around:2000,${lat},${lon})[tourism~"^(hotel|hostel|motel|guest_house)$"][name];`,
+    eventos:`(node(around:5000,${lat},${lon})[amenity~"^(theatre|cinema|arts_centre)$"][name];node(around:5000,${lat},${lon})[leisure="stadium"][name];);`,
+    turistico:`node(around:3000,${lat},${lon})[tourism~"^(museum|attraction|viewpoint|gallery)$"][name];`,
+  };
+  const oq = queries[cat]; if(!oq) return;
+  try{
+    const r=await fetch(`https://overpass-api.de/api/interpreter?data=[out:json];${encodeURIComponent(oq)}out 20;`);
+    const d=await r.json();
+    if(!d.elements||!d.elements.length) return;
+    // Calcula distância e ordena
+    const R=6371;
+    const dist=(a,b,c,dd)=>R*2*Math.asin(Math.sqrt(Math.sin(((c-a)*Math.PI/180)/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(((dd-b)*Math.PI/180)/2)**2));
+    const itens=d.elements
+      .filter(e=>e.tags&&e.tags.name)
+      .map(e=>({n:e.tags.name, sub:e.tags['addr:suburb']||e.tags['addr:city']||'Via GPS', km:dist(lat,lon,e.lat||lat,e.lon||lon)}))
+      .sort((a,b)=>a.km-b.km)
+      .slice(0,12)
+      .map(e=>({...e,distStr:(e.km<1?Math.round(e.km*1000)+'m':e.km.toFixed(1)+'km')}));
+    if(itens.length) infAbrirVenueSheet(cat, itens, true);
+  }catch(e){console.warn('overpass venues',e);}
+}
+function infAbrirVenueSheet(cat, itens, viaGPS){
+  const v=INF_VENUES[cat]; if(!v) return;
+  const t=INF_TIPOS[v.tipo]||INF_TIPOS.bairro;
+  const ic=document.getElementById('inf-venue-ic');
+  if(ic){ic.style.background=t.bg;ic.innerHTML=infIconSvg(v.tipo,t.cor,17);}
+  const titleEl=document.getElementById('inf-venue-title');
+  if(titleEl) titleEl.textContent=v.titulo;
+  const subEl=document.getElementById('inf-venue-sub');
+  if(subEl) subEl.textContent=viaGPS?'Ordenado pela sua localização':'Locais populares';
+  const listEl=document.getElementById('inf-venue-list');
+  const displayItens=itens||v.itens||[];
+  if(listEl) listEl.innerHTML=displayItens.map(item=>
+    `<div class="inf-loc-item" onclick="infFecharOv('inf-ov-venue');infAbrirLocal(null,'${(item.n||'').replace(/'/g,"\'")}','${v.tipo}')">
+      <div class="inf-loc-ic" style="background:${t.bg}">${infIconSvg(v.tipo,t.cor,15)}</div>
+      <div class="inf-loc-body"><div class="inf-loc-name">${item.n||''}</div><div class="inf-loc-sub">${item.sub||item.distStr||''}</div></div>
+    </div>`
+  ).join('');
+  const ovEl=document.getElementById('inf-ov-venue');
+  if(ovEl) ovEl.classList.add('open');
+}
+
+const INF_PICONS={
+  transito:`<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
+  fiscalizacao:`<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+  dinamico:`<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+  demanda:`<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.56 2 2 0 0 1 3.6 1.37h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21.73 16.92z"/></svg>`,
+  fila:`<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`,
+  lotacao:`<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  acidente:`<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+};
+
+function infAbrirReportar(){
+  const t=INF_TIPOS[_infTipoKey]||INF_TIPOS.bairro;
+  const ic=document.getElementById('inf-rep-ic');ic.style.background=t.bg;ic.innerHTML=infIconSvg(_infTipoKey,t.cor,16);
+  document.getElementById('inf-rep-sub').textContent=_infLoc;
+  _infRepTipo=null;_infRepValor=null;_infRepDetalhe=null;
+  document.getElementById('inf-send-btn').disabled=true;
+  document.getElementById('inf-rep-tipos').innerHTML=t.modal.map(pid=>
+    `<div class="inf-rtipo" data-pid="${pid}" onclick="infSelTipo('${pid}')">
+      <div class="inf-rtipo-ic">${INF_PICONS[pid]||''}</div>
+      <div class="inf-rtipo-lbl">${INF_PLBL[pid]||pid}</div>
+    </div>`
+  ).join('');
+  document.getElementById('inf-rep-opcoes-wrap').innerHTML='';
+  document.getElementById('inf-ov-rep').classList.add('open');
+}
+
+function infSelTipo(pid){
+  _infRepTipo=pid;_infRepValor=null;_infRepDetalhe=null;
+  document.querySelectorAll('.inf-rtipo').forEach(b=>b.classList.remove('sel'));
+  const sel=document.querySelector(`.inf-rtipo[data-pid="${pid}"]`);if(sel)sel.classList.add('sel');
+  document.getElementById('inf-send-btn').disabled=true;
+  const p=INF_PARAMS[pid];if(!p)return;
+  let html=`<div class="inf-ropts show" id="inf-ropts-main"><div class="inf-ropt-lbl">${INF_PLBL[pid]}</div>`;
+  if(p.opts){html+=p.opts.map(o=>`<button class="inf-ropt" onclick="infSelOpt(this,'${o.v}','${o.c||''}')">${o.v}</button>`).join('');}
+  else if(p.sub){html+=p.sub.map(o=>`<button class="inf-ropt" onclick="infSelFisc(this,'${o.v}')">${o.v}</button>`).join('');}
+  html+='</div>';
+  if(pid==='fiscalizacao')html+=`<div class="inf-ropts" id="inf-ropts-fisc-acao"><div class="inf-ropt-lbl">O que estão fazendo?</div>${p.subacao.map(o=>`<button class="inf-ropt" onclick="infSelOpt(this,'${o.v}','${o.c||''}')">${o.v}</button>`).join('')}</div>`;
+  document.getElementById('inf-rep-opcoes-wrap').innerHTML=html;
+}
+
+function infSel
+
+===== function infEscolherCidade @ 1692449 =====
+eturn false; vistos.add(k); return true; });
+      document.getElementById('inf-city-list').innerHTML = unicos.length
+        ? unicos.map(infCidadeItemHtml).join('')
+        : '<div class="inf-empty">Nenhuma cidade encontrada</div>';
+    } catch(e) { console.warn('busca cidade', e); }
+  }, 400);
+}
+function infEscolherCidade(name, uf){
+  _infCity = {name, uf};
+  localStorage.setItem('sm_inf_city', JSON.stringify(_infCity));
+  document.getElementById('inf-city-name').textContent = name;
+  closeMo('mo-inf-cidade');
+  showToast('Cidade alterada para '+name);
+  // Recarrega o que depender da cidade — feed "Agora" e listas de venue.
+  try { infCarregarFeedAgora?.(); } catch(e){}
+}
+function infToggleSearch(){
+  const el = document.getElementById('inf-search-fixed');
+  const btn = document.getElementById('inf-search-toggle');
+  if(!el) return;
+  const show = el.style.display === 'none';
+  el.style.display = show ? 'flex' : 'none';
+  if(btn){ btn.style.background = show ? '#0A2F6B' : ''; btn.style.color = show ? '#fff' : ''; }
+  if(show){ document.getElementById('inf-search-bar')?.focus(); }
+  else {
+    const inp = document.getElementById('inf-search-bar'); if(inp) inp.value='';
+    const dd = document.getElementById('inf-search-dd'); if(dd) dd.classList.remove('show');
+  }
+}
+// Botão "Relatar agora" (barra fixa embaixo, Opção B aprovada) — abre o
+// seletor de tipo. Reaproveita ícone/expMin do FEED_TYPES (blitz/risco/
+// transito), só troca label/cor pro contexto do Informes (Policiamento/
+// Alerta/Trânsito) — mesma chave de type no banco, então o composer do
+// Início (que ainda usa os nomes antigos) continua compatível com o
+// mesmo dado. Construído dentro da função (não como const no topo do
+// arquivo) porque FEED_TYPES só existe mais abaixo — na hora que essa
+// função É CHAMADA (clique do usuário) o resto do script já rodou, mas
+// declarar como const aqui em cima quebraria (referência antes de existir).
+let _infRelState = {};
+function infOpenRelatar(){
+  _infRelState = {};
+  const types = {
+    transito: {label:'Trânsito',     color:'#F97316', icon:FEED_TYPES.transito.icon, expMin:FEED_TYPES.transito.expMin},
+    risco:    {label:'Alerta',       color:'#DC2626', icon:FEED_TYPES.risco.icon,    expMin:FEED_TYPES.risco.expMin},
+    blitz:    {label:'Fiscalização', color:'#2563EB', icon:FEED_TYPES.blitz.icon,    expMin:FEED_TYPES.blitz.expMin}
+  };
+  _infRelState.types = types;
+  document.getElementById('inf-relatar-title').textContent = 'Informe';
+  document.getElementById('inf-relatar-back').style.display = 'none';
+  document.getElementById('inf-relatar-body').innerHTML = `<div class="qr-grid">` +
+    Object.entries(types).map(([key,t]) =>
+      `<div class="qr-btn" style="background:${t.color}" onclick="infRelatarSelType('${key}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">${t.icon}</svg>
+        <span class="qr-label">${t.label}</span>
+      </div>`
+    ).join('') + `</div>`;
+  const locTxt = document.getElementById('inf-relatar-loc-txt');
+  locTxt.textContent = 'Localizando…';
+  openMo('mo-inf-relatar');
+  infRelatarBuscarLocalizacao();
+}
+// Pede o GPS e preenche o chip de endereço — separado do resto pra poder
+// ser chamado de novo depois que a pessoa toca "Alterar" e volta.
+function infRelatarBuscarLocalizacao(){
+  const locTxt = document.getElementById('inf-relatar-loc-txt');
+  if (!navigator.geolocation) { if (locTxt) locTxt.textContent = 'GPS indisponível'; return; }
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    _infRelState.lat = pos.coords.latitude; _infRelState.lng = pos.coords.longitude;
+    try{
+      const revR = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&zoom=16&format=json&accept-language=pt`,{headers:{'User-Agent':'MoB/1.0'}});
+      const rev = await revR.json();
+      _infRelState.address = rev.address?.road || rev.address?.suburb || rev.address?.neighbourhood || null;
+    }catch(e){ _infRelState.address = null; }
+    const el = document.getElementById('inf-relatar-loc-txt');
+    if (el) el.textContent = _infRelState.address || 'Localização atual';
+  }, ()=>{ const el=document.getElementById('inf-relatar-loc-txt'); if(el) el.textContent='Localização indisponível'; },
+  {timeout:7000, maximumAge:60000});
+}
+// "Alterar" (16/08/2026, pedido do Yuri) — reaproveita a MESMA busca de
+// rua próxima que "Minha área" já usa (infAbrirGps), só que em vez de
+// abrir o painel de navegação, seta o endereço da corrida atual e volta
+// pro Informe. Motorista pode não estar exatamente onde o GPS achou, ou
+// o GPS errou — dá pra corrigir manualmente antes de publicar.
+function infRelatarAlterarLocal(){
+  closeMo('mo-inf-relatar');
+  infAbrirGps('relatar');
+}
+function infRelatarPickLocal(nome){
+  _infRelState.address = nome;
+  infFecharOv('inf-ov-gps');
+  openMo('mo-inf-relatar');
+  const el = document.getElementById('inf-relatar-loc-txt');
+  if (el) el.textContent = nome;
+}
+function infRelatarShowBack(label, fn){
+  _infRelState.backFn = fn;
+  const back = document.getElementById('inf-relatar-back');
+  back.style.display = 'flex';
+  document.getElementById('inf-relatar-back-lbl').textContent = label;
+}
+function infRelatarBack(){ if (_infRelState.backFn) _infRelState.backFn(); }
+
+function infRelatarSelType(key){
+  _infRelState.type = key;
+  if (key === 'transito') return infRelatarShowTransito();
+  if (key === 'blitz') return infRelatarShowPoliciamento();
+  if (key === 'risco') return infRelatarShowAlertaStep1();
+}
+
+// Trânsito — barra 0 a 5, 1 toque publica.
+function infRelatarShowTransito(){
+  document.getElementById('inf-relatar-title').textContent = 'Como tá o trânsito?';
+  infRelatarShowBack('Trânsito', infOpenRelatar);
+  const cores = ['#DC2626','#EF4444','#F59E0B','#EAB308','#84CC16','#22C55E'];
+  document.getElementById('inf-relatar-body').innerHTML =
+    `<div class="inf-tbar">${cores.map((c,i)=>`<button class="inf-tbar-seg" style="background:${c}" onclick="infRelatarPublish({nivel:${i}})">${i}</button>`).join('')}</div>
+     <div class="inf-tbar-labels"><span>Parado</span><span>Livre</span></div>`;
+}
+
+// Policiamento — "quem" (2 col) + "fazendo o quê" (3 col) na mesma tela;
+// publica sozinho assim que os dois têm uma opção marcada.
+function infRelatarShowPoliciamento(){
+  document.getElementById('inf-relatar-title').textContent = 'Fiscalização';
+  infRelatarShowBack('Fiscalização', infOpenRelatar);
+  _infRelState.orgao = null; _infRelState.acao = null;
+  infRelatarRenderPoliciamento();
+}
+function infRelatarRenderPoliciamento(){
+  const orgaos = [['Polícia Militar','pm'],['Guarda Municipal','gm'],['Lei Seca','leiseca'],['Detro','detro']];
+  const acoes = [['Multando','multando'],['Abordando','abordando'],['Posicionado','posicionado']];
+  docum
+
+===== function infAbrirCidade @ 1690062 =====
+Property('--inf-topbar-h', el.offsetHeight + 'px');
+  new ResizeObserver(apply).observe(el);
+  apply();
+})();
+// Trocar cidade (16/08/2026) — abre com a atual marcada + algumas
+// sugestões próximas; busca de verdade via Nominatim (mesma fonte já
+// usada em todo o resto do app pra geocodificação).
+function infAbrirCidade(){
+  document.getElementById('inf-city-search-input').value = '';
+  infRenderCidadeDefaults();
+  openMo('mo-inf-cidade');
+}
+function infRenderCidadeDefaults(){
+  const sugestoes = [
+    {name:'Rio de Janeiro', uf:'RJ'}, {name:'Teresópolis', uf:'RJ'},
+    {name:'Niterói', uf:'RJ'}, {name:'São Paulo', uf:'SP'}
+  ];
+  document.getElementById('inf-city-list').innerHTML = sugestoes.map(infCidadeItemHtml).join('');
+}
+function infCidadeItemHtml(c){
+  const isActive = c.name === _infCity.name && c.uf === _infCity.uf;
+  return `<div class="inf-city-item ${isActive?'active':''}" onclick="infEscolherCidade('${c.name.replace(/'/g,"\\'")}','${c.uf}')">
+    <div class="inf-city-item-ic"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div>
+    <div><div class="inf-city-item-name">${c.name}</div><div class="inf-city-item-uf">${c.uf}</div></div>
+    ${isActive ? '<svg class="inf-city-item-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+  </div>`;
+}
+let _infCitySearchDebounce = null;
+function infBuscarCidade(q){
+  clearTimeout(_infCitySearchDebounce);
+  if (!q || q.trim().length < 2) { infRenderCidadeDefaults(); return; }
+  _infCitySearchDebounce = setTimeout(async () => {
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(q)}&country=Brazil&format=json&addressdetails=1&limit=8`, {headers:{'User-Agent':'MoB/1.0'}});
+      const data = await r.json();
+      const cidades = data
+        .filter(d => d.address && (d.address.city || d.address.town || d.address.municipality))
+        .map(d => ({name: d.address.city || d.address.town || d.address.municipality, uf: d.address.state_code || (d.address['ISO3166-2-lvl4']||'').split('-')[1] || ''}));
+      const vistos = new Set();
+      const unicos = cidades.filter(c => { const k = c.name+c.uf; if (vistos.has(k)) return false; vistos.add(k); return true; });
+      document.getElementById('inf-city-list').innerHTML = unicos.length
+        ? unicos.map(infCidadeItemHtml).join('')
+        : '<div class="inf-empty">Nenhuma cidade encontrada</div>';
+    } catch(e) { console.warn('busca cidade', e); }
+  }, 400);
+}
+function infEscolherCidade(name, uf){
+  _infCity = {name, uf};
+  localStorage.setItem('sm_inf_city', JSON.stringify(_infCity));
+  document.getElementById('inf-city-name').textContent = name;
+  closeMo('mo-inf-cidade');
+  showToast('Cidade alterada para '+name);
+  // Recarrega o que depender da cidade — feed "Agora" e listas de venue.
+  try { infCarregarFeedAgora?.(); } catch(e){}
+}
+function infToggleSearch(){
+  const el = document.getElementById('inf-search-fixed');
+  const btn = document.getElementById('inf-search-toggle');
+  if(!el) return;
+  const show = el.style.display === 'none';
+  el.style.display = show ? 'flex' : 'none';
+  if(btn){ btn.style.background = show ? '#0A2F6B' : ''; btn.style.color = show ? '#fff' : ''; }
+  if(show){ document.getElementById('inf-search-bar')?.focus(); }
+  else {
+    const inp = document.getElementById('inf-search-bar'); if(inp) inp.value='';
+    const dd = document.getElementById('inf-search-dd'); if(dd) dd.classList.remove('show');
+  }
+}
+// Botão "Relatar agora" (barra fixa embaixo, Opção B aprovada) — abre o
+// seletor de tipo. Reaproveita ícone/expMin do FEED_TYPES (blitz/risco/
+// transito), só troca label/cor pro contexto do Informes (Policiamento/
+// Alerta/Trânsito) — mesma chave de type no banco, então o composer do
+// Início (que ainda usa os nomes antigos) continua compatível com o
+// mesmo dado. Construído dentro da função (não como const no topo do
+// arquivo) porque FEED_TYPES só existe mais abaixo — na hora que essa
+// função É CHAMADA (clique do usuário) o resto do script já rodou, mas
+// declarar como const aqui em cima quebraria (referência antes de existir).
+let _infRelState = {};
+function infOpenRelatar(){
+  _infRelState = {};
+  const types = {
+    transito: {label:'Trânsito',     color:'#F97316', icon:FEED_TYPES.transito.icon, expMin:FEED_TYPES.transito.expMin},
+    risco:    {label:'Alerta',       color:'#DC2626', icon:FEED_TYPES.risco.icon,    expMin:FEED_TYPES.risco.expMin},
+    blitz:    {label:'Fiscalização', color:'#2563EB', icon:FEED_TYPES.blitz.icon,    expMin:FEED_TYPES.blitz.expMin}
+  };
+  _infRelState.types = types;
+  document.getElementById('inf-relatar-title').textContent = 'Informe';
+  document.getElementById('inf-relatar-back').style.display = 'none';
+  document.getElementById('inf-relatar-body').innerHTML = `<div class="qr-grid">` +
+    Object.entries(types).map(([key,t]) =>
+      `<div class="qr-btn" style="background:${t.color}" onclick="infRelatarSelType('${key}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">${t.icon}</svg>
+        <span class="qr-label">${t.label}</span>
+      </div>`
+    ).join('') + `</div>`;
+  const locTxt = document.getElementById('inf-relatar-loc-txt');
+  locTxt.textContent = 'Localizando…';
+  openMo('mo-inf-relatar');
+  infRelatarBuscarLocalizacao();
+}
+// Pede o GPS e preenche o chip de endereço — separado do resto pra poder
+// ser chamado de novo depois que a pessoa toca "Alterar" e volta.
+function infRelatarBuscarLocalizacao(){
+  const locTxt = document.getElementById('inf-relatar-loc-txt');
+  if (!navigator.geolocation) { if (locTxt) locTxt.textContent = 'GPS indisponível'; return; }
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    _infRelState.lat = pos.coords.latitude; _infRelState.lng = pos.coords.longitude;
+    try{
+      const revR = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&zoom=16&format=json&accept-language=pt`,{headers:{'User-Agent':'MoB/1.0'}});
+      const rev = await revR.json();
+      _infRelState.address = rev.address?.road || rev.address?.suburb || rev.address?.neighbourhood || null;
+    }catch(e){ _infRelState.address = null; }
+    const el = document.getElementById('inf-relatar-loc-txt');
+    if (el) el.textContent = _infRelState.address || 'Localização atual';
+  }, ()=>{ const el=document.getElementById('inf-relatar-loc-txt'); if(el) el.textContent='Localização indisponível'; },
+  {timeout:7000, maximumAge:60000});
+}
+// "Alterar" (16/08/2026, pedido do Yuri) — reaproveita a MESMA busca de
+// rua próxima que
+
+===== function infCarregarFeedAgora @ 1632698 =====
+**2;
+  return R*2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+// Feed unificado da aba "Agora" (16/08/2026) — substitui os antigos
+// "Informe da área" + "Últimos informes" (2 listas separadas, tabela
+// informes) por 1 lista só, ordenada por proximidade real via GPS,
+// direto de feed_posts.
+async function infCarregarFeedAgora(){
+  infRenderFavs();
+  const wrap=document.getElementById('inf-feed-agora');
+  if(!wrap)return;
+  if(!navigator.geolocation){wrap.innerHTML='<div class="inf-empty-feed">GPS não disponível</div>';return;}
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    try{
+      const{latitude:lat,longitude:lon}=pos.coords;
+      if(!_SUPA){wrap.innerHTML='<div class="inf-empty-feed">Sem conexão</div>';return;}
+      const d=0.02; // ~2km — feed geral da região, mais largo que o painel de 1 local
+      const{data}=await _SUPA.from('feed_posts').select('*')
+        .eq('status','ativo').gt('expires_at',new Date().toISOString())
+        .gte('lat',lat-d).lte('lat',lat+d)
+        .gte('lng',lon-d).lte('lng',lon+d)
+        .order('created_at',{ascending:false}).limit(30);
+      const posts=(data||[]).map(p=>{p._distM=infHaversineM(lat,lon,p.lat,p.lng);return p;})
+        .sort((a,b)=>a._distM-b._distM);
+      wrap.innerHTML = posts.length ? await infBuildPostCardsHtml(posts) : '<div class="inf-empty-feed">Nenhum informe recente por perto · seja o primeiro a reportar!</div>';
+    }catch(e){console.warn('feed agora',e);wrap.innerHTML='<div class="inf-empty-feed">Erro ao carregar</div>';}
+  },()=>{wrap.innerHTML='<div class="inf-empty-feed">Ative o GPS pra ver os informes perto de você</div>';},{timeout:10000,enableHighAccuracy:true});
+}
+
+async function infCarregarContagens(){
+  if(!_SUPA)return;
+  try{
+    // Migrado de 'informes' (tabela legada, sem post novo desde a
+    // reformulação de 16/08/2026 — segue existindo só pro cron de
+    // expiração antigo) pra feed_posts. feed_posts não tem location_name
+    // (é geolocalizado, não por local nomeado), então a contagem vira
+    // match textual no endereço geocodificado — aproximado, não é mais
+    // igualdade exata como era com location_name. Efeito prático: alguns
+    // locais podem subcontar se o endereço reverso não citar o nome
+    // exatamente (ex.: aeroporto que geocodifica só como rua) — degrada
+    // pra "–" nesse caso, nunca quebra a tela.
+    const{data}=await _SUPA.from('feed_posts')
+      .select('address')
+      .eq('status','ativo')
+      .gt('expires_at',new Date().toISOString())
+      .not('address','is',null);
+    if(!data)return;
+    const countFor=(nome)=>{
+      const needle=(nome||'').toLowerCase().trim();
+      if(!needle) return 0;
+      return data.filter(r=>(r.address||'').toLowerCase().includes(needle)).length;
+    };
+    // Atualiza contagem individual dos bairros quando inline
+    document.querySelectorAll('.inf-bchip-ct').forEach(el=>{
+      const nome=el.closest('.inf-bchip')?.querySelector('.inf-bchip-name')?.textContent||'';
+      const n=countFor(nome);
+      el.textContent=n;el.className='inf-bchip-ct'+(n===0?' z':'');
+    });
+    [['gig','Galeão (GIG)'],['sdu','Santos Dumont (SDU)'],['rod','Rodoviária Novo Rio']].forEach(([id,n])=>{
+      const el=document.getElementById('inf-ct-'+id);if(el)el.textContent=countFor(n);
+    });
+    Object.entries({sul:INF_BAIRROS.sul,norte:INF_BAIRROS.norte,oeste:INF_BAIRROS.oeste,centro:INF_BAIRROS.centro}).forEach(([z,bs])=>{
+      const total=bs.reduce((s,b)=>s+countFor(b),0);
+      const el=document.getElementById('inf-zct-'+z);
+      if(el){el.textContent=total;el.className='inf-zcard-ct'+(total===0?' z':'');}
+    });
+    Object.entries({bares:INF_VENUES.bares.itens,hoteis:INF_VENUES.hoteis.itens,eventos:INF_VENUES.eventos.itens,turistico:INF_VENUES.turistico.itens}).forEach(([cat,itens])=>{
+      const total=itens.reduce((s,i)=>s+countFor(i.n),0);
+      const el=document.getElementById('inf-cct-'+cat);if(el)el.textContent=total||'–';
+    });
+    // Badges individuais nas listas de venues das abas (bares/hotéis/eventos/turístico/shoppings)
+    document.querySelectorAll('.inf-vitem-ct').forEach(el=>{
+      const nome=el.closest('.inf-vitem')?.querySelector('.inf-vitem-name')?.textContent||'';
+      const n=countFor(nome);
+      el.textContent=n||'–';el.className='inf-vitem-ct'+(n===0?' z':'');
+    });
+  }catch(e){console.warn('inf cnt',e);}
+}
+
+async function infAbrirLocal(el,nome,tipoKey){
+  document.querySelectorAll('.inf-feat,.inf-featF,.inf-bchip,.inf-zcard,.inf-vitem').forEach(b=>b.classList.remove('active'));
+  if(el)el.classList.add('active');
+  _infLoc=nome;_infTipoKey=tipoKey;
+  const t=INF_TIPOS[tipoKey]||INF_TIPOS.bairro;
+  const hic=document.getElementById('inf-panel-hic');
+  hic.style.background=t.bg;hic.innerHTML=infIconSvg(tipoKey,t.cor,17);
+  document.getElementById('inf-panel-tipo').textContent=t.label;
+  document.getElementById('inf-panel-tipo').style.color=t.cor;
+  document.getElementById('inf-panel-loc').textContent=nome;
+  document.getElementById('inf-panel-meta').textContent='Carregando…';
+  document.getElementById('inf-panel-fav').classList.toggle('on',_infFavs.some(f=>f.n===nome));
+  document.getElementById('inf-panel').classList.add('open');
+  // Botão "Abrir no mapa" — busca a coordenada no venue_cache (fonte
+  // OpenStreetMap) ANTES de carregar os informes, porque agora o feed
+  // "Últimos informes" filtra por proximidade real (lat/lng), não mais
+  // por texto exato do nome do local.
+  _infPanelVenue = null;
+  const mapBtn = document.getElementById('inf-panel-map');
+  if (mapBtn) mapBtn.style.display = 'none';
+  if (_SUPA) {
+    try {
+      const { data } = await _SUPA.from('venue_cache').select('id,lat,lng').ilike('name', nome).limit(1);
+      if (data && data.length) {
+        _infPanelVenue = data[0];
+        if (mapBtn) mapBtn.style.display = 'flex';
+      }
+    } catch(e) { console.warn('venue_cache lookup', e); }
+  }
+  infCarregarInformes(nome,tipoKey);
+  // Realtime: assina novos informes para esse local
+  infSubscribeRealtime(nome,tipoKey);
+}
+function infAbrirNoMapa(){
+  if (!_infPanelVenue) return;
+  const url = `https://www.google.com/maps/search/?api=1&query=${_infPanelVenue.lat},${_infPanelVenue.lng}`;
+  window.open(url, '_blank');
+}
+
+// ── Metadados dos 4 tipos de informe manual (Fiscalização/Trânsito/
+// Alerta/Lotação — Demanda e Dinâmico são automáticos, não aparecem
+// aqui como relato de usuário) ──────────────────────────────────────
+const INF_POST_META = {
+  blitz:    {label:'Fiscalização', color:'#2563EB', bg:'#DBEAFE'},
+  transito: {label:'Trânsito',     color:'#EA580C', bg:'#FFEDD5'},
+  risco:    {label:'Alerta',       color:'#DC2626', bg:'#FEF2F2'},
+  lotacao:  {label:'Lotação',      color:'#7C3AED', bg:'#F5F3FF'}
+};
+const INF_TRANSITO_LBL = ['Parado','Muito lento','Lento','Moder
+
+===== function infEnviarReporte @ 1686302 =====
+pts');
+  parent.querySelectorAll('.inf-ropt').forEach(b=>b.className='inf-ropt');
+  btn.className='inf-ropt sel r';
+  _infRepDetalhe=val;
+  const acao=document.getElementById('inf-ropts-fisc-acao');if(acao)acao.classList.add('show');
+  document.getElementById('inf-send-btn').disabled=true;
+}
+
+async function infEnviarReporte(){
+  if(!_infRepTipo||!_infRepValor)return;
+  const btn=document.getElementById('inf-send-btn');btn.disabled=true;btn.textContent='Enviando…';
+  const expMin=INF_PARAMS[_infRepTipo]?.expMin||30;
+  const expiresAt=new Date(Date.now()+expMin*60000).toISOString();
+  try{
+    if(_SUPA){
+      const sess=await _SUPA.auth.getSession();const uid=sess?.data?.session?.user?.id;
+      if(uid){
+        const{error}=await _SUPA.from('informes').insert({user_id:uid,location_name:_infLoc,location_type:_infTipoKey,city:'rio',param_type:_infRepTipo,param_value:_infRepValor,param_detail:_infRepDetalhe||null,expires_at:expiresAt,votes_up:1,votes_dn:0,is_active:true});
+        if(error){
+          // Trigger de spam ativo — informa o usuário sem travar o app
+          if(error.message?.includes('duplicate_report')||error.code==='P0001'){
+            btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Enviar informe';
+            showToast('Você já reportou isso recentemente. Aguarde um pouco.');return;
+          }
+          throw error;
+        }
+      }
+    }
+    infFecharOv('inf-ov-rep');showToast('Informe enviado — obrigado!');
+    infCarregarInformes(_infLoc,_infTipoKey);
+  }catch(e){console.error('inf send',e);showToast('Erro ao enviar. Tente novamente.');}
+  btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Enviar informe';
+}
+
+function infBuscarGlobal(q){
+  const dd=document.getElementById('inf-search-dd');
+  if(!q.trim()){dd.classList.remove('show');return;}
+  const qL=q.toLowerCase();
+  let res=INF_SDBDB.filter(x=>x.n.toLowerCase().includes(qL));
+  for(const [,v] of Object.entries(INF_VENUES)){
+    for(const item of (v.itens||[])){
+      if(item.n.toLowerCase().includes(qL)||(item.sub&&item.sub.toLowerCase().includes(qL))){
+        res.push({n:item.n+(item.sub?' ('+item.sub+')':''),t:v.tipo||'bairro'});
+      }
+    }
+  }
+  const _seen=new Set(); res=res.filter(x=>{if(_seen.has(x.n))return false;_seen.add(x.n);return true;}).slice(0,8);
+  dd.innerHTML=res.length?res.map(x=>{const t=INF_TIPOS[x.t]||INF_TIPOS.bairro;return`<div class="inf-sd-item" onclick="infToggleSearch();infAbrirLocal(null,'${x.n}','${x.t}')"><div class="inf-sd-ic" style="background:${t.bg}">${infIconSvg(x.t,t.cor,14)}</div><div><div class="inf-sd-name">${x.n}</div><div class="inf-sd-sub">${t.label}</div></div></div>`;}).join(''):'<div class="inf-sd-empty">Nenhum resultado</div>';
+  dd.classList.add('show');
+}
+// Busca colapsável (16/08/2026, pedido do Yuri) — vira ícone, só expande
+// quando toca, no lugar do campo fixo que ocupava uma linha inteira.
+// Mantém a barra de abas do Informes grudada certinho embaixo do topbar,
+// medindo a altura real em vez de chutar um valor fixo (16/08/2026 —
+// bug real: header colapsável mudou de altura, valor fixo antigo (74px)
+// cortava a primeira lista). ResizeObserver corrige sozinho pra sempre,
+// não importa o que mude na altura do topbar no futuro.
+(function infWatchTopbarHeight(){
+  const el = document.getElementById('inf-topbar');
+  if (!el || typeof ResizeObserver === 'undefined') return;
+  const apply = () => document.documentElement.style.setProperty('--inf-topbar-h', el.offsetHeight + 'px');
+  new ResizeObserver(apply).observe(el);
+  apply();
+})();
+// Trocar cidade (16/08/2026) — abre com a atual marcada + algumas
+// sugestões próximas; busca de verdade via Nominatim (mesma fonte já
+// usada em todo o resto do app pra geocodificação).
+function infAbrirCidade(){
+  document.getElementById('inf-city-search-input').value = '';
+  infRenderCidadeDefaults();
+  openMo('mo-inf-cidade');
+}
+function infRenderCidadeDefaults(){
+  const sugestoes = [
+    {name:'Rio de Janeiro', uf:'RJ'}, {name:'Teresópolis', uf:'RJ'},
+    {name:'Niterói', uf:'RJ'}, {name:'São Paulo', uf:'SP'}
+  ];
+  document.getElementById('inf-city-list').innerHTML = sugestoes.map(infCidadeItemHtml).join('');
+}
+function infCidadeItemHtml(c){
+  const isActive = c.name === _infCity.name && c.uf === _infCity.uf;
+  return `<div class="inf-city-item ${isActive?'active':''}" onclick="infEscolherCidade('${c.name.replace(/'/g,"\\'")}','${c.uf}')">
+    <div class="inf-city-item-ic"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div>
+    <div><div class="inf-city-item-name">${c.name}</div><div class="inf-city-item-uf">${c.uf}</div></div>
+    ${isActive ? '<svg class="inf-city-item-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+  </div>`;
+}
+let _infCitySearchDebounce = null;
+function infBuscarCidade(q){
+  clearTimeout(_infCitySearchDebounce);
+  if (!q || q.trim().length < 2) { infRenderCidadeDefaults(); return; }
+  _infCitySearchDebounce = setTimeout(async () => {
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(q)}&country=Brazil&format=json&addressdetails=1&limit=8`, {headers:{'User-Agent':'MoB/1.0'}});
+      const data = await r.json();
+      const cidades = data
+        .filter(d => d.address && (d.address.city || d.address.town || d.address.municipality))
+        .map(d => ({name: d.address.city || d.address.town || d.address.municipality, uf: d.address.state_code || (d.address['ISO3166-2-lvl4']||'').split('-')[1] || ''}));
+      const vistos = new Set();
+      const unicos = cidades.filter(c => { const k = c.name+c.uf; if (vistos.has(k)) return false; vistos.add(k); return true; });
+      document.getElementById('inf-city-list').innerHTML = unicos.length
+        ? unicos.map(infCidadeItemHtml).join('')
+        : '<div class="inf-empty">Nenhuma cidade encontrada</div>';
+    } catch(e) { console.warn('busca cidade', e); }
+  }, 400);
+}
+function infEscolherCidade(name, uf){
+  _infCity = {name, uf};
+  localStorage.setItem('sm_inf_city', JSON.stringify(_infCity));
+  document.getElementById('inf-city-name').textContent = name;
+  closeMo('mo-inf-cidade');
+  showToast('Cidade alterada para '+name);
+  // Recarrega o que depender da cidade — feed "Agora" e listas de venue.
+  try { infCarreg
