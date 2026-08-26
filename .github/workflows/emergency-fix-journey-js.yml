@@ -1,0 +1,78 @@
+name: Emergency fix Journey JavaScript
+on:
+  push:
+    paths:
+      - '.github/workflows/emergency-fix-journey-js.yml'
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix duplicated Journey KPI block
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          bad="""  const canPublishTripKpis = autoTripsReady || legacyTripsHoje.length > 0;
+            const declinedCount = (S.declined || []).length;
+            let rsh = null, rskm = null;
+            if (canPublishTripKpis) {
+              const aceitasCount = journeySrc.count;
+              // Só publica KPIs dependentes de corridas depois que a fonte automática está pronta.
+            const canPublishTripKpis = autoTripsReady || legacyTripsHoje.length > 0;
+            const declinedCount = (S.declined || []).length;
+            let rsh = null, rskm = null;
+            if (canPublishTripKpis) {
+              const aceitasCount = journeySrc.count;
+          """
+          good="""  // Só publica KPIs dependentes de corridas depois que a fonte automática está pronta.
+            const canPublishTripKpis = autoTripsReady || legacyTripsHoje.length > 0;
+            const declinedCount = (S.declined || []).length;
+            let rsh = null, rskm = null;
+            if (canPublishTripKpis) {
+              const aceitasCount = journeySrc.count;
+          """
+          if bad not in s:
+              # tolerant fallback based on the exact duplicated declarations
+              marker="const canPublishTripKpis = autoTripsReady || legacyTripsHoje.length > 0;"
+              first=s.find(marker)
+              second=s.find(marker,first+1) if first>=0 else -1
+              assert first>=0 and second>=0 and second-first<800, 'duplicated KPI block not found'
+              # Remove from first declaration up to the second declaration, preserving the second valid block.
+              s=s[:first]+"// Só publica KPIs dependentes de corridas depois que a fonte automática está pronta.\n  "+s[second:]
+          else:
+              s=s.replace(bad,good,1)
+          # Sanity: there must not be two declarations close together anymore.
+          positions=[]; start=0; marker="const canPublishTripKpis = autoTripsReady || legacyTripsHoje.length > 0;"
+          while True:
+              i=s.find(marker,start)
+              if i<0: break
+              positions.append(i); start=i+1
+          for a,b in zip(positions,positions[1:]):
+              assert b-a>2000, f'duplicate canPublishTripKpis remains at {a},{b}'
+          p.write_text(s,encoding='utf-8')
+          print('fixed Journey JS duplicate')
+          PY
+      - name: Validate braces around KPI block
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8')
+          i=s.find('const canPublishTripKpis = autoTripsReady || legacyTripsHoje.length > 0;')
+          assert i>=0
+          chunk=s[i:i+5000]
+          assert chunk.count('const canPublishTripKpis')==1
+          assert chunk.count('const declinedCount')==1
+          assert chunk.count('let rsh = null, rskm = null')==1
+          print('Journey KPI block validation OK')
+          PY
+      - name: Commit fix
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add index.html
+          git commit -m 'Fix Journey JavaScript parse error' || exit 0
+          git push
