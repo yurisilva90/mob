@@ -1,0 +1,32 @@
+name: Inspect Informes GPS loader
+on:
+  push:
+    paths:
+      - '.github/workflows/inspect-informes-gps.yml'
+permissions:
+  contents: write
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract GPS loader
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8')
+          keys=['async function infCarregarVenuesGPS','function infAbrirVenue(cat)','function infEscolherCidade','function infAbrirCidade']
+          out=[]
+          for k in keys:
+            i=s.find(k)
+            if i<0: out.append(f'NOT FOUND {k}\n'); continue
+            out.append(f'===== {k} @ {i} =====\n'+s[i:i+5000]+'\n')
+          Path('_informes_gps_probe.txt').write_text('\n'.join(out),encoding='utf-8')
+          PY
+      - name: Commit probe
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add _informes_gps_probe.txt
+          git commit -m "Capture Informes GPS loader"
+          git push
