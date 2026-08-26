@@ -1,0 +1,125 @@
+name: Fix video import confirmation sync
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-import-confirm-sync-20260826.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch confirmImport to await Supabase writes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          old="""  // Aplica as atualizações nas automáticas casadas — valor real por cima do
+  // estimado, km real quando a importação trouxe (senão mantém o que já
+  // tinha), status vira confirmada (agora tem valor confirmado de verdade).
+  toUpdateAuto.forEach(u => {
+    _SUPA.from('auto_trips').update({
+      offer_value: u.value,
+      real_km_trip: u.km > 0 ? u.km : undefined,
+      dinheiro: u.dinheiro,
+      status: 'confirmada',
+      value_needs_review: false,
+      data_quality_flag: null,
+      import_video_id: videoId || undefined
+    }).eq('id', u.id).then(() => {}).catch(() => {});
+  });
+  // Corridas novas — insere de uma vez em auto_trips.
+  if (toPushAuto.length) {
+    _SUPA.from('auto_trips').insert(toPushAuto).then(() => {}).catch((e) => console.warn('insert importada falhou', e));
+  }
+  // Atualiza a contagem de corridas confirmadas/criadas por esse vídeo —
+  // só informativo, útil pra revisão manual depois.
+  if (videoId) {
+    _SUPA.from('import_videos').update({ trip_count: toUpdateAuto.length + toPushAuto.length }).eq('id', videoId).then(()=>{}).catch(()=>{});
+  }
+  window._pendingImportVideoIds = null;
+  if (toUpdateAuto.length || toPushAuto.length) { S.autoTripsDate = null; } // força recarregar no próximo renderJornada
+"""
+          new="""  // IMPORTANTE: aguarda TODAS as gravações antes de invalidar o cache e
+  // redesenhar. Antes estas operações eram fire-and-forget: renderJornada()
+  // recarregava auto_trips antes do INSERT/UPDATE terminar e prendia na tela
+  // a fotografia antiga (ex.: 7 corridas), embora o vídeo tivesse sido lido.
+  const importWrites = [];
+  toUpdateAuto.forEach(u => {
+    importWrites.push(
+      _SUPA.from('auto_trips').update({
+        offer_value: u.value,
+        real_km_trip: u.km > 0 ? u.km : undefined,
+        dinheiro: u.dinheiro,
+        status: 'confirmada',
+        value_needs_review: false,
+        data_quality_flag: null,
+        import_video_id: videoId || undefined
+      }).eq('id', u.id).then(({error}) => { if (error) throw error; })
+    );
+  });
+  if (toPushAuto.length) {
+    importWrites.push(
+      _SUPA.from('auto_trips').insert(toPushAuto).then(({error}) => { if (error) throw error; })
+    );
+  }
+  if (videoId) {
+    importWrites.push(
+      _SUPA.from('import_videos').update({ trip_count: toUpdateAuto.length + toPushAuto.length })
+        .eq('id', videoId).then(({error}) => { if (error) console.warn('trip_count import_videos:', error); })
+    );
+  }
+  try {
+    await Promise.all(importWrites);
+  } catch (e) {
+    console.error('confirmImport: falha ao persistir importação', e);
+    showToast('Não consegui salvar todas as corridas. Tente confirmar novamente.', 'error');
+    return;
+  }
+  window._pendingImportVideoIds = null;
+  if (toUpdateAuto.length || toPushAuto.length) {
+    S.autoTripsDate = null;
+    S._autoTripsDataDate = null;
+    S.autoTrips = [];
+    // Carrega explicitamente a versão recém-gravada antes dos cards/listas.
+    try {
+      const freshAutoTrips = await loadAutoTripsForDay(S.curDate);
+      if (Array.isArray(freshAutoTrips)) {
+        S.autoTrips = freshAutoTrips;
+        S.autoTripsDate = S.curDate;
+        S._autoTripsDataDate = S.curDate;
+      }
+    } catch(e) { console.warn('refresh pós-importação:', e); }
+    // Financeiro mantém cache próprio das auto_trips; invalida para que a
+    // receita das corridas confirmadas entre imediatamente nos totais.
+    if (typeof _finAuto !== 'undefined') _finAuto = { key:'', byDate:{}, loading:false, ts:0 };
+  }
+"""
+          if old not in s:
+              raise SystemExit('Trecho alvo de confirmImport não encontrado; abortando sem alterar.')
+          s=s.replace(old,new,1)
+          p.write_text(s)
+          PY
+      - name: Validate inline JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text()
+          blocks=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,re.S|re.I)
+          for i,b in enumerate(blocks):
+              Path(f'/tmp/inline-{i}.js').write_text(b)
+          print('inline scripts:',len(blocks))
+          PY
+          for f in /tmp/inline-*.js; do node --check "$f"; done
+          grep -q "await Promise.all(importWrites)" index.html
+          grep -q "freshAutoTrips = await loadAutoTripsForDay" index.html
+      - name: Commit patch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Await video import writes and refresh trip totals'
+          git push
