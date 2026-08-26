@@ -12273,47 +12273,33 @@ async function loginEnter() {
 }
 
 async function loginRegister() {
-  const name  = document.getElementById('r-name')?.value?.trim();
-  const email = document.getElementById('r-email')?.value?.trim();
-  const phone = document.getElementById('r-phone')?.value?.trim();
-  const pass  = document.getElementById('r-pass')?.value;
+  const name=document.getElementById('r-name')?.value?.trim();
+  const email=document.getElementById('r-email')?.value?.trim();
+  const phone=document.getElementById('r-phone')?.value?.trim();
+  const pass=document.getElementById('r-pass')?.value;
   lsErr('r-err','');
-  if (!name)  { lsErr('r-err','Digite seu nome');       return; }
-  if (!email) { lsErr('r-err','Digite seu email');      return; }
-  if (!pass||pass.length<10) { lsErr('r-err','Use uma senha com pelo menos 10 caracteres'); return; }
+  if(!name){lsErr('r-err','Digite seu nome');return;}
+  if(!email){lsErr('r-err','Digite seu email');return;}
+  if(!pass||pass.length<10){lsErr('r-err','Use uma senha com pelo menos 10 caracteres');return;}
   lsBtn('l-btn-reg','Criando conta...',true);
-  const { data, error } = await _SUPA.auth.signUp({
-    email, password: pass,
-    options: { data: { name, phone } }
-  });
-  lsBtn('l-btn-reg','Criar conta',false);
-  if (error) {
-    const em = error.message || '';
-    if (em.includes('already registered') || em.includes('already been registered')) {
-      lsErr('r-err', 'Não foi possível criar a conta com esses dados. Se você já possui cadastro, use Entrar ou Esqueci minha senha.');
-    } else if (em.includes('Password') || em.includes('password')) {
-      lsErr('r-err', 'Use uma senha com pelo menos 10 caracteres.');
-    } else {
-      lsErr('r-err', em || 'Erro ao criar conta. Tente novamente.');
+  try{
+    const {data,error}=await _SUPA.auth.signUp({email,password:pass,options:{data:{name,phone}}});
+    if(error){
+      const em=String(error.message||'');
+      if(em.toLowerCase().includes('password')) lsErr('r-err','Use uma senha com pelo menos 10 caracteres.');
+      else if(em.toLowerCase().includes('too many')) lsErr('r-err','Muitas solicitações. Aguarde alguns minutos e tente novamente.');
+      else lsErr('r-err','Não foi possível concluir o cadastro. Se você já possui conta, use Entrar ou Esqueci minha senha.');
+      return;
     }
-    return;
-  }
-  // Sucesso: atualiza perfil e navega
-  if (data?.user) {
-    const cfg=DB.cfg(); cfg.name=name; cfg.phone=phone; DB.saveCfg(cfg);
-    try {
-      await _SUPA.from('profiles').upsert(
-        { id:data.user.id, name, phone },
-        { onConflict:'id' }
-      );
-    } catch(e) { console.warn('Profile upsert:', e); }
-    // Navega direto — não espera o onAuthStateChange
-    _supaUser = data.user;
-    showApp();
-  } else {
-    // Sem sessão: usuário pode precisar confirmar email
-    lsErr('r-err', 'Conta criada! Verifique seu email para confirmar.');
-  }
+    if(data?.session){
+      const cfg=DB.cfg();cfg.name=name;cfg.phone=phone;DB.saveCfg(cfg);
+      try{await _SUPA.from('profiles').upsert({id:data.user.id,name,phone},{onConflict:'id'});}catch(e){}
+      _supaUser=data.user;showApp();
+    }else{
+      lsErr('r-err','Cadastro recebido. Confira seu email para confirmar a conta antes de entrar.');
+    }
+  }catch(e){lsErr('r-err','Não foi possível concluir o cadastro agora. Tente novamente em alguns minutos.');}
+  finally{lsBtn('l-btn-reg','Criar conta',false);}
 }
 
 async function loadProfile() {
@@ -12357,10 +12343,10 @@ async function loginForgot() {
     msgEl.style.display = 'block';
     if (error) {
       msgEl.style.color = '#EF4444';
-      msgEl.textContent = 'Erro ao enviar. Verifique o email digitado.';
+      msgEl.textContent = 'Não foi possível processar a solicitação agora. Aguarde e tente novamente.';
     } else {
       msgEl.style.color = '#22C55E';
-      msgEl.textContent = 'Link enviado! Verifique seu email ' + email + ' e clique no link para redefinir a senha.';
+      msgEl.textContent = 'Se existir uma conta para esse email, você receberá as instruções de redefinição.';
     }
   }
 }
