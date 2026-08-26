@@ -1,0 +1,911 @@
+
+===== nativeSyncGps @ 937015 =====
+não tenta retomar
+  const ageMs = Date.now() - (saved.start || 0);
+  if (!saved.start || ageMs > 16*3600*1000) { DB.del('sm_gps_session'); return; }
+  // Defesa extra: se o Supabase já sabe que esta sessão foi encerrada
+  // (ex: gpsStop rodou parcialmente numa tentativa anterior — fechou lá
+  // mas não apagou o marcador local), NÃO resume. Confia no servidor.
+  if (_supaUser && saved.sessionId && navigator.onLine) {
+    _SUPA.from('sessions').select('end_ms,km,start_ms').eq('id', saved.sessionId).maybeSingle()
+      .then(({data}) => {
+        // Recupera km/start do checkpoint na nuvem se forem melhores que o
+        // snapshot local (marcador local pode estar defasado se o app ficou
+        // muito tempo em background sem JS rodando).
+        if (data && !data.end_ms && S.gps.st !== 'idle' && S.gps.sessionId === saved.sessionId) {
+          const cloudKm = parseFloat(data.km) || 0;
+          if (cloudKm > (S.gps.km || 0)) { S.gps.km = cloudKm; S.gps.pts = []; S.gps.lastFixTime = null; }
+          if (data.start_ms && Number(data.start_ms) < (S.gps.start || Infinity)) S.gps.start = Number(data.start_ms);
+          try { if (S.sec==='jornada') renderJornada(); } catch(e) {}
+        }
+        if (data && data.end_ms) {
+          console.warn('[restoreGpsSession] Sessão já encerrada no Supabase — descartando marcador local stale');
+          DB.del('sm_gps_session');
+          if (S.gps.st !== 'idle') {
+            S.gps.st = 'idle'; S.gps.start = null;
+            if (S.gps.wid) { try{navigator.geolocation.clearWatch(S.gps.wid);}catch(e){} }
+            if (S.gps.ti) clearInterval(S.gps.ti);
+            try { renderJornada(); renderHome(); } catch(e) {}
+          }
+        }
+      }).catch(()=>{});
+  }
+  // Limpeza defensiva — garante que não sobra nenhum watcher/timer órfão
+  if (g.wid) { try{ navigator.geolocation.clearWatch(g.wid); }catch(e){} }
+  if (g.ti) clearInterval(g.ti);
+  g.st = saved.st; g.start = saved.start; g.pausedMs = saved.pausedMs || 0; g.pa = saved.pa || null;
+  g.km = saved.km || 0; g.pts = saved.lastPt ? [saved.lastPt] : [];
+  g.baseKm = saved.baseKm || 0; g.baseElapsed = saved.baseElapsed || 0;
+  g.sessionId = saved.sessionId || null; // restaura ID para continuar o upsert correto
+  g.forceDate = saved.forceDate || null;
+  // O snapshot acima é só o último valor salvo antes do app ir pra segundo plano (o
+  // watchPosition do JS para quando o app não está em foreground). Se o app nativo
+  // tiver um GpsService rodando, ele é a fonte mais atual — corrige aqui, antes do
+  // primeiro render, pra não mostrar um km/tempo defasado por um instante na tela.
+  if (window.SmartMobiNative && typeof SmartMobiNative.isGpsRunning === 'function') {
+    try {
+      if (SmartMobiNative.isGpsRunning()) {
+        // So confia no km nativo se a sessao ja estiver rodando ha mais de alguns
+        // segundos. Logo apos um gpsStart(), o sinal de reset enviado pro servico
+        // nativo pode ainda nao ter sido processado — ler o km nesse instante corre
+        // o risco de pegar um valor antigo (de antes do reset), fazendo o numero
+        // "pular" pra um valor maior por um instante ate se corrigir sozinho.
+        const sessionAgeMs = Date.now() - (g.start || 0);
+        if (sessionAgeMs > 8000) {
+          const nativeKm = SmartMobiNative.getGpsKm();
+          const nativeStart = SmartMobiNative.getGpsStartTime();
+          const nativePaused = SmartMobiNative.getGpsPausedMs();
+          // Mesmo guard de plausibilidade do nativeSyncGps — protege contra
+          // herdar km de uma sessão fantasma anterior que o nativo nunca zerou
+          const elapsedMinR = sessionAgeMs / 60000;
+          const maxPlausibleR = (elapsedMinR * 3) + 0.5;
+          if (typeof nativeKm === 'number' && nativeKm > maxPlausibleR) {
+            console.warn('[restoreGpsSession] km nativo implausível ignorado:', nativeKm, 'em', elapsedMinR.toFixed(1), 'min');
+          } else
+          // So adota o km nativo se ele for MAIOR que o que a sessao web ja tem.
+          // Nunca deixa essa reconciliacao DIMINUIR o km exibido — isso e o que
+          // causava o "pulo pra baixo" quando havia uma correcao manual (kmAdjust)
+          // aplicada: o servico nativo nao sabe nada sobre essa correcao, entao
+          // confiar nele sem essa guarda jogava o numero de volta pro valor cru,
+          // descartando a edicao do usuario.
+          if (typeof nativeKm === 'number' && nativeKm > g.km) {
+            g.km = nativeKm;
+            // Limpa referencia JS para evitar dupla contagem no primeiro fix
+            g.pts = [];
+            g.lastFixTime = null;
+          }
+          // GUARD: só adota o start nativo se for ANTERIOR ao que já temos.
+          // Se o Android matou e reiniciou o GpsService (START_STICKY), o
+          // start nativo vira a hora do RESTART — adotar ele fazia a jornada
+          // "recomeçar" e o upsert (mesmo sessionId) sobrescrevia o start_ms
+          // da sessão no Supabase, perdendo todo o histórico do dia.
+          if (nativeStart && nativeStart < g.start) g.start = nativeStart;
+          else if (nativeStart && nativeStart > g.start + 60000) {
+            // Serviço nativo reiniciou do zero — re-semeia com o estado correto
+            console.warn('[restoreGpsSession] Serviço nativo reiniciado (start nativo mais novo) — re-semeando com start/km da sessão real');
+            try { SmartMobiNative.startFloating?.(g.start, g.km || 0); } catch(e) {}
+          }
+          // Guard: não diminui pausedMs com valor menor do nativo
+          if (typeof nativePaused === 'number' && nativePaused >= (g.pausedMs || 0)) {
+            g.pausedMs = nativePaused;
+          }
+        }
+      }
+    } catch(e) {}
+  }
+  syncNavButton();
+  g.ti = setInterval(gpsUpdate, 1000);
+  if (navigator.geolocation) {
+    g.wid = navigator.geolocation.watchPosition(gpsOnPosition, null, {enableHighAccuracy:true, maximumAge:3000, timeout:10000});
+  }
+  if (g.st === 'running') requestWakeLock();
+  // Se há jornada em aberto mas o serviço nativo está MORTO (Android matou
+  // o processo e o START_STICKY ainda não religou, ou foi removido de vez),
+  // religa ele semeado com o start/km corretos — a jornada continua de onde
+  // parou em vez de ficar sem rastreamento em background.
+  if (g.st === 'running' && window.SmartMobiNative && DB.cfg().overlayEnabled !== false) {
+    try {
+      const nativeUp = typeof SmartMobiNative.isGpsRunning === 'function' && SmartMobiNative.isGpsRunning();
+      if (!nativeUp && typeof SmartMobiNative.startFloating === 'function') {
+        console.warn('[restoreGpsSession] Serviço nativo morto com jornada em aberto — religando com start/km da sessão');
+        SmartMobiNative.startFloating(g.start, g.km || 0);
+      }
+    } catch(e) {}
+  }
+  if (window.SmartMobiNative && typeof SmartMobiNative.updateFloatingStatus === 'function') {
+    try { SmartMobiNative.updateFloatingStatus(g.st); } catch(e) {}
+  }
+  // Se o app ficou fechado/em segundo plano e a jornada cruzou a meia-noite
+  // nesse meio tempo, avisa agora que reabriu (dá um tempo pro render inicial
+  // da tela terminar antes de empilhar o modal por cima).
+  setTimeout(checkMidnightCrossing, 600);
+}
+const _CAR_IMGS = {
+  idle:    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAAoCAYAAADzL6qcAAACMElEQVR4nO2TO2tUYRCGn/n27C17kijReEsUohLYuEmRQhC8kB9gI0FrQUGwCjZWi6kE/QVWgqBIChurWCWNCBHR6KYxUcjG4C1m49nNnj3nfGOxJhBcZU0hFvsUUwzDzMs7M9CiRYt/gfxlfgNtonfebKem8eT+s+0p58gO8QNVDQVAxFFNhlJdWfzK8uPK7xtl8wkKhG5u9ZyY1LhG4TKogGJVBEENomJi+6LAH6vMfZhkeKfh+Z2goSJ38No8Gt30Zqfv0tPnsGchBOBjn0NxIczkzlwFuVSevZ39VdHw5XimljhNFNstJn7de3178E8OucfGZpFoXMNgpTz3ZgqmQgeg84ufsR3uLZJtObXBS3dw7AoRIGrBAgawoNRNNk4oJnUfrbwg2z1CAU/qG7hh0/0X9sdSB18hsZSoZsRJb1GhCiKKBhVUTEU0WrPe26HywqNPkDeG0YIAmHj3AKqutzzT56+967dBec2G1XUbrldsUKlo5FdtUF78/n66K1idG0DtLtJ7BwAYLYizOdLWInHScbc7N4nQJU6qY8NEpR4E0+seOjGDWg9jYtRqm4fpMPFTug1LaCgSbxtSv/TE1j4/wIiA2Ho/EVAViQ1Lon2EaN2q0RIAE+BAVgHE94rWSa0YlQ6prua9+XtPG27s6MVTxJInbeSXxP+2VM9mdcsdpQ6f71Uh4VMqcuB41HD3S89iSTp7RKlV5x8Wae7vtk3eNP+0zdS1aNHiv+UHbE7u+HuU0XwAAAAASUVORK5CYII=",
+  running: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAAoCAYAAAAc7cGiAAACRklEQVR4nO2UPWhTURTH/+fe95GksaA1tZgiqKDQoRac/KLUVlen1kV0UlBQEAkoCNFBB78FQXEQcWzFSRAstmYQp45FdFAKSSVFY02a9/Jy373HIba0lRcdHETygzuce+49X/eeA7Ro0eJfhCI13ERH4D93kc2KpvoIR5Heu67sTYVM1up96cZ0MTM+9ztjhMl+iYGc7r479IBc2WfqYYWY5LKQDGwR54A/FebVMQDApZxeTPuXyNJ39veSJXPhd39bMpksq5JPdqnAal2adDkgr93YiY72aQ7MiUJm4sXqyAgAb7h+oNOx9Q4jxWFiruTPvDobVYLuWwOnWdAgG7pX8/hd6eJEAQyyMDosMDKmXa73csx9Ii3ZZTx1P3176DgAEBmzlKRmAQAM6hSufQjg3Y4fnALwFGPDopHm6LDEyJhOX+s/YnW0PTZBqEXMcsiWAKOxwAARWGkYP1SUsCj86p2fzby+iWy/hcu5sPEFpucIACjm7OGaelt98zEVzvsXwKhpTy0YT/naUxUw13Q5uOq9nOkw5eAZ2da+5emveHpiVCnh9LXt2jwOol4SFJMJC0tfVBDIlpn44KaDMiG36gX1PNIYG1MUrkwaj/q4ph6pWuiDmPCzagYAEWzhWEdFwlmjy/Uv0ZHV1XsONHM9nM6fmzwZ9ZrpGwPbOTSDJtAfVtxfLvRke5xvTmqLrAaVvO0Wd25coKnZ5FIfLsqpqrdetsfXUr468/nhlBfl9C+TzYqmEwNoNHpjGDQ/16JFi/+PHzU4+b7N7fhyAAAAAElFTkSuQmCC",
+  paused:  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAAoCAYAAADzL6qcAAAB4UlEQVR4nO2TMYvUQBTH/29mswt3sMXdubLHNlb3CRa7YxexFbxSGxHs9QP4IWwEKxHsBLt4VhZ2iwqptvIq0xxBIWaSyc5k5llsVvduL8cVIhb5wZDw/pk3//feBGhpafkX0GUiM1+oExFfKTszU1OSWhfnY53LTozjeJeIziR0znki+rGx57wTAPIbEOxp/cp7P/CAFYDwAMHDSUk9IjqZzWaPJpMJADgi4jOOaieVUuoeSXkjz/OpEIKMMS5JEhoOh6SUkqPR6NN4PL5NRMcbPQGAJM/3tdbTQuswTdM7TT1SSj0siuJNlmW3siy7vt4jAcB1jLkptrZeCCH7lXMflVLXvPckhGAAWJbnAWA/CLpHUlaHafrzAYA/zpiXZSqlnjrHxlhruQG71EyWZU9We9fHyAAQBMHhYqGfvwvDHWPMBwAlAFWv0hhzHIbhjtb6ZafbnW7UzcwSALTWb51zp1VVfWl0VFWfnXOJLsvXK0frU6M6eCqEGBhrXVEUzyAEi9rtqp+9Xu++kHKPvf++Cm5cSGvt1yAI/KIs3/f7/ccNUxsBuGutPblIBwBEUbQdx/HBfD7fZeYOMwf18/d7FEWDOI4PoijaXq/mr7CRqb6cBICb/vKrfNPS0vKf8wtL0kJULdPtUQAAAABJRU5ErkJggg==",
+};
+function syncNavButton() {
+  const g = S.gps;
+  let cls = 'idle';
+  if (g.st === 'running') cls = 'running';
+  else if ((DB.day(DB.today()).sessions||[]).length > 0) cls = 'ended';
+  updateGpsBtn(cls);
+}
+function updateGpsBtn(state) {
+  const btn = document.getElementById('gps-btn');
+  if (!btn) return;
+  btn.className = 'start' + (state && state !== 'idle' ? ' '+state : '');
+  const img = document.getElementById('gps-icon-img');
+  if (img) img.src = state === 'running' ? _CAR_IMGS.running :
+                     state === 'paused'  ? _CAR_IMGS.paused  : _CAR_IMGS.idle;
+}
+function hav(a,b,c,d) {
+  const R=6371, dA=(c-a)*Math.PI/180, dB=(d-b)*Math.PI/180;
+  return R*2*Math.asin(Math.sqrt(Math.sin(dA/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dB/2)**2));
+}
+
+// ── PERFIL ────────────────────────────────────────────────────
+function authSignOutBtn() { showConfirm('Sair da conta?', authSignOut, { confirmLabel: 'Sair' }); }
+function perfilAvatarColor() { return feedAvColor((_supaUser && _supaUser.id) || ''); }
+
+function perfilRenderAvatar() {
+  const cfg = DB.cfg();
+  const initEl = document.getElementById('p-av-initials');
+  const imgEl  = document.getElementById('p-av-photo');
+  const url = cfg.avatarUrl;
+  if (!initEl || !imgEl) return;
+  if (url) {
+    imgEl.src = url; imgEl.style.display = 'block';
+    initEl.style.display = 'none';
+  } else {
+    initEl.textContent = feedInitials(cfg.name || 'Motorista');
+    initEl.style.background = perfilAvatarColor();
+    initEl.style.display = 'flex';
+    imgEl.style.display = 'none';
+  }
+  const removeOpt = document.getElementById('p-remove-foto-opt');
+  if (removeOpt) removeOpt.style.display = url ? 'flex' : 'none';
+}
+
+async function perfilLoadStats() {
+  const setStat = (id, v)
+===== restoreSession @ 1055780 =====
+cfg.city)    { cfg.city = data.city; changed = true; }
+  if (data.plate    && !cfg.plate)   { cfg.plate = data.plate; changed = true; }
+  if (data.vehicle  && !cfg.vehicle) { cfg.vehicle = data.vehicle; changed = true; }
+  // Avatar é campo novo, sem edição local legada pra proteger — nuvem manda.
+  if ((data.avatar_url || null) !== (cfg.avatarUrl || null)) { cfg.avatarUrl = data.avatar_url || null; changed = true; }
+  if (changed) DB.saveCfg(cfg);
+}
+
+async function authSignOut() { await _SUPA.auth.signOut(); }
+function toggleRegister() {}
+
+function getCurrentUser() { return _supaUser; }
+
+
+
+
+
+
+async function loginForgot() {
+  const email = document.getElementById('f-email')?.value?.trim();
+  const msgEl = document.getElementById('f-msg');
+  const btn   = document.getElementById('l-btn-forgot');
+  if (!email) { if(msgEl){msgEl.style.color='#EF4444';msgEl.textContent='Digite seu email.';msgEl.style.display='block';} return; }
+  if(btn){btn.textContent='Enviando...';btn.disabled=true;}
+  const { error } = await _SUPA.auth.resetPasswordForEmail(email, {
+    redirectTo: 'https://yurisilva90.github.io/smartmobi/'
+  });
+  if(btn){btn.textContent='Enviar link';btn.disabled=false;}
+  if (msgEl) {
+    msgEl.style.display = 'block';
+    if (error) {
+      msgEl.style.color = '#EF4444';
+      msgEl.textContent = 'Não foi possível processar a solicitação agora. Aguarde e tente novamente.';
+    } else {
+      msgEl.style.color = '#22C55E';
+      msgEl.textContent = 'Se existir uma conta para esse email, você receberá as instruções de redefinição.';
+    }
+  }
+}
+
+
+
+// Chamada pelo nativo ao voltar ao foreground — sincroniza GPS
+function nativeSyncGps(km, startMs, pausedMs) {
+  if (!S || !S.gps || S.gps.st === 'idle') return;
+
+  // GUARD: nunca deixa o sync nativo DIMINUIR o km acumulado.
+  // Se o GpsService foi morto e reiniciado pelo Android, ele pode chamar
+  // nativeSyncGps com km < do que ja temos em memoria. Nesse caso mantemos
+  // o valor maior (o que estava em S.gps.km ou no nativo, o que for maior).
+  const kmNat = (typeof km === 'number' && isFinite(km)) ? km : S.gps.km;
+  // GUARD DE PLAUSIBILIDADE: se o serviço nativo Android nunca for
+  // efetivamente resetado entre uma jornada e outra (não existe um comando
+  // nativo pra isso hoje), ele pode reportar o km ACUMULADO de uma jornada
+  // ANTERIOR logo no início de uma jornada NOVA — e como o guard acima
+  // nunca deixa diminuir, esse km 'órfão' seria herdado silenciosamente.
+  // Rejeita qualquer salto que implique velocidade fisicamente impossível
+  // (>180km/h) dado o tempo decorrido desde o início desta sessão.
+  const elapsedMin = S.gps.start ? (Date.now() - S.gps.start) / 60000 : 0;
+  const maxPlausibleKm = (elapsedMin * 3) + 0.5; // 180km/h + margem
+  if (kmNat > maxPlausibleKm) {
+    console.warn('[nativeSyncGps] Ignorado — km implausível pro tempo decorrido:', kmNat.toFixed(1), 'km em', elapsedMin.toFixed(1), 'min (provável km órfão do serviço nativo)');
+  } else if (kmNat > (S.gps.km || 0)) {
+    S.gps.km = kmNat;
+  }
+  if (startMs && !S.gps.start) S.gps.start = startMs;
+  // GUARD: nunca deixa o sync nativo DIMINUIR o pausedMs acumulado.
+  // Se o GpsService reiniciou com pausedMs=0, mantemos o valor JS que é maior.
+  const pauseNat = (typeof pausedMs === 'number' && isFinite(pausedMs)) ? pausedMs : 0;
+  if (pauseNat >= (S.gps.pausedMs || 0)) { S.gps.pausedMs = pauseNat; }
+
+  // LIMPA pontos de referencia JS para evitar dupla contagem.
+  // Quando o app volta ao foreground, restoreSession recarrega o ultimo ponto
+  // GPS salvo (g.pts = [lastPt]). Se o carro se deslocou no background, o
+  // proximo disparo do watchPosition calcularia essa distancia E SOMARIA em
+  // cima do km ja atualizado pelo nativo -> inflaria o total momentaneamente.
+  // Zerando g.pts e lastFixTime, o proximo fix apenas registra a posicao atual
+  // como nova referencia sem contar nenhuma distancia extra.
+  S.gps.pts = [];
+  S.gps.lastFixTime = null;
+
+  const kmFinal = S.gps.km;
+  // Só atualiza DOM se o usuário estiver vendo hoje
+  if (S.curDate === DB.today()) {
+    setText('jc-km', kmFinal.toFixed(1));
+    const dayNow = DB.day(DB.today());
+    const finKm = (dayNow.sessions||[]).reduce((a,x)=>a+(x.km||0),0);
+    setText('jc-kmtotal', (finKm + kmFinal + (dayNow.kmAdjust||0)).toFixed(1)+' km');
+  }
+
+  // Recria a bolinha flutuante se o Android tiver matado o overlay.
+  // startFloating e seguro de chamar de novo: se ja existe, so atualiza o km.
+  if (window.SmartMobiNative && DB.cfg().overlayEnabled !== false) {
+    try {
+      if (typeof SmartMobiNative.startFloating === 'function') SmartMobiNative.startFloating(S.gps.start, kmFinal);
+      if (typeof SmartMobiNative.updateFloatingStatus === 'function') SmartMobiNative.updateFloatingStatus('running');
+    } catch(e) {}
+  }
+}
+
+
+
+function togglePass(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  if (!inp) return;
+  const EYE = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const EYE_OFF = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 19c-7 0-11-7-11-7a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 7 11 7a18.46 18.46 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/></svg>';
+  const isHidden = inp.type === 'password';
+  inp.type = isHidden ? 'text' : 'password';
+  btn.innerHTML = isHidden ? EYE_OFF : EYE;
+}
+
+
+// ── INIT ──────────────────────────────────────────────────────
+const initCfg = DB.cfg();
+if (initCfg.name) { const el=document.getElementById('p-nome'); if(el) el.value=initCfg.name; }
+if (initCfg.plate) { const el=document.getElementById('p-placa'); if(el) el.value=initCfg.plate; }
+const now0 = new Date();
+const dateInputs = ['l-data'];
+dateInputs.forEach(id => { const el=document.getElementById(id); if(el) el.value=DB.today(); });
+const timeEl = document.getElementById('c-time');
+if (timeEl) timeEl.value = p2(now0.getHours())+':'+p2(now0.getMinutes());
+// Set type-switch initial state
+setType('receita');
+setScope('operacional');
+renderLancCats();
+// Render all screens
+agCalY=new Date().getFullYear();agCalM=new Date().getMonth();
+
+
+// ── Parceiros PUBLI — imagens reais ─────────────────────────────────────────
+const ADS_IMG = [
+  { img:'data:image/jpeg;base64,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
+===== startJourney @ -1 =====
+
+===== startJornada @ -1 =====
+
+===== sessions @ 409813 =====
+-btn" onclick="openTempoAdjust()" aria-label="Editar tempo total">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+              </button>
+            </div>
+            <span>Tempo total</span>
+          </div>
+          <div class="tk-divider"></div>
+          <div class="tk-half right">
+            <svg class="td-wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 23L9 1M20 23L15 1"/><path d="M12 3.5v3M12 10v3M12 16.5v3"/></svg>
+            <div style="display:flex;align-items:center;justify-content:center;gap:5px;position:relative;z-index:1">
+              <strong id="jc-kmtotal">0,0 km</strong>
+              <button class="km-edit-btn" onclick="openKmAdjust()" aria-label="Editar km total">
+                <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+              </button>
+            </div>
+            <span>Km total</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="td-row">
+        <svg class="td-wm left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22"/><path d="M17 5.5c0-2-2.2-3.3-5-3.3s-5 1.5-5 3.7c0 2.5 2.2 3.5 5 4.3c3.2.9 5.4 1.9 5.4 4.5c0 2.5-2.4 3.8-5.4 3.8s-5.4-1.4-5.4-3.8"/></svg>
+        <div class="td-rates">
+          <div class="td-rcard" id="jc-rate-hora"><strong id="jc-rsh">R$0,00</strong><span>R$ / hora</span></div>
+          <div class="td-rcard" id="jc-rate-km"><strong id="jc-rskm">R$0,00</strong><span>R$ / km</span></div>
+        </div>
+        <div class="td-fin-divider"></div>
+        <div class="td-fin">
+          <div class="cell"><strong class="g" id="d-rev">R$0</strong><span>Receitas</span></div>
+          <div class="cell"><strong class="r" id="d-exp">R$0</strong><span>Despesas</span></div>
+          <div class="cell"><strong id="d-net">R$0</strong><span>Resultado</span></div>
+        </div>
+      </div>
+
+      <div class="td-row bd" id="td-bd-row" style="display:none">
+        <div class="sbar" id="td-bd-bar"></div>
+        <div class="sbar-list open" id="td-bd-list"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Metas do dia: pedido do Yuri (23/07/2026) — sai de dentro do card
+       azul da jornada (onde competia por espaço com timer/km/corridas) e
+       vira seção solta, igual "Lançamentos" logo abaixo (título + link no
+       fundo da tela, sem balão/card branco por trás). renderMetasDoDia()
+       não muda nada — só o container onde a mesma função escreve. -->
+  <div class="section" style="padding:0 16px 8px"><h2>Metas do dia</h2><button class="add" onclick="openMetasHojeModal()">Editar &#8250;</button></div>
+  <div style="padding:0 16px 4px">
+    <div class="metas-wrap">
+      <svg class="metas-wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2.2"/></svg>
+      <div id="metas-dia-stack"></div>
+    </div>
+  </div>
+
+  <div class="section" style="padding:16px 16px 8px"><h2>Jornadas do dia</h2><button class="add" onclick="toggleSessionsView()" id="sessions-toggle" style="display:none">Ver todas &#8250;</button></div>
+  <div style="padding:0 16px"><div id="sessions-list"><div class="empty">Nenhuma sessão registrada</div></div></div>
+
+  <div class="section" style="padding:16px 16px 8px"><h2>Lançamentos</h2><div style="display:flex;gap:8px;align-items:center"><button class="add" onclick="toggleLancView()" id="lanc-toggle" style="display:none">Ver todas &#8250;</button><button class="add" onclick="openLanc('receita')">+ Adicionar</button></div></div>
+  <div style="padding:0 16px"><div id="jorn-lanc-list"><div class="empty">Nenhum lançamento registrado</div></div></div>
+
+  <div style="height:8px"></div>
+</div>
+
+<!-- ══ TELA FINANCEIRO ════════════════════════════════════════════════════ -->
+<div class="screen" id="sc-financeiro">
+  <div class="wrap">
+    <section class="hero" style="margin-bottom:14px">
+      <div class="fin-hero-top">
+        <div class="fin-ptabs">
+          <button id="fp-today" onclick="setFinPer('today')">Hoje</button>
+          <button id="fp-month" class="on" onclick="setFinPer('month')">Mês</button>
+          <button id="fp-year" onclick="setFinPer('year')">Ano</button>
+        </div>
+        <button class="fin-filter-btn" id="fin-filter-btn" onclick="openFinFilter()"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/></svg></button>
+      </div>
+      <div class="heroTop">
+        <div><div class="label">Saldo líquido</div><div class="amount" id="fin-amount">R$ 0,00</div><div class="sub" id="fin-sub">Entradas R$ 0 · Saídas R$ 0</div></div>
+      </div>
+      <div class="fin-range-chip" id="fin-range-chip" style="display:none">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span id="fin-range-txt"></span>
+        <button onclick="event.stopPropagation();clearFinFilter()">&#x2715;</button>
+      </div>
+      <div class="heroGrid">
+        <div class="heroCell"><strong id="fin-pct-lucro">0%</strong><span>% lucro</span></div>
+        <div class="heroCell"><strong id="fin-media">R$ 0</strong><span>média dia</span></div>
+        <div class="heroCell"><strong id="fin-vs-ant">—</strong><span id="fin-vs-ant-lbl">vs mês ant.</span></div>
+      </div>
+    </section>
+    <section class="card cardPad" style="margin-bottom:14px">
+      <div class="cardHead"><h2>Resumo</h2><div class="seg"><button class="on" id="fs-all" onclick="setFinScope('all')">Tudo</button><button id="fs-prof" onclick="setFinScope('prof')">Prof.</button><button id="fs-pes" onclick="setFinScope('pes')">Pessoal</button></div></div>
+      <div class="fin-metrics">
+        <div class="fin-metric g"><span>Corridas</span><strong id="fin-corr">R$ 0,00</strong><small id="fin-corr-sub">&nbsp;</small></div>
+        <div class="fin-metric g"><span>Receitas extras</span><strong id="fin-rec">R$ 0,00</strong><small>gorjetas, b&#244;nus...</small></div>
+        <div class="fin-metric r"><span>Despesas</span><strong id="fin-desp">R$ 0,00</strong><small id="fin-desp-sub">&nbsp;</small></div>
+        <div class="fin-metric"><span>Lucro</span><strong id="fin-lucro">R$ 0,00</strong><small id="fin-lucro-sub">&nbsp;</small></div>
+      </div>
+    </section>
+    <section class="card cardPad" style="margin-bottom:14px">
+      <div class="cardHead"><h2>Objetivos</h2></div>
+      <div class="obj-switch">
+        <button class="obj-btn active" id="ob-rec" onclick="setObjTab('rec')">Receitas</button>
+        <button class="obj-btn" id="ob-desp" onclick="setObjTab('desp')">Despesas</button>
+      </div>
+      <div id="obj-rec-list"></div>
+      <div id="obj-desp-list" style="display:none"></div>
+      <div class="cfg-link" onclick="openObjConfig()">Configurar objetivos</div>
+    </section>
+    <section class="card cardPad" style="margin-bottom:14px">
+      <div class="cardHead"><h2>Fluxo</h2></div>
+      <div class="fin-flow" id="fin-flow"></div>
+      <div class="fin-flow-legend">
+        <span><i style="background:#22C55E"></i>Entradas (com corridas)</span>
+        <span><i style="background:#FCA5A5"></i>Sa&#237;das</span>
+      </div>
+    </section>
+    <section class="card cardPad" style="margin-bottom:14px">
+      <div class="cardHead"><h2>Ações rápidas</h2></div>
+      <div class="fin-actions">
+        <button class="fin-action" onclick="openLanc('receita')"><div class="ico green"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></div>Receita</button>
+        <button class="fin-action" onclick="openLanc('despesa')"><div class="ico red"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></div>Despesa</button>
+        <button class="fin-action" onclick="navTo('lancamentos')"><div class="ico purple"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2Z"/></svg></div>Histórico</button>
+        <button class="fin-action" onclick="navTo('relatorios')"><div class="ico orange"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-4 4"/></svg></div>Relatório</button>
+      </div>
+    </section>
+    <section class="card" style="margin-bottom:14px">
+      <div class="cardPad cardHead"><h2>Últimas movimentações</h2><button onclick="navTo('lancamentos')">Ver tudo</button></div>
+      <div id="fin-mov"><div class="empty">Nenhuma movimentação</div></div>
+    </section>
+    <div style="height:8px"></div>
+  </div>
+</div>
+
+<!-- ══ TELA RELATÓRIOS (placeholder — visão geral + alertas vêm na sequência) ══ -->
+<div class="screen" id="sc-relatorios">
+  <div style="display:flex;align-items:center;gap:10px;padding:14px 16px 6px">
+    <button onclick="navTo('financeiro')" style="width:32px;height:32px;border-radius:10px;background:#F1F5F9;border:0;display:flex;align-items:center;justify-content:center;color:#0F172A;cursor:pointer;flex-shrink:0"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
+    <h2 style="font-size:17px;letter-spacing:-.02em;flex:1">Relatórios</h2>
+  </div>
+  <div style="padding:0 16px">
+    <div class="ad-carousel" id="ad-carousel-0"></div>
+  </div>
+  <div class="hg-info-tip" id="hg-info-tip"></div>
+  <section class="hg-period-card" style="margin:12px 16px 0">
+    <div class="hg-period-top">
+      <div class="hg-period-tabs">
+        <button id="hg-tab-w" class="active" onclick="setHomePeriod('w')">Semana</button>
+        <button id="hg-tab-m" onclick="setHomePeriod('m')">Mês</button>
+        <button id="hg-tab-y" onclick="setHomePeriod('y')">Ano</button>
+      </div>
+      <button class="hg-filter-btn" onclick="openHgFilter()"><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/></svg></button>
+    </div>
+    <div class="hg-main-value">
+      <label>Faturamento</label>
+      <h1 id="hg-amount">R$ 0</h1>
+      <p id="hg-sub">0 corridas · 0,0 km</p>
+    </div>
+    <div class="hg-insight" id="hg-insight" style="display:none">
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:.5;margin-top:2px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <p id="hg-insight-txt"></p>
+    </div>
+    <div class="hg-metrics">
+      <div class="hg-metric"><strong id="hg-rpk
+===== elapsed_secs @ 663531 =====
+ard ${rshCls}"><strong>${rsPorHora}</strong><span>R$/hora</span></div>
+      <div class="jss-rcard ${rskmCls}"><strong>${rsPorKm}</strong><span>R$/km</span></div>
+      ${hasCusto ? `<div class="jss-rcard ${lucroCls}"><strong>${DB.fR(lucroVal)}</strong><span>Lucro</span></div>` : `<div class="jss-rcard"><strong>—</strong><span>Lucro</span></div>`}
+    </div>
+    ${elapsedSecs > 0 ? `<div class="jss-statusbar">
+      <div class="sbar-wrap" onclick="event.stopPropagation();toggleBar('${bdListId}')"><div class="sbar">${buildSbarHtml(sessBd)}</div></div>
+      <div class="sbar-list" id="${bdListId}">${buildSrowsHtml(sessBd)}</div>
+    </div>` : ''}
+    <div class="jss-trips">
+      <div class="jss-trips-head">
+        <h4>Corridas desta jornada</h4>
+        ${corridas > 0 ? `<span>${corridas} corrida${corridas !== 1 ? 's' : ''}</span>` : ''}
+      </div>
+      ${corridas > 0
+        ? [
+            ...trips.map(t => ({ ts: t.ts || (t.time?new Date(dateStr+'T'+t.time+':00').getTime():0), html: tripItem(t) })),
+            ...autoTrips.map(t => ({ ts: autoTripTs(t), html: autoTripItem(t) })),
+          ].sort((a,b)=>b.ts-a.ts).map(x=>x.html).join('')
+        : '<div class="jss-trips-empty">Nenhuma corrida nesta jornada</div>'}
+    </div>
+  </div>`;
+
+}
+// ── Editar sessão ─────────────────────────────────────────────────────────
+function editJss(dateStr, idx) {
+  const day = DB.day(dateStr);
+  const sess = (day.sessions || [])[idx];
+  if (!sess) return;
+
+  document.getElementById('jss-edit-date').value = dateStr;
+  document.getElementById('jss-edit-idx').value  = idx;
+  document.getElementById('jss-edit-km').value   = (sess.km || 0).toFixed(1);
+
+  // Hora início e fim a partir dos timestamps da sessão
+  const fmt = ms => {
+    if (!ms) return '';
+    const d = new Date(ms);
+    return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  };
+  document.getElementById('jss-edit-inicio').value = fmt(sess.start);
+  document.getElementById('jss-edit-fim').value    = fmt(sess.end);
+
+  openMo('mo-jss-edit');
+}
+
+function saveJss() {
+  const dateStr = document.getElementById('jss-edit-date').value;
+  const idx     = parseInt(document.getElementById('jss-edit-idx').value);
+  const km      = parseFloat(document.getElementById('jss-edit-km').value) || 0;
+  const inicioStr = document.getElementById('jss-edit-inicio').value; // "HH:MM"
+  const fimStr    = document.getElementById('jss-edit-fim').value;    // "HH:MM"
+
+  const day = DB.day(dateStr);
+  if (!day.sessions || !day.sessions[idx]) { closeMo('mo-jss-edit'); return; }
+
+  const sess = day.sessions[idx];
+
+  // Recalcular timestamps de início e fim mantendo a data original
+  const toMs = (base, timeStr) => {
+    if (!timeStr) return base;
+    const [hh, mm] = timeStr.split(':').map(Number);
+    const d = new Date(base || Date.now());
+    d.setHours(hh, mm, 0, 0);
+    return d.getTime();
+  };
+  const newStart = toMs(sess.start, inicioStr);
+  const newEnd   = toMs(sess.end || sess.start, fimStr);
+  // Elapsed recalculado a partir da diferença início→fim
+  const elapsed  = newEnd > newStart ? Math.round((newEnd - newStart) / 1000) : (sess.elapsed || 0);
+
+  sess.km      = km;
+  sess.start   = newStart;
+  sess.end     = newEnd;
+  sess.elapsed = elapsed;
+  DB.saveDay(day);
+
+  // Sincronizar com Supabase
+  if (_supaUser && sess.id) {
+    _SUPA.from('sessions').update({
+      km:           parseFloat(km.toFixed(3)),
+      start_ms:     newStart,
+      end_ms:       newEnd,
+      elapsed_secs: elapsed
+    }).eq('id', sess.id).then(() => {}).catch(() => {});
+  }
+
+  closeMo('mo-jss-edit');
+  renderJornada();
+  if (S.sec === 'relatorios') renderHome();
+  showToast('Sessão atualizada');
+}
+
+function deleteJss(dateStr, idx) {
+  showConfirm('Excluir esta sessão?', () => {
+    const day = DB.day(dateStr);
+    if (!day.sessions || !day.sessions[idx]) return;
+
+    const sess = day.sessions[idx];
+    day.sessions.splice(idx, 1);
+    DB.saveDay(day);
+
+    // Remover do Supabase (delete real, não update)
+    if (sess.id) {
+      SYNC.del('sessions', { id: sess.id });
+    }
+
+    renderJornada();
+    if (S.sec === 'relatorios') renderHome();
+    showToast('Sessão excluída');
+  }, { confirmLabel: 'Excluir', danger: true, cancelLabel: 'Cancelar' });
+}
+
+
+// CORRIGIDO (15/08/2026, relatado pelo Yuri): mesmo bug do toggleTripDetail
+// (comentário abaixo, 24/07) só que no card da jornada — toggleJss só
+// mexia numa classe CSS, sem guardar estado. O refresh automático de 25s
+// (_refreshAutoTripsIfOnJornada) recria os cards do zero sempre fechados,
+// então a expansão "voltava a fechar sozinha" em segundos. Mesmo padrão
+// de correção: guarda o id aberto, reaplica depois de qualquer redesenho.
+let _openJssId = null;
+function toggleJss(id){
+  const el=document.getElementById(id);
+  if(!el) return;
+  const willOpen = !el.classList.contains('open');
+  el.classList.toggle('open');
+  _openJssId = willOpen ? id : null;
+}
+function reapplyOpenJss(){
+  if (!_openJssId) return;
+  const el = document.getElementById(_openJssId);
+  if (el) el.classList.add('open');
+}
+// CORRIGIDO (24/07/2026, relatado pelo Yuri): o painel de detalhe de uma
+// corrida é só um display:none/block num elemento — quando a tela
+// redesenha os cards (o refresh automático de 25s/60s da Jornada/Home,
+// por exemplo), os elementos são recriados do zero, sempre fechados por
+// padrão, perdendo o que estava aberto na hora errada (parecia fechar
+// sozinho, sem motivo). Guarda qual tid está aberto e reaplica depois de
+// qualquer redesenho.
+let _openTripDetailTid = null;
+// Linha vertical da rota (Aceite/Embarque/Destino) tem que parar exatamente
+// no centro do último marcador (pin de Destino) — pedido do Yuri
+// (16/08/2026): como os marcadores têm tamanhos diferentes (círculo
+// pequeno vs pin maior), um valor fixo de CSS nunca acerta em todo caso,
+// então mede a posição real na tela depois de renderizado.
+function sizeRouteLine(panelEl) {
+  try {
+    const block = panelEl.querySelector('.route-block');
+    if (!block) return;
+    const marks = block.querySelectorAll('.route-mark');
+    const line = block.querySelector('.route-line');
+    if (!line || marks.length < 2) return;
+    const first = marks[0], last = marks[marks.length - 1];
+    const blockTop = block.getBoundingClientRect().top;
+    const firstMid = first.getBoundingClientRect().top - blockTop + first.offsetHeight / 2;
+    const lastMid = last.getBoundingClientRect().top - blockTop + last.offsetHeight / 2;
+    if (lastMid <= firstMid) return;
+    line.style.top = firstMid + 'px';
+    line.style.height = (lastMid - firstMid) + 'px';
+  } catch (e) {}
+}
+function toggleTripDetail(tid) {
+  const det = document.getElementById('td-'+tid);
+  const row = document.getElementById('tr-'+tid);
+  if (!det||!row) return;
+  const open = det.style.display!=='none';
+  document.querySelectorAll('.trip-detail-panel').forEach(el=>el.style.display='none');
+  document.querySelectorAll('.li-row[id^="tr-"]').forEach(el=>el.classList.remove('open'));
+  if (!open){det.style.display='block';row.classList.add('open');_openTripDetailTid=tid;sizeRouteLine(det);}
+  else {_openTripDetailTid=null;}
+}
+// Chamar depois de qualquer redesenho que possa ter recriado os cards de
+// corrida (renderJornada, renderCorridasActive etc.) — reabre sozinho se
+// o mesmo tid ainda existir na tela.
+function reapplyOpenTripDetail() {
+  if (!_openTripDetailTid) return;
+  const det = document.getElementById('td-'+_openTripDetailTid);
+  const row = document.getElementById('tr-'+_openTripDetailTid);
+  if (det && row) { det.style.display='block'; row.classList.add('open'); sizeRouteLine(det); }
+}
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+// Escapa texto externo (Nominatim/Overpass) pra uso dentro de um literal JS
+// de aspas simples que por sua vez está dentro de um atributo onclick="..."
+// de aspas duplas — precisa fugir dos dois delimitadores ao mesmo tempo,
+// senão um "/' no rótulo devolvido pela API quebra o atributo e injeta HTML.
+function escJsAttr(s){return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+// ── Logos das plataformas (assets originais processados: fundo removido) ──
+const LOGO_UBER = 'data:image/png;base64,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
+===== syncSession @ -1 =====
+
+===== saveSession @ 1041127 =====
+rrida local que a reconciliação do pullAll() ainda não
+  // teve tempo de apagar (ex: já tinha sido excluída direto no banco),
+  // ressuscitando dado errado. Confirmado acontecendo em 18/07/2026.
+  await _waitBootPull(30000);
+
+  console.log('[MōB] Iniciando migração local → Supabase...');
+  let pushed = 0;
+
+  // 1. Todos os dados de dias: trips, expenses, revenues
+  for (const [key, raw] of Object.entries(localStorage)) {
+    if (!key.startsWith('sm_day_')) continue;
+    const date = key.replace('sm_day_', '');
+    try {
+      const day = JSON.parse(raw);
+      for (const t of day.trips || []) {
+        await SYNC.push('trips', { id: t.id, date, platform: t.platform||'uber',
+          time: t.time||null, duration: t.duration||0, origin: t.origin||'',
+          dest: t.dest||'', value: t.value||0, km: t.km||0,
+          source: t.source||'manual', surge: t.surge||false, airport: t.airport||false,
+          dinamico: t.dinamico||0, tip: t.tip||0 });
+        pushed++;
+      }
+      for (const e of day.expenses || []) {
+        await SYNC.push('expenses', { id: e.id, date: e.date||date,
+          category: e.category||'', category_label: e.categoryLabel||'',
+          description: e.desc||'', amount: e.amount||0, scope: e.scope||'operacional',
+          recorrente: e.recorrente||false, freq: e.freq||null,
+          status: e.status||'a_pagar', due_date: e.date||date });
+        pushed++;
+      }
+      for (const r of day.revenues || []) {
+        await SYNC.push('revenues', { id: r.id, date: r.date||date,
+          category: r.category||'', category_label: r.categoryLabel||'',
+          description: r.desc||'', amount: r.amount||0, scope: r.scope||'operacional',
+          recorrente: r.recorrente||false, freq: r.freq||null,
+          status: r.status||'pago', due_date: r.date||date });
+        pushed++;
+      }
+    } catch(e) { console.warn('[MōB] migração dia', date, e); }
+  }
+
+  // 2. Favoritos
+  await SYNC.pushFavs(); pushed++;
+
+  // 3. Configurações
+  await SYNC.pushSettings(); pushed++;
+
+  // 4. Categorias
+  try {
+    for (const key2 of Object.keys(localStorage)) {
+      if (key2.startsWith('sm_cats_')) await SYNC.pushCats(key2.replace('sm_cats_',''));
+    }
+  } catch(e) {}
+
+  // 5. Eventos
+  const localEvs = JSON.parse(localStorage.getItem('sm_events')||'[]');
+  for (const ev of localEvs) {
+    await SYNC.push('events', { id: ev.id, title: ev.title, date: ev.date,
+      time_start: ev.timeStart||null, time_end: ev.timeEnd||null,
+      type: ev.type||'operacional', color: ev.color||'#22C55E',
+      notes: ev.notes||'', paid: ev.paid||false });
+    pushed++;
+  }
+
+  localStorage.setItem('sm_cloud_migration_v2', '1');
+  console.log('[MōB] Migração concluída —', pushed, 'registros enviados ao Supabase');
+  showToast('Dados sincronizados com a nuvem ✓');
+}
+
+async function authInit() {
+  ['app-nav','app-header'].forEach(id => { const el=document.getElementById(id);if(el)el.style.display='none'; });
+  document.querySelectorAll('.screen').forEach(s => s.style.display='none');
+  await new Promise(r => setTimeout(r, 300));
+  const { data:{ session } } = await _SUPA.auth.getSession();
+  if (session?.user) { _supaUser=session.user; await loadProfile(); showApp(); }
+  else showLogin();
+  _SUPA.auth.onAuthStateChange(async (ev, session) => {
+    if ((ev==='SIGNED_IN' || ev==='TOKEN_REFRESHED') && session?.user) {
+      _supaUser = session.user;
+      // Salva tokens no storage nativo (persiste mesmo com app morto)
+      if (window.SmartMobiNative?.saveSession) {
+        try { SmartMobiNative.saveSession(JSON.stringify({
+          access_token: session.access_token,
+          refresh_token: session.refresh_token
+        })); } catch(e) {}
+      }
+      // Salva credenciais para o GpsService usar nas notificações de reporte
+      // rápido e no alerta automático de dinâmico do feed. Reenviado também
+      // a cada TOKEN_REFRESHED (autoRefreshToken troca o token ~1x/hora) —
+      // antes só rodava no SIGNED_IN, então esses recursos paravam de
+      // funcionar (silenciosamente) depois de ~1h de app aberto.
+      if (window.SmartMobiNative?.saveUserToken) {
+        try { SmartMobiNative.saveUserToken(session.user.id, session.access_token); } catch(e) {}
+      }
+      if (ev==='SIGNED_IN') { await loadProfile(); showApp(); }
+    } else if (ev==='SIGNED_OUT') {
+      _supaUser = null;
+      if (window.SmartMobiNative?.saveSession) {
+        try { SmartMobiNative.saveSession(''); } catch(e) {}
+      }
+      showLogin();
+    }
+  });
+}
+
+function lsShow(id) {
+  ['lsLogin','lsReg','lsForgot'].forEach(x => { const el=document.getElementById(x);if(el)el.style.display=x===id?'block':'none'; });
+}
+function showLogin() {
+  const el=document.getElementById('sc-login'); if(el)el.style.display='flex';
+  ['app-nav','app-header'].forEach(id=>{ const e=document.getElementById(id);if(e)e.style.display='none'; });
+  document.querySelectorAll('.screen').forEach(s=>s.style.display='none');
+}
+let _appBooted = false;
+async function showApp() {
+  const el=document.getElementById('sc-login'); if(el)el.style.display='none';
+  const nav=document.getElementById('app-nav'); if(nav)nav.style.display='flex';
+  if(_supaUser && !DB.cfg().name && _supaUser.email){
+    const cfg=DB.cfg(); cfg.name=_supaUser.email.split('@')[0]; DB.saveCfg(cfg);
+  }
+  // Migração única de dados locais para o Supabase
+  setTimeout(() => migrateLocalToCloud().catch(()=>{}), 3000);
+  setTimeout(() => reconcileAllExistingDays().catch(()=>{}), 5000);
+  // Limpeza única: remove corridas source='import_uber_zip' do localStorage
+  // antes de reimportar com os fixes de UTC e promocao fundida no dinamico.
+  // Roda só uma vez (flag sm_zip_wipe_v1). Não afeta uber_import nem import_ai.
+  if (!localStorage.getItem('sm_zip_wipe_v1')) {
+    let removidas = 0;
+    DB.allDates().forEach(d => {
+      const day = DB.day(d);
+      const antes = (day.trips||[]).length;
+      day.trips = (day.trips||[]).filter(t => t.source !== 'import_uber_zip');
+      if (day.trips.length !== antes) { removidas += antes - day.trips.length; DB.saveDay(day); }
+    });
+    localStorage.setItem('sm_zip_wipe_v1', '1');
+    if (removidas > 0) console.log('[boot] zip wipe: removidas', removidas, 'corridas do localStorage');
+  }
+  if (!_appBooted) {
+    setTimeout(updateNetStatus, 500);
+  }
+  try{renderHome();}    catch(e){console.error('renderHome:',e);}
+  try{restoreGpsSession();} catch(e){console.error('restoreGpsSession:',e);}
+  try{renderJornada();}  catch(e){console.error('renderJornada:',e);}
+  // Verifica jornadas órfãs (de outra aba/instância que não fechou corretamente)
+  // toda vez que o app abre, não só ao navegar manualmente pra Jornada
+  if (_supaUser && navigator.onLine) {
+    _closeOrphanSessions().then(n => { if (n) { renderJornada(); renderHome(); } }).catch(()=>{});
+  }
+  try{syncNavButton();}  catch(e){console.error('syncNavButton:',e);}
+  try{renderFin();}      catch(e){console.error('renderFin:',e);}
+  try{updateFavBtn();}   catch(e){console.error('updateFavBtn:',e);}
+  try{renderAgenda();} catch(e){console.error('renderAgenda:',e);}
+  // Só navega pra Home no primeiro boot. O Supabase reemite SIGNED_IN sempre que
+  // o app volta de segundo plano, o que chamava showApp() de novo e forçava a
+  // tela de volta pra Home mesmo a pessoa estando em outra tela (ex: Jornada).
+  if (!_appBooted) {
+    _appBooted = true;
+    // FIX: restaura a última tela em vez de forçar Home quando a WebView
+    // recarrega (Android mata a página em background)
+    let lastSec = 'home';
+    try {
+      const saved = JSON.parse(localStorage.getItem('sm_last_screen') || 'null');
+      // Só restaura se foi salvo há menos de 30 min (senão, home mesmo)
+      if (saved && saved.sec && (Date.now() - saved.ts) < 30*60*1000) lastSec = saved.sec;
+    } catch(e) {}
+    navTo(lastSec);
+    _bootPullBg();
+  }
+}
+
+// Promessa que resolve quando a restauração da nuvem (pullAll) termina no
+// boot. Telas como Custo do Veículo e MōB Flash usam isso pra não mostrar
+// formulário vazio e deixar o usuário preencher de novo por cima de dados
+// que já estavam guardados, só porque a restauração ainda não tinha chegado.
+let _bootPullResolve;
+let _bootPullDone = false;
+const _bootPullPromise = new Promise(r => { _bootPullResolve = r; });
+
+// Depois de _bootPullPromise pronta: espera ela terminar (com timeout, pra
+// não travar pra sempre se estiver offline) antes de liberar uma tela.
+async function _waitBootPull(maxMs = 4000) {
+  try { await Promise.race([_bootPullPromise, new Promise(r => setTimeout(r, maxMs))]); } catch (e) {}
+}
+
+// Pull do cloud em BACKGROUND — a UI já está visível com dados locais.
+// Quando terminar, re-renderiza tudo e restaura sessão GPS do cloud se houver.
+async function _bootPullBg() {
+  try { await SYNC.pullAll(); } catch(e) { console.error('pullAll boot:', e); }
+  try { await SYNC.flushQueue(); } catch(e) { console.error('flushQueue boot:', e); }
+  try { checkRecurringLancamentos(); } catch(e) { console.error('checkRecurringLancamentos boot:', e); }
+  try{restoreGpsSession();} catch(e){}
+  try{syncNavButton();}  catch(e){}
+  try{renderHome();}     catch(e){}
+  try{renderJornada();}  catch(e){}
+  try{renderFin();}      catch(e){}
+  try{renderAgenda();} catch(e){}
+  try{ if (S.sec==='corridas') renderCorridasActive(); } catch(e){}
+  try{ if (S.sec==='lancamentos') renderLancamentos(); } catch(e){}
+  _bootPullDone = true;
+  _bootPullResolve();
+}
+
+function lsErr(id, msg) { const el=document.getElementById(id);if(el){el.textContent=msg;el.style.display=msg?'block':'none';} }
+function lsBtn(id, txt, disabled) { const el=document.getElementById(id);if(el){el.textContent=txt;el.disabled=disabled;} }
+
+const _MOB_LOGIN_GUARD_KEY='mob_login_guard_v1';
+function mobLoginGuardLoad(){
+  try{return JSON.parse(localStorage.getItem(_MOB_LOGIN_GUARD_KEY)||'{"fails":[],"blockedUntil":0}')}catch(e){return{fails:[],blockedUntil:0}}
+}
+function mobLoginGuardSave(g){try{localStorage.setItem(_MOB_LOGIN_GUARD_KEY,JSON.stringify(g))}catch(e){}}
+function mobLoginBlockedSeconds(){const g=mobLoginGuardLoad();return Math.max(0,Math.ceil(((g.blockedUntil||0)-Date.now())/1000));}
+function mobLoginGuardFail(){
+  const now=Date.now(),g=mobLoginGuardLoad();
+  g.fails=(g.fails||[]).filter(t=>now-t<10*60*1000);g.fails.push(now);
+  if(g.fails.length>=5){g.blockedUntil=now+15*60*1000;g.fails=[];}
+  mobLoginGuardSave(g);return mobLoginBlockedSeconds();
+}
+function mobLoginGuardClear(){try{localStorage.removeItem(_MOB_LOGIN_GUARD_KEY)}catch(e){}}
+
+async function loginEnter() {
+  const email=document.getElementById('l-email')?.value?.trim();
+  const pass=document.getElementById('l-pass')?.value;
+  lsErr('l-err','');
+  if(!email||!pass){lsErr('l-err','Preencha email e senha');return;}
+  const blocked=mobLoginBlockedSeconds();
+  if(blocked>0){lsErr('l-err',`Muitas tentativas. Aguarde ${Math.ceil(blocked/60)} min e tente novamente.`);return;}
+  lsBtn('l-btn-enter','Entrando...',true);
+  try{
+    if(_MOB_IS_TEST_ENV){
+      const result=await Promise.race([
+        _SUPA.auth.signInWithPassword({email,password:pass}),
+        new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),12000))
+      ]);
+      if(result.error) throw new Error('invalid_credentials');
+    }else{
+      const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),12000);let resp;
+      try{
+        resp=await fetch(`${_MOB_SUPA_CONFIG.url}/functions/v1/auth-login-gate`,{
+          method:'POST',signal:ctl.signal,
+          headers:{'Content-Typ
+===== Jornada reiniciada @ -1 =====
+
+===== reiniciada @ -1 =====
