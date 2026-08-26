@@ -1,0 +1,27 @@
+name: Run city-wide Informes patch
+on:
+  push:
+    paths:
+      - '.github/workflows/run-informes-citywide-20260826.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply patch
+        run: python3 .github/scripts/patch_informes_citywide_20260826.py
+      - name: Validate
+        run: |
+          grep -q 'infRenderBairrosCidade' index.html
+          grep -q 'infRenderAeroportosRaio' index.html
+          grep -q 'Aeroportos em até 200 km' index.html
+          grep -q 'inf-bairros-dynamic' index.html
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Make Informes neighborhoods city-aware and airports 200km" || exit 0
+          git push
