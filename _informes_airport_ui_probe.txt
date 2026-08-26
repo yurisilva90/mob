@@ -1,0 +1,1321 @@
+
+===== inf-bchip-sul @ 443009 =====
+r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+            <div><div class="inf-featF-name">Rodoviária Novo Rio <svg class="inf-featF-mode" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="4" width="16" height="12" rx="2.5"/><path d="M4 11h16"/><path d="M7.5 16v2M16.5 16v2"/></svg></div><div class="inf-featF-sub">Santo Cristo</div></div>
+          </div>
+          <div class="inf-featF-ct" id="inf-ct-rod">–</div>
+        </div>
+        <div class="inf-featF-mini" id="inf-mini-rod"></div>
+        <div class="inf-featF-arriving"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="4" width="16" height="12" rx="2.5"/><path d="M4 11h16"/><path d="M7.5 16v2M16.5 16v2"/></svg>Chegando: — (em breve via sistema da rodoviária)</div>
+      </div>
+    </div>
+
+    <!-- ═══ ABA: BAIRROS ═══ -->
+    <div class="inf-panelbody hide inf-fill" id="inf-tab-bairros">
+      <div class="inf-area-grp-lbl"><div class="inf-area-grp-dot"></div><span class="inf-area-grp-name">Zona Sul</span></div>
+      <div class="inf-bchip-scroll">
+        <div class="inf-bchip-2row" id="inf-bchip-sul"></div>
+      </div>
+      <div class="inf-area-grp-lbl"><div class="inf-area-grp-dot"></div><span class="inf-area-grp-name">Barra / Recreio</span></div>
+      <div class="inf-bchip-scroll inf-fill-scroll">
+        <div class="inf-bchip-1row" id="inf-bchip-barra"></div>
+      </div>
+    </div>
+
+    <!-- ═══ ABAS: SHOPPINGS / BARES / HOTÉIS / EVENTOS / TURÍSTICO ═══ -->
+    <div class="inf-panelbody hide" id="inf-tab-shop"><div class="inf-vlist" id="inf-vlist-shoppings"></div></div>
+    <div class="inf-panelbody hide" id="inf-tab-bares"><div class="inf-vlist" id="inf-vlist-bares"></div></div>
+    <div class="inf-panelbody hide" id="inf-tab-hoteis"><div class="inf-vlist" id="inf-vlist-hoteis"></div></div>
+    <div class="inf-panelbody hide" id="inf-tab-eventos"><div class="inf-vlist" id="inf-vlist-eventos"></div></div>
+    <div class="inf-panelbody hide" id="inf-tab-tur"><div class="inf-vlist" id="inf-vlist-turistico"></div></div>
+
+  </div><!-- /inf-scroll-content -->
+
+  <!-- painel de informes full-screen -->
+  <div class="inf-panel" id="inf-panel">
+    <div class="inf-panel-drag" id="inf-panel-drag"><div class="inf-panel-drag-bar"></div></div>
+    <div class="inf-panel-head">
+      <button onclick="infFecharPainel()" style="width:32px;height:32px;border-radius:9px;border:1.5px solid var(--line);background:var(--soft);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="inf-panel-hic" id="inf-panel-hic"></div>
+      <div class="inf-panel-hbody">
+        <div class="inf-panel-tipo" id="inf-panel-tipo"></div>
+        <div class="inf-panel-loc" id="inf-panel-loc">—</div>
+        <div class="inf-panel-meta" id="inf-panel-meta"></div>
+      </div>
+      <div class="inf-head-badges" id="inf-head-badges" style="display:flex;gap:6px;flex-shrink:0"></div>
+      <button class="inf-panel-fav" id="inf-panel-map" onclick="infAbrirNoMapa()" style="display:none" aria-label="Abrir no mapa">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#0EA5E9" stroke-width="2.2"><path d="M9 20l-5.5 2V6L9 4l6 2 5.5-2v16L15 22l-6-2z"/><line x1="9" y1="4" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="20"/></svg>
+      </button>
+      <button class="inf-panel-fav" id="inf-panel-fav" onclick="infToggleFav()">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#F59E0B" stroke-width="2"><polygon points="12 2
+
+===== inf-bchip-sul @ 1635284 =====
+onclick="infAbrirLocal(this,'${item.n.replace(/'/g,"\\'")}','${v.tipo}')"><div class="inf-vitem-ic" style="background:${t.bg}">${infIconSvg(v.tipo,t.cor,15)}</div><div><div class="inf-vitem-name">${item.n}</div><div class="inf-vitem-sub">${item.sub||''}</div></div><div class="inf-vitem-badges" data-vname="${esc(item.n)}"></div><div class="inf-vitem-ct z">–</div></div>`).join('');
+}
+
+function infTab(id){
+  document.querySelectorAll('.inf-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));
+  document.querySelectorAll('#inf-scroll-content > .inf-panelbody').forEach(p=>p.classList.add('hide'));
+  const p=document.getElementById('inf-tab-'+id);if(p)p.classList.remove('hide');
+}
+
+function infRenderBairrosTab(){
+  const bic=`<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#475569" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.333-8 14-8 14S4 15.333 4 10a8 8 0 0 1 8-8z"/></svg>`;
+  const chip=b=>`<div class="inf-bchip" onclick="infAbrirLocal(this,'${b}','bairro')"><div class="inf-bchip-ct z">–</div><div class="inf-bchip-ic">${bic}</div><div class="inf-bchip-name">${b}</div></div>`;
+  const sulEl=document.getElementById('inf-bchip-sul');if(sulEl)sulEl.innerHTML=INF_BAIRROS.sul.map(chip).join('');
+  const barraEl=document.getElementById('inf-bchip-barra');if(barraEl)barraEl.innerHTML=INF_BAIRROS.barra.map(chip).join('');
+  infCarregarContagens();
+}
+
+function infRenderVenueLists(){
+  Object.entries({shoppings:'shoppings',bares:'bares',hoteis:'hoteis',eventos:'eventos',turistico:'turistico'}).forEach(([tabKey,venueKey])=>{
+    const el=document.getElementById('inf-vlist-'+tabKey);if(!el)return;
+    const v=INF_VENUES[venueKey];if(!v)return;
+    const t=INF_TIPOS[v.tipo]||INF_TIPOS.bairro;
+    el.innerHTML=v.itens.map(item=>`<div class="inf-vitem" onclick="infAbrirLocal(this,'${item.n.replace(/'/g,"\\'")}','${v.tipo}')">
+      <div class="inf-vitem-ic" style="background:${t.bg}">${infIconSvg(v.tipo,t.cor,15)}</div>
+      <div><div class="inf-vitem-name">${item.n}</div><div class="inf-vitem-sub">${item.sub||''}</div></div>
+      <div class="inf-vitem-badges" data-vname="${esc(item.n)}"></div>
+      <div class="inf-vitem-ct z">–</div>
+    </div>`).join('');
+  });
+  infCarregarContagens();
+  infCarregarBadgesListagem();
+}
+
+// Badges "Alta demanda"/"Tarifa dinâmica" nos itens da listagem —
+// mesmo visual do header (ícone+texto), some quando não há dado.
+// Reaproveita venue_cache (já resolvido em lote pela infCarregarContagens
+// não; aqui cada item pede seu próprio lat/lng, mas em paralelo/Promise.all
+// pra não travar a UI — listas são pequenas, 6-7 itens por aba).
+async function infCarregarBadgesListagem(){
+  if(!_SUPA) return;
+  const els=[...document.querySelectorAll('.inf-vitem-badges[data-vname]')];
+  if(!els.length) return;
+  await Promise.all(els.map(async el=>{
+    const nome=el.getAttribute('data-vname');
+    try{
+      const {data:vc}=await _SUPA.from('venue_cache').select('id,lat,lng').ilike('name',nome).limit(1);
+      if(!vc||!vc.length) return;
+      const venue=vc[0];
+      const d=0.003;
+      const [{data:stats},{data:posts}]=await Promise.all([
+        _SUPA.rpc('venue_collab_stats',{p_venue_id:venue.id}),
+        _SUPA.from('feed_posts').select('param_value,param_detail,created_at')
+          .eq('type','dinamico').eq('status','ativo').gt('expires_at',new Date().toISOString())
+          .gte('lat',venue.lat-d).lte('lat',venue.lat+d).gte('lng',venue.lng-d).lte('lng',venue.lng+d)
+          .order('created_at',{ascending:false}).limit(10)
+      ]);
+      let html='';
+      if(stats && stats.alta_demanda_agora){
+        html+=`<div class="inf-badge-btn peak"><svg viewBox="0 0 24 24" width="14" height="14" fill="#fff" stroke="none"><path d="M12 2c1 3-2 4-2 7a4 4
+
+===== inf-bchip-barra @ 443270 =====
+="4" width="16" height="12" rx="2.5"/><path d="M4 11h16"/><path d="M7.5 16v2M16.5 16v2"/></svg></div><div class="inf-featF-sub">Santo Cristo</div></div>
+          </div>
+          <div class="inf-featF-ct" id="inf-ct-rod">–</div>
+        </div>
+        <div class="inf-featF-mini" id="inf-mini-rod"></div>
+        <div class="inf-featF-arriving"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="4" width="16" height="12" rx="2.5"/><path d="M4 11h16"/><path d="M7.5 16v2M16.5 16v2"/></svg>Chegando: — (em breve via sistema da rodoviária)</div>
+      </div>
+    </div>
+
+    <!-- ═══ ABA: BAIRROS ═══ -->
+    <div class="inf-panelbody hide inf-fill" id="inf-tab-bairros">
+      <div class="inf-area-grp-lbl"><div class="inf-area-grp-dot"></div><span class="inf-area-grp-name">Zona Sul</span></div>
+      <div class="inf-bchip-scroll">
+        <div class="inf-bchip-2row" id="inf-bchip-sul"></div>
+      </div>
+      <div class="inf-area-grp-lbl"><div class="inf-area-grp-dot"></div><span class="inf-area-grp-name">Barra / Recreio</span></div>
+      <div class="inf-bchip-scroll inf-fill-scroll">
+        <div class="inf-bchip-1row" id="inf-bchip-barra"></div>
+      </div>
+    </div>
+
+    <!-- ═══ ABAS: SHOPPINGS / BARES / HOTÉIS / EVENTOS / TURÍSTICO ═══ -->
+    <div class="inf-panelbody hide" id="inf-tab-shop"><div class="inf-vlist" id="inf-vlist-shoppings"></div></div>
+    <div class="inf-panelbody hide" id="inf-tab-bares"><div class="inf-vlist" id="inf-vlist-bares"></div></div>
+    <div class="inf-panelbody hide" id="inf-tab-hoteis"><div class="inf-vlist" id="inf-vlist-hoteis"></div></div>
+    <div class="inf-panelbody hide" id="inf-tab-eventos"><div class="inf-vlist" id="inf-vlist-eventos"></div></div>
+    <div class="inf-panelbody hide" id="inf-tab-tur"><div class="inf-vlist" id="inf-vlist-turistico"></div></div>
+
+  </div><!-- /inf-scroll-content -->
+
+  <!-- painel de informes full-screen -->
+  <div class="inf-panel" id="inf-panel">
+    <div class="inf-panel-drag" id="inf-panel-drag"><div class="inf-panel-drag-bar"></div></div>
+    <div class="inf-panel-head">
+      <button onclick="infFecharPainel()" style="width:32px;height:32px;border-radius:9px;border:1.5px solid var(--line);background:var(--soft);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="inf-panel-hic" id="inf-panel-hic"></div>
+      <div class="inf-panel-hbody">
+        <div class="inf-panel-tipo" id="inf-panel-tipo"></div>
+        <div class="inf-panel-loc" id="inf-panel-loc">—</div>
+        <div class="inf-panel-meta" id="inf-panel-meta"></div>
+      </div>
+      <div class="inf-head-badges" id="inf-head-badges" style="display:flex;gap:6px;flex-shrink:0"></div>
+      <button class="inf-panel-fav" id="inf-panel-map" onclick="infAbrirNoMapa()" style="display:none" aria-label="Abrir no mapa">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#0EA5E9" stroke-width="2.2"><path d="M9 20l-5.5 2V6L9 4l6 2 5.5-2v16L15 22l-6-2z"/><line x1="9" y1="4" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="20"/></svg>
+      </button>
+      <button class="inf-panel-fav" id="inf-panel-fav" onclick="infToggleFav()">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#F59E0B" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </button>
+    </div>
+    <div class="inf-status" id="inf-status"></div>
+    <div class="inf-sep"></div>
+    <div class="inf-list-wrap" id="inf-list-wrap"><
+
+===== inf-bchip-barra @ 1635402 =====
+${t.bg}">${infIconSvg(v.tipo,t.cor,15)}</div><div><div class="inf-vitem-name">${item.n}</div><div class="inf-vitem-sub">${item.sub||''}</div></div><div class="inf-vitem-badges" data-vname="${esc(item.n)}"></div><div class="inf-vitem-ct z">–</div></div>`).join('');
+}
+
+function infTab(id){
+  document.querySelectorAll('.inf-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));
+  document.querySelectorAll('#inf-scroll-content > .inf-panelbody').forEach(p=>p.classList.add('hide'));
+  const p=document.getElementById('inf-tab-'+id);if(p)p.classList.remove('hide');
+}
+
+function infRenderBairrosTab(){
+  const bic=`<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#475569" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.333-8 14-8 14S4 15.333 4 10a8 8 0 0 1 8-8z"/></svg>`;
+  const chip=b=>`<div class="inf-bchip" onclick="infAbrirLocal(this,'${b}','bairro')"><div class="inf-bchip-ct z">–</div><div class="inf-bchip-ic">${bic}</div><div class="inf-bchip-name">${b}</div></div>`;
+  const sulEl=document.getElementById('inf-bchip-sul');if(sulEl)sulEl.innerHTML=INF_BAIRROS.sul.map(chip).join('');
+  const barraEl=document.getElementById('inf-bchip-barra');if(barraEl)barraEl.innerHTML=INF_BAIRROS.barra.map(chip).join('');
+  infCarregarContagens();
+}
+
+function infRenderVenueLists(){
+  Object.entries({shoppings:'shoppings',bares:'bares',hoteis:'hoteis',eventos:'eventos',turistico:'turistico'}).forEach(([tabKey,venueKey])=>{
+    const el=document.getElementById('inf-vlist-'+tabKey);if(!el)return;
+    const v=INF_VENUES[venueKey];if(!v)return;
+    const t=INF_TIPOS[v.tipo]||INF_TIPOS.bairro;
+    el.innerHTML=v.itens.map(item=>`<div class="inf-vitem" onclick="infAbrirLocal(this,'${item.n.replace(/'/g,"\\'")}','${v.tipo}')">
+      <div class="inf-vitem-ic" style="background:${t.bg}">${infIconSvg(v.tipo,t.cor,15)}</div>
+      <div><div class="inf-vitem-name">${item.n}</div><div class="inf-vitem-sub">${item.sub||''}</div></div>
+      <div class="inf-vitem-badges" data-vname="${esc(item.n)}"></div>
+      <div class="inf-vitem-ct z">–</div>
+    </div>`).join('');
+  });
+  infCarregarContagens();
+  infCarregarBadgesListagem();
+}
+
+// Badges "Alta demanda"/"Tarifa dinâmica" nos itens da listagem —
+// mesmo visual do header (ícone+texto), some quando não há dado.
+// Reaproveita venue_cache (já resolvido em lote pela infCarregarContagens
+// não; aqui cada item pede seu próprio lat/lng, mas em paralelo/Promise.all
+// pra não travar a UI — listas são pequenas, 6-7 itens por aba).
+async function infCarregarBadgesListagem(){
+  if(!_SUPA) return;
+  const els=[...document.querySelectorAll('.inf-vitem-badges[data-vname]')];
+  if(!els.length) return;
+  await Promise.all(els.map(async el=>{
+    const nome=el.getAttribute('data-vname');
+    try{
+      const {data:vc}=await _SUPA.from('venue_cache').select('id,lat,lng').ilike('name',nome).limit(1);
+      if(!vc||!vc.length) return;
+      const venue=vc[0];
+      const d=0.003;
+      const [{data:stats},{data:posts}]=await Promise.all([
+        _SUPA.rpc('venue_collab_stats',{p_venue_id:venue.id}),
+        _SUPA.from('feed_posts').select('param_value,param_detail,created_at')
+          .eq('type','dinamico').eq('status','ativo').gt('expires_at',new Date().toISOString())
+          .gte('lat',venue.lat-d).lte('lat',venue.lat+d).gte('lng',venue.lng-d).lte('lng',venue.lng+d)
+          .order('created_at',{ascending:false}).limit(10)
+      ]);
+      let html='';
+      if(stats && stats.alta_demanda_agora){
+        html+=`<div class="inf-badge-btn peak"><svg viewBox="0 0 24 24" width="14" height="14" fill="#fff" stroke="none"><path d="M12 2c1 3-2 4-2 7a4 4 0 0 0 8 0c0-1-.5-2-1-2 1 3-1 4-2 4a2 2 0 0 1-2-2c0-2 2-3 2-5-2 0-4 1-5 3-1 2-1 4 0 6a6 6 0 0 0 12-2c0-4-3-6-4-9-1 1-3
+
+===== Aeroportos @ 114857 =====
+o precisa alcançar rápido com o
+   polegar, sem procurar/rolar — Opção B do mockup, aprovada. */
+.inf-relatar-bar{position:fixed;left:50%;bottom:calc(var(--bottom) + var(--safe-bottom));transform:translateX(-50%);width:min(430px,100vw);padding:10px 16px;background:var(--card);border-top:1px solid var(--line);z-index:90;box-sizing:border-box}
+.inf-relatar-bar button{width:100%;height:52px;border-radius:14px;border:0;background:linear-gradient(135deg,#EF4444,#DC2626);color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-shadow:0 6px 16px rgba(220,38,38,.3);font-family:inherit;touch-action:manipulation}
+.inf-tabs::-webkit-scrollbar{display:none}
+.inf-tab{flex-shrink:0;border:1.5px solid var(--line);background:var(--card);color:var(--muted);font-size:12px;font-weight:700;font-family:inherit;padding:7px 13px;border-radius:99px;white-space:nowrap;cursor:pointer}
+.inf-tab.active{background:#0A2F6B;border-color:#0A2F6B;color:#fff}
+.inf-panelbody{padding-bottom:110px}
+.inf-panelbody.inf-fill{display:flex;flex-direction:column;min-height:calc(100% - 2px)}
+.inf-panelbody.hide{display:none!important}
+/* cards largura cheia (aeroportos/rodoviárias/minha área) */
+.inf-featF{background:var(--card);border:2px solid var(--line);border-radius:17px;padding:14px 15px 14px;margin:0 14px 9px;display:flex;flex-direction:column;cursor:pointer;transition:border-color .15s,transform .1s}
+.inf-featF:active{transform:scale(.98)}
+.inf-featF-top{display:flex;align-items:center;justify-content:space-between}
+.inf-featF-id{display:flex;align-items:center;gap:10px}
+.inf-featF-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-featF-name{font-size:15px;font-weight:800}
+.inf-featF-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.inf-featF-mode{color:#94A3B8;vertical-align:-2px;margin-left:3px}
+.inf-featF-ct{font-size:10px;font-weight:800;background:var(--red);color:#fff;border-radius:99px;padding:3px 9px;flex-shrink:0}
+.inf-featF-mini{margin-top:12px;background:var(--soft);border-radius:10px;padding:9px 11px;display:grid;grid-template-columns:repeat(3,1fr);gap:7px 10px}
+.inf-featF-mstat{display:flex;align-items:center;gap:5px}
+.inf-featF-mstat-ic{color:var(--muted);flex-shrink:0}
+.inf-featF-mstat-val{font-size:11px;font-weight:800;color:var(--text)}
+.inf-featF-arriving{margin-top:9px;display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:var(--muted2)}
+/* feed de informes — lista única, linha fina */
+.inf-feed-list{margin:0 14px;background:var(--card);border:1.5px solid var(--line);border-radius:14px;overflow:hidden}
+.inf-feed-fill{flex:1;display:flex;flex-direction:column}
+.inf-feed-row{display:flex;align-items:center;gap:9px;padding:10px 12px;border-bottom:1px solid #EEF1F5;cursor:pointer}
+.inf-feed-row:last-child{border-bottom:0}
+.inf-feed-row:active{background:var(--soft)}
+.inf-feed-ic{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-feed-body{flex:1;min-width:0}
+.inf-feed-txt{font-size:11.5px;font-weight:700}
+.inf-feed-loc{font-size:10px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.inf-feed-right{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.inf-feed-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:800;color:#fff;flex-shrink:0}
+.inf-feed-votes{display:flex;flex-direction:column;gap:2px}
+.inf-feed-votes .inf-vbtn{border:0;background:transparent;padding:0;display:flex;align-items:center;gap:2px;font-size:9px;font-weight:700;color:var(--muted2);cursor:pointer;font-family:inherit}
+.inf-feed-votes .in
+
+===== Aeroportos @ 437261 =====
+"16" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+      <div class="inf-city" id="inf-city-btn" onclick="infAbrirCidade()"><div class="inf-city-dot"></div><span id="inf-city-name">Localizando…</span><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#94A3B8;margin-left:1px"><path d="M6 9l6 6 6-6"/></svg></div>
+    </div>
+    <div class="inf-search-fixed" id="inf-search-fixed" style="display:none">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="inf-search-bar" type="text" placeholder="Buscar local…" oninput="infBuscarGlobal(this.value)">
+    </div>
+  </div>
+  <div class="inf-search-dd" id="inf-search-dd"></div>
+
+  <!-- abas -->
+  <div class="inf-tabs-wrap">
+    <div class="inf-tabs" id="inf-tabs">
+      <button class="inf-tab active" data-tab="agora" onclick="infTab('agora')">Agora</button>
+      <button class="inf-tab" data-tab="aero" onclick="infTab('aero')">Aeroportos</button>
+      <button class="inf-tab" data-tab="rod" onclick="infTab('rod')">Rodoviárias</button>
+      <button class="inf-tab" data-tab="bairros" onclick="infTab('bairros')">Bairros</button>
+      <button class="inf-tab" data-tab="shop" onclick="infTab('shop')">Shoppings</button>
+      <button class="inf-tab" data-tab="bares" onclick="infTab('bares')">Bares</button>
+      <button class="inf-tab" data-tab="hoteis" onclick="infTab('hoteis')">Hotéis</button>
+      <button class="inf-tab" data-tab="eventos" onclick="infTab('eventos')">Eventos</button>
+      <button class="inf-tab" data-tab="tur" onclick="infTab('tur')">Turístico</button>
+    </div>
+  </div>
+
+  <div class="inf-relatar-bar">
+    <button onclick="infOpenRelatar()">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.3"><path d="M12 5v14M5 12h14"/></svg>
+      Relatar agora
+    </button>
+  </div>
+
+  <div id="inf-scroll-content">
+
+    <!-- ═══ ABA: AGORA ═══ -->
+    <div class="inf-panelbody inf-fill" id="inf-tab-agora">
+      <div class="inf-sec-lbl" id="inf-favs-section" style="display:none">Seus favoritos</div>
+      <div class="inf-favs-scroll" id="inf-favs-row"></div>
+
+      <div class="inf-sec-lbl">Informes perto de você</div>
+      <div id="inf-feed-agora"><div class="inf-empty-feed">Carregando…</div></div>
+    </div>
+
+    <!-- ═══ ABA: AEROPORTOS ═══ -->
+    <div class="inf-panelbody hide" id="inf-tab-aero">
+      <div class="inf-featF" onclick="infAbrirLocal(this,'Galeão (GIG)','aero')">
+        <div class="inf-featF-top">
+          <div class="inf-featF-id">
+            <div class="inf-featF-ic" style="background:#EFF6FF"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#0A2F6B" stroke-width="2"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></div>
+            <div><div class="inf-featF-name">Galeão <svg class="inf-featF-mode" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg></div><div class="inf-featF-sub">Terminal 1 e 2</div></div>
+          </div>
+          <div class="inf-featF-ct" id="inf-ct-gig">–</div>
+        </div>
+        <div class="inf-featF-mini" id="inf-mini-gig"></div>
+        <div class="inf-featF-arriving"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-
+
+===== Aeroportos @ 438641 =====
+ros')">Bairros</button>
+      <button class="inf-tab" data-tab="shop" onclick="infTab('shop')">Shoppings</button>
+      <button class="inf-tab" data-tab="bares" onclick="infTab('bares')">Bares</button>
+      <button class="inf-tab" data-tab="hoteis" onclick="infTab('hoteis')">Hotéis</button>
+      <button class="inf-tab" data-tab="eventos" onclick="infTab('eventos')">Eventos</button>
+      <button class="inf-tab" data-tab="tur" onclick="infTab('tur')">Turístico</button>
+    </div>
+  </div>
+
+  <div class="inf-relatar-bar">
+    <button onclick="infOpenRelatar()">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.3"><path d="M12 5v14M5 12h14"/></svg>
+      Relatar agora
+    </button>
+  </div>
+
+  <div id="inf-scroll-content">
+
+    <!-- ═══ ABA: AGORA ═══ -->
+    <div class="inf-panelbody inf-fill" id="inf-tab-agora">
+      <div class="inf-sec-lbl" id="inf-favs-section" style="display:none">Seus favoritos</div>
+      <div class="inf-favs-scroll" id="inf-favs-row"></div>
+
+      <div class="inf-sec-lbl">Informes perto de você</div>
+      <div id="inf-feed-agora"><div class="inf-empty-feed">Carregando…</div></div>
+    </div>
+
+    <!-- ═══ ABA: AEROPORTOS ═══ -->
+    <div class="inf-panelbody hide" id="inf-tab-aero">
+      <div class="inf-featF" onclick="infAbrirLocal(this,'Galeão (GIG)','aero')">
+        <div class="inf-featF-top">
+          <div class="inf-featF-id">
+            <div class="inf-featF-ic" style="background:#EFF6FF"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#0A2F6B" stroke-width="2"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></div>
+            <div><div class="inf-featF-name">Galeão <svg class="inf-featF-mode" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg></div><div class="inf-featF-sub">Terminal 1 e 2</div></div>
+          </div>
+          <div class="inf-featF-ct" id="inf-ct-gig">–</div>
+        </div>
+        <div class="inf-featF-mini" id="inf-mini-gig"></div>
+        <div class="inf-featF-arriving"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg>Chegando: — (em breve via FlightRadar)</div>
+      </div>
+      <div class="inf-featF" onclick="infAbrirLocal(this,'Santos Dumont (SDU)','aero')">
+        <div class="inf-featF-top">
+          <div class="inf-featF-id">
+            <div class="inf-featF-ic" style="background:#EFF6FF"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#0A2F6B" stroke-width="2"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></div>
+            <div><div class="inf-featF-name">Santos Dumont <svg class="inf-featF-mode" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg></div><div class="inf-featF-sub">Centro</div></div>
+          </div>
+          <div class="inf-featF-ct" id="inf-ct-sdu">–</div>
+        </div>
+        <div class="inf-featF-mini" id="inf-mini-sdu"></div>
+        <div class="inf-featF-arriving"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg>Chegando: — (em breve 
+
+===== Aeroportos @ 1627493 =====
+ca'},{n:'Devassa',sub:'Vários'},{n:'Confeitaria Colombo',sub:'Centro'}]},
+  hoteis:{titulo:'Hotéis',tipo:'hotel',itens:[{n:'Copacabana Palace',sub:'Copacabana'},{n:'Fairmont Rio',sub:'Copacabana'},{n:'Intercontinental',sub:'São Conrado'},{n:'Windsor Barra',sub:'Barra'},{n:'Sheraton Grand',sub:'Leblon'},{n:'Ibis Copacabana',sub:'Copacabana'},{n:'Arena Hotel',sub:'Barra'}]},
+  eventos:{titulo:'Eventos e Shows',tipo:'ev',itens:[{n:'Vivo Rio',sub:'Glória'},{n:'Fundição Progresso',sub:'Lapa'},{n:'Circo Voador',sub:'Lapa'},{n:'Teatro Municipal',sub:'Centro'},{n:'MAM',sub:'Flamengo'},{n:'Maracanã',sub:'Zona Norte'},{n:'Arena Jeunesse',sub:'Barra'}]},
+  turistico:{titulo:'Pontos Turísticos',tipo:'tur',itens:[{n:'Museu do Amanhã',sub:'Porto Maravilha'},{n:'Pão de Açúcar',sub:'Urca'},{n:'Arcos da Lapa',sub:'Lapa'},{n:'Cristo Redentor',sub:'Corcovado'},{n:'Jardim Botânico',sub:'Lagoa'},{n:'MAM',sub:'Flamengo'},{n:'Quinta da Boa Vista',sub:'São Cristóvão'}]},
+  shoppings:{titulo:'Shoppings',tipo:'shop',itens:[{n:'BarraShopping',sub:'Barra da Tijuca'},{n:'VillageMall',sub:'Barra da Tijuca'},{n:'NorteShopping',sub:'Zona Norte'},{n:'Rio Design Leblon',sub:'Leblon'}]},
+};
+const INF_SDBDB = [
+  // Aeroportos e terminais
+  {n:'Galeão (GIG)',t:'aero'},{n:'Santos Dumont (SDU)',t:'aero'},{n:'Rodoviária Novo Rio',t:'term'},
+  // Bairros
+  {n:'Copacabana',t:'bairro'},{n:'Ipanema',t:'bairro'},{n:'Leblon',t:'bairro'},
+  {n:'Lapa',t:'bairro'},{n:'Botafogo',t:'bairro'},{n:'Barra da Tijuca',t:'bairro'},
+  {n:'Tijuca',t:'bairro'},{n:'Maracanã',t:'bairro'},{n:'Niterói',t:'bairro'},
+  {n:'Flamengo',t:'bairro'},{n:'Glória',t:'bairro'},{n:'Recreio',t:'bairro'},
+  {n:'Vila Isabel',t:'bairro'},{n:'Méier',t:'bairro'},{n:'Penha',t:'bairro'},
+  // Eventos
+  {n:'Vivo Rio',t:'ev'},{n:'Maracanã',t:'ev'},{n:'Fundição Progresso',t:'ev'},
+  {n:'Circo Voador',t:'ev'},{n:'Teatro Municipal',t:'ev'},{n:'MAM',t:'ev'},
+  {n:'Arena Jeunesse',t:'ev'},
+  // Turístico
+  {n:'Cristo Redentor',t:'tur'},{n:'Pão de Açúcar',t:'tur'},{n:'Arcos da Lapa',t:'tur'},
+  {n:'Museu do Amanhã',t:'tur'},{n:'Jardim Botânico',t:'tur'},{n:'Quinta da Boa Vista',t:'tur'},
+  // Bares e Restaurantes
+  {n:'Bar do Mineiro',t:'bar'},{n:'Casa da Cachaça',t:'bar'},{n:'Academia da Cachaça',t:'bar'},
+  {n:'Bar Urca',t:'bar'},{n:'Devassa',t:'bar'},{n:'Confeitaria Colombo',t:'bar'},
+  // Hotéis
+  {n:'Copacabana Palace',t:'hotel'},{n:'Fairmont Rio',t:'hotel'},{n:'Intercontinental',t:'hotel'},
+  {n:'Windsor Barra',t:'hotel'},{n:'Sheraton Grand',t:'hotel'},{n:'Ibis Copacabana',t:'hotel'},
+];
+let _infLoc=null,_infTipoKey=null,_infMinutos=60,_infRepTipo=null,_infRepValor=null,_infRepDetalhe=null,_infPanelVenue=null;
+// Cidade do Informes (16/08/2026, pedido do Yuri) — antes fixa "Rio de
+// Janeiro" no HTML, agora clicável e persistida.
+let _infCity = JSON.parse(localStorage.getItem('sm_inf_city') || '{"name":"Localizando…","uf":""}');
+let _infGps=null;
+let _infFavs=JSON.parse(localStorage.getItem('sm_inf_favs')||'[]');
+const INF_AVC=['#6D28D9','#0369A1','#B45309','#0F766E','#15803D','#BE123C','#7C3AED','#0284C7'];
+const INF_BADGE={dinamico:'infbd',transito:'infbt',fiscalizacao:'infbf',fila:'infbfi',demanda:'infbde',lotacao:'infblo',acidente:'infbac'};
+
+function renderInformes(){
+  const cityEl=document.getElementById('inf-city-name');
+  if(cityEl)cityEl.textContent=(_infCity?.name&&_infCity.name!=='Rio de Janeiro')?_infCity.name:'Localizando…';
+  infCarregarContagens();
+  infRenderBairrosTab();
+  infRenderVenueLists();
+  infCarregarFeedAgora();
+  infSyncCidadeAtual();
+}
+
+function infCityKey(name){
+  const n=(name||'').trim();
+  if(/^rio de janeiro$/i.test(n))return'rio';
+  return n.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||null;
+}
+
+async function infRev
+
+===== aeroporto @ 114857 =====
+o precisa alcançar rápido com o
+   polegar, sem procurar/rolar — Opção B do mockup, aprovada. */
+.inf-relatar-bar{position:fixed;left:50%;bottom:calc(var(--bottom) + var(--safe-bottom));transform:translateX(-50%);width:min(430px,100vw);padding:10px 16px;background:var(--card);border-top:1px solid var(--line);z-index:90;box-sizing:border-box}
+.inf-relatar-bar button{width:100%;height:52px;border-radius:14px;border:0;background:linear-gradient(135deg,#EF4444,#DC2626);color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-shadow:0 6px 16px rgba(220,38,38,.3);font-family:inherit;touch-action:manipulation}
+.inf-tabs::-webkit-scrollbar{display:none}
+.inf-tab{flex-shrink:0;border:1.5px solid var(--line);background:var(--card);color:var(--muted);font-size:12px;font-weight:700;font-family:inherit;padding:7px 13px;border-radius:99px;white-space:nowrap;cursor:pointer}
+.inf-tab.active{background:#0A2F6B;border-color:#0A2F6B;color:#fff}
+.inf-panelbody{padding-bottom:110px}
+.inf-panelbody.inf-fill{display:flex;flex-direction:column;min-height:calc(100% - 2px)}
+.inf-panelbody.hide{display:none!important}
+/* cards largura cheia (aeroportos/rodoviárias/minha área) */
+.inf-featF{background:var(--card);border:2px solid var(--line);border-radius:17px;padding:14px 15px 14px;margin:0 14px 9px;display:flex;flex-direction:column;cursor:pointer;transition:border-color .15s,transform .1s}
+.inf-featF:active{transform:scale(.98)}
+.inf-featF-top{display:flex;align-items:center;justify-content:space-between}
+.inf-featF-id{display:flex;align-items:center;gap:10px}
+.inf-featF-ic{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-featF-name{font-size:15px;font-weight:800}
+.inf-featF-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.inf-featF-mode{color:#94A3B8;vertical-align:-2px;margin-left:3px}
+.inf-featF-ct{font-size:10px;font-weight:800;background:var(--red);color:#fff;border-radius:99px;padding:3px 9px;flex-shrink:0}
+.inf-featF-mini{margin-top:12px;background:var(--soft);border-radius:10px;padding:9px 11px;display:grid;grid-template-columns:repeat(3,1fr);gap:7px 10px}
+.inf-featF-mstat{display:flex;align-items:center;gap:5px}
+.inf-featF-mstat-ic{color:var(--muted);flex-shrink:0}
+.inf-featF-mstat-val{font-size:11px;font-weight:800;color:var(--text)}
+.inf-featF-arriving{margin-top:9px;display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:var(--muted2)}
+/* feed de informes — lista única, linha fina */
+.inf-feed-list{margin:0 14px;background:var(--card);border:1.5px solid var(--line);border-radius:14px;overflow:hidden}
+.inf-feed-fill{flex:1;display:flex;flex-direction:column}
+.inf-feed-row{display:flex;align-items:center;gap:9px;padding:10px 12px;border-bottom:1px solid #EEF1F5;cursor:pointer}
+.inf-feed-row:last-child{border-bottom:0}
+.inf-feed-row:active{background:var(--soft)}
+.inf-feed-ic{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-feed-body{flex:1;min-width:0}
+.inf-feed-txt{font-size:11.5px;font-weight:700}
+.inf-feed-loc{font-size:10px;color:var(--muted);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.inf-feed-right{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.inf-feed-av{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:800;color:#fff;flex-shrink:0}
+.inf-feed-votes{display:flex;flex-direction:column;gap:2px}
+.inf-feed-votes .inf-vbtn{border:0;background:transparent;padding:0;display:flex;align-items:center;gap:2px;font-size:9px;font-weight:700;color:var(--muted2);cursor:pointer;font-family:inherit}
+.inf-feed-votes .in
+
+===== aeroporto @ 437261 =====
+"16" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+      <div class="inf-city" id="inf-city-btn" onclick="infAbrirCidade()"><div class="inf-city-dot"></div><span id="inf-city-name">Localizando…</span><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#94A3B8;margin-left:1px"><path d="M6 9l6 6 6-6"/></svg></div>
+    </div>
+    <div class="inf-search-fixed" id="inf-search-fixed" style="display:none">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="inf-search-bar" type="text" placeholder="Buscar local…" oninput="infBuscarGlobal(this.value)">
+    </div>
+  </div>
+  <div class="inf-search-dd" id="inf-search-dd"></div>
+
+  <!-- abas -->
+  <div class="inf-tabs-wrap">
+    <div class="inf-tabs" id="inf-tabs">
+      <button class="inf-tab active" data-tab="agora" onclick="infTab('agora')">Agora</button>
+      <button class="inf-tab" data-tab="aero" onclick="infTab('aero')">Aeroportos</button>
+      <button class="inf-tab" data-tab="rod" onclick="infTab('rod')">Rodoviárias</button>
+      <button class="inf-tab" data-tab="bairros" onclick="infTab('bairros')">Bairros</button>
+      <button class="inf-tab" data-tab="shop" onclick="infTab('shop')">Shoppings</button>
+      <button class="inf-tab" data-tab="bares" onclick="infTab('bares')">Bares</button>
+      <button class="inf-tab" data-tab="hoteis" onclick="infTab('hoteis')">Hotéis</button>
+      <button class="inf-tab" data-tab="eventos" onclick="infTab('eventos')">Eventos</button>
+      <button class="inf-tab" data-tab="tur" onclick="infTab('tur')">Turístico</button>
+    </div>
+  </div>
+
+  <div class="inf-relatar-bar">
+    <button onclick="infOpenRelatar()">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.3"><path d="M12 5v14M5 12h14"/></svg>
+      Relatar agora
+    </button>
+  </div>
+
+  <div id="inf-scroll-content">
+
+    <!-- ═══ ABA: AGORA ═══ -->
+    <div class="inf-panelbody inf-fill" id="inf-tab-agora">
+      <div class="inf-sec-lbl" id="inf-favs-section" style="display:none">Seus favoritos</div>
+      <div class="inf-favs-scroll" id="inf-favs-row"></div>
+
+      <div class="inf-sec-lbl">Informes perto de você</div>
+      <div id="inf-feed-agora"><div class="inf-empty-feed">Carregando…</div></div>
+    </div>
+
+    <!-- ═══ ABA: AEROPORTOS ═══ -->
+    <div class="inf-panelbody hide" id="inf-tab-aero">
+      <div class="inf-featF" onclick="infAbrirLocal(this,'Galeão (GIG)','aero')">
+        <div class="inf-featF-top">
+          <div class="inf-featF-id">
+            <div class="inf-featF-ic" style="background:#EFF6FF"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#0A2F6B" stroke-width="2"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></div>
+            <div><div class="inf-featF-name">Galeão <svg class="inf-featF-mode" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg></div><div class="inf-featF-sub">Terminal 1 e 2</div></div>
+          </div>
+          <div class="inf-featF-ct" id="inf-ct-gig">–</div>
+        </div>
+        <div class="inf-featF-mini" id="inf-mini-gig"></div>
+        <div class="inf-featF-arriving"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-
+
+===== aeroporto @ 438641 =====
+ros')">Bairros</button>
+      <button class="inf-tab" data-tab="shop" onclick="infTab('shop')">Shoppings</button>
+      <button class="inf-tab" data-tab="bares" onclick="infTab('bares')">Bares</button>
+      <button class="inf-tab" data-tab="hoteis" onclick="infTab('hoteis')">Hotéis</button>
+      <button class="inf-tab" data-tab="eventos" onclick="infTab('eventos')">Eventos</button>
+      <button class="inf-tab" data-tab="tur" onclick="infTab('tur')">Turístico</button>
+    </div>
+  </div>
+
+  <div class="inf-relatar-bar">
+    <button onclick="infOpenRelatar()">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.3"><path d="M12 5v14M5 12h14"/></svg>
+      Relatar agora
+    </button>
+  </div>
+
+  <div id="inf-scroll-content">
+
+    <!-- ═══ ABA: AGORA ═══ -->
+    <div class="inf-panelbody inf-fill" id="inf-tab-agora">
+      <div class="inf-sec-lbl" id="inf-favs-section" style="display:none">Seus favoritos</div>
+      <div class="inf-favs-scroll" id="inf-favs-row"></div>
+
+      <div class="inf-sec-lbl">Informes perto de você</div>
+      <div id="inf-feed-agora"><div class="inf-empty-feed">Carregando…</div></div>
+    </div>
+
+    <!-- ═══ ABA: AEROPORTOS ═══ -->
+    <div class="inf-panelbody hide" id="inf-tab-aero">
+      <div class="inf-featF" onclick="infAbrirLocal(this,'Galeão (GIG)','aero')">
+        <div class="inf-featF-top">
+          <div class="inf-featF-id">
+            <div class="inf-featF-ic" style="background:#EFF6FF"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#0A2F6B" stroke-width="2"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></div>
+            <div><div class="inf-featF-name">Galeão <svg class="inf-featF-mode" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg></div><div class="inf-featF-sub">Terminal 1 e 2</div></div>
+          </div>
+          <div class="inf-featF-ct" id="inf-ct-gig">–</div>
+        </div>
+        <div class="inf-featF-mini" id="inf-mini-gig"></div>
+        <div class="inf-featF-arriving"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg>Chegando: — (em breve via FlightRadar)</div>
+      </div>
+      <div class="inf-featF" onclick="infAbrirLocal(this,'Santos Dumont (SDU)','aero')">
+        <div class="inf-featF-top">
+          <div class="inf-featF-id">
+            <div class="inf-featF-ic" style="background:#EFF6FF"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#0A2F6B" stroke-width="2"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></div>
+            <div><div class="inf-featF-name">Santos Dumont <svg class="inf-featF-mode" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg></div><div class="inf-featF-sub">Centro</div></div>
+          </div>
+          <div class="inf-featF-ct" id="inf-ct-sdu">–</div>
+        </div>
+        <div class="inf-featF-mini" id="inf-mini-sdu"></div>
+        <div class="inf-featF-arriving"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg>Chegando: — (em breve 
+
+===== aeroporto @ 1622461 =====
+{
+    reg.update();
+    setInterval(() => { reg.update().catch(()=>{}); }, 3*60*1000);
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloaded) return;
+      reloaded = true;
+      location.reload();
+    });
+  }).catch(() => {});
+}
+
+// Reporta qual versão da PWA o usuário está rodando de verdade (pedido do
+// Yuri, 24/07/2026) — pra investigar problema de cache/versão desatualizada
+// sem precisar perguntar "que versão você tá vendo?". IMPORTANTE: manter
+// igual ao CACHE_NAME de sw.js sempre que um dos dois mudar.
+const PWA_VERSION = 'mob-v25-sw-update-check';
+async function reportClientVersion() {
+  if (!_supaUser) return;
+  try {
+    await _SUPA.from('client_versions').upsert(
+      { user_id: _supaUser.id, platform: 'pwa', version: PWA_VERSION, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id,platform' }
+    );
+  } catch (e) {}
+}
+setTimeout(()=>{ reportClientVersion(); setInterval(reportClientVersion, 3*60*1000); }, 5000);
+
+// ══════════════════════════════════════════════
+// INFORMES
+// ══════════════════════════════════════════════
+const INF_TIPOS = {
+  aero:  {cor:'#0A2F6B',bg:'#EFF6FF',label:'Aeroporto',
+    r1:['fila','lotacao'], r2:['transito','fiscalizacao','dinamico','demanda'],
+    modal:['lotacao','fila','dinamico','demanda','fiscalizacao','transito']},
+  term:  {cor:'#6366F1',bg:'#EEF2FF',label:'Terminal',
+    r1:['fila','lotacao'], r2:['transito','fiscalizacao','dinamico','demanda'],
+    modal:['lotacao','fila','demanda','dinamico','fiscalizacao','transito']},
+  bairro:{cor:'#475569',bg:'#F1F5F9',label:'Bairro',
+    r1:['dinamico','demanda'], r2:[],
+    modal:['dinamico','demanda']},
+  rua:   {cor:'#14B8A6',bg:'#CCFBF1',label:'Rua',
+    r1:['transito','acidente'], r2:['fiscalizacao','dinamico','demanda'],
+    modal:['transito','fiscalizacao','acidente','dinamico']},
+  ev:    {cor:'#F59E0B',bg:'#FFF7ED',label:'Evento',
+    r1:['dinamico','demanda'], r2:['transito','fiscalizacao','fila','lotacao'],
+    modal:['fila','lotacao','demanda','dinamico','fiscalizacao']},
+  tur:   {cor:'#22C55E',bg:'#F0FDF4',label:'Turístico',
+    r1:['dinamico','demanda'], r2:['transito','fiscalizacao','fila','lotacao'],
+    modal:['fila','lotacao','demanda','fiscalizacao']},
+  bar:   {cor:'#8B5CF6',bg:'#EDE9FE',label:'Bar / Restaurante',
+    r1:['demanda','lotacao'], r2:['fiscalizacao','dinamico','fila'],
+    modal:['fila','lotacao','demanda','fiscalizacao']},
+  hotel: {cor:'#EC4899',bg:'#FDF2F8',label:'Hotel',
+    r1:['demanda','lotacao'], r2:['dinamico'],
+    modal:['lotacao','fila','demanda','fiscalizacao']},
+  shop:  {cor:'#B45309',bg:'#FEF3C7',label:'Shopping',
+    r1:['demanda','lotacao'], r2:['transito','fiscalizacao','dinamico'],
+    modal:['lotacao','fila','demanda','fiscalizacao','dinamico']},
+};
+const INF_PARAMS = {
+  transito:    {label:'Trânsito',     expMin:30, opts:[{v:'Fluindo',c:'g'},{v:'Leve',c:''},{v:'Lento',c:'a'},{v:'Parado',c:'r'}]},
+  fiscalizacao:{label:'Fiscalização', expMin:60, sub:[{v:'PM',c:'r'},{v:'GM',c:'r'},{v:'Lei Seca',c:'r'},{v:'Detro',c:'a'}], subacao:[{v:'Multando',c:'r'},{v:'Abordando',c:'a'},{v:'Posicionado',c:''}]},
+  dinamico:    {label:'Dinâmico',     expMin:15, opts:[{v:'R$ 0',c:''},{v:'+R$2,50',c:'g'},{v:'+R$5',c:'g'},{v:'+R$8',c:'g'},{v:'+R$10',c:'g'},{v:'+R$15',c:'g'},{v:'+R$20',c:'g'},{v:'+R$25',c:'g'}]},
+  demanda:     {label:'Demanda',      expMin:30, opts:[{v:'Tocando bem',c:'g'},{v:'Esporádico',c:'a'},{v:'Não toca nada',c:'r'}]},
+  fila:        {label:'Fila',         expMin:20, opts:[{v:'Vazia',c:'g'},{v:'Pequena',c:''},{v:'Média',c:'a'},{v:'Grande',c:'r'}]},
+  lotacao:     {label:'Lotação',      expMin:60, opts:[{v:'Vazio',c:'g'},{v:'Pouco movimentado',c:'g'},{v:'Movimentado',c:'a'},{v:'Muito movimentado',c:'
+
+===== aeroporto @ 1627493 =====
+ca'},{n:'Devassa',sub:'Vários'},{n:'Confeitaria Colombo',sub:'Centro'}]},
+  hoteis:{titulo:'Hotéis',tipo:'hotel',itens:[{n:'Copacabana Palace',sub:'Copacabana'},{n:'Fairmont Rio',sub:'Copacabana'},{n:'Intercontinental',sub:'São Conrado'},{n:'Windsor Barra',sub:'Barra'},{n:'Sheraton Grand',sub:'Leblon'},{n:'Ibis Copacabana',sub:'Copacabana'},{n:'Arena Hotel',sub:'Barra'}]},
+  eventos:{titulo:'Eventos e Shows',tipo:'ev',itens:[{n:'Vivo Rio',sub:'Glória'},{n:'Fundição Progresso',sub:'Lapa'},{n:'Circo Voador',sub:'Lapa'},{n:'Teatro Municipal',sub:'Centro'},{n:'MAM',sub:'Flamengo'},{n:'Maracanã',sub:'Zona Norte'},{n:'Arena Jeunesse',sub:'Barra'}]},
+  turistico:{titulo:'Pontos Turísticos',tipo:'tur',itens:[{n:'Museu do Amanhã',sub:'Porto Maravilha'},{n:'Pão de Açúcar',sub:'Urca'},{n:'Arcos da Lapa',sub:'Lapa'},{n:'Cristo Redentor',sub:'Corcovado'},{n:'Jardim Botânico',sub:'Lagoa'},{n:'MAM',sub:'Flamengo'},{n:'Quinta da Boa Vista',sub:'São Cristóvão'}]},
+  shoppings:{titulo:'Shoppings',tipo:'shop',itens:[{n:'BarraShopping',sub:'Barra da Tijuca'},{n:'VillageMall',sub:'Barra da Tijuca'},{n:'NorteShopping',sub:'Zona Norte'},{n:'Rio Design Leblon',sub:'Leblon'}]},
+};
+const INF_SDBDB = [
+  // Aeroportos e terminais
+  {n:'Galeão (GIG)',t:'aero'},{n:'Santos Dumont (SDU)',t:'aero'},{n:'Rodoviária Novo Rio',t:'term'},
+  // Bairros
+  {n:'Copacabana',t:'bairro'},{n:'Ipanema',t:'bairro'},{n:'Leblon',t:'bairro'},
+  {n:'Lapa',t:'bairro'},{n:'Botafogo',t:'bairro'},{n:'Barra da Tijuca',t:'bairro'},
+  {n:'Tijuca',t:'bairro'},{n:'Maracanã',t:'bairro'},{n:'Niterói',t:'bairro'},
+  {n:'Flamengo',t:'bairro'},{n:'Glória',t:'bairro'},{n:'Recreio',t:'bairro'},
+  {n:'Vila Isabel',t:'bairro'},{n:'Méier',t:'bairro'},{n:'Penha',t:'bairro'},
+  // Eventos
+  {n:'Vivo Rio',t:'ev'},{n:'Maracanã',t:'ev'},{n:'Fundição Progresso',t:'ev'},
+  {n:'Circo Voador',t:'ev'},{n:'Teatro Municipal',t:'ev'},{n:'MAM',t:'ev'},
+  {n:'Arena Jeunesse',t:'ev'},
+  // Turístico
+  {n:'Cristo Redentor',t:'tur'},{n:'Pão de Açúcar',t:'tur'},{n:'Arcos da Lapa',t:'tur'},
+  {n:'Museu do Amanhã',t:'tur'},{n:'Jardim Botânico',t:'tur'},{n:'Quinta da Boa Vista',t:'tur'},
+  // Bares e Restaurantes
+  {n:'Bar do Mineiro',t:'bar'},{n:'Casa da Cachaça',t:'bar'},{n:'Academia da Cachaça',t:'bar'},
+  {n:'Bar Urca',t:'bar'},{n:'Devassa',t:'bar'},{n:'Confeitaria Colombo',t:'bar'},
+  // Hotéis
+  {n:'Copacabana Palace',t:'hotel'},{n:'Fairmont Rio',t:'hotel'},{n:'Intercontinental',t:'hotel'},
+  {n:'Windsor Barra',t:'hotel'},{n:'Sheraton Grand',t:'hotel'},{n:'Ibis Copacabana',t:'hotel'},
+];
+let _infLoc=null,_infTipoKey=null,_infMinutos=60,_infRepTipo=null,_infRepValor=null,_infRepDetalhe=null,_infPanelVenue=null;
+// Cidade do Informes (16/08/2026, pedido do Yuri) — antes fixa "Rio de
+// Janeiro" no HTML, agora clicável e persistida.
+let _infCity = JSON.parse(localStorage.getItem('sm_inf_city') || '{"name":"Localizando…","uf":""}');
+let _infGps=null;
+let _infFavs=JSON.parse(localStorage.getItem('sm_inf_favs')||'[]');
+const INF_AVC=['#6D28D9','#0369A1','#B45309','#0F766E','#15803D','#BE123C','#7C3AED','#0284C7'];
+const INF_BADGE={dinamico:'infbd',transito:'infbt',fiscalizacao:'infbf',fila:'infbfi',demanda:'infbde',lotacao:'infblo',acidente:'infbac'};
+
+function renderInformes(){
+  const cityEl=document.getElementById('inf-city-name');
+  if(cityEl)cityEl.textContent=(_infCity?.name&&_infCity.name!=='Rio de Janeiro')?_infCity.name:'Localizando…';
+  infCarregarContagens();
+  infRenderBairrosTab();
+  infRenderVenueLists();
+  infCarregarFeedAgora();
+  infSyncCidadeAtual();
+}
+
+function infCityKey(name){
+  const n=(name||'').trim();
+  if(/^rio de janeiro$/i.test(n))return'rio';
+  return n.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||null;
+}
+
+async function infRev
+
+===== aeroporto @ 1641000 =====
+reated_at',{ascending:false}).limit(30);
+      const posts=(data||[]).map(p=>{p._distM=infHaversineM(lat,lon,p.lat,p.lng);return p;})
+        .sort((a,b)=>a._distM-b._distM);
+      wrap.innerHTML = posts.length ? await infBuildPostCardsHtml(posts) : '<div class="inf-empty-feed">Nenhum informe recente por perto · seja o primeiro a reportar!</div>';
+    }catch(e){console.warn('feed agora',e);wrap.innerHTML='<div class="inf-empty-feed">Erro ao carregar</div>';}
+  },()=>{wrap.innerHTML='<div class="inf-empty-feed">Ative o GPS pra ver os informes perto de você</div>';},{timeout:10000,enableHighAccuracy:true});
+}
+
+async function infCarregarContagens(){
+  if(!_SUPA)return;
+  try{
+    // Migrado de 'informes' (tabela legada, sem post novo desde a
+    // reformulação de 16/08/2026 — segue existindo só pro cron de
+    // expiração antigo) pra feed_posts. feed_posts não tem location_name
+    // (é geolocalizado, não por local nomeado), então a contagem vira
+    // match textual no endereço geocodificado — aproximado, não é mais
+    // igualdade exata como era com location_name. Efeito prático: alguns
+    // locais podem subcontar se o endereço reverso não citar o nome
+    // exatamente (ex.: aeroporto que geocodifica só como rua) — degrada
+    // pra "–" nesse caso, nunca quebra a tela.
+    const{data}=await _SUPA.from('feed_posts')
+      .select('address')
+      .eq('status','ativo')
+      .gt('expires_at',new Date().toISOString())
+      .not('address','is',null);
+    if(!data)return;
+    const countFor=(nome)=>{
+      const needle=(nome||'').toLowerCase().trim();
+      if(!needle) return 0;
+      return data.filter(r=>(r.address||'').toLowerCase().includes(needle)).length;
+    };
+    // Atualiza contagem individual dos bairros quando inline
+    document.querySelectorAll('.inf-bchip-ct').forEach(el=>{
+      const nome=el.closest('.inf-bchip')?.querySelector('.inf-bchip-name')?.textContent||'';
+      const n=countFor(nome);
+      el.textContent=n;el.className='inf-bchip-ct'+(n===0?' z':'');
+    });
+    [['gig','Galeão (GIG)'],['sdu','Santos Dumont (SDU)'],['rod','Rodoviária Novo Rio']].forEach(([id,n])=>{
+      const el=document.getElementById('inf-ct-'+id);if(el)el.textContent=countFor(n);
+    });
+    Object.entries({sul:INF_BAIRROS.sul,norte:INF_BAIRROS.norte,oeste:INF_BAIRROS.oeste,centro:INF_BAIRROS.centro}).forEach(([z,bs])=>{
+      const total=bs.reduce((s,b)=>s+countFor(b),0);
+      const el=document.getElementById('inf-zct-'+z);
+      if(el){el.textContent=total;el.className='inf-zcard-ct'+(total===0?' z':'');}
+    });
+    Object.entries({bares:INF_VENUES.bares.itens,hoteis:INF_VENUES.hoteis.itens,eventos:INF_VENUES.eventos.itens,turistico:INF_VENUES.turistico.itens}).forEach(([cat,itens])=>{
+      const total=itens.reduce((s,i)=>s+countFor(i.n),0);
+      const el=document.getElementById('inf-cct-'+cat);if(el)el.textContent=total||'–';
+    });
+    // Badges individuais nas listas de venues das abas (bares/hotéis/eventos/turístico/shoppings)
+    document.querySelectorAll('.inf-vitem-ct').forEach(el=>{
+      const nome=el.closest('.inf-vitem')?.querySelector('.inf-vitem-name')?.textContent||'';
+      const n=countFor(nome);
+      el.textContent=n||'–';el.className='inf-vitem-ct'+(n===0?' z':'');
+    });
+  }catch(e){console.warn('inf cnt',e);}
+}
+
+async function infAbrirLocal(el,nome,tipoKey){
+  document.querySelectorAll('.inf-feat,.inf-featF,.inf-bchip,.inf-zcard,.inf-vitem').forEach(b=>b.classList.remove('active'));
+  if(el)el.classList.add('active');
+  _infLoc=nome;_infTipoKey=tipoKey;
+  const t=INF_TIPOS[tipoKey]||INF_TIPOS.bairro;
+  const hic=document.getElementById('inf-panel-hic');
+  hic.style.background=t.bg;hic.innerHTML=infIconSvg(tipoKey,t.cor,17);
+  document.getElementById('inf-panel-tipo').textContent=t.label;
+  document.get
+
+===== Galeão (GIG) @ 438773 =====
+s="inf-tab" data-tab="bares" onclick="infTab('bares')">Bares</button>
+      <button class="inf-tab" data-tab="hoteis" onclick="infTab('hoteis')">Hotéis</button>
+      <button class="inf-tab" data-tab="eventos" onclick="infTab('eventos')">Eventos</button>
+      <button class="inf-tab" data-tab="tur" onclick="infTab('tur')">Turístico</button>
+    </div>
+  </div>
+
+  <div class="inf-relatar-bar">
+    <button onclick="infOpenRelatar()">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.3"><path d="M12 5v14M5 12h14"/></svg>
+      Relatar agora
+    </button>
+  </div>
+
+  <div id="inf-scroll-content">
+
+    <!-- ═══ ABA: AGORA ═══ -->
+    <div class="inf-panelbody inf-fill" id="inf-tab-agora">
+      <div class="inf-sec-lbl" id="inf-favs-section" style="display:none">Seus favoritos</div>
+      <div class="inf-favs-scroll" id="inf-favs-row"></div>
+
+      <div class="inf-sec-lbl">Informes perto de você</div>
+      <div id="inf-feed-agora"><div class="inf-empty-feed">Carregando…</div></div>
+    </div>
+
+    <!-- ═══ ABA: AEROPORTOS ═══ -->
+    <div class="inf-panelbody hide" id="inf-tab-aero">
+      <div class="inf-featF" onclick="infAbrirLocal(this,'Galeão (GIG)','aero')">
+        <div class="inf-featF-top">
+          <div class="inf-featF-id">
+            <div class="inf-featF-ic" style="background:#EFF6FF"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#0A2F6B" stroke-width="2"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></div>
+            <div><div class="inf-featF-name">Galeão <svg class="inf-featF-mode" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg></div><div class="inf-featF-sub">Terminal 1 e 2</div></div>
+          </div>
+          <div class="inf-featF-ct" id="inf-ct-gig">–</div>
+        </div>
+        <div class="inf-featF-mini" id="inf-mini-gig"></div>
+        <div class="inf-featF-arriving"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg>Chegando: — (em breve via FlightRadar)</div>
+      </div>
+      <div class="inf-featF" onclick="infAbrirLocal(this,'Santos Dumont (SDU)','aero')">
+        <div class="inf-featF-top">
+          <div class="inf-featF-id">
+            <div class="inf-featF-ic" style="background:#EFF6FF"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#0A2F6B" stroke-width="2"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></div>
+            <div><div class="inf-featF-name">Santos Dumont <svg class="inf-featF-mode" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg></div><div class="inf-featF-sub">Centro</div></div>
+          </div>
+          <div class="inf-featF-ct" id="inf-ct-sdu">–</div>
+        </div>
+        <div class="inf-featF-mini" id="inf-mini-sdu"></div>
+        <div class="inf-featF-arriving"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg>Chegando: — (em breve via FlightRadar)</div>
+      </div>
+    </div>
+
+    <!-- ═══ ABA: RODOVIÁRIAS ═══ -->
+    <div class="inf-panelbody hide" id="inf-ta
+
+===== Galeão (GIG) @ 1627522 =====
+'},{n:'Confeitaria Colombo',sub:'Centro'}]},
+  hoteis:{titulo:'Hotéis',tipo:'hotel',itens:[{n:'Copacabana Palace',sub:'Copacabana'},{n:'Fairmont Rio',sub:'Copacabana'},{n:'Intercontinental',sub:'São Conrado'},{n:'Windsor Barra',sub:'Barra'},{n:'Sheraton Grand',sub:'Leblon'},{n:'Ibis Copacabana',sub:'Copacabana'},{n:'Arena Hotel',sub:'Barra'}]},
+  eventos:{titulo:'Eventos e Shows',tipo:'ev',itens:[{n:'Vivo Rio',sub:'Glória'},{n:'Fundição Progresso',sub:'Lapa'},{n:'Circo Voador',sub:'Lapa'},{n:'Teatro Municipal',sub:'Centro'},{n:'MAM',sub:'Flamengo'},{n:'Maracanã',sub:'Zona Norte'},{n:'Arena Jeunesse',sub:'Barra'}]},
+  turistico:{titulo:'Pontos Turísticos',tipo:'tur',itens:[{n:'Museu do Amanhã',sub:'Porto Maravilha'},{n:'Pão de Açúcar',sub:'Urca'},{n:'Arcos da Lapa',sub:'Lapa'},{n:'Cristo Redentor',sub:'Corcovado'},{n:'Jardim Botânico',sub:'Lagoa'},{n:'MAM',sub:'Flamengo'},{n:'Quinta da Boa Vista',sub:'São Cristóvão'}]},
+  shoppings:{titulo:'Shoppings',tipo:'shop',itens:[{n:'BarraShopping',sub:'Barra da Tijuca'},{n:'VillageMall',sub:'Barra da Tijuca'},{n:'NorteShopping',sub:'Zona Norte'},{n:'Rio Design Leblon',sub:'Leblon'}]},
+};
+const INF_SDBDB = [
+  // Aeroportos e terminais
+  {n:'Galeão (GIG)',t:'aero'},{n:'Santos Dumont (SDU)',t:'aero'},{n:'Rodoviária Novo Rio',t:'term'},
+  // Bairros
+  {n:'Copacabana',t:'bairro'},{n:'Ipanema',t:'bairro'},{n:'Leblon',t:'bairro'},
+  {n:'Lapa',t:'bairro'},{n:'Botafogo',t:'bairro'},{n:'Barra da Tijuca',t:'bairro'},
+  {n:'Tijuca',t:'bairro'},{n:'Maracanã',t:'bairro'},{n:'Niterói',t:'bairro'},
+  {n:'Flamengo',t:'bairro'},{n:'Glória',t:'bairro'},{n:'Recreio',t:'bairro'},
+  {n:'Vila Isabel',t:'bairro'},{n:'Méier',t:'bairro'},{n:'Penha',t:'bairro'},
+  // Eventos
+  {n:'Vivo Rio',t:'ev'},{n:'Maracanã',t:'ev'},{n:'Fundição Progresso',t:'ev'},
+  {n:'Circo Voador',t:'ev'},{n:'Teatro Municipal',t:'ev'},{n:'MAM',t:'ev'},
+  {n:'Arena Jeunesse',t:'ev'},
+  // Turístico
+  {n:'Cristo Redentor',t:'tur'},{n:'Pão de Açúcar',t:'tur'},{n:'Arcos da Lapa',t:'tur'},
+  {n:'Museu do Amanhã',t:'tur'},{n:'Jardim Botânico',t:'tur'},{n:'Quinta da Boa Vista',t:'tur'},
+  // Bares e Restaurantes
+  {n:'Bar do Mineiro',t:'bar'},{n:'Casa da Cachaça',t:'bar'},{n:'Academia da Cachaça',t:'bar'},
+  {n:'Bar Urca',t:'bar'},{n:'Devassa',t:'bar'},{n:'Confeitaria Colombo',t:'bar'},
+  // Hotéis
+  {n:'Copacabana Palace',t:'hotel'},{n:'Fairmont Rio',t:'hotel'},{n:'Intercontinental',t:'hotel'},
+  {n:'Windsor Barra',t:'hotel'},{n:'Sheraton Grand',t:'hotel'},{n:'Ibis Copacabana',t:'hotel'},
+];
+let _infLoc=null,_infTipoKey=null,_infMinutos=60,_infRepTipo=null,_infRepValor=null,_infRepDetalhe=null,_infPanelVenue=null;
+// Cidade do Informes (16/08/2026, pedido do Yuri) — antes fixa "Rio de
+// Janeiro" no HTML, agora clicável e persistida.
+let _infCity = JSON.parse(localStorage.getItem('sm_inf_city') || '{"name":"Localizando…","uf":""}');
+let _infGps=null;
+let _infFavs=JSON.parse(localStorage.getItem('sm_inf_favs')||'[]');
+const INF_AVC=['#6D28D9','#0369A1','#B45309','#0F766E','#15803D','#BE123C','#7C3AED','#0284C7'];
+const INF_BADGE={dinamico:'infbd',transito:'infbt',fiscalizacao:'infbf',fila:'infbfi',demanda:'infbde',lotacao:'infblo',acidente:'infbac'};
+
+function renderInformes(){
+  const cityEl=document.getElementById('inf-city-name');
+  if(cityEl)cityEl.textContent=(_infCity?.name&&_infCity.name!=='Rio de Janeiro')?_infCity.name:'Localizando…';
+  infCarregarContagens();
+  infRenderBairrosTab();
+  infRenderVenueLists();
+  infCarregarFeedAgora();
+  infSyncCidadeAtual();
+}
+
+function infCityKey(name){
+  const n=(name||'').trim();
+  if(/^rio de janeiro$/i.test(n))return'rio';
+  return n.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||null;
+}
+
+async function infReverseCidade(lat,lon){
+  try{
+ 
+
+===== Galeão (GIG) @ 1641836 =====
+igo) pra feed_posts. feed_posts não tem location_name
+    // (é geolocalizado, não por local nomeado), então a contagem vira
+    // match textual no endereço geocodificado — aproximado, não é mais
+    // igualdade exata como era com location_name. Efeito prático: alguns
+    // locais podem subcontar se o endereço reverso não citar o nome
+    // exatamente (ex.: aeroporto que geocodifica só como rua) — degrada
+    // pra "–" nesse caso, nunca quebra a tela.
+    const{data}=await _SUPA.from('feed_posts')
+      .select('address')
+      .eq('status','ativo')
+      .gt('expires_at',new Date().toISOString())
+      .not('address','is',null);
+    if(!data)return;
+    const countFor=(nome)=>{
+      const needle=(nome||'').toLowerCase().trim();
+      if(!needle) return 0;
+      return data.filter(r=>(r.address||'').toLowerCase().includes(needle)).length;
+    };
+    // Atualiza contagem individual dos bairros quando inline
+    document.querySelectorAll('.inf-bchip-ct').forEach(el=>{
+      const nome=el.closest('.inf-bchip')?.querySelector('.inf-bchip-name')?.textContent||'';
+      const n=countFor(nome);
+      el.textContent=n;el.className='inf-bchip-ct'+(n===0?' z':'');
+    });
+    [['gig','Galeão (GIG)'],['sdu','Santos Dumont (SDU)'],['rod','Rodoviária Novo Rio']].forEach(([id,n])=>{
+      const el=document.getElementById('inf-ct-'+id);if(el)el.textContent=countFor(n);
+    });
+    Object.entries({sul:INF_BAIRROS.sul,norte:INF_BAIRROS.norte,oeste:INF_BAIRROS.oeste,centro:INF_BAIRROS.centro}).forEach(([z,bs])=>{
+      const total=bs.reduce((s,b)=>s+countFor(b),0);
+      const el=document.getElementById('inf-zct-'+z);
+      if(el){el.textContent=total;el.className='inf-zcard-ct'+(total===0?' z':'');}
+    });
+    Object.entries({bares:INF_VENUES.bares.itens,hoteis:INF_VENUES.hoteis.itens,eventos:INF_VENUES.eventos.itens,turistico:INF_VENUES.turistico.itens}).forEach(([cat,itens])=>{
+      const total=itens.reduce((s,i)=>s+countFor(i.n),0);
+      const el=document.getElementById('inf-cct-'+cat);if(el)el.textContent=total||'–';
+    });
+    // Badges individuais nas listas de venues das abas (bares/hotéis/eventos/turístico/shoppings)
+    document.querySelectorAll('.inf-vitem-ct').forEach(el=>{
+      const nome=el.closest('.inf-vitem')?.querySelector('.inf-vitem-name')?.textContent||'';
+      const n=countFor(nome);
+      el.textContent=n||'–';el.className='inf-vitem-ct'+(n===0?' z':'');
+    });
+  }catch(e){console.warn('inf cnt',e);}
+}
+
+async function infAbrirLocal(el,nome,tipoKey){
+  document.querySelectorAll('.inf-feat,.inf-featF,.inf-bchip,.inf-zcard,.inf-vitem').forEach(b=>b.classList.remove('active'));
+  if(el)el.classList.add('active');
+  _infLoc=nome;_infTipoKey=tipoKey;
+  const t=INF_TIPOS[tipoKey]||INF_TIPOS.bairro;
+  const hic=document.getElementById('inf-panel-hic');
+  hic.style.background=t.bg;hic.innerHTML=infIconSvg(tipoKey,t.cor,17);
+  document.getElementById('inf-panel-tipo').textContent=t.label;
+  document.getElementById('inf-panel-tipo').style.color=t.cor;
+  document.getElementById('inf-panel-loc').textContent=nome;
+  document.getElementById('inf-panel-meta').textContent='Carregando…';
+  document.getElementById('inf-panel-fav').classList.toggle('on',_infFavs.some(f=>f.n===nome));
+  document.getElementById('inf-panel').classList.add('open');
+  // Botão "Abrir no mapa" — busca a coordenada no venue_cache (fonte
+  // OpenStreetMap) ANTES de carregar os informes, porque agora o feed
+  // "Últimos informes" filtra por proximidade real (lat/lng), não mais
+  // por texto exato do nome do local.
+  _infPanelVenue = null;
+  const mapBtn = document.getElementById('inf-panel-map');
+  if (mapBtn) mapBtn.style.display = 'none';
+  if (_SUPA) {
+    try {
+      const { data } = await _SUPA.from('venue_cache').select('id,lat,lng').ilike('name', n
+
+===== Santos Dumont (SDU) @ 440051 =====
+ss="inf-featF-id">
+            <div class="inf-featF-ic" style="background:#EFF6FF"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#0A2F6B" stroke-width="2"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></div>
+            <div><div class="inf-featF-name">Galeão <svg class="inf-featF-mode" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg></div><div class="inf-featF-sub">Terminal 1 e 2</div></div>
+          </div>
+          <div class="inf-featF-ct" id="inf-ct-gig">–</div>
+        </div>
+        <div class="inf-featF-mini" id="inf-mini-gig"></div>
+        <div class="inf-featF-arriving"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg>Chegando: — (em breve via FlightRadar)</div>
+      </div>
+      <div class="inf-featF" onclick="infAbrirLocal(this,'Santos Dumont (SDU)','aero')">
+        <div class="inf-featF-top">
+          <div class="inf-featF-id">
+            <div class="inf-featF-ic" style="background:#EFF6FF"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#0A2F6B" stroke-width="2"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></div>
+            <div><div class="inf-featF-name">Santos Dumont <svg class="inf-featF-mode" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg></div><div class="inf-featF-sub">Centro</div></div>
+          </div>
+          <div class="inf-featF-ct" id="inf-ct-sdu">–</div>
+        </div>
+        <div class="inf-featF-mini" id="inf-mini-sdu"></div>
+        <div class="inf-featF-arriving"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg>Chegando: — (em breve via FlightRadar)</div>
+      </div>
+    </div>
+
+    <!-- ═══ ABA: RODOVIÁRIAS ═══ -->
+    <div class="inf-panelbody hide" id="inf-tab-rod">
+      <div class="inf-featF" onclick="infAbrirLocal(this,'Rodoviária Novo Rio','term')">
+        <div class="inf-featF-top">
+          <div class="inf-featF-id">
+            <div class="inf-featF-ic" style="background:#EEF2FF"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#6366F1" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+            <div><div class="inf-featF-name">Rodoviária Novo Rio <svg class="inf-featF-mode" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="4" width="16" height="12" rx="2.5"/><path d="M4 11h16"/><path d="M7.5 16v2M16.5 16v2"/></svg></div><div class="inf-featF-sub">Santo Cristo</div></div>
+          </div>
+          <div class="inf-featF-ct" id="inf-ct-rod">–</div>
+        </div>
+        <div class="inf-featF-mini" id="inf-mini-rod"></div>
+        <div class="inf-featF-arriving"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="4" width="16" height="12" rx="2.5"/><path d="M4 11h16"/><path d="M7.5 16v2M16.5 16v2"/></svg>Chegando: — (em breve via 
+
+===== Santos Dumont (SDU) @ 1627550 =====
+sub:'Centro'}]},
+  hoteis:{titulo:'Hotéis',tipo:'hotel',itens:[{n:'Copacabana Palace',sub:'Copacabana'},{n:'Fairmont Rio',sub:'Copacabana'},{n:'Intercontinental',sub:'São Conrado'},{n:'Windsor Barra',sub:'Barra'},{n:'Sheraton Grand',sub:'Leblon'},{n:'Ibis Copacabana',sub:'Copacabana'},{n:'Arena Hotel',sub:'Barra'}]},
+  eventos:{titulo:'Eventos e Shows',tipo:'ev',itens:[{n:'Vivo Rio',sub:'Glória'},{n:'Fundição Progresso',sub:'Lapa'},{n:'Circo Voador',sub:'Lapa'},{n:'Teatro Municipal',sub:'Centro'},{n:'MAM',sub:'Flamengo'},{n:'Maracanã',sub:'Zona Norte'},{n:'Arena Jeunesse',sub:'Barra'}]},
+  turistico:{titulo:'Pontos Turísticos',tipo:'tur',itens:[{n:'Museu do Amanhã',sub:'Porto Maravilha'},{n:'Pão de Açúcar',sub:'Urca'},{n:'Arcos da Lapa',sub:'Lapa'},{n:'Cristo Redentor',sub:'Corcovado'},{n:'Jardim Botânico',sub:'Lagoa'},{n:'MAM',sub:'Flamengo'},{n:'Quinta da Boa Vista',sub:'São Cristóvão'}]},
+  shoppings:{titulo:'Shoppings',tipo:'shop',itens:[{n:'BarraShopping',sub:'Barra da Tijuca'},{n:'VillageMall',sub:'Barra da Tijuca'},{n:'NorteShopping',sub:'Zona Norte'},{n:'Rio Design Leblon',sub:'Leblon'}]},
+};
+const INF_SDBDB = [
+  // Aeroportos e terminais
+  {n:'Galeão (GIG)',t:'aero'},{n:'Santos Dumont (SDU)',t:'aero'},{n:'Rodoviária Novo Rio',t:'term'},
+  // Bairros
+  {n:'Copacabana',t:'bairro'},{n:'Ipanema',t:'bairro'},{n:'Leblon',t:'bairro'},
+  {n:'Lapa',t:'bairro'},{n:'Botafogo',t:'bairro'},{n:'Barra da Tijuca',t:'bairro'},
+  {n:'Tijuca',t:'bairro'},{n:'Maracanã',t:'bairro'},{n:'Niterói',t:'bairro'},
+  {n:'Flamengo',t:'bairro'},{n:'Glória',t:'bairro'},{n:'Recreio',t:'bairro'},
+  {n:'Vila Isabel',t:'bairro'},{n:'Méier',t:'bairro'},{n:'Penha',t:'bairro'},
+  // Eventos
+  {n:'Vivo Rio',t:'ev'},{n:'Maracanã',t:'ev'},{n:'Fundição Progresso',t:'ev'},
+  {n:'Circo Voador',t:'ev'},{n:'Teatro Municipal',t:'ev'},{n:'MAM',t:'ev'},
+  {n:'Arena Jeunesse',t:'ev'},
+  // Turístico
+  {n:'Cristo Redentor',t:'tur'},{n:'Pão de Açúcar',t:'tur'},{n:'Arcos da Lapa',t:'tur'},
+  {n:'Museu do Amanhã',t:'tur'},{n:'Jardim Botânico',t:'tur'},{n:'Quinta da Boa Vista',t:'tur'},
+  // Bares e Restaurantes
+  {n:'Bar do Mineiro',t:'bar'},{n:'Casa da Cachaça',t:'bar'},{n:'Academia da Cachaça',t:'bar'},
+  {n:'Bar Urca',t:'bar'},{n:'Devassa',t:'bar'},{n:'Confeitaria Colombo',t:'bar'},
+  // Hotéis
+  {n:'Copacabana Palace',t:'hotel'},{n:'Fairmont Rio',t:'hotel'},{n:'Intercontinental',t:'hotel'},
+  {n:'Windsor Barra',t:'hotel'},{n:'Sheraton Grand',t:'hotel'},{n:'Ibis Copacabana',t:'hotel'},
+];
+let _infLoc=null,_infTipoKey=null,_infMinutos=60,_infRepTipo=null,_infRepValor=null,_infRepDetalhe=null,_infPanelVenue=null;
+// Cidade do Informes (16/08/2026, pedido do Yuri) — antes fixa "Rio de
+// Janeiro" no HTML, agora clicável e persistida.
+let _infCity = JSON.parse(localStorage.getItem('sm_inf_city') || '{"name":"Localizando…","uf":""}');
+let _infGps=null;
+let _infFavs=JSON.parse(localStorage.getItem('sm_inf_favs')||'[]');
+const INF_AVC=['#6D28D9','#0369A1','#B45309','#0F766E','#15803D','#BE123C','#7C3AED','#0284C7'];
+const INF_BADGE={dinamico:'infbd',transito:'infbt',fiscalizacao:'infbf',fila:'infbfi',demanda:'infbde',lotacao:'infblo',acidente:'infbac'};
+
+function renderInformes(){
+  const cityEl=document.getElementById('inf-city-name');
+  if(cityEl)cityEl.textContent=(_infCity?.name&&_infCity.name!=='Rio de Janeiro')?_infCity.name:'Localizando…';
+  infCarregarContagens();
+  infRenderBairrosTab();
+  infRenderVenueLists();
+  infCarregarFeedAgora();
+  infSyncCidadeAtual();
+}
+
+function infCityKey(name){
+  const n=(name||'').trim();
+  if(/^rio de janeiro$/i.test(n))return'rio';
+  return n.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||null;
+}
+
+async function infReverseCidade(lat,lon){
+  try{
+    const u=`https://nominati
+
+===== Santos Dumont (SDU) @ 1641859 =====
+ed_posts não tem location_name
+    // (é geolocalizado, não por local nomeado), então a contagem vira
+    // match textual no endereço geocodificado — aproximado, não é mais
+    // igualdade exata como era com location_name. Efeito prático: alguns
+    // locais podem subcontar se o endereço reverso não citar o nome
+    // exatamente (ex.: aeroporto que geocodifica só como rua) — degrada
+    // pra "–" nesse caso, nunca quebra a tela.
+    const{data}=await _SUPA.from('feed_posts')
+      .select('address')
+      .eq('status','ativo')
+      .gt('expires_at',new Date().toISOString())
+      .not('address','is',null);
+    if(!data)return;
+    const countFor=(nome)=>{
+      const needle=(nome||'').toLowerCase().trim();
+      if(!needle) return 0;
+      return data.filter(r=>(r.address||'').toLowerCase().includes(needle)).length;
+    };
+    // Atualiza contagem individual dos bairros quando inline
+    document.querySelectorAll('.inf-bchip-ct').forEach(el=>{
+      const nome=el.closest('.inf-bchip')?.querySelector('.inf-bchip-name')?.textContent||'';
+      const n=countFor(nome);
+      el.textContent=n;el.className='inf-bchip-ct'+(n===0?' z':'');
+    });
+    [['gig','Galeão (GIG)'],['sdu','Santos Dumont (SDU)'],['rod','Rodoviária Novo Rio']].forEach(([id,n])=>{
+      const el=document.getElementById('inf-ct-'+id);if(el)el.textContent=countFor(n);
+    });
+    Object.entries({sul:INF_BAIRROS.sul,norte:INF_BAIRROS.norte,oeste:INF_BAIRROS.oeste,centro:INF_BAIRROS.centro}).forEach(([z,bs])=>{
+      const total=bs.reduce((s,b)=>s+countFor(b),0);
+      const el=document.getElementById('inf-zct-'+z);
+      if(el){el.textContent=total;el.className='inf-zcard-ct'+(total===0?' z':'');}
+    });
+    Object.entries({bares:INF_VENUES.bares.itens,hoteis:INF_VENUES.hoteis.itens,eventos:INF_VENUES.eventos.itens,turistico:INF_VENUES.turistico.itens}).forEach(([cat,itens])=>{
+      const total=itens.reduce((s,i)=>s+countFor(i.n),0);
+      const el=document.getElementById('inf-cct-'+cat);if(el)el.textContent=total||'–';
+    });
+    // Badges individuais nas listas de venues das abas (bares/hotéis/eventos/turístico/shoppings)
+    document.querySelectorAll('.inf-vitem-ct').forEach(el=>{
+      const nome=el.closest('.inf-vitem')?.querySelector('.inf-vitem-name')?.textContent||'';
+      const n=countFor(nome);
+      el.textContent=n||'–';el.className='inf-vitem-ct'+(n===0?' z':'');
+    });
+  }catch(e){console.warn('inf cnt',e);}
+}
+
+async function infAbrirLocal(el,nome,tipoKey){
+  document.querySelectorAll('.inf-feat,.inf-featF,.inf-bchip,.inf-zcard,.inf-vitem').forEach(b=>b.classList.remove('active'));
+  if(el)el.classList.add('active');
+  _infLoc=nome;_infTipoKey=tipoKey;
+  const t=INF_TIPOS[tipoKey]||INF_TIPOS.bairro;
+  const hic=document.getElementById('inf-panel-hic');
+  hic.style.background=t.bg;hic.innerHTML=infIconSvg(tipoKey,t.cor,17);
+  document.getElementById('inf-panel-tipo').textContent=t.label;
+  document.getElementById('inf-panel-tipo').style.color=t.cor;
+  document.getElementById('inf-panel-loc').textContent=nome;
+  document.getElementById('inf-panel-meta').textContent='Carregando…';
+  document.getElementById('inf-panel-fav').classList.toggle('on',_infFavs.some(f=>f.n===nome));
+  document.getElementById('inf-panel').classList.add('open');
+  // Botão "Abrir no mapa" — busca a coordenada no venue_cache (fonte
+  // OpenStreetMap) ANTES de carregar os informes, porque agora o feed
+  // "Últimos informes" filtra por proximidade real (lat/lng), não mais
+  // por texto exato do nome do local.
+  _infPanelVenue = null;
+  const mapBtn = document.getElementById('inf-panel-map');
+  if (mapBtn) mapBtn.style.display = 'none';
+  if (_SUPA) {
+    try {
+      const { data } = await _SUPA.from('venue_cache').select('id,lat,lng').ilike('name', nome).limit(1);
+      if
+
+===== INF_SDBDB @ 1627474 =====
+:'Bar Urca',sub:'Urca'},{n:'Devassa',sub:'Vários'},{n:'Confeitaria Colombo',sub:'Centro'}]},
+  hoteis:{titulo:'Hotéis',tipo:'hotel',itens:[{n:'Copacabana Palace',sub:'Copacabana'},{n:'Fairmont Rio',sub:'Copacabana'},{n:'Intercontinental',sub:'São Conrado'},{n:'Windsor Barra',sub:'Barra'},{n:'Sheraton Grand',sub:'Leblon'},{n:'Ibis Copacabana',sub:'Copacabana'},{n:'Arena Hotel',sub:'Barra'}]},
+  eventos:{titulo:'Eventos e Shows',tipo:'ev',itens:[{n:'Vivo Rio',sub:'Glória'},{n:'Fundição Progresso',sub:'Lapa'},{n:'Circo Voador',sub:'Lapa'},{n:'Teatro Municipal',sub:'Centro'},{n:'MAM',sub:'Flamengo'},{n:'Maracanã',sub:'Zona Norte'},{n:'Arena Jeunesse',sub:'Barra'}]},
+  turistico:{titulo:'Pontos Turísticos',tipo:'tur',itens:[{n:'Museu do Amanhã',sub:'Porto Maravilha'},{n:'Pão de Açúcar',sub:'Urca'},{n:'Arcos da Lapa',sub:'Lapa'},{n:'Cristo Redentor',sub:'Corcovado'},{n:'Jardim Botânico',sub:'Lagoa'},{n:'MAM',sub:'Flamengo'},{n:'Quinta da Boa Vista',sub:'São Cristóvão'}]},
+  shoppings:{titulo:'Shoppings',tipo:'shop',itens:[{n:'BarraShopping',sub:'Barra da Tijuca'},{n:'VillageMall',sub:'Barra da Tijuca'},{n:'NorteShopping',sub:'Zona Norte'},{n:'Rio Design Leblon',sub:'Leblon'}]},
+};
+const INF_SDBDB = [
+  // Aeroportos e terminais
+  {n:'Galeão (GIG)',t:'aero'},{n:'Santos Dumont (SDU)',t:'aero'},{n:'Rodoviária Novo Rio',t:'term'},
+  // Bairros
+  {n:'Copacabana',t:'bairro'},{n:'Ipanema',t:'bairro'},{n:'Leblon',t:'bairro'},
+  {n:'Lapa',t:'bairro'},{n:'Botafogo',t:'bairro'},{n:'Barra da Tijuca',t:'bairro'},
+  {n:'Tijuca',t:'bairro'},{n:'Maracanã',t:'bairro'},{n:'Niterói',t:'bairro'},
+  {n:'Flamengo',t:'bairro'},{n:'Glória',t:'bairro'},{n:'Recreio',t:'bairro'},
+  {n:'Vila Isabel',t:'bairro'},{n:'Méier',t:'bairro'},{n:'Penha',t:'bairro'},
+  // Eventos
+  {n:'Vivo Rio',t:'ev'},{n:'Maracanã',t:'ev'},{n:'Fundição Progresso',t:'ev'},
+  {n:'Circo Voador',t:'ev'},{n:'Teatro Municipal',t:'ev'},{n:'MAM',t:'ev'},
+  {n:'Arena Jeunesse',t:'ev'},
+  // Turístico
+  {n:'Cristo Redentor',t:'tur'},{n:'Pão de Açúcar',t:'tur'},{n:'Arcos da Lapa',t:'tur'},
+  {n:'Museu do Amanhã',t:'tur'},{n:'Jardim Botânico',t:'tur'},{n:'Quinta da Boa Vista',t:'tur'},
+  // Bares e Restaurantes
+  {n:'Bar do Mineiro',t:'bar'},{n:'Casa da Cachaça',t:'bar'},{n:'Academia da Cachaça',t:'bar'},
+  {n:'Bar Urca',t:'bar'},{n:'Devassa',t:'bar'},{n:'Confeitaria Colombo',t:'bar'},
+  // Hotéis
+  {n:'Copacabana Palace',t:'hotel'},{n:'Fairmont Rio',t:'hotel'},{n:'Intercontinental',t:'hotel'},
+  {n:'Windsor Barra',t:'hotel'},{n:'Sheraton Grand',t:'hotel'},{n:'Ibis Copacabana',t:'hotel'},
+];
+let _infLoc=null,_infTipoKey=null,_infMinutos=60,_infRepTipo=null,_infRepValor=null,_infRepDetalhe=null,_infPanelVenue=null;
+// Cidade do Informes (16/08/2026, pedido do Yuri) — antes fixa "Rio de
+// Janeiro" no HTML, agora clicável e persistida.
+let _infCity = JSON.parse(localStorage.getItem('sm_inf_city') || '{"name":"Localizando…","uf":""}');
+let _infGps=null;
+let _infFavs=JSON.parse(localStorage.getItem('sm_inf_favs')||'[]');
+const INF_AVC=['#6D28D9','#0369A1','#B45309','#0F766E','#15803D','#BE123C','#7C3AED','#0284C7'];
+const INF_BADGE={dinamico:'infbd',transito:'infbt',fiscalizacao:'infbf',fila:'infbfi',demanda:'infbde',lotacao:'infblo',acidente:'infbac'};
+
+function renderInformes(){
+  const cityEl=document.getElementById('inf-city-name');
+  if(cityEl)cityEl.textContent=(_infCity?.name&&_infCity.name!=='Rio de Janeiro')?_infCity.name:'Localizando…';
+  infCarregarContagens();
+  infRenderBairrosTab();
+  infRenderVenueLists();
+  infCarregarFeedAgora();
+  infSyncCidadeAtual();
+}
+
+function infCityKey(name){
+  const n=(name||'').trim();
+  if(/^rio de janeiro$/i.test(n))return'rio';
+  return n.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||null;
+}
+
+as
+
+===== INF_SDBDB @ 1694528 =====
+is_active:true});
+        if(error){
+          // Trigger de spam ativo — informa o usuário sem travar o app
+          if(error.message?.includes('duplicate_report')||error.code==='P0001'){
+            btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Enviar informe';
+            showToast('Você já reportou isso recentemente. Aguarde um pouco.');return;
+          }
+          throw error;
+        }
+      }
+    }
+    infFecharOv('inf-ov-rep');showToast('Informe enviado — obrigado!');
+    infCarregarInformes(_infLoc,_infTipoKey);
+  }catch(e){console.error('inf send',e);showToast('Erro ao enviar. Tente novamente.');}
+  btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Enviar informe';
+}
+
+function infBuscarGlobal(q){
+  const dd=document.getElementById('inf-search-dd');
+  if(!q.trim()){dd.classList.remove('show');return;}
+  const qL=q.toLowerCase();
+  let res=INF_SDBDB.filter(x=>x.n.toLowerCase().includes(qL));
+  for(const [,v] of Object.entries(INF_VENUES)){
+    for(const item of (v.itens||[])){
+      if(item.n.toLowerCase().includes(qL)||(item.sub&&item.sub.toLowerCase().includes(qL))){
+        res.push({n:item.n+(item.sub?' ('+item.sub+')':''),t:v.tipo||'bairro'});
+      }
+    }
+  }
+  const _seen=new Set(); res=res.filter(x=>{if(_seen.has(x.n))return false;_seen.add(x.n);return true;}).slice(0,8);
+  dd.innerHTML=res.length?res.map(x=>{const t=INF_TIPOS[x.t]||INF_TIPOS.bairro;return`<div class="inf-sd-item" onclick="infToggleSearch();infAbrirLocal(null,'${x.n}','${x.t}')"><div class="inf-sd-ic" style="background:${t.bg}">${infIconSvg(x.t,t.cor,14)}</div><div><div class="inf-sd-name">${x.n}</div><div class="inf-sd-sub">${t.label}</div></div></div>`;}).join(''):'<div class="inf-sd-empty">Nenhum resultado</div>';
+  dd.classList.add('show');
+}
+// Busca colapsável (16/08/2026, pedido do Yuri) — vira ícone, só expande
+// quando toca, no lugar do campo fixo que ocupava uma linha inteira.
+// Mantém a barra de abas do Informes grudada certinho embaixo do topbar,
+// medindo a altura real em vez de chutar um valor fixo (16/08/2026 —
+// bug real: header colapsável mudou de altura, valor fixo antigo (74px)
+// cortava a primeira lista). ResizeObserver corrige sozinho pra sempre,
+// não importa o que mude na altura do topbar no futuro.
+(function infWatchTopbarHeight(){
+  const el = document.getElementById('inf-topbar');
+  if (!el || typeof ResizeObserver === 'undefined') return;
+  const apply = () => document.documentElement.style.setProperty('--inf-topbar-h', el.offsetHeight + 'px');
+  new ResizeObserver(apply).observe(el);
+  apply();
+})();
+// Trocar cidade (16/08/2026) — abre com a atual marcada + algumas
+// sugestões próximas; busca de verdade via Nominatim (mesma fonte já
+// usada em todo o resto do app pra geocodificação).
+function infAbrirCidade(){
+  document.getElementById('inf-city-search-input').value = '';
+  infRenderCidadeDefaults();
+  openMo('mo-inf-cidade');
+}
+function infRenderCidadeDefaults(){
+  const sugestoes = [
+    {name:'Rio de Janeiro', uf:'RJ'}, {name:'Teresópolis', uf:'RJ'},
+    {name:'Niterói', uf:'RJ'}, {name:'São Paulo', uf:'SP'}
+  ];
+  document.getElementById('inf-city-list').innerHTML = sugestoes.map(infCidadeItemHtml).join('');
+}
+function infCidadeItemHtml(c){
+  const isActive = c.name === _infCity.name && c.uf === _infCity.uf;
+  return `<div class="inf-city-item ${isActive?'active':''}" onclick="infEscolherCidade('${c.name.replace(/'/g,"\\'")}','${c.uf}')">
+    <div class="inf-city-item-ic"><
+
+===== data-tab="bairros" @ 437401 =====
+
+      </button>
+      <div class="inf-city" id="inf-city-btn" onclick="infAbrirCidade()"><div class="inf-city-dot"></div><span id="inf-city-name">Localizando…</span><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#94A3B8;margin-left:1px"><path d="M6 9l6 6 6-6"/></svg></div>
+    </div>
+    <div class="inf-search-fixed" id="inf-search-fixed" style="display:none">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="inf-search-bar" type="text" placeholder="Buscar local…" oninput="infBuscarGlobal(this.value)">
+    </div>
+  </div>
+  <div class="inf-search-dd" id="inf-search-dd"></div>
+
+  <!-- abas -->
+  <div class="inf-tabs-wrap">
+    <div class="inf-tabs" id="inf-tabs">
+      <button class="inf-tab active" data-tab="agora" onclick="infTab('agora')">Agora</button>
+      <button class="inf-tab" data-tab="aero" onclick="infTab('aero')">Aeroportos</button>
+      <button class="inf-tab" data-tab="rod" onclick="infTab('rod')">Rodoviárias</button>
+      <button class="inf-tab" data-tab="bairros" onclick="infTab('bairros')">Bairros</button>
+      <button class="inf-tab" data-tab="shop" onclick="infTab('shop')">Shoppings</button>
+      <button class="inf-tab" data-tab="bares" onclick="infTab('bares')">Bares</button>
+      <button class="inf-tab" data-tab="hoteis" onclick="infTab('hoteis')">Hotéis</button>
+      <button class="inf-tab" data-tab="eventos" onclick="infTab('eventos')">Eventos</button>
+      <button class="inf-tab" data-tab="tur" onclick="infTab('tur')">Turístico</button>
+    </div>
+  </div>
+
+  <div class="inf-relatar-bar">
+    <button onclick="infOpenRelatar()">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.3"><path d="M12 5v14M5 12h14"/></svg>
+      Relatar agora
+    </button>
+  </div>
+
+  <div id="inf-scroll-content">
+
+    <!-- ═══ ABA: AGORA ═══ -->
+    <div class="inf-panelbody inf-fill" id="inf-tab-agora">
+      <div class="inf-sec-lbl" id="inf-favs-section" style="display:none">Seus favoritos</div>
+      <div class="inf-favs-scroll" id="inf-favs-row"></div>
+
+      <div class="inf-sec-lbl">Informes perto de você</div>
+      <div id="inf-feed-agora"><div class="inf-empty-feed">Carregando…</div></div>
+    </div>
+
+    <!-- ═══ ABA: AEROPORTOS ═══ -->
+    <div class="inf-panelbody hide" id="inf-tab-aero">
+      <div class="inf-featF" onclick="infAbrirLocal(this,'Galeão (GIG)','aero')">
+        <div class="inf-featF-top">
+          <div class="inf-featF-id">
+            <div class="inf-featF-ic" style="background:#EFF6FF"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#0A2F6B" stroke-width="2"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></div>
+            <div><div class="inf-featF-name">Galeão <svg class="inf-featF-mode" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg></div><div class="inf-featF-sub">Terminal 1 e 2</div></div>
+          </div>
+          <div class="inf-featF-ct" id="inf-ct-gig">–</div>
+        </div>
+        <div class="inf-featF-mini" id="inf-mini-gig"></div>
+        <div class="inf-featF-arriving"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg>Chegando: — (em breve via FlightRadar)</div>
+      </div>
+      <d
