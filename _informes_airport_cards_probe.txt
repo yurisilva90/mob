@@ -1,0 +1,192 @@
+   <button class="pj-day" data-d="0" onclick="pjToggleDay(0)">Dom</button>
+          <button class="pj-day" data-d="1" onclick="pjToggleDay(1)">Seg</button>
+          <button class="pj-day" data-d="2" onclick="pjToggleDay(2)">Ter</button>
+          <button class="pj-day" data-d="3" onclick="pjToggleDay(3)">Qua</button>
+          <button class="pj-day" data-d="4" onclick="pjToggleDay(4)">Qui</button>
+          <button class="pj-day" data-d="5" onclick="pjToggleDay(5)">Sex</button>
+          <button class="pj-day" data-d="6" onclick="pjToggleDay(6)">Sáb</button>
+        </div>
+      </div>
+      <div class="ag-row2">
+        <div class="ag-field" style="margin-bottom:0"><label class="ag-label">Meta financeira (R$)</label><input class="ag-input" type="number" inputmode="decimal" id="pj-money" placeholder="Opcional"></div>
+        <div class="ag-field" style="margin-bottom:0"><label class="ag-label">Quilometragem (km)</label><input class="ag-input" type="number" inputmode="decimal" id="pj-km" placeholder="Opcional"></div>
+      </div>
+      <div class="ag-field">
+        <label class="ag-label">Horários de trabalho</label>
+        <div id="pj-schedules"></div>
+        <button class="ag-addbtn" style="margin-top:4px" onclick="pjAddSchedule()">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Adicionar horário
+        </button>
+      </div>
+      <button class="ag-save" onclick="pjSaveEntry()">Salvar jornada</button>
+    </div>
+    <div class="ag-form-card" style="margin-bottom:24px">
+      <label class="ag-label" style="margin-bottom:10px;display:block">Jornadas planejadas</label>
+      <div id="pj-list"><div class="empty">Nenhuma jornada planejada ainda</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TELA MAIS ══════════════════════════════════════════════════════════ -->
+<div class="screen" id="sc-informes">
+  <!-- topbar: linha 1 = lupa (colapsa/expande) + cidade | linha 2 = busca (só quando aberta) -->
+  <div class="inf-topbar" id="inf-topbar">
+    <div class="inf-topbar-row1">
+      <button class="inf-search-toggle" id="inf-search-toggle" onclick="infToggleSearch()" aria-label="Buscar local">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+      <div class="inf-city" id="inf-city-btn" onclick="infAbrirCidade()"><div class="inf-city-dot"></div><span id="inf-city-name">Localizando…</span><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#94A3B8;margin-left:1px"><path d="M6 9l6 6 6-6"/></svg></div>
+    </div>
+    <div class="inf-search-fixed" id="inf-search-fixed" style="display:none">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="inf-search-bar" type="text" placeholder="Buscar local…" oninput="infBuscarGlobal(this.value)">
+    </div>
+  </div>
+  <div class="inf-search-dd" id="inf-search-dd"></div>
+
+  <!-- abas -->
+  <div class="inf-tabs-wrap">
+    <div class="inf-tabs" id="inf-tabs">
+      <button class="inf-tab active" data-tab="agora" onclick="infTab('agora')">Agora</button>
+      <button class="inf-tab" data-tab="aero" onclick="infTab('aero')">Aeroportos</button>
+      <button class="inf-tab" data-tab="rod" onclick="infTab('rod')">Rodoviárias</button>
+      <button class="inf-tab" data-tab="bairros" onclick="infTab('bairros')">Bairros</button>
+      <button class="inf-tab" data-tab="shop" onclick="infTab('shop')">Shoppings</button>
+      <button class="inf-tab" data-tab="bares" onclick="infTab('bares')">Bares</button>
+      <button class="inf-tab" data-tab="hoteis" onclick="infTab('hoteis')">Hotéis</button>
+      <button class="inf-tab" data-tab="eventos" onclick="infTab('eventos')">Eventos</button>
+      <button class="inf-tab" data-tab="tur" onclick="infTab('tur')">Turístico</button>
+    </div>
+  </div>
+
+  <div class="inf-relatar-bar">
+    <button onclick="infOpenRelatar()">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.3"><path d="M12 5v14M5 12h14"/></svg>
+      Relatar agora
+    </button>
+  </div>
+
+  <div id="inf-scroll-content">
+
+    <!-- ═══ ABA: AGORA ═══ -->
+    <div class="inf-panelbody inf-fill" id="inf-tab-agora">
+      <div class="inf-sec-lbl" id="inf-favs-section" style="display:none">Seus favoritos</div>
+      <div class="inf-favs-scroll" id="inf-favs-row"></div>
+
+      <div class="inf-sec-lbl">Informes perto de você</div>
+      <div id="inf-feed-agora"><div class="inf-empty-feed">Carregando…</div></div>
+    </div>
+
+    <!-- ═══ ABA: AEROPORTOS ═══ -->
+    <div class="inf-panelbody hide" id="inf-tab-aero">
+      <div class="inf-featF" onclick="infAbrirLocal(this,'Galeão (GIG)','aero')">
+        <div class="inf-featF-top">
+          <div class="inf-featF-id">
+            <div class="inf-featF-ic" style="background:#EFF6FF"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#0A2F6B" stroke-width="2"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></div>
+            <div><div class="inf-featF-name">Galeão <svg class="inf-featF-mode" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg></div><div class="inf-featF-sub">Terminal 1 e 2</div></div>
+          </div>
+          <div class="inf-featF-ct" id="inf-ct-gig">–</div>
+        </div>
+        <div class="inf-featF-mini" id="inf-mini-gig"></div>
+        <div class="inf-featF-arriving"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg>Chegando: — (em breve via FlightRadar)</div>
+      </div>
+      <div class="inf-featF" onclick="infAbrirLocal(this,'Santos Dumont (SDU)','aero')">
+        <div class="inf-featF-top">
+          <div class="inf-featF-id">
+            <div class="inf-featF-ic" style="background:#EFF6FF"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#0A2F6B" stroke-width="2"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></div>
+            <div><div class="inf-featF-name">Santos Dumont <svg class="inf-featF-mode" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg></div><div class="inf-featF-sub">Centro</div></div>
+          </div>
+          <div class="inf-featF-ct" id="inf-ct-sdu">–</div>
+        </div>
+        <div class="inf-featF-mini" id="inf-mini-sdu"></div>
+        <div class="inf-featF-arriving"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2.5 19h19"/><path d="M4.5 15.5 11 9l7-3.8c.9-.5 2 .1 2 1.1 0 .4-.2.8-.5 1.1L13 13l-3 5-2-1 1.3-3.6-2.6.6L5 15z"/></svg>Chegando: — (em breve via FlightRadar)</div>
+      </div>
+    </div>
+
+    <!-- ═══ ABA: RODOVIÁRIAS ═══ -->
+    <div class="inf-panelbody hide" id="inf-tab-rod">
+      <div class="inf-featF" onclick="infAbrirLocal(this,'Rodoviária Novo Rio','term')">
+        <div class="inf-featF-top">
+          <div class="inf-featF-id">
+            <div class="inf-featF-ic" style="background:#EEF2FF"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#6366F1" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+            <div><div class="inf-featF-name">Rodoviária Novo Rio <svg class="inf-featF-mode" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="4" width="16" height="12" rx="2.5"/><path d="M4 11h16"/><path d="M7.5 16v2M16.5 16v2"/></svg></div><div class="inf-featF-sub">Santo Cristo</div></div>
+          </div>
+          <div class="inf-featF-ct" id="inf-ct-rod">–</div>
+        </div>
+        <div class="inf-featF-mini" id="inf-mini-rod"></div>
+        <div class="inf-featF-arriving"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="4" width="16" height="12" rx="2.5"/><path d="M4 11h16"/><path d="M7.5 16v2M16.5 16v2"/></svg>Chegando: — (em breve via sistema da rodoviária)</div>
+      </div>
+    </div>
+
+    <!-- ═══ ABA: BAIRROS ═══ -->
+    <div class="inf-panelbody hide inf-fill" id="inf-tab-bairros">
+      <div class="inf-area-grp-lbl"><div class="inf-area-grp-dot"></div><span class="inf-area-grp-name">Zona Sul</span></div>
+      <div class="inf-bchip-scroll">
+        <div class="inf-bchip-2row" id="inf-bchip-sul"></div>
+      </div>
+      <div class="inf-area-grp-lbl"><div class="inf-area-grp-dot"></div><span class="inf-area-grp-name">Barra / Recreio</span></div>
+      <div class="inf-bchip-scroll inf-fill-scroll">
+        <div class="inf-bchip-1row" id="inf-bchip-barra"></div>
+      </div>
+    </div>
+
+    <!-- ═══ ABAS: SHOPPINGS / BARES / HOTÉIS / EVENTOS / TURÍSTICO ═══ -->
+    <div class="inf-panelbody hide" id="inf-tab-shop"><div class="inf-vlist" id="inf-vlist-shoppings"></div></div>
+    <div class="inf-panelbody hide" id="inf-tab-bares"><div class="inf-vlist" id="inf-vlist-bares"></div></div>
+    <div class="inf-panelbody hide" id="inf-tab-hoteis"><div class="inf-vlist" id="inf-vlist-hoteis"></div></div>
+    <div class="inf-panelbody hide" id="inf-tab-eventos"><div class="inf-vlist" id="inf-vlist-eventos"></div></div>
+    <div class="inf-panelbody hide" id="inf-tab-tur"><div class="inf-vlist" id="inf-vlist-turistico"></div></div>
+
+  </div><!-- /inf-scroll-content -->
+
+  <!-- painel de informes full-screen -->
+  <div class="inf-panel" id="inf-panel">
+    <div class="inf-panel-drag" id="inf-panel-drag"><div class="inf-panel-drag-bar"></div></div>
+    <div class="inf-panel-head">
+      <button onclick="infFecharPainel()" style="width:32px;height:32px;border-radius:9px;border:1.5px solid var(--line);background:var(--soft);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="inf-panel-hic" id="inf-panel-hic"></div>
+      <div class="inf-panel-hbody">
+        <div class="inf-panel-tipo" id="inf-panel-tipo"></div>
+        <div class="inf-panel-loc" id="inf-panel-loc">—</div>
+        <div class="inf-panel-meta" id="inf-panel-meta"></div>
+      </div>
+      <div class="inf-head-badges" id="inf-head-badges" style="display:flex;gap:6px;flex-shrink:0"></div>
+      <button class="inf-panel-fav" id="inf-panel-map" onclick="infAbrirNoMapa()" style="display:none" aria-label="Abrir no mapa">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#0EA5E9" stroke-width="2.2"><path d="M9 20l-5.5 2V6L9 4l6 2 5.5-2v16L15 22l-6-2z"/><line x1="9" y1="4" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="20"/></svg>
+      </button>
+      <button class="inf-panel-fav" id="inf-panel-fav" onclick="infToggleFav()">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#F59E0B" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </button>
+    </div>
+    <div class="inf-status" id="inf-status"></div>
+    <div class="inf-sep"></div>
+    <div class="inf-list-wrap" id="inf-list-wrap"><div class="inf-empty">Carregando informes…</div></div>
+    <div class="inf-rep-wrap">
+      <button class="inf-rep-btn" onclick="infAbrirReportar()">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Reportar agora
+      </button>
+    </div>
+  </div>
+
+  <!-- Sheet: GPS ruas -->
+  <div class="inf-ov" id="inf-ov-gps">
+    <div class="inf-sheet">
+      <div class="inf-sh-handle"></div>
+      <div class="inf-sh-head"><div class="inf-sh-ic" style="background:#CCFBF1"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#14B8A6" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div><div class="inf-sh-title">Minha rua</div></div>
+      <div class="inf-sh-sub">Raio de 300m · mais próxima primeiro</div>
+      <div class="inf-sh-search"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input class="inf-sh-sinput" type="text" placeholder="Buscar rua…" oninput="infFiltrarSheet(this,'inf-gps-list')"></div>
+      <div id="inf-gps-list"><div class="inf-empty">Aguardando GPS…</div></div>
+    </div>
+  </div>
+
+  <!-- Sheet: venue list (usado como fallback de busca detalhada) -->
+  <div class="inf-ov" id="inf-ov-venue">
+    <div class="inf-sheet">
+      <div class="inf-sh-handle"></div>
+      <div class="inf-sh-head"><div class="inf-sh-ic" id="inf-venue-ic"></div><div class="inf-sh-title" id="inf-venue-title"></div></div>
+      <div class="inf-sh-sub" id="inf-venue-sub"></div>
+      <div class="inf-sh-search"><svg viewBox="0 0 24 24" width="15" height="15" 
