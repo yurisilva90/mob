@@ -25,3 +25,4 @@ jobs:
           git add index.html
           git commit -m 'Consolidate journey trips and keep video review available' || exit 0
           git push
+# trigger
