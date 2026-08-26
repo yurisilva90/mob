@@ -18,3 +18,4 @@ jobs:
           git add _journey_functions_small.txt
           git commit -m 'Extract small journey functions' || exit 0
           git push
+# trigger
