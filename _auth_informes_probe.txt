@@ -1,0 +1,2587 @@
+
+===== signinwithpassword @ 1050134 =====
+ushQueue(); } catch(e) { console.error('flushQueue boot:', e); }
+  try { checkRecurringLancamentos(); } catch(e) { console.error('checkRecurringLancamentos boot:', e); }
+  try{restoreGpsSession();} catch(e){}
+  try{syncNavButton();}  catch(e){}
+  try{renderHome();}     catch(e){}
+  try{renderJornada();}  catch(e){}
+  try{renderFin();}      catch(e){}
+  try{renderAgenda();} catch(e){}
+  try{ if (S.sec==='corridas') renderCorridasActive(); } catch(e){}
+  try{ if (S.sec==='lancamentos') renderLancamentos(); } catch(e){}
+  _bootPullDone = true;
+  _bootPullResolve();
+}
+
+function lsErr(id, msg) { const el=document.getElementById(id);if(el){el.textContent=msg;el.style.display=msg?'block':'none';} }
+function lsBtn(id, txt, disabled) { const el=document.getElementById(id);if(el){el.textContent=txt;el.disabled=disabled;} }
+
+async function loginEnter() {
+  const email=document.getElementById('l-email')?.value?.trim();
+  const pass =document.getElementById('l-pass')?.value;
+  lsErr('l-err','');
+  if (!email||!pass) { lsErr('l-err','Preencha email e senha'); return; }
+  lsBtn('l-btn-enter','Entrando...',true);
+  let signInResult;
+  try {
+    signInResult = await Promise.race([
+      _SUPA.auth.signInWithPassword({ email, password: pass }),
+      new Promise((_,rej) => setTimeout(() => rej(new Error('Tempo esgotado. Verifique sua conexão.')), 12000))
+    ]);
+  } catch(err) {
+    lsBtn('l-btn-enter','Entrar',false);
+    lsErr('l-err', err.message);
+    return;
+  }
+  const { error } = signInResult;
+  lsBtn('l-btn-enter','Entrar',false);
+  if (error) {
+    const m = error.message || '';
+    let msg = 'Erro ao entrar. Tente novamente.';
+    if (m.includes('Invalid login credentials') || m.includes('invalid_credentials'))
+      msg = 'Email ou senha incorretos. Verifique seus dados ou use "Esqueci minha senha".';
+    else if (m.includes('Email not confirmed'))
+      msg = 'Email não confirmado. Use "Esqueci minha senha" para acessar.';
+    else if (m.includes('Too many requests'))
+      msg = 'Muitas tentativas. Aguarde alguns minutos.';
+    lsErr('l-err', msg);
+  }
+}
+
+async function loginRegister() {
+  const name  = document.getElementById('r-name')?.value?.trim();
+  const email = document.getElementById('r-email')?.value?.trim();
+  const phone = document.getElementById('r-phone')?.value?.trim();
+  const pass  = document.getElementById('r-pass')?.value;
+  lsErr('r-err','');
+  if (!name)  { lsErr('r-err','Digite seu nome');       return; }
+  if (!email) { lsErr('r-err','Digite seu email');      return; }
+  if (!pass||pass.length<6) { lsErr('r-err','Senha deve ter pelo menos 6 caracteres'); return; }
+  lsBtn('l-btn-reg','Criando conta...',true);
+  const { data, error } = await _SUPA.auth.signUp({
+    email, password: pass,
+    options: { data: { name, phone } }
+  });
+  lsBtn('l-btn-reg','Criar conta',false);
+  if (error) {
+    const em = error.message || '';
+    if (em.includes('already registered') || em.includes('already been registered')) {
+      lsErr('r-err', 'Este email já possui conta. Use "← Voltar" → "Entrar". Se esqueceu a senha, toque em "Esqueci minha senha".');
+    } else if (em.includes('Password') || em.includes('password')) {
+      lsErr('r-err', 'Senha deve ter pelo menos 6 caracteres.');
+    } else {
+      lsErr('r-err', em || 'Erro ao criar conta. Tente novamente.');
+    }
+    return;
+  }
+  // Sucesso: atualiza perfil e navega
+  if (data?.
+
+===== login @ 154594 =====
+0NH0.OMZliNHYTj_R6HhHI9yizWAzREMGFfv2_yHk4s6z9N0'
+    } : {
+      url: 'https://jlsrpptslwfhmkvelaro.supabase.co',
+      key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impsc3JwcHRzbHdmaG1rdmVsYXJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NjYxNzIsImV4cCI6MjA4OTQ0MjE3Mn0.4gD4dKx05QaOAAkY1gAx2HuH_CN31Xg3kkDMdvZ4kh0'
+    };
+    console.info('[MōB] ambiente:', _MOB_IS_TEST_ENV ? 'TESTE (mob-teste)' : 'produção');
+    const _SUPA = supabase.createClient(
+      _MOB_SUPA_CONFIG.url,
+      _MOB_SUPA_CONFIG.key,
+      {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: false,
+          storage: window.localStorage
+        }
+      }
+    );
+  </script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet"></head>
+<body style="background:#0F172A">
+<div class="app">
+<!-- ════ TOPBAR (fixed, shared) ════ -->
+<!-- ════ SCROLL WRAPPER ════ -->
+<div class="scroll" id="main-scroll">
+
+<!-- ══ TELA LOGIN ══════════════════════════════════════════════════════════ -->
+<div id="sc-login" style="display:none;position:fixed;inset:0;z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;background:#F8FAFC;overflow-y:auto">
+
+  <div style="background:#0A2F6B;width:calc(100% + 48px);margin:-32px -24px 28px;padding:44px 24px 32px;display:flex;flex-direction:column;align-items:center;border-radius:0 0 28px 28px">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABgAAAAQACAYAAAAncZJCAAEAAElEQVR42uz9e7C26XUW+F3Xup/9nfrw9UmHlmSdrHNLNrIsm9OACcaAwTiGtAkzU1QmMyH/JKFSxTBVSTH1pVIVqJkJRfLHQE1NAakwFZAAE9vYZmwwMAYbIwt8kNWSLcmyWmodWupzf4f93NeVP9b97JbBdmxLXx+vn1zu07ff/b7P++797r3Wuq8FxFedbeYqRETETZT3mYiIiIiIiIh4bqQAHhEREREREc+S/P4ZERERERERERERERERERERERERERERERHPgitXrlSuwrMqp0aeT5znIyIiIiIiIiIiIiIiIiIinmvZgRARETdTpgQjIp538vP/c/rGiLwvRkRERERERERERERERERERMRX6IV+CiCnGCIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiLiJS+nrCKvv4iIiMj7ckRERERERERERERERERERMTzUnYqREREREREPD9cuXKlchUiIiIiIiIiIiIiIiIiIiIiIiLi2ZGptYiIiC9/Y0TeFyMiIiLi2ZGol4iIiIiIiHgpyFBCRERERERERERERERERERERERERERERERERERERERERMSvJpGEERERec+PiIiIiIiIiIiIiIiIiIiIiIiIiIiIiK+uLNN9tmVqPiIiIiIiIiIiIiIiIiIiIiIiIp4lVzIlGBHxfJNp4uf0jRF5X8zrPyIiIiIiIiIiIiIivloylBARERHxAmU7UxwRERERERERERERERERERERERFfgQxhRUREREREREQKBBEREXlffN5ci1z/vP4jIiIiIiIiIiIiIiIiIiIiIiIiIiIiXvwyvf0cuP/++0euQr4OIiIiIiIiIiIiIiIiIiIinmE73euIiLhprly5UrkKERERxxsj8r743MjvvREREfHSk+J/REREREREvETk99+IiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIr5oc44+IiIj8/BAREREREflFJSIiIiIiIiIiIiIiIiIiIiLi15LhlGfRlStXKtc8r/+IiIiIiIiIiIiIiIiIiIhn2E73OiIibpr7779/5CpEREQsV1C5CPECkDpBRERERERERERERERERETE81pOAURERERERERERERERERERERERLy0ZYgsIiIiIiIi4iX8Cz6/wo+PvMYiIvI9L/c/Il8HERERERERERERERERERERyfyPiIhnS95vIq+fiIh8f36p3W/meuf1HxERERERERERERERERERcfPkNEBERNxkeZ+JiMj35ThcQeUi5PUfed1EREQ8K1L8j4iIiIiIiIiIiIh4EXuhNwLSyIiIiIiIiIiIZ0HqDxEREREREfklKSIiIiIiIiIiIiIiIiIiIp4NGUyIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiHi+e0FO/1+5cqXy1EVERERERERERERERERERERERMSzJFNrERERX/a+iLwvRkRERMSzw3YWIEVERERERERERERERERERERERETES1YGKSMi4oUlpwAiIiK/JEVERETe3yMiIiIiIiLiNysFgoiIiLwvRkREREREREREREREREREPP8kSSUiIiIiIiKi5RfkPLfx1bveueYRERHxlUkHKyIiIiIiIiIiIiIiIiIifqPSYI6IiDhcQeUiRERERMSzIlP/ERERERER
+
+===== login @ 389994 =====
+AAC8iDP4AAC1xFm7AHDG6KfTLgLzgjgBAAA06gAAAAAAAAAAAAAAAAAAAI2NhZQAAAAA8EoMkgAAAAAAAAAAWDAaf3UUExfkPwAAAAAAAAAAAAAAAAAAAAAAAAA0qMHBwahBk87uMgAAAAAAAAAAAAAAAAAAXleSJI5cAIAzwmrlBZjvtIsAAACoG2v8CxoBAAAAAHgzGP8CAAAAAAAAAADgdCykBAAAAAAAAAAAAAAAALBA1X51FKuvAAAAAAAAAAAAAAAAAAAAAAAAAAB4LUq6AQAAAAAAAAAAAAAA5gs32AMAailJEkcuAMAZoZ++8PJdaRcBvBHiNAAAGhUAAAAAmHuMjwAAAAAAAAAAAIBmw0JKAAAAAAAAAAAAAAAAADgjrL4CADQm2i/yHwAAAAAAAAAAAAAAAAAAAAAALDicOc/zAAAAAAAAAAARjrgBAAAAAAD1kiSJIxcA4Ixog30uyH8AAACEhK1rAAAAAIDmGAAz+QIAAJq1H9TgEwFMZAAAAAAAgFoj/gAAAAAAAAAAAAAAAAAAZ4TVV3jrKDPkC8A71/T9h9rlf61Whi+kFeesngcAAAAAAAAAAAAAAAAA4CRW1AEAaGteR6OuPmfVPM8DAEDDAwAAbRUAABBhQhigfwsAAA0XAKBe7rnnnohcAIAzQj99AT7TJEkc2QAAAAAAAAAAADBXWPwGAAAAAAAAAACAV8MpCgAA0MgDAF6Gow4AAAAAAAAAAAAAAAAWKBbWAQAAAAAAAAAAAADQ7Fg9AAAAAAD1wbF+jHsBAAAAAAAAAAAWLCZlAAAAAOCkJElicgEAgkLgah7znlX08+TFgC2BWzREcaWcAgDmuFGhcQEAAAAANMP4FwAAgI4QAAAAAAAAAAB19P8DWU3c+1XWtDoAAAAASUVORK5CYII=" alt="MōB" style="width:180px;height:auto;object-fit:contain;display:block">
+    <p style="font-size:13px;color:rgba(255,255,255,.7);margin-top:10px;font-family:var(--font-app)">A ferramenta da sua jornada</p>
+  </div>
+
+  <div style="width:100%;max-width:360px">
+
+    <div id="lsLogin">
+      <h2 style="font-size:22px;font-weight:700;color:#0A2F6B;margin-bottom:4px;font-family:var(--font-brand)">Bem-vindo a MōB</h2>
+      <p style="font-size:13px;color:#94A3B8;margin-bottom:24px;font-family:var(--font-app)">Faça login para continuar</p>
+      <div style="margin-bottom:14px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Email</label>
+        <input id="l-email" type="email" inputmode="email" placeholder="seuemail@gmail.com" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'">
+      </div>
+      <div style="margin-bottom:6px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Senha</label>
+        <div style="position:relative">
+          <input id="l-pass" type="password" placeholder="Sua senha" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 48px 0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'" onkeydown="if(event.key==='Enter')loginEnter()">
+          <button type="button" onclick="togglePass('l-pass',this)" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;color:#94A3B8;display:flex;align-items:center;padding:4px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+      </div>
+      <div style="text-align:right;margin-bottom:20px">
+        <button onclick="lsShow('lsForgot')" style="background:transparent;border:0;co
+
+===== login @ 390232 =====
+BA1X51FKuvAAAAAAAAAAAAAAAAAAAAAAAAAAB4LUq6AQAAAAAAAAAAAAAA5gs32AMAailJEkcuAMAZoZ++8PJdaRcBvBHiNAAAGhUAAAAAmHuMjwAAAAAAAAAAAIBmw0JKAAAAAAAAAAAAAAAAADgjrL4CADQm2i/yHwAAAAAAAAAAAAAAAAAAAAAALDicOc/zAAAAAAAAAAARjrgBAAAAAAD1kiSJIxcA4Ixog30uyH8AAACEhK1rAAAAAIDmGAAz+QIAAJq1H9TgEwFMZAAAAAAAgFoj/gAAAAAAAAAAAAAAAAAAZ4TVV3jrKDPkC8A71/T9h9rlf61Whi+kFeesngcAAAAAAAAAAAAAAAAA4CRW1AEAaGteR6OuPmfVPM8DAEDDAwAAbRUAABBhQhigfwsAAA0XAKBe7rnnnohcAIAzQj99AT7TJEkc2QAAAAAAAAAAADBXWPwGAAAAAAAAAACAV8MpCgAA0MgDAF6Gow4AAAAAAAAAAAAAAAAWKBbWAQAAAAAAAAAAAADQ7Fg9AAAAAAD1wbF+jHsBAAAAAAAAAAAWLCZlAAAAAOCkJElicgEAgkLgah7znlX08+TFgC2BWzREcaWcAgDmuFGhcQEAAAAANMP4FwAAgI4QAAAAAAAAAAB19P8DWU3c+1XWtDoAAAAASUVORK5CYII=" alt="MōB" style="width:180px;height:auto;object-fit:contain;display:block">
+    <p style="font-size:13px;color:rgba(255,255,255,.7);margin-top:10px;font-family:var(--font-app)">A ferramenta da sua jornada</p>
+  </div>
+
+  <div style="width:100%;max-width:360px">
+
+    <div id="lsLogin">
+      <h2 style="font-size:22px;font-weight:700;color:#0A2F6B;margin-bottom:4px;font-family:var(--font-brand)">Bem-vindo a MōB</h2>
+      <p style="font-size:13px;color:#94A3B8;margin-bottom:24px;font-family:var(--font-app)">Faça login para continuar</p>
+      <div style="margin-bottom:14px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Email</label>
+        <input id="l-email" type="email" inputmode="email" placeholder="seuemail@gmail.com" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'">
+      </div>
+      <div style="margin-bottom:6px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Senha</label>
+        <div style="position:relative">
+          <input id="l-pass" type="password" placeholder="Sua senha" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 48px 0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'" onkeydown="if(event.key==='Enter')loginEnter()">
+          <button type="button" onclick="togglePass('l-pass',this)" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;color:#94A3B8;display:flex;align-items:center;padding:4px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+      </div>
+      <div style="text-align:right;margin-bottom:20px">
+        <button onclick="lsShow('lsForgot')" style="background:transparent;border:0;color:#64748B;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-app);text-decoration:underline;text-underline-offset:3px">Esqueci minha senha</button>
+      </div>
+      <button onclick="loginEnter()" id="l-btn-enter" sty
+
+===== login @ 391522 =====
+x;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Email</label>
+        <input id="l-email" type="email" inputmode="email" placeholder="seuemail@gmail.com" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'">
+      </div>
+      <div style="margin-bottom:6px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Senha</label>
+        <div style="position:relative">
+          <input id="l-pass" type="password" placeholder="Sua senha" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 48px 0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'" onkeydown="if(event.key==='Enter')loginEnter()">
+          <button type="button" onclick="togglePass('l-pass',this)" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;color:#94A3B8;display:flex;align-items:center;padding:4px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+      </div>
+      <div style="text-align:right;margin-bottom:20px">
+        <button onclick="lsShow('lsForgot')" style="background:transparent;border:0;color:#64748B;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-app);text-decoration:underline;text-underline-offset:3px">Esqueci minha senha</button>
+      </div>
+      <button onclick="loginEnter()" id="l-btn-enter" style="width:100%;height:52px;background:#22C55E;border:0;border-radius:14px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:var(--font-brand);box-shadow:0 10px 24px rgba(34,197,94,.3);margin-bottom:16px">Entrar</button>
+      <div id="l-err" style="color:#EF4444;font-size:13px;text-align:center;margin-bottom:12px;display:none;font-family:var(--font-app)"></div>
+      <div style="text-align:center">
+        <button onclick="lsShow('lsReg')" style="background:transparent;border:0;color:#64748B;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-app);text-decoration:underline;text-underline-offset:3px">Não sou MōB — Criar conta</button>
+      </div>
+    </div>
+
+    <div id="lsReg" style="display:none">
+      <button onclick="lsShow('lsLogin')" style="background:transparent;border:0;color:#64748B;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-app);text-decoration:underline;text-underline-offset:3px;margin-bottom:20px;display:block">← Voltar</button>
+      <h2 style="font-size:22px;font-weight:700;color:#0A2F6B;margin-bottom:20px;font-family:var(--font-brand)">Criar conta</h2>
+      <div style="margin-bottom:14px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;d
+
+===== login @ 392398 =====
+="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 48px 0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'" onkeydown="if(event.key==='Enter')loginEnter()">
+          <button type="button" onclick="togglePass('l-pass',this)" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;color:#94A3B8;display:flex;align-items:center;padding:4px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+      </div>
+      <div style="text-align:right;margin-bottom:20px">
+        <button onclick="lsShow('lsForgot')" style="background:transparent;border:0;color:#64748B;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-app);text-decoration:underline;text-underline-offset:3px">Esqueci minha senha</button>
+      </div>
+      <button onclick="loginEnter()" id="l-btn-enter" style="width:100%;height:52px;background:#22C55E;border:0;border-radius:14px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:var(--font-brand);box-shadow:0 10px 24px rgba(34,197,94,.3);margin-bottom:16px">Entrar</button>
+      <div id="l-err" style="color:#EF4444;font-size:13px;text-align:center;margin-bottom:12px;display:none;font-family:var(--font-app)"></div>
+      <div style="text-align:center">
+        <button onclick="lsShow('lsReg')" style="background:transparent;border:0;color:#64748B;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-app);text-decoration:underline;text-underline-offset:3px">Não sou MōB — Criar conta</button>
+      </div>
+    </div>
+
+    <div id="lsReg" style="display:none">
+      <button onclick="lsShow('lsLogin')" style="background:transparent;border:0;color:#64748B;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-app);text-decoration:underline;text-underline-offset:3px;margin-bottom:20px;display:block">← Voltar</button>
+      <h2 style="font-size:22px;font-weight:700;color:#0A2F6B;margin-bottom:20px;font-family:var(--font-brand)">Criar conta</h2>
+      <div style="margin-bottom:14px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Nome completo</label><input id="r-name" type="text" placeholder="Seu nome" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'"></div>
+      <div style="margin-bottom:14px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Email</label><input id="r-email" type="email" inputmode="email" placeholder="seuemail@gmail.com" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 16px;font-size:15px;color:#0A2F6B;outline
+
+===== login @ 393210 =====
+svg></button>
+        </div>
+      </div>
+      <div style="text-align:right;margin-bottom:20px">
+        <button onclick="lsShow('lsForgot')" style="background:transparent;border:0;color:#64748B;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-app);text-decoration:underline;text-underline-offset:3px">Esqueci minha senha</button>
+      </div>
+      <button onclick="loginEnter()" id="l-btn-enter" style="width:100%;height:52px;background:#22C55E;border:0;border-radius:14px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:var(--font-brand);box-shadow:0 10px 24px rgba(34,197,94,.3);margin-bottom:16px">Entrar</button>
+      <div id="l-err" style="color:#EF4444;font-size:13px;text-align:center;margin-bottom:12px;display:none;font-family:var(--font-app)"></div>
+      <div style="text-align:center">
+        <button onclick="lsShow('lsReg')" style="background:transparent;border:0;color:#64748B;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-app);text-decoration:underline;text-underline-offset:3px">Não sou MōB — Criar conta</button>
+      </div>
+    </div>
+
+    <div id="lsReg" style="display:none">
+      <button onclick="lsShow('lsLogin')" style="background:transparent;border:0;color:#64748B;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-app);text-decoration:underline;text-underline-offset:3px;margin-bottom:20px;display:block">← Voltar</button>
+      <h2 style="font-size:22px;font-weight:700;color:#0A2F6B;margin-bottom:20px;font-family:var(--font-brand)">Criar conta</h2>
+      <div style="margin-bottom:14px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Nome completo</label><input id="r-name" type="text" placeholder="Seu nome" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'"></div>
+      <div style="margin-bottom:14px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Email</label><input id="r-email" type="email" inputmode="email" placeholder="seuemail@gmail.com" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'"></div>
+      <div style="margin-bottom:14px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Celular (WhatsApp)</label><input id="r-phone" type="tel" inputmode="tel" placeholder="(21) 99999-9999" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'"></div>
+      <div style="margin-bottom:24px"><label style="font-size:
+
+===== login @ 396013 =====
+;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Celular (WhatsApp)</label><input id="r-phone" type="tel" inputmode="tel" placeholder="(21) 99999-9999" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'"></div>
+      <div style="margin-bottom:24px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Senha</label>
+        <div style="position:relative">
+          <input id="r-pass" type="password" placeholder="Mínimo 6 caracteres" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 48px 0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'" onkeydown="if(event.key==='Enter')loginRegister()">
+          <button type="button" onclick="togglePass('r-pass',this)" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;color:#94A3B8;display:flex;align-items:center;padding:4px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+      </div>
+      <button onclick="loginRegister()" id="l-btn-reg" style="width:100%;height:52px;background:#22C55E;border:0;border-radius:14px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:var(--font-brand);box-shadow:0 10px 24px rgba(34,197,94,.3)">Criar conta</button>
+      <div id="r-err" style="color:#EF4444;font-size:13px;text-align:center;margin-top:12px;display:none;font-family:var(--font-app)"></div>
+    </div>
+
+    <div id="lsForgot" style="display:none">
+      <button onclick="lsShow('lsLogin')" style="background:transparent;border:0;color:#64748B;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-app);text-decoration:underline;text-underline-offset:3px;margin-bottom:20px;display:block">← Voltar</button>
+      <h2 style="font-size:22px;font-weight:700;color:#0A2F6B;margin-bottom:6px;font-family:var(--font-brand)">Recuperar senha</h2>
+      <p style="font-size:13px;color:#64748B;margin-bottom:20px;font-family:var(--font-app)">Enviaremos um link de redefinição para seu email.</p>
+      <div style="margin-bottom:20px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Email</label><input id="f-email" type="email" inputmode="email" placeholder="seuemail@gmail.com" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'" onkeydown="if(event.key==='Enter')loginForgot(
+
+===== login @ 396569 =====
+gin-bottom:24px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Senha</label>
+        <div style="position:relative">
+          <input id="r-pass" type="password" placeholder="Mínimo 6 caracteres" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 48px 0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'" onkeydown="if(event.key==='Enter')loginRegister()">
+          <button type="button" onclick="togglePass('r-pass',this)" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;color:#94A3B8;display:flex;align-items:center;padding:4px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+      </div>
+      <button onclick="loginRegister()" id="l-btn-reg" style="width:100%;height:52px;background:#22C55E;border:0;border-radius:14px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:var(--font-brand);box-shadow:0 10px 24px rgba(34,197,94,.3)">Criar conta</button>
+      <div id="r-err" style="color:#EF4444;font-size:13px;text-align:center;margin-top:12px;display:none;font-family:var(--font-app)"></div>
+    </div>
+
+    <div id="lsForgot" style="display:none">
+      <button onclick="lsShow('lsLogin')" style="background:transparent;border:0;color:#64748B;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-app);text-decoration:underline;text-underline-offset:3px;margin-bottom:20px;display:block">← Voltar</button>
+      <h2 style="font-size:22px;font-weight:700;color:#0A2F6B;margin-bottom:6px;font-family:var(--font-brand)">Recuperar senha</h2>
+      <p style="font-size:13px;color:#64748B;margin-bottom:20px;font-family:var(--font-app)">Enviaremos um link de redefinição para seu email.</p>
+      <div style="margin-bottom:20px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Email</label><input id="f-email" type="email" inputmode="email" placeholder="seuemail@gmail.com" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'" onkeydown="if(event.key==='Enter')loginForgot()"></div>
+      <button onclick="loginForgot()" id="l-btn-forgot" style="width:100%;height:52px;background:#22C55E;border:0;border-radius:14px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:var(--font-brand);box-shadow:0 10px 24px rgba(34,197,94,.3)">Enviar link</button>
+      <div id="f-err" style="color:#22C55E;font-size:13px;text-align:center;margin-top:12px;display:none;font-family:var(--font-app)"></div>
+    </div>
+
+  </div>
+  <p style="position:absolute;bottom:20px;font-size:11px;color:#CBD5E1;font-family:var(--font-app)">
+
+===== login @ 397060 =====
+-font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'" onkeydown="if(event.key==='Enter')loginRegister()">
+          <button type="button" onclick="togglePass('r-pass',this)" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;color:#94A3B8;display:flex;align-items:center;padding:4px"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+      </div>
+      <button onclick="loginRegister()" id="l-btn-reg" style="width:100%;height:52px;background:#22C55E;border:0;border-radius:14px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:var(--font-brand);box-shadow:0 10px 24px rgba(34,197,94,.3)">Criar conta</button>
+      <div id="r-err" style="color:#EF4444;font-size:13px;text-align:center;margin-top:12px;display:none;font-family:var(--font-app)"></div>
+    </div>
+
+    <div id="lsForgot" style="display:none">
+      <button onclick="lsShow('lsLogin')" style="background:transparent;border:0;color:#64748B;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-app);text-decoration:underline;text-underline-offset:3px;margin-bottom:20px;display:block">← Voltar</button>
+      <h2 style="font-size:22px;font-weight:700;color:#0A2F6B;margin-bottom:6px;font-family:var(--font-brand)">Recuperar senha</h2>
+      <p style="font-size:13px;color:#64748B;margin-bottom:20px;font-family:var(--font-app)">Enviaremos um link de redefinição para seu email.</p>
+      <div style="margin-bottom:20px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Email</label><input id="f-email" type="email" inputmode="email" placeholder="seuemail@gmail.com" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'" onkeydown="if(event.key==='Enter')loginForgot()"></div>
+      <button onclick="loginForgot()" id="l-btn-forgot" style="width:100%;height:52px;background:#22C55E;border:0;border-radius:14px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:var(--font-brand);box-shadow:0 10px 24px rgba(34,197,94,.3)">Enviar link</button>
+      <div id="f-err" style="color:#22C55E;font-size:13px;text-align:center;margin-top:12px;display:none;font-family:var(--font-app)"></div>
+    </div>
+
+  </div>
+  <p style="position:absolute;bottom:20px;font-size:11px;color:#CBD5E1;font-family:var(--font-app)">MōB · A ferramenta da sua jornada</p>
+</div>
+
+<!-- ══ TELA HOME ══════════════════════════════════════════════════════════ -->
+<div class="screen on" id="sc-home">
+  <div class="feed-kpis" id="feed-kpis">
+    <div class="feed-kpi"><div class="v g" id="feed-k-rev">R$ 0</div><div class="l">Hoje</div></div>
+    <div class="feed-kpi"><div class="v" id="feed-k-trips">0</div><div class="l">Corridas</div></div>
+    <div class="feed-kpi"><div class="v" id="feed-k-rpkm">—</div><div class="l">R$/
+
+===== login @ 398201 =====
+ot" style="display:none">
+      <button onclick="lsShow('lsLogin')" style="background:transparent;border:0;color:#64748B;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font-app);text-decoration:underline;text-underline-offset:3px;margin-bottom:20px;display:block">← Voltar</button>
+      <h2 style="font-size:22px;font-weight:700;color:#0A2F6B;margin-bottom:6px;font-family:var(--font-brand)">Recuperar senha</h2>
+      <p style="font-size:13px;color:#64748B;margin-bottom:20px;font-family:var(--font-app)">Enviaremos um link de redefinição para seu email.</p>
+      <div style="margin-bottom:20px"><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#64748B;display:block;margin-bottom:6px;font-family:var(--font-app)">Email</label><input id="f-email" type="email" inputmode="email" placeholder="seuemail@gmail.com" style="width:100%;height:52px;border:1.5px solid #E2E8F0;background:#F8FAFC;border-radius:14px;padding:0 16px;font-size:15px;color:#0A2F6B;outline:none;font-family:var(--font-app);box-sizing:border-box" onfocus="this.style.borderColor='#0A2F6B'" onblur="this.style.borderColor='#E2E8F0'" onkeydown="if(event.key==='Enter')loginForgot()"></div>
+      <button onclick="loginForgot()" id="l-btn-forgot" style="width:100%;height:52px;background:#22C55E;border:0;border-radius:14px;color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:var(--font-brand);box-shadow:0 10px 24px rgba(34,197,94,.3)">Enviar link</button>
+      <div id="f-err" style="color:#22C55E;font-size:13px;text-align:center;margin-top:12px;display:none;font-family:var(--font-app)"></div>
+    </div>
+
+  </div>
+  <p style="position:absolute;bottom:20px;font-size:11px;color:#CBD5E1;font-family:var(--font-app)">MōB · A ferramenta da sua jornada</p>
+</div>
+
+<!-- ══ TELA HOME ══════════════════════════════════════════════════════════ -->
+<div class="screen on" id="sc-home">
+  <div class="feed-kpis" id="feed-kpis">
+    <div class="feed-kpi"><div class="v g" id="feed-k-rev">R$ 0</div><div class="l">Hoje</div></div>
+    <div class="feed-kpi"><div class="v" id="feed-k-trips">0</div><div class="l">Corridas</div></div>
+    <div class="feed-kpi"><div class="v" id="feed-k-rpkm">—</div><div class="l">R$/km</div></div>
+    <div class="feed-kpi"><div class="v" id="feed-k-online">—</div><div class="l">Online</div></div>
+  </div>
+  <div class="feed-filters" id="feed-filters">
+    <div class="feed-chip on" data-type="" onclick="feedSetFilter('',this)">Tudo</div>
+    <div class="feed-chip" data-type="blitz" onclick="feedSetFilter('blitz',this)">Blitz</div>
+    <div class="feed-chip" data-type="risco" onclick="feedSetFilter('risco',this)">Risco</div>
+    <div class="feed-chip" data-type="transito" onclick="feedSetFilter('transito',this)">Trânsito</div>
+    <div class="feed-chip" data-type="demanda" onclick="feedSetFilter('demanda',this)">Demanda</div>
+    <div class="feed-chip" data-type="dinamico" onclick="feedSetFilter('dinamico',this)">Dinâmico</div>
+    <div class="feed-chip" data-type="fila" onclick="feedSetFilter('fila',this)">Fila</div>
+  </div>
+  <div class="feed-list" id="feed-list"><div class="feed-empty">Carregando alertas…</div></div>
+  <div class="feed-fab-wrap">
+    <button class="feed-fab" onclick="feedOpenComposer()" aria-label="Publicar alerta">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" st
+
+===== login @ 1043310 =====
+  // 4. Categorias
+  try {
+    for (const key2 of Object.keys(localStorage)) {
+      if (key2.startsWith('sm_cats_')) await SYNC.pushCats(key2.replace('sm_cats_',''));
+    }
+  } catch(e) {}
+
+  // 5. Eventos
+  const localEvs = JSON.parse(localStorage.getItem('sm_events')||'[]');
+  for (const ev of localEvs) {
+    await SYNC.push('events', { id: ev.id, title: ev.title, date: ev.date,
+      time_start: ev.timeStart||null, time_end: ev.timeEnd||null,
+      type: ev.type||'operacional', color: ev.color||'#22C55E',
+      notes: ev.notes||'', paid: ev.paid||false });
+    pushed++;
+  }
+
+  localStorage.setItem('sm_cloud_migration_v2', '1');
+  console.log('[MōB] Migração concluída —', pushed, 'registros enviados ao Supabase');
+  showToast('Dados sincronizados com a nuvem ✓');
+}
+
+async function authInit() {
+  ['app-nav','app-header'].forEach(id => { const el=document.getElementById(id);if(el)el.style.display='none'; });
+  document.querySelectorAll('.screen').forEach(s => s.style.display='none');
+  await new Promise(r => setTimeout(r, 300));
+  const { data:{ session } } = await _SUPA.auth.getSession();
+  if (session?.user) { _supaUser=session.user; await loadProfile(); showApp(); }
+  else showLogin();
+  _SUPA.auth.onAuthStateChange(async (ev, session) => {
+    if ((ev==='SIGNED_IN' || ev==='TOKEN_REFRESHED') && session?.user) {
+      _supaUser = session.user;
+      // Salva tokens no storage nativo (persiste mesmo com app morto)
+      if (window.SmartMobiNative?.saveSession) {
+        try { SmartMobiNative.saveSession(JSON.stringify({
+          access_token: session.access_token,
+          refresh_token: session.refresh_token
+        })); } catch(e) {}
+      }
+      // Salva credenciais para o GpsService usar nas notificações de reporte
+      // rápido e no alerta automático de dinâmico do feed. Reenviado também
+      // a cada TOKEN_REFRESHED (autoRefreshToken troca o token ~1x/hora) —
+      // antes só rodava no SIGNED_IN, então esses recursos paravam de
+      // funcionar (silenciosamente) depois de ~1h de app aberto.
+      if (window.SmartMobiNative?.saveUserToken) {
+        try { SmartMobiNative.saveUserToken(session.user.id, session.access_token); } catch(e) {}
+      }
+      if (ev==='SIGNED_IN') { await loadProfile(); showApp(); }
+    } else if (ev==='SIGNED_OUT') {
+      _supaUser = null;
+      if (window.SmartMobiNative?.saveSession) {
+        try { SmartMobiNative.saveSession(''); } catch(e) {}
+      }
+      showLogin();
+    }
+  });
+}
+
+function lsShow(id) {
+  ['lsLogin','lsReg','lsForgot'].forEach(x => { const el=document.getElementById(x);if(el)el.style.display=x===id?'block':'none'; });
+}
+function showLogin() {
+  const el=document.getElementById('sc-login'); if(el)el.style.display='flex';
+  ['app-nav','app-header'].forEach(id=>{ const e=document.getElementById(id);if(e)e.style.display='none'; });
+  document.querySelectorAll('.screen').forEach(s=>s.style.display='none');
+}
+let _appBooted = false;
+async function showApp() {
+  const el=document.getElementById('sc-login'); if(el)el.style.display='none';
+  const nav=document.getElementById('app-nav'); if(nav)nav.style.display='flex';
+  if(_supaUser && !DB.cfg().name && _supaUser.email){
+    const cfg=DB.cfg(); cfg.name=_supaUser.email.split('@')[0]; DB.saveCfg(cfg);
+  }
+  // Migração única de dados locais para o Supabase
+  setTimeout(() => migrateLocalToCloud().catch(()=>{}), 3000);
+  setTimeo
+
+===== login @ 1044564 =====
+sion) => {
+    if ((ev==='SIGNED_IN' || ev==='TOKEN_REFRESHED') && session?.user) {
+      _supaUser = session.user;
+      // Salva tokens no storage nativo (persiste mesmo com app morto)
+      if (window.SmartMobiNative?.saveSession) {
+        try { SmartMobiNative.saveSession(JSON.stringify({
+          access_token: session.access_token,
+          refresh_token: session.refresh_token
+        })); } catch(e) {}
+      }
+      // Salva credenciais para o GpsService usar nas notificações de reporte
+      // rápido e no alerta automático de dinâmico do feed. Reenviado também
+      // a cada TOKEN_REFRESHED (autoRefreshToken troca o token ~1x/hora) —
+      // antes só rodava no SIGNED_IN, então esses recursos paravam de
+      // funcionar (silenciosamente) depois de ~1h de app aberto.
+      if (window.SmartMobiNative?.saveUserToken) {
+        try { SmartMobiNative.saveUserToken(session.user.id, session.access_token); } catch(e) {}
+      }
+      if (ev==='SIGNED_IN') { await loadProfile(); showApp(); }
+    } else if (ev==='SIGNED_OUT') {
+      _supaUser = null;
+      if (window.SmartMobiNative?.saveSession) {
+        try { SmartMobiNative.saveSession(''); } catch(e) {}
+      }
+      showLogin();
+    }
+  });
+}
+
+function lsShow(id) {
+  ['lsLogin','lsReg','lsForgot'].forEach(x => { const el=document.getElementById(x);if(el)el.style.display=x===id?'block':'none'; });
+}
+function showLogin() {
+  const el=document.getElementById('sc-login'); if(el)el.style.display='flex';
+  ['app-nav','app-header'].forEach(id=>{ const e=document.getElementById(id);if(e)e.style.display='none'; });
+  document.querySelectorAll('.screen').forEach(s=>s.style.display='none');
+}
+let _appBooted = false;
+async function showApp() {
+  const el=document.getElementById('sc-login'); if(el)el.style.display='none';
+  const nav=document.getElementById('app-nav'); if(nav)nav.style.display='flex';
+  if(_supaUser && !DB.cfg().name && _supaUser.email){
+    const cfg=DB.cfg(); cfg.name=_supaUser.email.split('@')[0]; DB.saveCfg(cfg);
+  }
+  // Migração única de dados locais para o Supabase
+  setTimeout(() => migrateLocalToCloud().catch(()=>{}), 3000);
+  setTimeout(() => reconcileAllExistingDays().catch(()=>{}), 5000);
+  // Limpeza única: remove corridas source='import_uber_zip' do localStorage
+  // antes de reimportar com os fixes de UTC e promocao fundida no dinamico.
+  // Roda só uma vez (flag sm_zip_wipe_v1). Não afeta uber_import nem import_ai.
+  if (!localStorage.getItem('sm_zip_wipe_v1')) {
+    let removidas = 0;
+    DB.allDates().forEach(d => {
+      const day = DB.day(d);
+      const antes = (day.trips||[]).length;
+      day.trips = (day.trips||[]).filter(t => t.source !== 'import_uber_zip');
+      if (day.trips.length !== antes) { removidas += antes - day.trips.length; DB.saveDay(day); }
+    });
+    localStorage.setItem('sm_zip_wipe_v1', '1');
+    if (removidas > 0) console.log('[boot] zip wipe: removidas', removidas, 'corridas do localStorage');
+  }
+  if (!_appBooted) {
+    setTimeout(updateNetStatus, 500);
+  }
+  try{renderHome();}    catch(e){console.error('renderHome:',e);}
+  try{restoreGpsSession();} catch(e){console.error('restoreGpsSession:',e);}
+  try{renderJornada();}  catch(e){console.error('renderJornada:',e);}
+  // Verifica jornadas órfãs (de outra aba/instância que não fechou corretamente)
+  // toda vez que o app abre, não só ao navegar manualmente pra Jornada
+  if (_sup
+
+===== login @ 1044808 =====
+try { SmartMobiNative.saveSession(JSON.stringify({
+          access_token: session.access_token,
+          refresh_token: session.refresh_token
+        })); } catch(e) {}
+      }
+      // Salva credenciais para o GpsService usar nas notificações de reporte
+      // rápido e no alerta automático de dinâmico do feed. Reenviado também
+      // a cada TOKEN_REFRESHED (autoRefreshToken troca o token ~1x/hora) —
+      // antes só rodava no SIGNED_IN, então esses recursos paravam de
+      // funcionar (silenciosamente) depois de ~1h de app aberto.
+      if (window.SmartMobiNative?.saveUserToken) {
+        try { SmartMobiNative.saveUserToken(session.user.id, session.access_token); } catch(e) {}
+      }
+      if (ev==='SIGNED_IN') { await loadProfile(); showApp(); }
+    } else if (ev==='SIGNED_OUT') {
+      _supaUser = null;
+      if (window.SmartMobiNative?.saveSession) {
+        try { SmartMobiNative.saveSession(''); } catch(e) {}
+      }
+      showLogin();
+    }
+  });
+}
+
+function lsShow(id) {
+  ['lsLogin','lsReg','lsForgot'].forEach(x => { const el=document.getElementById(x);if(el)el.style.display=x===id?'block':'none'; });
+}
+function showLogin() {
+  const el=document.getElementById('sc-login'); if(el)el.style.display='flex';
+  ['app-nav','app-header'].forEach(id=>{ const e=document.getElementById(id);if(e)e.style.display='none'; });
+  document.querySelectorAll('.screen').forEach(s=>s.style.display='none');
+}
+let _appBooted = false;
+async function showApp() {
+  const el=document.getElementById('sc-login'); if(el)el.style.display='none';
+  const nav=document.getElementById('app-nav'); if(nav)nav.style.display='flex';
+  if(_supaUser && !DB.cfg().name && _supaUser.email){
+    const cfg=DB.cfg(); cfg.name=_supaUser.email.split('@')[0]; DB.saveCfg(cfg);
+  }
+  // Migração única de dados locais para o Supabase
+  setTimeout(() => migrateLocalToCloud().catch(()=>{}), 3000);
+  setTimeout(() => reconcileAllExistingDays().catch(()=>{}), 5000);
+  // Limpeza única: remove corridas source='import_uber_zip' do localStorage
+  // antes de reimportar com os fixes de UTC e promocao fundida no dinamico.
+  // Roda só uma vez (flag sm_zip_wipe_v1). Não afeta uber_import nem import_ai.
+  if (!localStorage.getItem('sm_zip_wipe_v1')) {
+    let removidas = 0;
+    DB.allDates().forEach(d => {
+      const day = DB.day(d);
+      const antes = (day.trips||[]).length;
+      day.trips = (day.trips||[]).filter(t => t.source !== 'import_uber_zip');
+      if (day.trips.length !== antes) { removidas += antes - day.trips.length; DB.saveDay(day); }
+    });
+    localStorage.setItem('sm_zip_wipe_v1', '1');
+    if (removidas > 0) console.log('[boot] zip wipe: removidas', removidas, 'corridas do localStorage');
+  }
+  if (!_appBooted) {
+    setTimeout(updateNetStatus, 500);
+  }
+  try{renderHome();}    catch(e){console.error('renderHome:',e);}
+  try{restoreGpsSession();} catch(e){console.error('restoreGpsSession:',e);}
+  try{renderJornada();}  catch(e){console.error('renderJornada:',e);}
+  // Verifica jornadas órfãs (de outra aba/instância que não fechou corretamente)
+  // toda vez que o app abre, não só ao navegar manualmente pra Jornada
+  if (_supaUser && navigator.onLine) {
+    _closeOrphanSessions().then(n => { if (n) { renderJornada(); renderHome(); } }).catch(()=>{});
+  }
+  try{syncNavButton();}  catch(e){console.error('syncNavButton:',e);}
+  try{renderFin();}      catch(e){console.
+
+===== login @ 1045125 =====
+Reenviado também
+      // a cada TOKEN_REFRESHED (autoRefreshToken troca o token ~1x/hora) —
+      // antes só rodava no SIGNED_IN, então esses recursos paravam de
+      // funcionar (silenciosamente) depois de ~1h de app aberto.
+      if (window.SmartMobiNative?.saveUserToken) {
+        try { SmartMobiNative.saveUserToken(session.user.id, session.access_token); } catch(e) {}
+      }
+      if (ev==='SIGNED_IN') { await loadProfile(); showApp(); }
+    } else if (ev==='SIGNED_OUT') {
+      _supaUser = null;
+      if (window.SmartMobiNative?.saveSession) {
+        try { SmartMobiNative.saveSession(''); } catch(e) {}
+      }
+      showLogin();
+    }
+  });
+}
+
+function lsShow(id) {
+  ['lsLogin','lsReg','lsForgot'].forEach(x => { const el=document.getElementById(x);if(el)el.style.display=x===id?'block':'none'; });
+}
+function showLogin() {
+  const el=document.getElementById('sc-login'); if(el)el.style.display='flex';
+  ['app-nav','app-header'].forEach(id=>{ const e=document.getElementById(id);if(e)e.style.display='none'; });
+  document.querySelectorAll('.screen').forEach(s=>s.style.display='none');
+}
+let _appBooted = false;
+async function showApp() {
+  const el=document.getElementById('sc-login'); if(el)el.style.display='none';
+  const nav=document.getElementById('app-nav'); if(nav)nav.style.display='flex';
+  if(_supaUser && !DB.cfg().name && _supaUser.email){
+    const cfg=DB.cfg(); cfg.name=_supaUser.email.split('@')[0]; DB.saveCfg(cfg);
+  }
+  // Migração única de dados locais para o Supabase
+  setTimeout(() => migrateLocalToCloud().catch(()=>{}), 3000);
+  setTimeout(() => reconcileAllExistingDays().catch(()=>{}), 5000);
+  // Limpeza única: remove corridas source='import_uber_zip' do localStorage
+  // antes de reimportar com os fixes de UTC e promocao fundida no dinamico.
+  // Roda só uma vez (flag sm_zip_wipe_v1). Não afeta uber_import nem import_ai.
+  if (!localStorage.getItem('sm_zip_wipe_v1')) {
+    let removidas = 0;
+    DB.allDates().forEach(d => {
+      const day = DB.day(d);
+      const antes = (day.trips||[]).length;
+      day.trips = (day.trips||[]).filter(t => t.source !== 'import_uber_zip');
+      if (day.trips.length !== antes) { removidas += antes - day.trips.length; DB.saveDay(day); }
+    });
+    localStorage.setItem('sm_zip_wipe_v1', '1');
+    if (removidas > 0) console.log('[boot] zip wipe: removidas', removidas, 'corridas do localStorage');
+  }
+  if (!_appBooted) {
+    setTimeout(updateNetStatus, 500);
+  }
+  try{renderHome();}    catch(e){console.error('renderHome:',e);}
+  try{restoreGpsSession();} catch(e){console.error('restoreGpsSession:',e);}
+  try{renderJornada();}  catch(e){console.error('renderJornada:',e);}
+  // Verifica jornadas órfãs (de outra aba/instância que não fechou corretamente)
+  // toda vez que o app abre, não só ao navegar manualmente pra Jornada
+  if (_supaUser && navigator.onLine) {
+    _closeOrphanSessions().then(n => { if (n) { renderJornada(); renderHome(); } }).catch(()=>{});
+  }
+  try{syncNavButton();}  catch(e){console.error('syncNavButton:',e);}
+  try{renderFin();}      catch(e){console.error('renderFin:',e);}
+  try{updateFavBtn();}   catch(e){console.error('updateFavBtn:',e);}
+  try{renderAgenda();} catch(e){console.error('renderAgenda:',e);}
+  // Só navega pra Home no primeiro boot. O Supabase reemite SIGNED_IN sempre que
+  // o app volta de segundo plano, o que chamava showApp() de novo e forçav
+
+===== login @ 1049775 =====
+otPullPromise, new Promise(r => setTimeout(r, maxMs))]); } catch (e) {}
+}
+
+// Pull do cloud em BACKGROUND — a UI já está visível com dados locais.
+// Quando terminar, re-renderiza tudo e restaura sessão GPS do cloud se houver.
+async function _bootPullBg() {
+  try { await SYNC.pullAll(); } catch(e) { console.error('pullAll boot:', e); }
+  try { await SYNC.flushQueue(); } catch(e) { console.error('flushQueue boot:', e); }
+  try { checkRecurringLancamentos(); } catch(e) { console.error('checkRecurringLancamentos boot:', e); }
+  try{restoreGpsSession();} catch(e){}
+  try{syncNavButton();}  catch(e){}
+  try{renderHome();}     catch(e){}
+  try{renderJornada();}  catch(e){}
+  try{renderFin();}      catch(e){}
+  try{renderAgenda();} catch(e){}
+  try{ if (S.sec==='corridas') renderCorridasActive(); } catch(e){}
+  try{ if (S.sec==='lancamentos') renderLancamentos(); } catch(e){}
+  _bootPullDone = true;
+  _bootPullResolve();
+}
+
+function lsErr(id, msg) { const el=document.getElementById(id);if(el){el.textContent=msg;el.style.display=msg?'block':'none';} }
+function lsBtn(id, txt, disabled) { const el=document.getElementById(id);if(el){el.textContent=txt;el.disabled=disabled;} }
+
+async function loginEnter() {
+  const email=document.getElementById('l-email')?.value?.trim();
+  const pass =document.getElementById('l-pass')?.value;
+  lsErr('l-err','');
+  if (!email||!pass) { lsErr('l-err','Preencha email e senha'); return; }
+  lsBtn('l-btn-enter','Entrando...',true);
+  let signInResult;
+  try {
+    signInResult = await Promise.race([
+      _SUPA.auth.signInWithPassword({ email, password: pass }),
+      new Promise((_,rej) => setTimeout(() => rej(new Error('Tempo esgotado. Verifique sua conexão.')), 12000))
+    ]);
+  } catch(err) {
+    lsBtn('l-btn-enter','Entrar',false);
+    lsErr('l-err', err.message);
+    return;
+  }
+  const { error } = signInResult;
+  lsBtn('l-btn-enter','Entrar',false);
+  if (error) {
+    const m = error.message || '';
+    let msg = 'Erro ao entrar. Tente novamente.';
+    if (m.includes('Invalid login credentials') || m.includes('invalid_credentials'))
+      msg = 'Email ou senha incorretos. Verifique seus dados ou use "Esqueci minha senha".';
+    else if (m.includes('Email not confirmed'))
+      msg = 'Email não confirmado. Use "Esqueci minha senha" para acessar.';
+    else if (m.includes('Too many requests'))
+      msg = 'Muitas tentativas. Aguarde alguns minutos.';
+    lsErr('l-err', msg);
+  }
+}
+
+async function loginRegister() {
+  const name  = document.getElementById('r-name')?.value?.trim();
+  const email = document.getElementById('r-email')?.value?.trim();
+  const phone = document.getElementById('r-phone')?.value?.trim();
+  const pass  = document.getElementById('r-pass')?.value;
+  lsErr('r-err','');
+  if (!name)  { lsErr('r-err','Digite seu nome');       return; }
+  if (!email) { lsErr('r-err','Digite seu email');      return; }
+  if (!pass||pass.length<6) { lsErr('r-err','Senha deve ter pelo menos 6 caracteres'); return; }
+  lsBtn('l-btn-reg','Criando conta...',true);
+  const { data, error } = await _SUPA.auth.signUp({
+    email, password: pass,
+    options: { data: { name, phone } }
+  });
+  lsBtn('l-btn-reg','Criar conta',false);
+  if (error) {
+    const em = error.message || '';
+    if (em.includes('already registered') || em.includes('already been registered')) {
+      lsErr('r-err', 'Este email já possui conta. Use "← Voltar
+
+===== login @ 1050609 =====
+lancamentos') renderLancamentos(); } catch(e){}
+  _bootPullDone = true;
+  _bootPullResolve();
+}
+
+function lsErr(id, msg) { const el=document.getElementById(id);if(el){el.textContent=msg;el.style.display=msg?'block':'none';} }
+function lsBtn(id, txt, disabled) { const el=document.getElementById(id);if(el){el.textContent=txt;el.disabled=disabled;} }
+
+async function loginEnter() {
+  const email=document.getElementById('l-email')?.value?.trim();
+  const pass =document.getElementById('l-pass')?.value;
+  lsErr('l-err','');
+  if (!email||!pass) { lsErr('l-err','Preencha email e senha'); return; }
+  lsBtn('l-btn-enter','Entrando...',true);
+  let signInResult;
+  try {
+    signInResult = await Promise.race([
+      _SUPA.auth.signInWithPassword({ email, password: pass }),
+      new Promise((_,rej) => setTimeout(() => rej(new Error('Tempo esgotado. Verifique sua conexão.')), 12000))
+    ]);
+  } catch(err) {
+    lsBtn('l-btn-enter','Entrar',false);
+    lsErr('l-err', err.message);
+    return;
+  }
+  const { error } = signInResult;
+  lsBtn('l-btn-enter','Entrar',false);
+  if (error) {
+    const m = error.message || '';
+    let msg = 'Erro ao entrar. Tente novamente.';
+    if (m.includes('Invalid login credentials') || m.includes('invalid_credentials'))
+      msg = 'Email ou senha incorretos. Verifique seus dados ou use "Esqueci minha senha".';
+    else if (m.includes('Email not confirmed'))
+      msg = 'Email não confirmado. Use "Esqueci minha senha" para acessar.';
+    else if (m.includes('Too many requests'))
+      msg = 'Muitas tentativas. Aguarde alguns minutos.';
+    lsErr('l-err', msg);
+  }
+}
+
+async function loginRegister() {
+  const name  = document.getElementById('r-name')?.value?.trim();
+  const email = document.getElementById('r-email')?.value?.trim();
+  const phone = document.getElementById('r-phone')?.value?.trim();
+  const pass  = document.getElementById('r-pass')?.value;
+  lsErr('r-err','');
+  if (!name)  { lsErr('r-err','Digite seu nome');       return; }
+  if (!email) { lsErr('r-err','Digite seu email');      return; }
+  if (!pass||pass.length<6) { lsErr('r-err','Senha deve ter pelo menos 6 caracteres'); return; }
+  lsBtn('l-btn-reg','Criando conta...',true);
+  const { data, error } = await _SUPA.auth.signUp({
+    email, password: pass,
+    options: { data: { name, phone } }
+  });
+  lsBtn('l-btn-reg','Criar conta',false);
+  if (error) {
+    const em = error.message || '';
+    if (em.includes('already registered') || em.includes('already been registered')) {
+      lsErr('r-err', 'Este email já possui conta. Use "← Voltar" → "Entrar". Se esqueceu a senha, toque em "Esqueci minha senha".');
+    } else if (em.includes('Password') || em.includes('password')) {
+      lsErr('r-err', 'Senha deve ter pelo menos 6 caracteres.');
+    } else {
+      lsErr('r-err', em || 'Erro ao criar conta. Tente novamente.');
+    }
+    return;
+  }
+  // Sucesso: atualiza perfil e navega
+  if (data?.user) {
+    const cfg=DB.cfg(); cfg.name=name; cfg.phone=phone; DB.saveCfg(cfg);
+    try {
+      await _SUPA.from('profiles').upsert(
+        { id:data.user.id, name, phone },
+        { onConflict:'id' }
+      );
+    } catch(e) { console.warn('Profile upsert:', e); }
+    // Navega direto — não espera o onAuthStateChange
+    _supaUser = data.user;
+    showApp();
+  } else {
+    // Sem sessão: usuário pode precisar confirmar email
+    lsErr('r-err', 'Conta criada! Verifique
+
+===== login @ 1051036 =====
+')?.value?.trim();
+  const pass =document.getElementById('l-pass')?.value;
+  lsErr('l-err','');
+  if (!email||!pass) { lsErr('l-err','Preencha email e senha'); return; }
+  lsBtn('l-btn-enter','Entrando...',true);
+  let signInResult;
+  try {
+    signInResult = await Promise.race([
+      _SUPA.auth.signInWithPassword({ email, password: pass }),
+      new Promise((_,rej) => setTimeout(() => rej(new Error('Tempo esgotado. Verifique sua conexão.')), 12000))
+    ]);
+  } catch(err) {
+    lsBtn('l-btn-enter','Entrar',false);
+    lsErr('l-err', err.message);
+    return;
+  }
+  const { error } = signInResult;
+  lsBtn('l-btn-enter','Entrar',false);
+  if (error) {
+    const m = error.message || '';
+    let msg = 'Erro ao entrar. Tente novamente.';
+    if (m.includes('Invalid login credentials') || m.includes('invalid_credentials'))
+      msg = 'Email ou senha incorretos. Verifique seus dados ou use "Esqueci minha senha".';
+    else if (m.includes('Email not confirmed'))
+      msg = 'Email não confirmado. Use "Esqueci minha senha" para acessar.';
+    else if (m.includes('Too many requests'))
+      msg = 'Muitas tentativas. Aguarde alguns minutos.';
+    lsErr('l-err', msg);
+  }
+}
+
+async function loginRegister() {
+  const name  = document.getElementById('r-name')?.value?.trim();
+  const email = document.getElementById('r-email')?.value?.trim();
+  const phone = document.getElementById('r-phone')?.value?.trim();
+  const pass  = document.getElementById('r-pass')?.value;
+  lsErr('r-err','');
+  if (!name)  { lsErr('r-err','Digite seu nome');       return; }
+  if (!email) { lsErr('r-err','Digite seu email');      return; }
+  if (!pass||pass.length<6) { lsErr('r-err','Senha deve ter pelo menos 6 caracteres'); return; }
+  lsBtn('l-btn-reg','Criando conta...',true);
+  const { data, error } = await _SUPA.auth.signUp({
+    email, password: pass,
+    options: { data: { name, phone } }
+  });
+  lsBtn('l-btn-reg','Criar conta',false);
+  if (error) {
+    const em = error.message || '';
+    if (em.includes('already registered') || em.includes('already been registered')) {
+      lsErr('r-err', 'Este email já possui conta. Use "← Voltar" → "Entrar". Se esqueceu a senha, toque em "Esqueci minha senha".');
+    } else if (em.includes('Password') || em.includes('password')) {
+      lsErr('r-err', 'Senha deve ter pelo menos 6 caracteres.');
+    } else {
+      lsErr('r-err', em || 'Erro ao criar conta. Tente novamente.');
+    }
+    return;
+  }
+  // Sucesso: atualiza perfil e navega
+  if (data?.user) {
+    const cfg=DB.cfg(); cfg.name=name; cfg.phone=phone; DB.saveCfg(cfg);
+    try {
+      await _SUPA.from('profiles').upsert(
+        { id:data.user.id, name, phone },
+        { onConflict:'id' }
+      );
+    } catch(e) { console.warn('Profile upsert:', e); }
+    // Navega direto — não espera o onAuthStateChange
+    _supaUser = data.user;
+    showApp();
+  } else {
+    // Sem sessão: usuário pode precisar confirmar email
+    lsErr('r-err', 'Conta criada! Verifique seu email para confirmar.');
+  }
+}
+
+async function loadProfile() {
+  if(!_supaUser) return;
+  const { data } = await _SUPA.from('profiles').select('*').eq('id',_supaUser.id).single();
+  if (!data) return;
+  const cfg = DB.cfg();
+  let changed = false;
+  // Só preenche o que estiver vazio local — não sobrescreve edição que o
+  // usuário já tinha feito antes deste campo existir/sincronizar direito.
+  if (data.name    && !cf
+
+===== login @ 1053929 =====
+suário pode precisar confirmar email
+    lsErr('r-err', 'Conta criada! Verifique seu email para confirmar.');
+  }
+}
+
+async function loadProfile() {
+  if(!_supaUser) return;
+  const { data } = await _SUPA.from('profiles').select('*').eq('id',_supaUser.id).single();
+  if (!data) return;
+  const cfg = DB.cfg();
+  let changed = false;
+  // Só preenche o que estiver vazio local — não sobrescreve edição que o
+  // usuário já tinha feito antes deste campo existir/sincronizar direito.
+  if (data.name    && !cfg.name)    { cfg.name = data.name; changed = true; }
+  if (data.city     && !cfg.city)    { cfg.city = data.city; changed = true; }
+  if (data.plate    && !cfg.plate)   { cfg.plate = data.plate; changed = true; }
+  if (data.vehicle  && !cfg.vehicle) { cfg.vehicle = data.vehicle; changed = true; }
+  // Avatar é campo novo, sem edição local legada pra proteger — nuvem manda.
+  if ((data.avatar_url || null) !== (cfg.avatarUrl || null)) { cfg.avatarUrl = data.avatar_url || null; changed = true; }
+  if (changed) DB.saveCfg(cfg);
+}
+
+async function authSignOut() { await _SUPA.auth.signOut(); }
+function toggleRegister() {}
+
+function getCurrentUser() { return _supaUser; }
+
+
+
+
+
+
+async function loginForgot() {
+  const email = document.getElementById('f-email')?.value?.trim();
+  const msgEl = document.getElementById('f-msg');
+  const btn   = document.getElementById('l-btn-forgot');
+  if (!email) { if(msgEl){msgEl.style.color='#EF4444';msgEl.textContent='Digite seu email.';msgEl.style.display='block';} return; }
+  if(btn){btn.textContent='Enviando...';btn.disabled=true;}
+  const { error } = await _SUPA.auth.resetPasswordForEmail(email, {
+    redirectTo: 'https://yurisilva90.github.io/smartmobi/'
+  });
+  if(btn){btn.textContent='Enviar link';btn.disabled=false;}
+  if (msgEl) {
+    msgEl.style.display = 'block';
+    if (error) {
+      msgEl.style.color = '#EF4444';
+      msgEl.textContent = 'Erro ao enviar. Verifique o email digitado.';
+    } else {
+      msgEl.style.color = '#22C55E';
+      msgEl.textContent = 'Link enviado! Verifique seu email ' + email + ' e clique no link para redefinir a senha.';
+    }
+  }
+}
+
+
+
+// Chamada pelo nativo ao voltar ao foreground — sincroniza GPS
+function nativeSyncGps(km, startMs, pausedMs) {
+  if (!S || !S.gps || S.gps.st === 'idle') return;
+
+  // GUARD: nunca deixa o sync nativo DIMINUIR o km acumulado.
+  // Se o GpsService foi morto e reiniciado pelo Android, ele pode chamar
+  // nativeSyncGps com km < do que ja temos em memoria. Nesse caso mantemos
+  // o valor maior (o que estava em S.gps.km ou no nativo, o que for maior).
+  const kmNat = (typeof km === 'number' && isFinite(km)) ? km : S.gps.km;
+  // GUARD DE PLAUSIBILIDADE: se o serviço nativo Android nunca for
+  // efetivamente resetado entre uma jornada e outra (não existe um comando
+  // nativo pra isso hoje), ele pode reportar o km ACUMULADO de uma jornada
+  // ANTERIOR logo no início de uma jornada NOVA — e como o guard acima
+  // nunca deixa diminuir, esse km 'órfão' seria herdado silenciosamente.
+  // Rejeita qualquer salto que implique velocidade fisicamente impossível
+  // (>180km/h) dado o tempo decorrido desde o início desta sessão.
+  const elapsedMin = S.gps.start ? (Date.now() - S.gps.start) / 60000 : 0;
+  const maxPlausibleKm = (elapsedMin * 3) + 0.5; // 180km/h + margem
+  if (kmNat > maxPlausibleKm) {
+    console.warn('[nativeSyncGps] Ignorado — km imp
+
+===== login @ 1644101 =====
+ton class="inf-post-act" onclick="infPostDislikeToggle('${p.id}','${p.type}')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/></svg></button>
+          <button class="inf-post-act" onclick="infPostCommentsToggle('${p.id}')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>${p.comments_count||0}</span></button>
+        </div>
+      </div>
+      <div class="inf-post-avs">${infAvatarsHtml(p, reactorsMap)}</div>
+    </div>
+    <div id="ipr-dislike-${p.id}"></div>
+    <div id="ipr-comments-${p.id}"></div>
+  </div>`;
+}
+async function infBuildPostCardsHtml(posts){
+  if (!posts.length) return '';
+  const reactorsMap = await infFetchReactorsMap(posts.map(p=>p.id));
+  return `<div class="inf-post-card">${posts.map(p=>infPostRowHtml(p,reactorsMap)).join('')}</div>`;
+}
+// Curtir — sempre soma (sem alternar "descurtir"), atualiza contador na hora.
+async function infPostLike(postId, btn){
+  if (!_supaUser) { showToast('Faça login pra curtir.'); return; }
+  btn.classList.add('on-like');
+  try{
+    await _SUPA.from('feed_reactions').upsert({post_id:postId, user_id:_supaUser.id, vote:'up', reason:null}, {onConflict:'post_id,user_id'});
+    const { data } = await _SUPA.from('feed_posts').select('votes_up').eq('id',postId).single();
+    if (data) { const span = btn.querySelector('span'); if(span) span.textContent = data.votes_up; }
+  }catch(e){ console.warn('like', e); }
+}
+// Não curtir — abre painel perguntando o motivo (texto muda por tipo de
+// informe), pedido do Yuri (16/08/2026). O auto-encerramento por
+// downvote já existe no banco (feed_reactions_apply) — o motivo aqui é
+// só contexto, não precisa mudar essa lógica.
+function infPostDislikeToggle(postId, type){
+  const panel = document.getElementById('ipr-dislike-'+postId);
+  if (!panel) return;
+  if (panel.innerHTML) { panel.innerHTML=''; return; }
+  const reasons = INF_DISLIKE_REASONS[type] || ['Não existe','Já acabou'];
+  panel.innerHTML = `<div class="inf-post-dislike-panel">
+    <div class="inf-post-dislike-q">Por que você não confirma?</div>
+    <div class="inf-post-dislike-opts">
+      ${reasons.map(r=>`<div class="inf-post-dislike-opt" onclick="infPostDislikeSend('${postId}',${JSON.stringify(r)})">${r}</div>`).join('')}
+    </div>
+  </div>`;
+}
+async function infPostDislikeSend(postId, reason){
+  if (!_supaUser) { showToast('Faça login.'); return; }
+  try{
+    await _SUPA.from('feed_reactions').upsert({post_id:postId, user_id:_supaUser.id, vote:'down', reason}, {onConflict:'post_id,user_id'});
+    const row = document.getElementById('ipr-'+postId);
+    if (row) { const btns = row.querySelectorAll('.inf-post-act'); if(btns[1]) btns[1].classList.add('on-dislike'); }
+    document.getElementById('ipr-dislike-'+postId).innerHTML = '';
+    showToast('Obrigado pelo feedback!');
+  }catch(e){ console.warn('dislike', e); showToast('Erro ao enviar.'); }
+}
+// Comentar — expande inline, sem sair da linha (pedido do Yuri).
+function infPostCommentsToggle(postId){
+  const panel = document.getElementById('ipr-comments-'+postId);
+  if (!panel) return;
+  if (panel.innerHTML) { panel.innerHTML=''; return; }
+  infPostCommentsLoad(postId);
+}
+
+
+===== login @ 1645495 =====
+ost_id,user_id'});
+    const { data } = await _SUPA.from('feed_posts').select('votes_up').eq('id',postId).single();
+    if (data) { const span = btn.querySelector('span'); if(span) span.textContent = data.votes_up; }
+  }catch(e){ console.warn('like', e); }
+}
+// Não curtir — abre painel perguntando o motivo (texto muda por tipo de
+// informe), pedido do Yuri (16/08/2026). O auto-encerramento por
+// downvote já existe no banco (feed_reactions_apply) — o motivo aqui é
+// só contexto, não precisa mudar essa lógica.
+function infPostDislikeToggle(postId, type){
+  const panel = document.getElementById('ipr-dislike-'+postId);
+  if (!panel) return;
+  if (panel.innerHTML) { panel.innerHTML=''; return; }
+  const reasons = INF_DISLIKE_REASONS[type] || ['Não existe','Já acabou'];
+  panel.innerHTML = `<div class="inf-post-dislike-panel">
+    <div class="inf-post-dislike-q">Por que você não confirma?</div>
+    <div class="inf-post-dislike-opts">
+      ${reasons.map(r=>`<div class="inf-post-dislike-opt" onclick="infPostDislikeSend('${postId}',${JSON.stringify(r)})">${r}</div>`).join('')}
+    </div>
+  </div>`;
+}
+async function infPostDislikeSend(postId, reason){
+  if (!_supaUser) { showToast('Faça login.'); return; }
+  try{
+    await _SUPA.from('feed_reactions').upsert({post_id:postId, user_id:_supaUser.id, vote:'down', reason}, {onConflict:'post_id,user_id'});
+    const row = document.getElementById('ipr-'+postId);
+    if (row) { const btns = row.querySelectorAll('.inf-post-act'); if(btns[1]) btns[1].classList.add('on-dislike'); }
+    document.getElementById('ipr-dislike-'+postId).innerHTML = '';
+    showToast('Obrigado pelo feedback!');
+  }catch(e){ console.warn('dislike', e); showToast('Erro ao enviar.'); }
+}
+// Comentar — expande inline, sem sair da linha (pedido do Yuri).
+function infPostCommentsToggle(postId){
+  const panel = document.getElementById('ipr-comments-'+postId);
+  if (!panel) return;
+  if (panel.innerHTML) { panel.innerHTML=''; return; }
+  infPostCommentsLoad(postId);
+}
+async function infPostCommentsLoad(postId){
+  const panel = document.getElementById('ipr-comments-'+postId);
+  if (!panel) return;
+  panel.innerHTML = '<div class="inf-post-comments"><div style="font-size:11px;color:var(--muted)">Carregando…</div></div>';
+  try{
+    const { data } = await _SUPA.from('feed_comments').select('*').eq('post_id',postId).order('created_at',{ascending:true}).limit(50);
+    const items = (data||[]).map(c => {
+      const ltr = (c.user_id||'MO').replace(/-/g,'').slice(0,2).toUpperCase();
+      return `<div class="inf-comment-item"><div class="inf-comment-av">${ltr}</div><div class="inf-comment-txt">${esc(c.body)}</div></div>`;
+    }).join('');
+    panel.innerHTML = `<div class="inf-post-comments">
+      ${items || '<div style="font-size:11px;color:var(--muted);margin-bottom:8px">Nenhum comentário ainda</div>'}
+      <div class="inf-comment-input-row">
+        <input class="inf-comment-input" id="ipr-cinput-${postId}" placeholder="Escrever um comentário…">
+        <button class="inf-comment-send" onclick="infPostCommentSend('${postId}')"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--blue)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+      </div>
+    </div>`;
+  }catch(e){ panel.innerHTML = '<div class="
+
+===== login @ 1647875 =====
+ending:true}).limit(50);
+    const items = (data||[]).map(c => {
+      const ltr = (c.user_id||'MO').replace(/-/g,'').slice(0,2).toUpperCase();
+      return `<div class="inf-comment-item"><div class="inf-comment-av">${ltr}</div><div class="inf-comment-txt">${esc(c.body)}</div></div>`;
+    }).join('');
+    panel.innerHTML = `<div class="inf-post-comments">
+      ${items || '<div style="font-size:11px;color:var(--muted);margin-bottom:8px">Nenhum comentário ainda</div>'}
+      <div class="inf-comment-input-row">
+        <input class="inf-comment-input" id="ipr-cinput-${postId}" placeholder="Escrever um comentário…">
+        <button class="inf-comment-send" onclick="infPostCommentSend('${postId}')"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--blue)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+      </div>
+    </div>`;
+  }catch(e){ panel.innerHTML = '<div class="inf-post-comments"><div style="font-size:11px;color:var(--muted)">Erro ao carregar</div></div>'; }
+}
+async function infPostCommentSend(postId){
+  if (!_supaUser) { showToast('Faça login pra comentar.'); return; }
+  const inp = document.getElementById('ipr-cinput-'+postId);
+  const body = (inp?.value||'').trim();
+  if (!body) return;
+  try{
+    await _SUPA.from('feed_comments').insert({post_id:postId, user_id:_supaUser.id, body});
+    await infPostCommentsLoad(postId);
+    // Atualiza o contador visível na linha, sem recarregar a lista toda.
+    const row = document.getElementById('ipr-'+postId);
+    if (row) { const span = row.querySelector('.inf-post-actions .inf-post-act:last-child span'); if (span) span.textContent = (parseInt(span.textContent)||0)+1; }
+  }catch(e){ showToast('Erro ao comentar.'); }
+}
+
+// venue_cache.id já resolvido em _infPanelVenue (infAbrirLocal, roda antes)
+// Logos reais Uber/99 (Regra #2 — nunca recriar em SVG, usar exatamente
+// a imagem fornecida). Uber 112x40 (proporção original 2,8:1), 99 56x56.
+const INF_LOGO_UBER = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHAAAAAoCAYAAAAmPX7RAAAPYklEQVR42u1ceWxU1ff/vH06HQoD2LIUBil0YZUYVEKCdEkUEQNC0IAGU0kxLkj4A+OCIUoiMeKSGBTD4j8GSkRMJUiAhkJKgAYhSEtNBQlbCZSZaTu2ffO28/3j97vX96bT6UKb4PfLTW6mffPuOeeec+85537ObdHe3k6GYVA8Hqe2tjZyHIe2b99OAEiSJALQ687GzZo1iyzLIl3XPfRff/11AkA+n48AUFlZGTmOQ21tbaTrOhmGQeFwmLKzswkAiaLYJzn+mzrTweTJk8ndZFVVIUkSAEAURQiCwH+/18ZoMbrsUxAEz3vsuaZp/GdVVTu996B1bmKyh47jDChTInqg+YE04ANDPTDgg/bAgA/aAwP+DzT53yYwy2JFUUwacx3HGZDYy/gmZtGMV1/4Jsuyk9Fwzzdx3vK/yXCiKMK2bW6orho7Btm23e98U7Xe8u0JPbYwLMsCALS3t/+7DMjOhLquw7ZtqKqKqVOnIi8vDzk5OfD7/YjH42hsbERDQwMuXLiAcDj8f5OTZQiCANM0+8RXURQYhgHbtiGKInJzc5Gbm4tQKISMjAwYhoEbN27gypUrqK+vR0tLCwBAURSP0rsyjqZpEAQBRMQXSjwe54uFLYSsrCyMGDECgiBg/Pjx/P373oCiKIKIoOs6QqEQysrKsGjRIuTl5SV1oQBw69YtHDt2DN9//z0OHToEIoIsyymVmYyv4zgwDAOhUAivvPIKFi1ahIKCAqiqmnTMtWvXUFVVhZ07d6KqqoobKdluZPPat28fJk+eDNM0QURQVRVff/01Nm3aBFVVUVpaihUrViA/Px+BQACyLKOjowO2bUOW/990lmVxWMY0TSIi2rFjR79BaUREjuN46CdCaa+99hoREVmWxd9ta2ujrKwsEgSB3n//fQqHw1xOx3HIsiwyTdPT3XMhIqqsrKRHH32UAJAsyyQIQo9l1zSN1q9fT5FIxEMzGV8mM2v79u2jvLw8AkCKonTiweSor6+nxPbhhx9SIBCgY8eOUbLW1tbmmed9m4V2dHRg3LhxOHjwIDZu3IhgMAjTNOE4Do8LiUkFc0e2bcO2bRQVFaG6uhpr1qyBZVndQoRsx+Tk5ODo0aP46KOPEAwGYVkWHMfhrs0NC7IEhn1v2zYWLlyIU6dOYcmSJTBN85/dkhD74vE4H8fmFgwGsXfvXsyZMwemacK2bQ99t/u8L3cga7FYjG7dukVERLquk2maZBgGddcsyy
+
+===== login @ 1668466 =====
+ls.map(l=>`<div class="inf-peak-lbl">${l}</div>`).join('');
+  const nowRow=labels.map((_,i)=>`<div class="inf-peak-now-cell">${i===curBlk?'<div class="inf-peak-now-mark">AGORA</div>':''}</div>`).join('');
+  return `<div class="inf-agora-hd" style="margin-top:16px">Horários de alta demanda</div><div class="inf-peak-card"><div class="inf-peak-bars">${bars}</div><div class="inf-peak-lbl-row">${lbls}</div><div class="inf-peak-now-row">${nowRow}</div></div>`;
+}
+
+function infCollabBannerHtml(){
+  return `<button class="inf-collab-banner" onclick="infOpenColaborar()">
+    <div class="inf-collab-ic"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+    <div class="inf-collab-txt"><b>Colabore com a comunidade</b><span>Ajude outros motoristas com dados desse local</span></div>
+  </button>`;
+}
+
+// ── Formulário "Colabore com a comunidade" (3 perguntas aprovadas) ──
+let _infColabState={embarque:null,area:null,horas:new Set(),texto:''};
+function infOpenColaborar(){
+  if(!_supaUser){ showToast('Faça login pra colaborar.'); return; }
+  if(!_infPanelVenue){ showToast('Não consegui identificar esse local ainda.'); return; }
+  _infColabState={embarque:null,area:null,horas:new Set(),texto:''};
+  document.getElementById('inf-colab-sub').textContent=`Nos envie informações sobre o ${_infLoc||'local'} — ajuda outros motoristas a decidir se vale a pena vir pra cá.`;
+  infRenderColabForm();
+  openMo('mo-inf-colaborar');
+}
+function infRenderColabForm(){
+  const s=_infColabState;
+  const horas=['0h–3h','3h–6h','6h–9h','9h–12h','12h–15h','15h–18h','18h–21h','21h–24h'];
+  document.getElementById('inf-colab-body').innerHTML=`
+    <div class="inf-qblock">
+      <span class="inf-qnum">1</span><span class="inf-qtitle">Como é o embarque no local?</span>
+      <div class="inf-qopts2">
+        <div class="inf-qopt ${s.embarque==='facil'?'picked':''}" onclick="infColabPick('embarque','facil')">Fácil</div>
+        <div class="inf-qopt ${s.embarque==='dificil'?'picked':''}" onclick="infColabPick('embarque','dificil')">Difícil</div>
+      </div>
+      ${s.embarque?`<div class="inf-qsub-lbl">Área de embarque:</div>
+      <div class="inf-qsub-opts">
+        <div class="inf-qsub-opt ${s.area==='livre'?'picked':''}" onclick="infColabPick('area','livre')">Livre</div>
+        <div class="inf-qsub-opt ${s.area==='definida'?'picked':''}" onclick="infColabPick('area','definida')">Definida</div>
+      </div>`:''}
+    </div>
+    <div class="inf-qblock">
+      <span class="inf-qnum">2</span><span class="inf-qtitle">Horários de mais movimento</span>
+      <div style="font-size:10px;color:#94A3B8;margin:2px 0 0 24px">Pode marcar mais de um</div>
+      <div class="inf-qtime-grid">${horas.map((h,i)=>`<div class="inf-qtime-chip ${s.horas.has(i)?'picked':''}" onclick="infColabToggleHora(${i})">${h}</div>`).join('')}</div>
+    </div>
+    <div class="inf-qblock" style="margin-bottom:6px">
+      <span class="inf-qnum">3</span><span class="inf-qtitle">Alguma outra observação sobre esse local?</span>
+      <textarea class="inf-qtextarea" id="inf-colab-texto" placeholder="Opcional — conta pra gente algo que ache importante...">${esc(s.texto||'')}</textarea>
+      <div class="inf-qnote"><svg viewBox="0 0 24
+
+===== login @ 1703447 =====
+ong inf-strong-red" onclick="infRelatarPublish({param_value:'Área de risco', param_detail:'Proibido a entrada'})">Proibido a entrada</div>
+      <div class="inf-tile-strong inf-strong-red" onclick="infRelatarPublish({param_value:'Área de risco', param_detail:'Barricada'})">Barricada</div>
+    </div>`;
+}
+
+// Publica de verdade em feed_posts — usa a localização já detectada
+// quando o modal abriu (mais rápido que pedir de novo agora).
+function infRelatarPublish(extra){
+  document.getElementById('inf-relatar-title').textContent = 'Publicando…';
+  document.getElementById('inf-relatar-back').style.display = 'none';
+  document.getElementById('inf-relatar-body').innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;padding:24px 10px 8px;text-align:center">
+      <div style="width:40px;height:40px;border-radius:50%;border:3.5px solid #DBEAFE;border-top-color:#2563EB;animation:spin .8s linear infinite;margin-bottom:14px"></div>
+      <div style="font-size:12.5px;color:var(--muted)">Confirmando localização</div>
+    </div>`;
+  infRelatarDoPublish(extra);
+}
+async function infRelatarDoPublish(extra){
+  if (!_supaUser) { closeMo('mo-inf-relatar'); showToast('Faça login pra relatar.', 'error'); return; }
+  const t = (_infRelState.types||{})[_infRelState.type];
+  const expMin = t?.expMin || 30;
+  const row = {
+    user_id:_supaUser.id, type:_infRelState.type, audience:'comunidade', source:'user',
+    lat:_infRelState.lat ?? null, lng:_infRelState.lng ?? null,
+    address:_infRelState.address || null, city:'rio',
+    param_value:extra.param_value ?? null, param_detail:extra.param_detail ?? null,
+    nivel: extra.nivel ?? null,
+    expires_at:new Date(Date.now()+expMin*60000).toISOString(),
+    votes_up:1, votes_dn:0, comments_count:0, status:'ativo'
+  };
+  const { error } = await _SUPA.from('feed_posts').insert(row);
+  setTimeout(()=>{
+    closeMo('mo-inf-relatar');
+    if (error) { console.error('infRelatarDoPublish', error); showToast('Erro ao publicar. Tenta de novo.', 'error'); return; }
+    showToast('Publicado!', 'success');
+    if (_infLoc) infCarregarInformes(_infLoc, _infTipoKey);
+  }, 500);
+}
+function infSetTime(btn,min){
+  document.querySelectorAll('.inf-tp').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  _infMinutos=parseInt(min);infCarregarContagens();
+  if(_infLoc)infCarregarInformes(_infLoc,_infTipoKey);
+}
+function infFecharOv(id){document.getElementById(id).classList.remove('open');}
+function infFiltrarSheet(inp,listId){
+  const v=inp.value.toLowerCase();
+  document.querySelectorAll('#'+listId+' .inf-loc-item').forEach(el=>{const t=el.querySelector('.inf-loc-name')?.textContent.toLowerCase()||'';el.style.display=(!v||t.includes(v))?'':'none';});
+}
+function infIconSvg(tipo,cor,sz){
+  const a=`viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="none" stroke="${cor}" stroke-width="2"`;
+  const m={aero:`<svg ${a}><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>`,term:`<svg ${a}><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,bairro:`<svg ${a}><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.333-8 14-8 14S4 15.333 4 10a8 8 0 0 1 8-8z"/></svg>`,rua:`<svg ${a}><circle cx="12" cy="12" r="3"/><path d="
+
+===== sm_inf_city @ 1627637 =====
+t:'bairro'},
+  {n:'Vila Isabel',t:'bairro'},{n:'Méier',t:'bairro'},{n:'Penha',t:'bairro'},
+  // Eventos
+  {n:'Vivo Rio',t:'ev'},{n:'Maracanã',t:'ev'},{n:'Fundição Progresso',t:'ev'},
+  {n:'Circo Voador',t:'ev'},{n:'Teatro Municipal',t:'ev'},{n:'MAM',t:'ev'},
+  {n:'Arena Jeunesse',t:'ev'},
+  // Turístico
+  {n:'Cristo Redentor',t:'tur'},{n:'Pão de Açúcar',t:'tur'},{n:'Arcos da Lapa',t:'tur'},
+  {n:'Museu do Amanhã',t:'tur'},{n:'Jardim Botânico',t:'tur'},{n:'Quinta da Boa Vista',t:'tur'},
+  // Bares e Restaurantes
+  {n:'Bar do Mineiro',t:'bar'},{n:'Casa da Cachaça',t:'bar'},{n:'Academia da Cachaça',t:'bar'},
+  {n:'Bar Urca',t:'bar'},{n:'Devassa',t:'bar'},{n:'Confeitaria Colombo',t:'bar'},
+  // Hotéis
+  {n:'Copacabana Palace',t:'hotel'},{n:'Fairmont Rio',t:'hotel'},{n:'Intercontinental',t:'hotel'},
+  {n:'Windsor Barra',t:'hotel'},{n:'Sheraton Grand',t:'hotel'},{n:'Ibis Copacabana',t:'hotel'},
+];
+let _infLoc=null,_infTipoKey=null,_infMinutos=60,_infRepTipo=null,_infRepValor=null,_infRepDetalhe=null,_infPanelVenue=null;
+// Cidade do Informes (16/08/2026, pedido do Yuri) — antes fixa "Rio de
+// Janeiro" no HTML, agora clicável e persistida.
+let _infCity = JSON.parse(localStorage.getItem('sm_inf_city') || '{"name":"Rio de Janeiro","uf":"RJ"}');
+let _infFavs=JSON.parse(localStorage.getItem('sm_inf_favs')||'[]');
+const INF_AVC=['#6D28D9','#0369A1','#B45309','#0F766E','#15803D','#BE123C','#7C3AED','#0284C7'];
+const INF_BADGE={dinamico:'infbd',transito:'infbt',fiscalizacao:'infbf',fila:'infbfi',demanda:'infbde',lotacao:'infblo',acidente:'infbac'};
+
+function renderInformes(){
+  infCarregarContagens();
+  infRenderBairrosTab();
+  infRenderVenueLists();
+  infCarregarFeedAgora();
+}
+
+function infTab(id){
+  document.querySelectorAll('.inf-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));
+  document.querySelectorAll('#inf-scroll-content > .inf-panelbody').forEach(p=>p.classList.add('hide'));
+  const p=document.getElementById('inf-tab-'+id);if(p)p.classList.remove('hide');
+}
+
+function infRenderBairrosTab(){
+  const bic=`<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#475569" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.333-8 14-8 14S4 15.333 4 10a8 8 0 0 1 8-8z"/></svg>`;
+  const chip=b=>`<div class="inf-bchip" onclick="infAbrirLocal(this,'${b}','bairro')"><div class="inf-bchip-ct z">–</div><div class="inf-bchip-ic">${bic}</div><div class="inf-bchip-name">${b}</div></div>`;
+  const sulEl=document.getElementById('inf-bchip-sul');if(sulEl)sulEl.innerHTML=INF_BAIRROS.sul.map(chip).join('');
+  const barraEl=document.getElementById('inf-bchip-barra');if(barraEl)barraEl.innerHTML=INF_BAIRROS.barra.map(chip).join('');
+  infCarregarContagens();
+}
+
+function infRenderVenueLists(){
+  Object.entries({shoppings:'shoppings',bares:'bares',hoteis:'hoteis',eventos:'eventos',turistico:'turistico'}).forEach(([tabKey,venueKey])=>{
+    const el=document.getElementById('inf-vlist-'+tabKey);if(!el)return;
+    const v=INF_VENUES[venueKey];if(!v)return;
+    const t=INF_TIPOS[v.tipo]||INF_TIPOS.bairro;
+    el.innerHTML=v.itens.map(item=>`<div class="inf-vitem" onclick="infAbrirLocal(this,'${item.n.replace(/'/g,"\\'")}','${v.tipo}')">
+      <div class="inf-vitem-ic" style="background:${t.bg}">${infIconSvg(v.tipo,t.cor,15)}</div>
+      <div><div class="inf-vitem-name">${item.n}</div><div class="inf-vitem-sub">${it
+
+===== sm_inf_city @ 1692536 =====
+clearTimeout(_infCitySearchDebounce);
+  if (!q || q.trim().length < 2) { infRenderCidadeDefaults(); return; }
+  _infCitySearchDebounce = setTimeout(async () => {
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(q)}&country=Brazil&format=json&addressdetails=1&limit=8`, {headers:{'User-Agent':'MoB/1.0'}});
+      const data = await r.json();
+      const cidades = data
+        .filter(d => d.address && (d.address.city || d.address.town || d.address.municipality))
+        .map(d => ({name: d.address.city || d.address.town || d.address.municipality, uf: d.address.state_code || (d.address['ISO3166-2-lvl4']||'').split('-')[1] || ''}));
+      const vistos = new Set();
+      const unicos = cidades.filter(c => { const k = c.name+c.uf; if (vistos.has(k)) return false; vistos.add(k); return true; });
+      document.getElementById('inf-city-list').innerHTML = unicos.length
+        ? unicos.map(infCidadeItemHtml).join('')
+        : '<div class="inf-empty">Nenhuma cidade encontrada</div>';
+    } catch(e) { console.warn('busca cidade', e); }
+  }, 400);
+}
+function infEscolherCidade(name, uf){
+  _infCity = {name, uf};
+  localStorage.setItem('sm_inf_city', JSON.stringify(_infCity));
+  document.getElementById('inf-city-name').textContent = name;
+  closeMo('mo-inf-cidade');
+  showToast('Cidade alterada para '+name);
+  // Recarrega o que depender da cidade — feed "Agora" e listas de venue.
+  try { infCarregarFeedAgora?.(); } catch(e){}
+}
+function infToggleSearch(){
+  const el = document.getElementById('inf-search-fixed');
+  const btn = document.getElementById('inf-search-toggle');
+  if(!el) return;
+  const show = el.style.display === 'none';
+  el.style.display = show ? 'flex' : 'none';
+  if(btn){ btn.style.background = show ? '#0A2F6B' : ''; btn.style.color = show ? '#fff' : ''; }
+  if(show){ document.getElementById('inf-search-bar')?.focus(); }
+  else {
+    const inp = document.getElementById('inf-search-bar'); if(inp) inp.value='';
+    const dd = document.getElementById('inf-search-dd'); if(dd) dd.classList.remove('show');
+  }
+}
+// Botão "Relatar agora" (barra fixa embaixo, Opção B aprovada) — abre o
+// seletor de tipo. Reaproveita ícone/expMin do FEED_TYPES (blitz/risco/
+// transito), só troca label/cor pro contexto do Informes (Policiamento/
+// Alerta/Trânsito) — mesma chave de type no banco, então o composer do
+// Início (que ainda usa os nomes antigos) continua compatível com o
+// mesmo dado. Construído dentro da função (não como const no topo do
+// arquivo) porque FEED_TYPES só existe mais abaixo — na hora que essa
+// função É CHAMADA (clique do usuário) o resto do script já rodou, mas
+// declarar como const aqui em cima quebraria (referência antes de existir).
+let _infRelState = {};
+function infOpenRelatar(){
+  _infRelState = {};
+  const types = {
+    transito: {label:'Trânsito',     color:'#F97316', icon:FEED_TYPES.transito.icon, expMin:FEED_TYPES.transito.expMin},
+    risco:    {label:'Alerta',       color:'#DC2626', icon:FEED_TYPES.risco.icon,    expMin:FEED_TYPES.risco.expMin},
+    blitz:    {label:'Fiscalização', color:'#2563EB', icon:FEED_TYPES.blitz.icon,    expMin:FEED_TYPES.blitz.expMin}
+  };
+  _infRelState.types = types;
+  document.getElementById('inf-relatar-title').textContent = 'Informe';
+  document.getElementById('inf-relatar-back').style.display = 'none';
+  document.getElementById
+
+===== renderinformes @ 548232 =====
+crollTop = 0;
+  if (sec === 'home')       renderFeedHome();
+  if (sec === 'relatorios') renderHome();
+  if (sec === 'jornada') {
+    renderJornada(); // render imediato com dado local (nunca trava esperando rede)
+    updateNetStatus();
+    if (_supaUser && navigator.onLine) {
+      reconcileJornadaHoje().then(() => renderJornada()).catch(()=>{});
+      // Se o app local acha que está idle mas existe jornada aberta no
+      // Supabase há mais de 15min (provável órfã), fecha automaticamente
+      if (S.gps.st === 'idle') {
+        _closeOrphanSessions().then(n => { if (n) renderJornada(); }).catch(()=>{});
+      }
+    }
+  }
+  if (sec === 'financeiro') renderFin();
+  if (sec === 'lancamentos') renderLancamentos();
+  if (sec === 'corridas') {
+    S.corridasPlats = new Set(); // reseta sempre — nenhum filtro marcado = mostra tudo
+    document.getElementById('cor-plat-uber')?.classList.remove('active');
+    document.getElementById('cor-plat-99')?.classList.remove('active');
+    renderCorridasActive();
+  }
+  if (sec === 'mais')       renderMais();
+  if (sec === 'categorias') renderCatsModal();
+  if (sec === 'agenda')     { renderAgenda(); agScrollToFirst(); }
+  if (sec === 'informes')   renderInformes();
+}
+function openSuporte() {
+  const el = document.getElementById('suporte-version');
+  if (el) {
+    const v = window.SmartMobiNative?.getVersion?.();
+    el.textContent = v ? ('App nativo v' + v) : 'Acessando pelo navegador (sem app nativo)';
+  }
+  openMo('mo-suporte');
+}
+function navToFav() {
+  const cfg = DB.cfg();
+  navTo(cfg.favModule || 'financeiro');
+}
+function openMo(id) { const el = document.getElementById(id); if (el) el.classList.add('on'); }
+function closeMo(id) { const el = document.getElementById(id); if (el) el.classList.remove('on'); }
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('mo')) e.target.classList.remove('on');
+});
+
+// ── MAIS SCREEN ───────────────────────────────────────────────
+function renderMais() {
+  const vEl = document.getElementById("app-code-ver");
+  if (vEl) vEl.textContent = typeof _APP_CODE_VER !== "undefined" ? _APP_CODE_VER : "?";
+
+  const cfg = DB.cfg();
+  const favId = cfg.favModule || 'financeiro';
+  const container = document.getElementById('mais-modules');
+  if (!container) return;
+  container.innerHTML = MODULES.map(m => `
+    <div style="background:#fff;border-radius:20px;border:1px solid #E2E8F0;box-shadow:0 2px 10px rgba(15,23,42,.05);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="navTo('${m.id}')">
+      <div style="width:42px;height:42px;border-radius:14px;background:${MODULE_COLORS[m.color]};display:flex;align-items:center;justify-content:center;color:${MODULE_ICONS_COLOR[m.color]};flex-shrink:0">${m.icon}</div>
+      <div style="flex:1"><div style="font-size:14px;font-weight:700">${m.label}</div><div style="font-size:12px;color:#64748B;margin-top:2px">${m.sub}</div></div>
+      <button onclick="event.stopPropagation();setFavModule('${m.id}')" style="border:none;background:${m.id===favId?MODULE_COLORS[m.color]:'transparent'};border-radius:8px;padding:6px;cursor:pointer;color:${m.id===favId?MODULE_ICONS_COLOR[m.color]:'#94A3B8'};display:flex;align-items:center;justify-content:center" title="Fixar no menu">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="${m.id===favId?'currentColor':'none'}" stroke="currentColor" st
+
+===== renderinformes @ 1628009 =====
+os da Lapa',t:'tur'},
+  {n:'Museu do Amanhã',t:'tur'},{n:'Jardim Botânico',t:'tur'},{n:'Quinta da Boa Vista',t:'tur'},
+  // Bares e Restaurantes
+  {n:'Bar do Mineiro',t:'bar'},{n:'Casa da Cachaça',t:'bar'},{n:'Academia da Cachaça',t:'bar'},
+  {n:'Bar Urca',t:'bar'},{n:'Devassa',t:'bar'},{n:'Confeitaria Colombo',t:'bar'},
+  // Hotéis
+  {n:'Copacabana Palace',t:'hotel'},{n:'Fairmont Rio',t:'hotel'},{n:'Intercontinental',t:'hotel'},
+  {n:'Windsor Barra',t:'hotel'},{n:'Sheraton Grand',t:'hotel'},{n:'Ibis Copacabana',t:'hotel'},
+];
+let _infLoc=null,_infTipoKey=null,_infMinutos=60,_infRepTipo=null,_infRepValor=null,_infRepDetalhe=null,_infPanelVenue=null;
+// Cidade do Informes (16/08/2026, pedido do Yuri) — antes fixa "Rio de
+// Janeiro" no HTML, agora clicável e persistida.
+let _infCity = JSON.parse(localStorage.getItem('sm_inf_city') || '{"name":"Rio de Janeiro","uf":"RJ"}');
+let _infFavs=JSON.parse(localStorage.getItem('sm_inf_favs')||'[]');
+const INF_AVC=['#6D28D9','#0369A1','#B45309','#0F766E','#15803D','#BE123C','#7C3AED','#0284C7'];
+const INF_BADGE={dinamico:'infbd',transito:'infbt',fiscalizacao:'infbf',fila:'infbfi',demanda:'infbde',lotacao:'infblo',acidente:'infbac'};
+
+function renderInformes(){
+  infCarregarContagens();
+  infRenderBairrosTab();
+  infRenderVenueLists();
+  infCarregarFeedAgora();
+}
+
+function infTab(id){
+  document.querySelectorAll('.inf-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));
+  document.querySelectorAll('#inf-scroll-content > .inf-panelbody').forEach(p=>p.classList.add('hide'));
+  const p=document.getElementById('inf-tab-'+id);if(p)p.classList.remove('hide');
+}
+
+function infRenderBairrosTab(){
+  const bic=`<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#475569" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.333-8 14-8 14S4 15.333 4 10a8 8 0 0 1 8-8z"/></svg>`;
+  const chip=b=>`<div class="inf-bchip" onclick="infAbrirLocal(this,'${b}','bairro')"><div class="inf-bchip-ct z">–</div><div class="inf-bchip-ic">${bic}</div><div class="inf-bchip-name">${b}</div></div>`;
+  const sulEl=document.getElementById('inf-bchip-sul');if(sulEl)sulEl.innerHTML=INF_BAIRROS.sul.map(chip).join('');
+  const barraEl=document.getElementById('inf-bchip-barra');if(barraEl)barraEl.innerHTML=INF_BAIRROS.barra.map(chip).join('');
+  infCarregarContagens();
+}
+
+function infRenderVenueLists(){
+  Object.entries({shoppings:'shoppings',bares:'bares',hoteis:'hoteis',eventos:'eventos',turistico:'turistico'}).forEach(([tabKey,venueKey])=>{
+    const el=document.getElementById('inf-vlist-'+tabKey);if(!el)return;
+    const v=INF_VENUES[venueKey];if(!v)return;
+    const t=INF_TIPOS[v.tipo]||INF_TIPOS.bairro;
+    el.innerHTML=v.itens.map(item=>`<div class="inf-vitem" onclick="infAbrirLocal(this,'${item.n.replace(/'/g,"\\'")}','${v.tipo}')">
+      <div class="inf-vitem-ic" style="background:${t.bg}">${infIconSvg(v.tipo,t.cor,15)}</div>
+      <div><div class="inf-vitem-name">${item.n}</div><div class="inf-vitem-sub">${item.sub||''}</div></div>
+      <div class="inf-vitem-badges" data-vname="${esc(item.n)}"></div>
+      <div class="inf-vitem-ct z">–</div>
+    </div>`).join('');
+  });
+  infCarregarContagens();
+  infCarregarBadgesListagem();
+}
+
+// Badges "Alta demanda"/"Tarifa dinâmica" nos itens da listagem —
+// mesmo visual do header (ícone+texto), some quando não há dado.
+// Reaproveit
+
+===== infescolhercidade @ 1690671 =====
+ver corrige sozinho pra sempre,
+// não importa o que mude na altura do topbar no futuro.
+(function infWatchTopbarHeight(){
+  const el = document.getElementById('inf-topbar');
+  if (!el || typeof ResizeObserver === 'undefined') return;
+  const apply = () => document.documentElement.style.setProperty('--inf-topbar-h', el.offsetHeight + 'px');
+  new ResizeObserver(apply).observe(el);
+  apply();
+})();
+// Trocar cidade (16/08/2026) — abre com a atual marcada + algumas
+// sugestões próximas; busca de verdade via Nominatim (mesma fonte já
+// usada em todo o resto do app pra geocodificação).
+function infAbrirCidade(){
+  document.getElementById('inf-city-search-input').value = '';
+  infRenderCidadeDefaults();
+  openMo('mo-inf-cidade');
+}
+function infRenderCidadeDefaults(){
+  const sugestoes = [
+    {name:'Rio de Janeiro', uf:'RJ'}, {name:'Teresópolis', uf:'RJ'},
+    {name:'Niterói', uf:'RJ'}, {name:'São Paulo', uf:'SP'}
+  ];
+  document.getElementById('inf-city-list').innerHTML = sugestoes.map(infCidadeItemHtml).join('');
+}
+function infCidadeItemHtml(c){
+  const isActive = c.name === _infCity.name && c.uf === _infCity.uf;
+  return `<div class="inf-city-item ${isActive?'active':''}" onclick="infEscolherCidade('${c.name.replace(/'/g,"\\'")}','${c.uf}')">
+    <div class="inf-city-item-ic"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div>
+    <div><div class="inf-city-item-name">${c.name}</div><div class="inf-city-item-uf">${c.uf}</div></div>
+    ${isActive ? '<svg class="inf-city-item-check" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+  </div>`;
+}
+let _infCitySearchDebounce = null;
+function infBuscarCidade(q){
+  clearTimeout(_infCitySearchDebounce);
+  if (!q || q.trim().length < 2) { infRenderCidadeDefaults(); return; }
+  _infCitySearchDebounce = setTimeout(async () => {
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(q)}&country=Brazil&format=json&addressdetails=1&limit=8`, {headers:{'User-Agent':'MoB/1.0'}});
+      const data = await r.json();
+      const cidades = data
+        .filter(d => d.address && (d.address.city || d.address.town || d.address.municipality))
+        .map(d => ({name: d.address.city || d.address.town || d.address.municipality, uf: d.address.state_code || (d.address['ISO3166-2-lvl4']||'').split('-')[1] || ''}));
+      const vistos = new Set();
+      const unicos = cidades.filter(c => { const k = c.name+c.uf; if (vistos.has(k)) return false; vistos.add(k); return true; });
+      document.getElementById('inf-city-list').innerHTML = unicos.length
+        ? unicos.map(infCidadeItemHtml).join('')
+        : '<div class="inf-empty">Nenhuma cidade encontrada</div>';
+    } catch(e) { console.warn('busca cidade', e); }
+  }, 400);
+}
+function infEscolherCidade(name, uf){
+  _infCity = {name, uf};
+  localStorage.setItem('sm_inf_city', JSON.stringify(_infCity));
+  document.getElementById('inf-city-name').textContent = name;
+  closeMo('mo-inf-cidade');
+  showToast('Cidade alterada para '+name);
+  // Recarrega o que depender da cidade — feed "Agora" e listas de venue.
+  try { infCarregarFeedAgora?.(); } catch(e){}
+}
+function infToggleSearch(){
+  const e
+
+===== infcarregarvenuesgps @ 1679046 =====
+v class="inf-loc-body"><div class="inf-loc-name" style="color:#14B8A6">${esc(ruaAtual)}</div><div class="inf-loc-sub">Você está aqui · ${esc(bairro)}</div></div></div>`;
+      ruas.slice(0,10).forEach(r=>{html+=`<div class="inf-loc-item" onclick="${onTap(r)}"><div class="inf-loc-ic" style="background:#CCFBF1"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#14B8A6" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/></svg></div><div class="inf-loc-body"><div class="inf-loc-name">${esc(r)}</div><div class="inf-loc-sub">Próxima · ≈300m</div></div></div>`;});
+      document.getElementById('inf-gps-list').innerHTML=html;
+    }catch(e){document.getElementById('inf-gps-list').innerHTML='<div class="inf-empty">Erro ao buscar. Tente novamente.</div>';}
+  },()=>{document.getElementById('inf-gps-list').innerHTML='<div class="inf-empty">Permissão negada</div>';},{timeout:10000,enableHighAccuracy:true});
+}
+
+function infAbrirVenue(cat){
+  const v=INF_VENUES[cat];const t=INF_TIPOS[v.tipo];
+  // Tenta carregar via GPS primeiro; fallback para lista fixa
+  infAbrirVenueSheet(cat, v.itens);
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(pos=>{
+      infCarregarVenuesGPS(cat, pos.coords.latitude, pos.coords.longitude);
+    }, null, {timeout:5000, maximumAge:30000});
+  }
+}
+async function infCarregarVenuesGPS(cat, lat, lon){
+  const queries = {
+    bares: `node(around:800,${lat},${lon})[amenity~"^(bar|pub|restaurant|cafe|nightclub)$"][name];`,
+    hoteis:`node(around:2000,${lat},${lon})[tourism~"^(hotel|hostel|motel|guest_house)$"][name];`,
+    eventos:`(node(around:5000,${lat},${lon})[amenity~"^(theatre|cinema|arts_centre)$"][name];node(around:5000,${lat},${lon})[leisure="stadium"][name];);`,
+    turistico:`node(around:3000,${lat},${lon})[tourism~"^(museum|attraction|viewpoint|gallery)$"][name];`,
+  };
+  const oq = queries[cat]; if(!oq) return;
+  try{
+    const r=await fetch(`https://overpass-api.de/api/interpreter?data=[out:json];${encodeURIComponent(oq)}out 20;`);
+    const d=await r.json();
+    if(!d.elements||!d.elements.length) return;
+    // Calcula distância e ordena
+    const R=6371;
+    const dist=(a,b,c,dd)=>R*2*Math.asin(Math.sqrt(Math.sin(((c-a)*Math.PI/180)/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(((dd-b)*Math.PI/180)/2)**2));
+    const itens=d.elements
+      .filter(e=>e.tags&&e.tags.name)
+      .map(e=>({n:e.tags.name, sub:e.tags['addr:suburb']||e.tags['addr:city']||'Via GPS', km:dist(lat,lon,e.lat||lat,e.lon||lon)}))
+      .sort((a,b)=>a.km-b.km)
+      .slice(0,12)
+      .map(e=>({...e,distStr:(e.km<1?Math.round(e.km*1000)+'m':e.km.toFixed(1)+'km')}));
+    if(itens.length) infAbrirVenueSheet(cat, itens, true);
+  }catch(e){console.warn('overpass venues',e);}
+}
+function infAbrirVenueSheet(cat, itens, viaGPS){
+  const v=INF_VENUES[cat]; if(!v) return;
+  const t=INF_TIPOS[v.tipo]||INF_TIPOS.bairro;
+  const ic=document.getElementById('inf-venue-ic');
+  if(ic){ic.style.background=t.bg;ic.innerHTML=infIconSvg(v.tipo,t.cor,17);}
+  const titleEl=document.getElementById('inf-venue-title');
+  if(titleEl) titleEl.textContent=v.titulo;
+  const subEl=document.getElementById('inf-venue-sub');
+  if(subEl) subEl.textContent=viaGPS?'Ordenado pela sua localização':'Locais populares';
+  const listEl=document.getElementById('inf-venue-list');
+  const displayItens=itens||v.itens||[];
+  if(list
+
+===== navigator.geolocation @ 891035 =====
+      .gte('start_ms', cutoff).order('start_ms', {ascending:false}).limit(1);
+      if (open && open.length) {
+        const s = open[0];
+        const g2 = S.gps;
+        g2.st = 'running'; g2.sessionId = s.id; g2.start = s.start_ms;
+        g2.km = parseFloat(s.km)||0; g2.pa = null;
+        // Trata o intervalo em que o app ficou sem rastrear (entre o último
+        // elapsed salvo e agora) como se fosse uma pausa automática — preserva
+        // o horário real de início na tela, mas NÃO conta esse gap como tempo
+        // online de verdade (senão o 'Tempo total' fica inflado com tempo em
+        // que o app estava fechado, não rodando de fato).
+        const expectedNowMs = s.start_ms + (s.elapsed_secs||0)*1000 + (s.paused_ms||0);
+        const gapMs = Math.max(0, Date.now() - expectedNowMs);
+        g2.pausedMs = (s.paused_ms||0) + gapMs;
+        g2.pts = []; g2.lastFixTime = null;
+        const day1 = DB.day(s.date || DB.today());
+        g2.baseKm = (day1.sessions||[]).reduce((sum,x)=>sum+(x.km||0),0);
+        g2.baseElapsed = (day1.sessions||[]).reduce((sum,x)=>sum+(x.elapsed||0),0);
+        if (g2.ti) { try{ clearInterval(g2.ti); }catch(e){} }
+        if (g2.wid) { try{ navigator.geolocation.clearWatch(g2.wid); }catch(e){} }
+        persistGps();
+        syncNavButton();
+        g2.ti = setInterval(gpsUpdate, 1000);
+        if (navigator.geolocation) {
+          g2.wid = navigator.geolocation.watchPosition(gpsOnPosition, null, {enableHighAccuracy:true, maximumAge:3000, timeout:10000});
+        }
+        requestWakeLock();
+        // Religa o widget/serviço nativo semeado com o estado da jornada
+        // retomada — sem isso o rastreamento em background ficava morto
+        if (window.SmartMobiNative && DB.cfg().overlayEnabled !== false) {
+          try {
+            SmartMobiNative.startFloating?.(g2.start, g2.km || 0);
+            SmartMobiNative.updateFloatingStatus?.('running');
+          } catch(e) {}
+        }
+        showToast('Uma jornada em aberto foi encontrada e retomada (não iniciamos outra do zero).', 'info');
+        setTimeout(() => { try{renderJornada();}catch(e){} try{renderHome();}catch(e){} }, 80);
+        return; // NÃO cria sessão nova — já retomou a existente
+      }
+    } catch(e) { console.warn('[gpsStart] checagem de continuidade falhou:', e); }
+  }
+  // Defesa: limpa qualquer interval/watcher residual de uma sessão anterior
+  // que não tenha sido corretamente encerrada (evita contagem duplicada de km)
+  if (S.gps.ti) { try{ clearInterval(S.gps.ti); }catch(e){} }
+  if (S.gps.wid) { try{ navigator.geolocation.clearWatch(S.gps.wid); }catch(e){} }
+  const g = S.gps; g.st='running'; g.start=Date.now(); g.km=0; g.pts=[]; g.pausedMs=0; g.pa=null; g.forceDate=null;
+  // Fecha em segundo plano qualquer jornada órfã de verdade (mais de 12h,
+  // já não é candidata a retomada acima) — não bloqueia o início desta
+  _closeOrphanSessions().then(n => { if (n) showToast(n+' jornada(s) antiga(s) que ficaram aberta(s) foram encerrada(s) automaticamente.', 'info'); }).catch(()=>{});
+  g.sessionId = DB.uid(); // ID único desta sessão, usado para upsert no cloud
+  const day0 = DB.day(DB.today());
+  g.baseKm = (day0.sessions||[]).reduce((s,x)=>s+(x.km||0),0);
+  g.baseElapsed = (day0.sessions||[]).reduce((s,x)=>s+(x.elapsed||0),0);
+  // Inicia floating widget nativo (se o usuário não tiver desativado)
+  if (window.SmartMobi
+
+===== navigator.geolocation @ 891240 =====
+ s.id; g2.start = s.start_ms;
+        g2.km = parseFloat(s.km)||0; g2.pa = null;
+        // Trata o intervalo em que o app ficou sem rastrear (entre o último
+        // elapsed salvo e agora) como se fosse uma pausa automática — preserva
+        // o horário real de início na tela, mas NÃO conta esse gap como tempo
+        // online de verdade (senão o 'Tempo total' fica inflado com tempo em
+        // que o app estava fechado, não rodando de fato).
+        const expectedNowMs = s.start_ms + (s.elapsed_secs||0)*1000 + (s.paused_ms||0);
+        const gapMs = Math.max(0, Date.now() - expectedNowMs);
+        g2.pausedMs = (s.paused_ms||0) + gapMs;
+        g2.pts = []; g2.lastFixTime = null;
+        const day1 = DB.day(s.date || DB.today());
+        g2.baseKm = (day1.sessions||[]).reduce((sum,x)=>sum+(x.km||0),0);
+        g2.baseElapsed = (day1.sessions||[]).reduce((sum,x)=>sum+(x.elapsed||0),0);
+        if (g2.ti) { try{ clearInterval(g2.ti); }catch(e){} }
+        if (g2.wid) { try{ navigator.geolocation.clearWatch(g2.wid); }catch(e){} }
+        persistGps();
+        syncNavButton();
+        g2.ti = setInterval(gpsUpdate, 1000);
+        if (navigator.geolocation) {
+          g2.wid = navigator.geolocation.watchPosition(gpsOnPosition, null, {enableHighAccuracy:true, maximumAge:3000, timeout:10000});
+        }
+        requestWakeLock();
+        // Religa o widget/serviço nativo semeado com o estado da jornada
+        // retomada — sem isso o rastreamento em background ficava morto
+        if (window.SmartMobiNative && DB.cfg().overlayEnabled !== false) {
+          try {
+            SmartMobiNative.startFloating?.(g2.start, g2.km || 0);
+            SmartMobiNative.updateFloatingStatus?.('running');
+          } catch(e) {}
+        }
+        showToast('Uma jornada em aberto foi encontrada e retomada (não iniciamos outra do zero).', 'info');
+        setTimeout(() => { try{renderJornada();}catch(e){} try{renderHome();}catch(e){} }, 80);
+        return; // NÃO cria sessão nova — já retomou a existente
+      }
+    } catch(e) { console.warn('[gpsStart] checagem de continuidade falhou:', e); }
+  }
+  // Defesa: limpa qualquer interval/watcher residual de uma sessão anterior
+  // que não tenha sido corretamente encerrada (evita contagem duplicada de km)
+  if (S.gps.ti) { try{ clearInterval(S.gps.ti); }catch(e){} }
+  if (S.gps.wid) { try{ navigator.geolocation.clearWatch(S.gps.wid); }catch(e){} }
+  const g = S.gps; g.st='running'; g.start=Date.now(); g.km=0; g.pts=[]; g.pausedMs=0; g.pa=null; g.forceDate=null;
+  // Fecha em segundo plano qualquer jornada órfã de verdade (mais de 12h,
+  // já não é candidata a retomada acima) — não bloqueia o início desta
+  _closeOrphanSessions().then(n => { if (n) showToast(n+' jornada(s) antiga(s) que ficaram aberta(s) foram encerrada(s) automaticamente.', 'info'); }).catch(()=>{});
+  g.sessionId = DB.uid(); // ID único desta sessão, usado para upsert no cloud
+  const day0 = DB.day(DB.today());
+  g.baseKm = (day0.sessions||[]).reduce((s,x)=>s+(x.km||0),0);
+  g.baseElapsed = (day0.sessions||[]).reduce((s,x)=>s+(x.elapsed||0),0);
+  // Inicia floating widget nativo (se o usuário não tiver desativado)
+  if (window.SmartMobiNative && DB.cfg().overlayEnabled !== false) {
+    try {
+      if (typeof SmartMobiNative.startFloating === 'function')
+        SmartMobiNative.startFloating(g.start, 0);
+      if (typeof SmartMobiNative.u
+
+===== navigator.geolocation @ 892404 =====
+r.geolocation) {
+          g2.wid = navigator.geolocation.watchPosition(gpsOnPosition, null, {enableHighAccuracy:true, maximumAge:3000, timeout:10000});
+        }
+        requestWakeLock();
+        // Religa o widget/serviço nativo semeado com o estado da jornada
+        // retomada — sem isso o rastreamento em background ficava morto
+        if (window.SmartMobiNative && DB.cfg().overlayEnabled !== false) {
+          try {
+            SmartMobiNative.startFloating?.(g2.start, g2.km || 0);
+            SmartMobiNative.updateFloatingStatus?.('running');
+          } catch(e) {}
+        }
+        showToast('Uma jornada em aberto foi encontrada e retomada (não iniciamos outra do zero).', 'info');
+        setTimeout(() => { try{renderJornada();}catch(e){} try{renderHome();}catch(e){} }, 80);
+        return; // NÃO cria sessão nova — já retomou a existente
+      }
+    } catch(e) { console.warn('[gpsStart] checagem de continuidade falhou:', e); }
+  }
+  // Defesa: limpa qualquer interval/watcher residual de uma sessão anterior
+  // que não tenha sido corretamente encerrada (evita contagem duplicada de km)
+  if (S.gps.ti) { try{ clearInterval(S.gps.ti); }catch(e){} }
+  if (S.gps.wid) { try{ navigator.geolocation.clearWatch(S.gps.wid); }catch(e){} }
+  const g = S.gps; g.st='running'; g.start=Date.now(); g.km=0; g.pts=[]; g.pausedMs=0; g.pa=null; g.forceDate=null;
+  // Fecha em segundo plano qualquer jornada órfã de verdade (mais de 12h,
+  // já não é candidata a retomada acima) — não bloqueia o início desta
+  _closeOrphanSessions().then(n => { if (n) showToast(n+' jornada(s) antiga(s) que ficaram aberta(s) foram encerrada(s) automaticamente.', 'info'); }).catch(()=>{});
+  g.sessionId = DB.uid(); // ID único desta sessão, usado para upsert no cloud
+  const day0 = DB.day(DB.today());
+  g.baseKm = (day0.sessions||[]).reduce((s,x)=>s+(x.km||0),0);
+  g.baseElapsed = (day0.sessions||[]).reduce((s,x)=>s+(x.elapsed||0),0);
+  // Inicia floating widget nativo (se o usuário não tiver desativado)
+  if (window.SmartMobiNative && DB.cfg().overlayEnabled !== false) {
+    try {
+      if (typeof SmartMobiNative.startFloating === 'function')
+        SmartMobiNative.startFloating(g.start, 0);
+      if (typeof SmartMobiNative.updateFloatingStatus === 'function')
+        SmartMobiNative.updateFloatingStatus('running');
+    } catch(e) {}
+  }
+  syncNavButton();
+  persistGps();
+  // Registra imediatamente no Supabase — não espera checkpoint
+  if (_supaUser) {
+    _SUPA.from('sessions').upsert({
+      id: g.sessionId, user_id: _supaUser.id, date: DB.today(),
+      start_ms: g.start, end_ms: null, km: 0, elapsed_secs: 0,
+      paused_ms: 0, is_paused: false
+    }, { onConflict: 'id' }).catch(()=>{});
+  }
+  g.ti = setInterval(gpsUpdate, 1000);
+  if (navigator.geolocation) {
+    g.wid = navigator.geolocation.watchPosition(gpsOnPosition, null, {enableHighAccuracy:true, maximumAge:3000, timeout:10000});
+  }
+  // Verifica permissão overlay
+  if (window.SmartMobiNative && typeof SmartMobiNative.hasOverlay === 'function') {
+    if (!SmartMobiNative.hasOverlay()) {
+      setTimeout(() => showToast('Para ver a bolinha flutuante sobre o Uber:\nConfigurações → Apps → MōB → Aparecer sobre outros apps → Ativar', 'info'), 500);
+    }
+  }
+  requestWakeLock();
+  // Render forçado, sem depender de qual tela está ativa no momento do
+  // clique — mesmo padrão robusto já usado no gpsStop()
+  s
+
+===== navigator.geolocation @ 893966 =====
+(n) showToast(n+' jornada(s) antiga(s) que ficaram aberta(s) foram encerrada(s) automaticamente.', 'info'); }).catch(()=>{});
+  g.sessionId = DB.uid(); // ID único desta sessão, usado para upsert no cloud
+  const day0 = DB.day(DB.today());
+  g.baseKm = (day0.sessions||[]).reduce((s,x)=>s+(x.km||0),0);
+  g.baseElapsed = (day0.sessions||[]).reduce((s,x)=>s+(x.elapsed||0),0);
+  // Inicia floating widget nativo (se o usuário não tiver desativado)
+  if (window.SmartMobiNative && DB.cfg().overlayEnabled !== false) {
+    try {
+      if (typeof SmartMobiNative.startFloating === 'function')
+        SmartMobiNative.startFloating(g.start, 0);
+      if (typeof SmartMobiNative.updateFloatingStatus === 'function')
+        SmartMobiNative.updateFloatingStatus('running');
+    } catch(e) {}
+  }
+  syncNavButton();
+  persistGps();
+  // Registra imediatamente no Supabase — não espera checkpoint
+  if (_supaUser) {
+    _SUPA.from('sessions').upsert({
+      id: g.sessionId, user_id: _supaUser.id, date: DB.today(),
+      start_ms: g.start, end_ms: null, km: 0, elapsed_secs: 0,
+      paused_ms: 0, is_paused: false
+    }, { onConflict: 'id' }).catch(()=>{});
+  }
+  g.ti = setInterval(gpsUpdate, 1000);
+  if (navigator.geolocation) {
+    g.wid = navigator.geolocation.watchPosition(gpsOnPosition, null, {enableHighAccuracy:true, maximumAge:3000, timeout:10000});
+  }
+  // Verifica permissão overlay
+  if (window.SmartMobiNative && typeof SmartMobiNative.hasOverlay === 'function') {
+    if (!SmartMobiNative.hasOverlay()) {
+      setTimeout(() => showToast('Para ver a bolinha flutuante sobre o Uber:\nConfigurações → Apps → MōB → Aparecer sobre outros apps → Ativar', 'info'), 500);
+    }
+  }
+  requestWakeLock();
+  // Render forçado, sem depender de qual tela está ativa no momento do
+  // clique — mesmo padrão robusto já usado no gpsStop()
+  setTimeout(() => {
+    try { renderJornada(); } catch(e) {}
+    try { renderHome(); } catch(e) {}
+  }, 80);
+}
+
+function confirmStop() {
+  showConfirm('Encerrar a jornada agora?', gpsStop, { confirmLabel: 'Encerrar', cancelLabel: 'Cancelar' });
+}
+function showToast(msg, type) {
+  const existing = document.getElementById('app-toast-center'); if (existing) existing.remove();
+  const icons = {
+    success: { bg: '#ECFDF3', color: '#16A34A', svg: '<path d="M20 6 9 17l-5-5"/>' },
+    error:   { bg: '#FEF2F2', color: '#EF4444', svg: '<circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>' },
+    info:    { bg: '#EFF6FF', color: '#0A2F6B', svg: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>' },
+  };
+  const ic = icons[type] || icons.success;
+  const el = document.createElement('div');
+  el.id = 'app-toast-center';
+  el.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(15,23,42,.35)';
+  el.innerHTML = `
+    <div style="background:#fff;border-radius:26px;padding:32px 26px;max-width:320px;width:100%;text-align:center;box-shadow:0 24px 60px rgba(15,23,42,.25)">
+      <div style="width:60px;height:60px;border-radius:50%;background:${ic.bg};color:${ic.color};display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">${ic.svg}</svg>
+      </div>
+      <div style="font-size:
+
+===== navigator.geolocation @ 912195 =====
+ntById('app-confirm-cancel').onclick = () => el.remove();
+  document.getElementById('app-confirm-ok').onclick = () => { el.remove(); onConfirm(); };
+}
+
+function gpsPause() { /* removido — app usa só Iniciar / Encerrar */ }
+function gpsStop() {
+  const g = S.gps;
+  if (g.st === 'idle' || !g.start) return; // guard: evita duplo encerramento
+
+  // ═══ FASE 1 — CLEANUP CRÍTICO. Cada linha em try/catch isolado: uma
+  // exceção em qualquer uma NUNCA pode impedir as outras de rodar. Isso
+  // garante que a jornada SEMPRE é marcada como encerrada local e no
+  // Supabase, mesmo se algo mais adiante falhar. ═══
+  const cloudId = g.sessionId || DB.uid();
+  const startMs = g.start, kmSnap = g.km || 0, endMs = Date.now();
+  // Se o motorista escolheu "deixar tudo em ontem" no alerta de virada de
+  // meia-noite, g.forceDate trava a data em vez de usar DB.today() (que
+  // seria o dia do ENCERRAMENTO, não o do início) — ver resolveMidnightSplit().
+  const closeDate = _ymd(startMs); // Jornada contínua: identidade fica no dia em que começou
+  let elapsedSnap = 0;
+  try { elapsedSnap = getElapsed(); } catch(e) { console.error('[gpsStop] getElapsed:', e); }
+
+  g.st = 'idle';
+  if (g.wid) { try { navigator.geolocation.clearWatch(g.wid); } catch(e) { console.error('[gpsStop] clearWatch:', e); } }
+  if (g.ti)  { try { clearInterval(g.ti); } catch(e) { console.error('[gpsStop] clearInterval:', e); } }
+  if (window.SmartMobiNative && typeof SmartMobiNative.stopFloating === 'function') {
+    try { SmartMobiNative.stopFloating(); } catch(e) { console.error('[gpsStop] stopFloating:', e); }
+  }
+  // Apaga o marcador local IMEDIATAMENTE — é isso que impede a app de
+  // 'ressuscitar' esta jornada como ativa da próxima vez que abrir.
+  try { DB.del('sm_gps_session'); } catch(e) { console.error('[gpsStop] DB.del:', e); }
+  try { _addCss(cloudId, endMs); } catch(e) { console.error('[gpsStop] _addCss:', e); }
+  // Avisa o Supabase do fechamento JÁ, antes de qualquer lógica que possa
+  // falhar — o servidor precisa saber que a jornada acabou o quanto antes.
+  if (_supaUser) {
+    // 'Enfileira primeiro, tenta depois' — se o app for morto pelo Android
+    // NO MEIO da chamada de rede (antes dela resolver ou rejeitar), o
+    // fechamento não pode se perder. A intenção já está salva no localStorage
+    // ANTES de qualquer requisição de rede começar; só é removida da fila
+    // se a tentativa imediata realmente confirmar sucesso.
+    const closeRow = { id: cloudId, date: closeDate, start_ms: startMs, end_ms: endMs,
+      km: parseFloat(kmSnap.toFixed(3)), elapsed_secs: elapsedSnap, paused_ms: 0, is_paused: false };
+    const queueId = SYNC.enqueue({ type: 'push', table: 'sessions', row: closeRow });
+    _SUPA.from('sessions').upsert(Object.assign({}, closeRow, { user_id: _supaUser.id }),
+      { onConflict: 'id' }
+    ).then(({error}) => { if (!error) SYNC.dequeue(queueId); })
+     .catch(()=>{}); // falhou — fica na fila, flushQueue() tenta de novo depois
+  }
+  g.start=null; g.pausedMs=0; g.km=0; g.pts=[]; g.baseKm=0; g.baseElapsed=0; g.pa=null;
+  g.sessionId = null; g.forceDate = null;
+  try { syncNavButton(); } catch(e) { console.error('[gpsStop] syncNavButton:', e); }
+  try { releaseWakeLock(); } catch(e) { console.error('[gpsStop] releaseWakeLock:', e); }
+
+  // ═══ FASE 2 — detalhamento local (lista de jornadas do dia). Se algo
+  // aqui falhar, a jornada JÁ est
+
+===== navigator.geolocation @ 917670 =====
+_gps_session'); return; }
+  const lastPt = g.pts && g.pts.length ? g.pts[g.pts.length-1] : null;
+  DB.set('sm_gps_session', {
+    st: g.st, start: g.start, pausedMs: g.pausedMs, pa: g.pa,
+    km: g.km, lastPt, baseKm: g.baseKm, baseElapsed: g.baseElapsed,
+    sessionId: g.sessionId, forceDate: g.forceDate || null
+  });
+  // Checkpoint no Supabase (não bloqueia)
+  _persistGpsCloud().catch(()=>{});
+}
+
+async function _persistGpsCloud() {
+  if (!_supaUser || !S.gps.start || S.gps.st === 'idle') return;
+  // Defesa contra instância fantasma: se outra aba/instância desta MESMA
+  // origem já encerrou a jornada (apagou o marcador local), esta instância
+  // deve se autodestruir em vez de continuar fazendo checkpoint de uma
+  // jornada que já não existe mais oficialmente. localStorage é compartilhado
+  // entre abas da mesma origem — isso funciona mesmo sem comunicação direta.
+  const localMarker = DB.get('sm_gps_session');
+  if (!localMarker || (localMarker.st !== 'running' && localMarker.st !== 'paused')) {
+    console.warn('[_persistGpsCloud] Marcador local ausente — outra instância já encerrou. Auto-parando esta.');
+    S.gps.st = 'idle'; S.gps.start = null;
+    if (S.gps.wid) { try{ navigator.geolocation.clearWatch(S.gps.wid); }catch(e){} }
+    if (S.gps.ti) { try{ clearInterval(S.gps.ti); }catch(e){} }
+    return;
+  }
+  const g = S.gps;
+  if (!g.sessionId) g.sessionId = DB.uid();
+  const snapId = g.sessionId; // capturar antes do await
+  await _SUPA.from('sessions').upsert({
+    id:         snapId,
+    user_id:    _supaUser.id,
+    date:       _ymd(g.start), // Jornada contínua: não troca de identidade à meia-noite
+    start_ms:   g.start,
+    end_ms:     null,
+    km:         parseFloat((g.km||0).toFixed(3)),
+    elapsed_secs: getElapsed(),
+    paused_ms:  0,
+    is_paused:  false,
+    km_desloc:  null
+  }, { onConflict: 'id' });
+  // Guard de corrida: se gpsStop() foi chamado enquanto este await estava
+  // pendente, o nosso write (end_ms=null) pode ter chegado ao Supabase
+  // DEPOIS do write de fechamento, reabrindo a sessão. Re-aplicar o tombstone.
+  if (S.gps.st === 'idle') {
+    try {
+      if (_gcss().has(snapId)) {
+        const _cl=JSON.parse(localStorage.getItem('sm_gps_last_closed')||'null');
+        const _em=(_cl&&_cl.id===snapId)?_cl.end:Date.now();
+        await _SUPA.from('sessions').upsert({id:snapId,user_id:_supaUser.id,end_ms:_em,is_paused:false,paused_ms:0},{onConflict:'id'});
+        console.log('[_persistGpsCloud] Race condition — fechamento re-aplicado:',snapId);
+      }
+    } catch(e) {}
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// JORNADA CRUZOU A MEIA-NOITE — detecta, pergunta pro motorista, aplica.
+// ══════════════════════════════════════════════════════════════════════
+function _ymd(ms) { const d = new Date(ms); return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate()); }
+
+// Chamado a cada tick do gpsUpdate() (1x/s) e ao restaurar a sessão no boot.
+// Barato o bastante pra rodar toda hora: só comparação de strings até achar
+// uma virada real; o trabalho pesado (abrir modal) só acontece uma vez por
+// virada, travado pelo localStorage (sm_midnight_resolved_*).
+function checkMidnightCrossing() {
+  const g = S.gps;
+  if (g.st !== 'running' || !g.start) return;
+  if (S._midnightModalOpen) return; // já perguntando, não reprocessa
+  const startDate = _ymd(g.start);
+ 
+
+===== navigator.geolocation @ 937486 =====
+o marcador local), NÃO resume. Confia no servidor.
+  if (_supaUser && saved.sessionId && navigator.onLine) {
+    _SUPA.from('sessions').select('end_ms,km,start_ms').eq('id', saved.sessionId).maybeSingle()
+      .then(({data}) => {
+        // Recupera km/start do checkpoint na nuvem se forem melhores que o
+        // snapshot local (marcador local pode estar defasado se o app ficou
+        // muito tempo em background sem JS rodando).
+        if (data && !data.end_ms && S.gps.st !== 'idle' && S.gps.sessionId === saved.sessionId) {
+          const cloudKm = parseFloat(data.km) || 0;
+          if (cloudKm > (S.gps.km || 0)) { S.gps.km = cloudKm; S.gps.pts = []; S.gps.lastFixTime = null; }
+          if (data.start_ms && Number(data.start_ms) < (S.gps.start || Infinity)) S.gps.start = Number(data.start_ms);
+          try { if (S.sec==='jornada') renderJornada(); } catch(e) {}
+        }
+        if (data && data.end_ms) {
+          console.warn('[restoreGpsSession] Sessão já encerrada no Supabase — descartando marcador local stale');
+          DB.del('sm_gps_session');
+          if (S.gps.st !== 'idle') {
+            S.gps.st = 'idle'; S.gps.start = null;
+            if (S.gps.wid) { try{navigator.geolocation.clearWatch(S.gps.wid);}catch(e){} }
+            if (S.gps.ti) clearInterval(S.gps.ti);
+            try { renderJornada(); renderHome(); } catch(e) {}
+          }
+        }
+      }).catch(()=>{});
+  }
+  // Limpeza defensiva — garante que não sobra nenhum watcher/timer órfão
+  if (g.wid) { try{ navigator.geolocation.clearWatch(g.wid); }catch(e){} }
+  if (g.ti) clearInterval(g.ti);
+  g.st = saved.st; g.start = saved.start; g.pausedMs = saved.pausedMs || 0; g.pa = saved.pa || null;
+  g.km = saved.km || 0; g.pts = saved.lastPt ? [saved.lastPt] : [];
+  g.baseKm = saved.baseKm || 0; g.baseElapsed = saved.baseElapsed || 0;
+  g.sessionId = saved.sessionId || null; // restaura ID para continuar o upsert correto
+  g.forceDate = saved.forceDate || null;
+  // O snapshot acima é só o último valor salvo antes do app ir pra segundo plano (o
+  // watchPosition do JS para quando o app não está em foreground). Se o app nativo
+  // tiver um GpsService rodando, ele é a fonte mais atual — corrige aqui, antes do
+  // primeiro render, pra não mostrar um km/tempo defasado por um instante na tela.
+  if (window.SmartMobiNative && typeof SmartMobiNative.isGpsRunning === 'function') {
+    try {
+      if (SmartMobiNative.isGpsRunning()) {
+        // So confia no km nativo se a sessao ja estiver rodando ha mais de alguns
+        // segundos. Logo apos um gpsStart(), o sinal de reset enviado pro servico
+        // nativo pode ainda nao ter sido processado — ler o km nesse instante corre
+        // o risco de pegar um valor antigo (de antes do reset), fazendo o numero
+        // "pular" pra um valor maior por um instante ate se corrigir sozinho.
+        const sessionAgeMs = Date.now() - (g.start || 0);
+        if (sessionAgeMs > 8000) {
+          const nativeKm = SmartMobiNative.getGpsKm();
+          const nativeStart = SmartMobiNative.getGpsStartTime();
+          const nativePaused = SmartMobiNative.getGpsPausedMs();
+          // Mesmo guard de plausibilidade do nativeSyncGps — protege contra
+          // herdar km de uma sessão fantasma anterior que o nativo nunca zerou
+          const elapsedMinR = sessionAgeMs / 60000;
+          const maxPlausibleR = (elapsedMinR * 3) 
+
+===== navigator.geolocation @ 937802 =====
+/ snapshot local (marcador local pode estar defasado se o app ficou
+        // muito tempo em background sem JS rodando).
+        if (data && !data.end_ms && S.gps.st !== 'idle' && S.gps.sessionId === saved.sessionId) {
+          const cloudKm = parseFloat(data.km) || 0;
+          if (cloudKm > (S.gps.km || 0)) { S.gps.km = cloudKm; S.gps.pts = []; S.gps.lastFixTime = null; }
+          if (data.start_ms && Number(data.start_ms) < (S.gps.start || Infinity)) S.gps.start = Number(data.start_ms);
+          try { if (S.sec==='jornada') renderJornada(); } catch(e) {}
+        }
+        if (data && data.end_ms) {
+          console.warn('[restoreGpsSession] Sessão já encerrada no Supabase — descartando marcador local stale');
+          DB.del('sm_gps_session');
+          if (S.gps.st !== 'idle') {
+            S.gps.st = 'idle'; S.gps.start = null;
+            if (S.gps.wid) { try{navigator.geolocation.clearWatch(S.gps.wid);}catch(e){} }
+            if (S.gps.ti) clearInterval(S.gps.ti);
+            try { renderJornada(); renderHome(); } catch(e) {}
+          }
+        }
+      }).catch(()=>{});
+  }
+  // Limpeza defensiva — garante que não sobra nenhum watcher/timer órfão
+  if (g.wid) { try{ navigator.geolocation.clearWatch(g.wid); }catch(e){} }
+  if (g.ti) clearInterval(g.ti);
+  g.st = saved.st; g.start = saved.start; g.pausedMs = saved.pausedMs || 0; g.pa = saved.pa || null;
+  g.km = saved.km || 0; g.pts = saved.lastPt ? [saved.lastPt] : [];
+  g.baseKm = saved.baseKm || 0; g.baseElapsed = saved.baseElapsed || 0;
+  g.sessionId = saved.sessionId || null; // restaura ID para continuar o upsert correto
+  g.forceDate = saved.forceDate || null;
+  // O snapshot acima é só o último valor salvo antes do app ir pra segundo plano (o
+  // watchPosition do JS para quando o app não está em foreground). Se o app nativo
+  // tiver um GpsService rodando, ele é a fonte mais atual — corrige aqui, antes do
+  // primeiro render, pra não mostrar um km/tempo defasado por um instante na tela.
+  if (window.SmartMobiNative && typeof SmartMobiNative.isGpsRunning === 'function') {
+    try {
+      if (SmartMobiNative.isGpsRunning()) {
+        // So confia no km nativo se a sessao ja estiver rodando ha mais de alguns
+        // segundos. Logo apos um gpsStart(), o sinal de reset enviado pro servico
+        // nativo pode ainda nao ter sido processado — ler o km nesse instante corre
+        // o risco de pegar um valor antigo (de antes do reset), fazendo o numero
+        // "pular" pra um valor maior por um instante ate se corrigir sozinho.
+        const sessionAgeMs = Date.now() - (g.start || 0);
+        if (sessionAgeMs > 8000) {
+          const nativeKm = SmartMobiNative.getGpsKm();
+          const nativeStart = SmartMobiNative.getGpsStartTime();
+          const nativePaused = SmartMobiNative.getGpsPausedMs();
+          // Mesmo guard de plausibilidade do nativeSyncGps — protege contra
+          // herdar km de uma sessão fantasma anterior que o nativo nunca zerou
+          const elapsedMinR = sessionAgeMs / 60000;
+          const maxPlausibleR = (elapsedMinR * 3) + 0.5;
+          if (typeof nativeKm === 'number' && nativeKm > maxPlausibleR) {
+            console.warn('[restoreGpsSession] km nativo implausível ignorado:', nativeKm, 'em', elapsedMinR.toFixed(1), 'min');
+          } else
+          // So adota o km nativo se ele for MAIOR que o que a sessao web ja tem.
+        
+
+===== navigator.geolocation @ 941759 =====
+ [];
+            g.lastFixTime = null;
+          }
+          // GUARD: só adota o start nativo se for ANTERIOR ao que já temos.
+          // Se o Android matou e reiniciou o GpsService (START_STICKY), o
+          // start nativo vira a hora do RESTART — adotar ele fazia a jornada
+          // "recomeçar" e o upsert (mesmo sessionId) sobrescrevia o start_ms
+          // da sessão no Supabase, perdendo todo o histórico do dia.
+          if (nativeStart && nativeStart < g.start) g.start = nativeStart;
+          else if (nativeStart && nativeStart > g.start + 60000) {
+            // Serviço nativo reiniciou do zero — re-semeia com o estado correto
+            console.warn('[restoreGpsSession] Serviço nativo reiniciado (start nativo mais novo) — re-semeando com start/km da sessão real');
+            try { SmartMobiNative.startFloating?.(g.start, g.km || 0); } catch(e) {}
+          }
+          // Guard: não diminui pausedMs com valor menor do nativo
+          if (typeof nativePaused === 'number' && nativePaused >= (g.pausedMs || 0)) {
+            g.pausedMs = nativePaused;
+          }
+        }
+      }
+    } catch(e) {}
+  }
+  syncNavButton();
+  g.ti = setInterval(gpsUpdate, 1000);
+  if (navigator.geolocation) {
+    g.wid = navigator.geolocation.watchPosition(gpsOnPosition, null, {enableHighAccuracy:true, maximumAge:3000, timeout:10000});
+  }
+  if (g.st === 'running') requestWakeLock();
+  // Se há jornada em aberto mas o serviço nativo está MORTO (Android matou
+  // o processo e o START_STICKY ainda não religou, ou foi removido de vez),
+  // religa ele semeado com o start/km corretos — a jornada continua de onde
+  // parou em vez de ficar sem rastreamento em background.
+  if (g.st === 'running' && window.SmartMobiNative && DB.cfg().overlayEnabled !== false) {
+    try {
+      const nativeUp = typeof SmartMobiNative.isGpsRunning === 'function' && SmartMobiNative.isGpsRunning();
+      if (!nativeUp && typeof SmartMobiNative.startFloating === 'function') {
+        console.warn('[restoreGpsSession] Serviço nativo morto com jornada em aberto — religando com start/km da sessão');
+        SmartMobiNative.startFloating(g.start, g.km || 0);
+      }
+    } catch(e) {}
+  }
+  if (window.SmartMobiNative && typeof SmartMobiNative.updateFloatingStatus === 'function') {
+    try { SmartMobiNative.updateFloatingStatus(g.st); } catch(e) {}
+  }
+  // Se o app ficou fechado/em segundo plano e a jornada cruzou a meia-noite
+  // nesse meio tempo, avisa agora que reabriu (dá um tempo pro render inicial
+  // da tela terminar antes de empilhar o modal por cima).
+  setTimeout(checkMidnightCrossing, 600);
+}
+const _CAR_IMGS = {
+  idle:    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAAoCAYAAADzL6qcAAACMElEQVR4nO2TO2tUYRCGn/n27C17kijReEsUohLYuEmRQhC8kB9gI0FrQUGwCjZWi6kE/QVWgqBIChurWCWNCBHR6KYxUcjG4C1m49nNnj3nfGOxJhBcZU0hFvsUUwzDzMs7M9CiRYt/gfxlfgNtonfebKem8eT+s+0p58gO8QNVDQVAxFFNhlJdWfzK8uPK7xtl8wkKhG5u9ZyY1LhG4TKogGJVBEENomJi+6LAH6vMfZhkeKfh+Z2goSJ38No8Gt30Zqfv0tPnsGchBOBjn0NxIczkzlwFuVSevZ39VdHw5XimljhNFNstJn7de3178E8OucfGZpFoXMNgpTz3ZgqmQgeg84ufsR3uLZJtObXBS3dw7AoRIGrBAgawoNRNNk4oJnUfrbwg2z1CAU/qG7hh0/0X9sdSB18hsZSoZsRJb1GhCiKKBhVUTEU0WrPe26HywqNPkDeG0YIAmHj3AKqutzzT56+967dBec2G1XUbrldsUKlo5FdtUF78/n66K1idG0DtLtJ7BwAYLYizOdLWInHScbc7N4nQJU6qY8NEpR4E0+seOjGDWg9jYtRqm4fpMPFTug1LaCgSbxtSv/TE1j4/wIiA2Ho/EVAViQ1Lon2EaN2q0RIAE+BAVgHE94rWSa0YlQ6prua9+XtPG27s6MVTxJInbeSXxP+2V
+
+===== navigator.geolocation @ 1009726 =====
+in-width:0">
+        <span style="flex-shrink:0;font-size:8.5px;font-weight:800;letter-spacing:.03em;color:#fff;background:${item.type === 'rua' ? '#0A2F6B' : '#B91C1C'};border-radius:5px;padding:2px 6px">${item.type === 'rua' ? 'RUA' : 'BAIRRO'}</span>
+        <span style="font-size:12.5px;color:#7F1D1D;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.label}</span>
+      </div>
+      <button onclick="flashEnderecoRemove(${i})" style="background:none;border:0;color:#DC2626;font-size:16px;font-weight:800;padding:0 4px;flex-shrink:0">&#215;</button>
+    </div>`).join('');
+}
+
+// PEDIDO (17/07/2026): sugestão de endereço enquanto digita, priorizando a
+// localidade onde o motorista está agora (Nominatim — mesma fonte já usada
+// nos Informes; não existe um banco de endereços próprio dos Informes, só
+// uma lista fixa de bares/hotéis). Pega a posição 1x por sessão (não fica
+// pedindo GPS de novo a cada letra) e usa como viewbox de preferência —
+// "bounded=0" significa que prioriza perto, mas não exclui resultado longe
+// se não achar nada próximo.
+let _flashGeoPos = null;
+let _flashGeoTried = false;
+function _flashGeoFetch() {
+  if (_flashGeoTried || !navigator.geolocation) return;
+  _flashGeoTried = true;
+  navigator.geolocation.getCurrentPosition(
+    pos => { _flashGeoPos = { lat: pos.coords.latitude, lon: pos.coords.longitude }; },
+    () => {}, // sem permissão/sem sinal — segue sem bias, busca ainda funciona
+    { enableHighAccuracy: false, maximumAge: 600000, timeout: 8000 }
+  );
+}
+
+let _flashEnderecoDebounce = null;
+async function flashEnderecoSearch(query) {
+  const q = query.trim();
+  const box = document.getElementById('flash-endereco-suggestions');
+  if (_flashEnderecoDebounce) clearTimeout(_flashEnderecoDebounce);
+  if (q.length < 3) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  _flashEnderecoDebounce = setTimeout(() => _flashEnderecoRun(q), 450);
+}
+// PEDIDO (17/07/2026): endereço limpo — sem CEP, sem "Brasil", sem
+// "Região X", estado abreviado (RJ, não "Rio de Janeiro"). A ordem importa:
+// quando o resultado é uma RUA, a rua vem primeiro; quando é um BAIRRO
+// (sem rua nenhuma no resultado), o bairro vem primeiro. O nativo compara
+// só esse primeiro pedaço (antes da primeira vírgula) com o endereço da
+// oferta — então rua compara com rua, bairro compara com bairro, os dois
+// tipos convivem na mesma lista sem se atrapalhar.
+const _BR_ESTADOS = {
+  'acre':'AC','alagoas':'AL','amapá':'AP','amapa':'AP','amazonas':'AM','bahia':'BA','ceará':'CE','ceara':'CE',
+  'distrito federal':'DF','espírito santo':'ES','espirito santo':'ES','goiás':'GO','goias':'GO','maranhão':'MA','maranhao':'MA',
+  'mato grosso':'MT','mato grosso do sul':'MS','minas gerais':'MG','pará':'PA','para':'PA','paraíba':'PB','paraiba':'PB',
+  'paraná':'PR','parana':'PR','pernambuco':'PE','piauí':'PI','piaui':'PI','rio de janeiro':'RJ',
+  'rio grande do norte':'RN','rio grande do sul':'RS','rondônia':'RO','rondonia':'RO','roraima':'RR',
+  'santa catarina':'SC','são paulo':'SP','sao paulo':'SP','sergipe':'SE','tocantins':'TO'
+};
+function _flashBuildLabel(d) {
+  const a = d.address || {};
+  const isRua = !!(a.road || a.pedestrian);
+  const primary = a.road || a.pedestrian || a.suburb || a.neighbourhood || a.village || a.town || (d.display_name || '').split(',')[0].trim();
+  const bairro = a.suburb || a.neighbourhood 
+
+===== navigator.geolocation @ 1632831 =====
+a6 6 0 0 0 12-2c0-4-3-6-4-9-1 1-3 3-3 5-1-2-1-3-1-5-2 1-2 3-2 5z"/></svg><span>ALTA</span></div>`;
+      }
+      const dyn99=(posts||[]).find(p=>p.param_value==='99');
+      if(dyn99){
+        html+=`<div class="inf-badge-btn dyn"><svg viewBox="0 0 24 24" width="14" height="14" fill="#fff" stroke="none"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><span>99: ${esc(dyn99.param_detail||'ativo')}</span></div>`;
+      }
+      el.innerHTML=html;
+    }catch(e){ /* silencioso — badge é acessório, não pode travar a lista */ }
+  }));
+}
+
+function infHaversineM(lat1,lon1,lat2,lon2){
+  const R=6371000, toRad=x=>x*Math.PI/180;
+  const dLat=toRad(lat2-lat1), dLon=toRad(lon2-lon1);
+  const a=Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+// Feed unificado da aba "Agora" (16/08/2026) — substitui os antigos
+// "Informe da área" + "Últimos informes" (2 listas separadas, tabela
+// informes) por 1 lista só, ordenada por proximidade real via GPS,
+// direto de feed_posts.
+async function infCarregarFeedAgora(){
+  infRenderFavs();
+  const wrap=document.getElementById('inf-feed-agora');
+  if(!wrap)return;
+  if(!navigator.geolocation){wrap.innerHTML='<div class="inf-empty-feed">GPS não disponível</div>';return;}
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    try{
+      const{latitude:lat,longitude:lon}=pos.coords;
+      if(!_SUPA){wrap.innerHTML='<div class="inf-empty-feed">Sem conexão</div>';return;}
+      const d=0.02; // ~2km — feed geral da região, mais largo que o painel de 1 local
+      const{data}=await _SUPA.from('feed_posts').select('*')
+        .eq('status','ativo').gt('expires_at',new Date().toISOString())
+        .gte('lat',lat-d).lte('lat',lat+d)
+        .gte('lng',lon-d).lte('lng',lon+d)
+        .order('created_at',{ascending:false}).limit(30);
+      const posts=(data||[]).map(p=>{p._distM=infHaversineM(lat,lon,p.lat,p.lng);return p;})
+        .sort((a,b)=>a._distM-b._distM);
+      wrap.innerHTML = posts.length ? await infBuildPostCardsHtml(posts) : '<div class="inf-empty-feed">Nenhum informe recente por perto · seja o primeiro a reportar!</div>';
+    }catch(e){console.warn('feed agora',e);wrap.innerHTML='<div class="inf-empty-feed">Erro ao carregar</div>';}
+  },()=>{wrap.innerHTML='<div class="inf-empty-feed">Ative o GPS pra ver os informes perto de você</div>';},{timeout:10000,enableHighAccuracy:true});
+}
+
+async function infCarregarContagens(){
+  if(!_SUPA)return;
+  try{
+    // Migrado de 'informes' (tabela legada, sem post novo desde a
+    // reformulação de 16/08/2026 — segue existindo só pro cron de
+    // expiração antigo) pra feed_posts. feed_posts não tem location_name
+    // (é geolocalizado, não por local nomeado), então a contagem vira
+    // match textual no endereço geocodificado — aproximado, não é mais
+    // igualdade exata como era com location_name. Efeito prático: alguns
+    // locais podem subcontar se o endereço reverso não citar o nome
+    // exatamente (ex.: aeroporto que geocodifica só como rua) — degrada
+    // pra "–" nesse caso, nunca quebra a tela.
+    const{data}=await _SUPA.from('feed_posts')
+      .select('address')
+      .eq('status','ativo')
+      .gt('expires_at',new Date().toISOString())
+      .not('address','is',null);
+    if(!data)return;
+    const countFor=(nome)=>{
+      const needle=(nome||'').toLowerCas
+
+===== navigator.geolocation @ 1676088 =====
+vs();
+}
+
+function infAbrirZona(zona){
+  document.getElementById('inf-zona-grid').style.display='none';
+  document.getElementById('inf-bairros-inline').style.display='block';
+  document.getElementById('inf-bairros-zona-nome').textContent=INF_ZNOMES[zona];
+  document.getElementById('inf-bchip-grid').innerHTML=(INF_BAIRROS[zona]||[]).map(b=>
+    `<div class="inf-bchip" onclick="infAbrirLocal(this,'${b}','bairro')">
+      <div class="inf-bchip-ic" style="background:#F1F5F9"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#475569" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.333-8 14-8 14S4 15.333 4 10a8 8 0 0 1 8-8z"/></svg></div>
+      <div class="inf-bchip-name">${b}</div>
+      <div class="inf-bchip-ct z">–</div>
+    </div>`
+  ).join('');
+}
+function infVoltarZonas(){
+  document.getElementById('inf-zona-grid').style.display='grid';
+  document.getElementById('inf-bairros-inline').style.display='none';
+}
+
+function infAbrirGps(mode){
+  mode = mode || 'browse';
+  document.getElementById('inf-gps-list').innerHTML='<div class="inf-empty">Obtendo localização…</div>';
+  document.getElementById('inf-ov-gps').classList.add('open');
+  if(!navigator.geolocation){document.getElementById('inf-gps-list').innerHTML='<div class="inf-empty">GPS não disponível</div>';return;}
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const{latitude:lat,longitude:lon}=pos.coords;
+    document.getElementById('inf-gps-list').innerHTML='<div class="inf-empty">Buscando ruas…</div>';
+    try{
+      const revR=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&zoom=17&format=json&accept-language=pt`,{headers:{'User-Agent':'MoB/1.0'}});
+      const rev=await revR.json();
+      const ruaAtual=rev.address?.road||rev.address?.pedestrian||rev.address?.suburb||'Rua atual';
+      const bairro=rev.address?.suburb||rev.address?.neighbourhood||'';
+      const oQ=`[out:json];way(around:300,${lat},${lon})[highway][name];out tags;`;
+      const oR=await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(oQ)}`);
+      const oD=await oR.json();
+      const priority=['primary','secondary','tertiary','residential'];
+      const ruas=[];const seen=new Set([ruaAtual]);
+      [...oD.elements].sort((a,b)=>{const pa=priority.indexOf(a.tags.highway);const pb=priority.indexOf(b.tags.highway);return(pa<0?99:pa)-(pb<0?99:pb);}).forEach(el=>{const n=el.tags.name;if(n&&!seen.has(n)){seen.add(n);ruas.push(n);}});
+      const onTap = (nome) => mode === 'relatar'
+        ? `infRelatarPickLocal('${escJsAttr(nome)}')`
+        : `infFecharOv('inf-ov-gps');infAbrirLocal(null,'${escJsAttr(nome)}','rua')`;
+      let html=`<div class="inf-loc-item" onclick="${onTap(ruaAtual)}"><div class="inf-loc-ic" style="background:#CCFBF1"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#14B8A6" stroke-width="2"><circle cx="12" cy="12" r="4"/></svg></div><div class="inf-loc-body"><div class="inf-loc-name" style="color:#14B8A6">${esc(ruaAtual)}</div><div class="inf-loc-sub">Você está aqui · ${esc(bairro)}</div></div></div>`;
+      ruas.slice(0,10).forEach(r=>{html+=`<div class="inf-loc-item" onclick="${onTap(r)}"><div class="inf-loc-ic" style="background:#CCFBF1"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#14B8A6" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/
+
+===== navigator.geolocation @ 1695536 =====
+color:'#DC2626', icon:FEED_TYPES.risco.icon,    expMin:FEED_TYPES.risco.expMin},
+    blitz:    {label:'Fiscalização', color:'#2563EB', icon:FEED_TYPES.blitz.icon,    expMin:FEED_TYPES.blitz.expMin}
+  };
+  _infRelState.types = types;
+  document.getElementById('inf-relatar-title').textContent = 'Informe';
+  document.getElementById('inf-relatar-back').style.display = 'none';
+  document.getElementById('inf-relatar-body').innerHTML = `<div class="qr-grid">` +
+    Object.entries(types).map(([key,t]) =>
+      `<div class="qr-btn" style="background:${t.color}" onclick="infRelatarSelType('${key}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">${t.icon}</svg>
+        <span class="qr-label">${t.label}</span>
+      </div>`
+    ).join('') + `</div>`;
+  const locTxt = document.getElementById('inf-relatar-loc-txt');
+  locTxt.textContent = 'Localizando…';
+  openMo('mo-inf-relatar');
+  infRelatarBuscarLocalizacao();
+}
+// Pede o GPS e preenche o chip de endereço — separado do resto pra poder
+// ser chamado de novo depois que a pessoa toca "Alterar" e volta.
+function infRelatarBuscarLocalizacao(){
+  const locTxt = document.getElementById('inf-relatar-loc-txt');
+  if (!navigator.geolocation) { if (locTxt) locTxt.textContent = 'GPS indisponível'; return; }
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    _infRelState.lat = pos.coords.latitude; _infRelState.lng = pos.coords.longitude;
+    try{
+      const revR = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&zoom=16&format=json&accept-language=pt`,{headers:{'User-Agent':'MoB/1.0'}});
+      const rev = await revR.json();
+      _infRelState.address = rev.address?.road || rev.address?.suburb || rev.address?.neighbourhood || null;
+    }catch(e){ _infRelState.address = null; }
+    const el = document.getElementById('inf-relatar-loc-txt');
+    if (el) el.textContent = _infRelState.address || 'Localização atual';
+  }, ()=>{ const el=document.getElementById('inf-relatar-loc-txt'); if(el) el.textContent='Localização indisponível'; },
+  {timeout:7000, maximumAge:60000});
+}
+// "Alterar" (16/08/2026, pedido do Yuri) — reaproveita a MESMA busca de
+// rua próxima que "Minha área" já usa (infAbrirGps), só que em vez de
+// abrir o painel de navegação, seta o endereço da corrida atual e volta
+// pro Informe. Motorista pode não estar exatamente onde o GPS achou, ou
+// o GPS errou — dá pra corrigir manualmente antes de publicar.
+function infRelatarAlterarLocal(){
+  closeMo('mo-inf-relatar');
+  infAbrirGps('relatar');
+}
+function infRelatarPickLocal(nome){
+  _infRelState.address = nome;
+  infFecharOv('inf-ov-gps');
+  openMo('mo-inf-relatar');
+  const el = document.getElementById('inf-relatar-loc-txt');
+  if (el) el.textContent = nome;
+}
+function infRelatarShowBack(label, fn){
+  _infRelState.backFn = fn;
+  const back = document.getElementById('inf-relatar-back');
+  back.style.display = 'flex';
+  document.getElementById('inf-relatar-back-lbl').textContent = label;
+}
+function infRelatarBack(){ if (_infRelState.backFn) _infRelState.backFn(); }
+
+function infRelatarSelType(key){
+  _infRelState.type = key;
+  if (key === 'transito') return infRelatarShowTransito();
+  if (key === 'blitz') return infRelatarShowPoliciamento();
+  if (key === 'risco') return infRelatarShowAlertaStep1();
+}
+
+// Trânsito — barra 0 a 5, 1 toque publica.
+func
+
+===== navigator.geolocation @ 1712007 =====
+;
+  return parts.length===1 ? parts[0].slice(0,2).toUpperCase() : (parts[0][0]+parts[parts.length-1][0]).toUpperCase();
+}
+function feedAvColor(uid){
+  return INF_AVC[Math.abs((uid||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0))%INF_AVC.length];
+}
+
+async function renderFeedHome(){
+  feedComputeKpis();
+  feedGetLocation();
+  await feedLoadPosts();
+  feedSubscribeRealtime();
+}
+
+function feedComputeKpis(){
+  const dstr=DB.today();
+  const day=DB.day(dstr);
+  const tripsRev=(day.trips||[]).reduce((s,t)=>s+(t.value||0),0);
+  const autoInfo=(typeof finAutoDay==='function')?finAutoDay(dstr):{sum:0,count:0};
+  const manRev=(day.revenues||[]).reduce((s,r)=>s+(r.amount||0),0);
+  const rev=tripsRev+autoInfo.sum+manRev;
+  const trips=(day.trips||[]).length+autoInfo.count;
+  const km=(day.sessions||[]).reduce((s,ss)=>s+(ss.km||0),0);
+  const onlineSecs=(day.sessions||[]).reduce((s,ss)=>s+(ss.elapsed_secs||0),0);
+  setText('feed-k-rev', DB.fRI(rev));
+  setText('feed-k-trips', trips);
+  setText('feed-k-rpkm', km>0 ? DB.fRI(rev/km) : '—');
+  setText('feed-k-online', onlineSecs>0 ? Math.floor(onlineSecs/3600)+'h'+p2(Math.floor(onlineSecs%3600/60))+'m' : '—');
+}
+
+function feedGetLocation(){
+  if(!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const {latitude:lat,longitude:lon}=pos.coords;
+    _feedCoords={lat,lng:lon,address:null};
+    try{
+      const r=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&zoom=17&format=json&accept-language=pt`,{headers:{'User-Agent':'MoB/1.0'}});
+      const j=await r.json();
+      const addr=j.address||{};
+      _feedCoords.address=addr.road||addr.pedestrian||addr.suburb||addr.neighbourhood||'';
+    }catch(e){console.warn('feed loc',e);}
+    feedUpdateComposerLoc();
+    feedRenderList(); // recalcula distâncias com a posição atual
+  },()=>{_feedCoords=null;},{timeout:10000,enableHighAccuracy:true});
+}
+
+async function feedLoadPosts(){
+  const el=document.getElementById('feed-list');
+  if(!_SUPA){ if(el) el.innerHTML='<div class="feed-empty">Sem conexão</div>'; return; }
+  try{
+    let q=_SUPA.from('feed_posts').select('*')
+      .eq('status','ativo').eq('audience','comunidade')
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at',{ascending:false}).limit(40);
+    if(_feedFilter) q=q.eq('type',_feedFilter);
+    const {data,error}=await q;
+    if(error) throw error;
+    _feedPosts=data||[];
+    const uids=[...new Set(_feedPosts.map(p=>p.user_id))];
+    if(uids.length){
+      const {data:names}=await _SUPA.rpc('get_profile_names',{uids});
+      _feedNames={}; (names||[]).forEach(n=>{_feedNames[n.id]={name:n.name, avatar:n.avatar_url};});
+    }
+    feedRenderList();
+  }catch(e){console.warn('feed load',e); if(el) el.innerHTML='<div class="feed-empty">Erro ao carregar o feed</div>';}
+}
+
+// Avatar compartilhado entre feed, comentários e composer: foto real
+// quando existe, senão iniciais coloridas (mesma cor sempre pro mesmo uid).
+function feedAvatarHtml(uid, name, avatarUrl, extraClass){
+  const cls = 'feed-av' + (extraClass?(' '+extraClass):'');
+  if (avatarUrl) return `<img class="${cls}" src="${esc(avatarUrl)}" alt="">`;
+  return `<div class="${cls}" style="background:${feedAvColor(uid)}">${esc(feedInitials(name))}</div>`;
+}
+
+function feedRenderList(){
+  const el=document.getElementById('feed-list');if(!el)return;
+  if(!_feedPos
+
+===== inf-city-name @ 436280 =====
+dth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Adicionar horário
+        </button>
+      </div>
+      <button class="ag-save" onclick="pjSaveEntry()">Salvar jornada</button>
+    </div>
+    <div class="ag-form-card" style="margin-bottom:24px">
+      <label class="ag-label" style="margin-bottom:10px;display:block">Jornadas planejadas</label>
+      <div id="pj-list"><div class="empty">Nenhuma jornada planejada ainda</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TELA MAIS ══════════════════════════════════════════════════════════ -->
+<div class="screen" id="sc-informes">
+  <!-- topbar: linha 1 = lupa (colapsa/expande) + cidade | linha 2 = busca (só quando aberta) -->
+  <div class="inf-topbar" id="inf-topbar">
+    <div class="inf-topbar-row1">
+      <button class="inf-search-toggle" id="inf-search-toggle" onclick="infToggleSearch()" aria-label="Buscar local">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </button>
+      <div class="inf-city" id="inf-city-btn" onclick="infAbrirCidade()"><div class="inf-city-dot"></div><span id="inf-city-name">Rio de Janeiro</span><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#94A3B8;margin-left:1px"><path d="M6 9l6 6 6-6"/></svg></div>
+    </div>
+    <div class="inf-search-fixed" id="inf-search-fixed" style="display:none">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="inf-search-bar" type="text" placeholder="Buscar local…" oninput="infBuscarGlobal(this.value)">
+    </div>
+  </div>
+  <div class="inf-search-dd" id="inf-search-dd"></div>
+
+  <!-- abas -->
+  <div class="inf-tabs-wrap">
+    <div class="inf-tabs" id="inf-tabs">
+      <button class="inf-tab active" data-tab="agora" onclick="infTab('agora')">Agora</button>
+      <button class="inf-tab" data-tab="aero" onclick="infTab('aero')">Aeroportos</button>
+      <button class="inf-tab" data-tab="rod" onclick="infTab('rod')">Rodoviárias</button>
+      <button class="inf-tab" data-tab="bairros" onclick="infTab('bairros')">Bairros</button>
+      <button class="inf-tab" data-tab="shop" onclick="infTab('shop')">Shoppings</button>
+      <button class="inf-tab" data-tab="bares" onclick="infTab('bares')">Bares</button>
+      <button class="inf-tab" data-tab="hoteis" onclick="infTab('hoteis')">Hotéis</button>
+      <button class="inf-tab" data-tab="eventos" onclick="infTab('eventos')">Eventos</button>
+      <button class="inf-tab" data-tab="tur" onclick="infTab('tur')">Turístico</button>
+    </div>
+  </div>
+
+  <div class="inf-relatar-bar">
+    <button onclick="infOpenRelatar()">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.3"><path d="M12 5v14M5 12h14"/></svg>
+      Relatar agora
+    </button>
+  </div>
+
+  <div id="inf-scroll-content">
+
+    <!-- ═══ ABA: AGORA ═══ -->
+    <div class="inf-panelbody inf-fill" id="inf-tab-agora">
+      <div class="inf-sec-lbl" id="inf-favs-section" style="display:none">Seus favoritos</div>
+      <div class="inf-favs-scroll" id="inf-favs-row"></div>
+
+      <div class="inf-sec-lbl">Informes perto de você</div>
+   
+
+===== city:'rio' @ 1686833 =====
+s-wrap').innerHTML=html;
+}
+
+function infSelOpt(btn,val,cor){
+  const parent=btn.closest('.inf-ropts');
+  parent.querySelectorAll('.inf-ropt').forEach(b=>b.className='inf-ropt');
+  btn.className=`inf-ropt sel${cor?' '+cor:''}`;
+  _infRepValor=val;document.getElementById('inf-send-btn').disabled=false;
+}
+function infSelFisc(btn,val){
+  const parent=btn.closest('.inf-ropts');
+  parent.querySelectorAll('.inf-ropt').forEach(b=>b.className='inf-ropt');
+  btn.className='inf-ropt sel r';
+  _infRepDetalhe=val;
+  const acao=document.getElementById('inf-ropts-fisc-acao');if(acao)acao.classList.add('show');
+  document.getElementById('inf-send-btn').disabled=true;
+}
+
+async function infEnviarReporte(){
+  if(!_infRepTipo||!_infRepValor)return;
+  const btn=document.getElementById('inf-send-btn');btn.disabled=true;btn.textContent='Enviando…';
+  const expMin=INF_PARAMS[_infRepTipo]?.expMin||30;
+  const expiresAt=new Date(Date.now()+expMin*60000).toISOString();
+  try{
+    if(_SUPA){
+      const sess=await _SUPA.auth.getSession();const uid=sess?.data?.session?.user?.id;
+      if(uid){
+        const{error}=await _SUPA.from('informes').insert({user_id:uid,location_name:_infLoc,location_type:_infTipoKey,city:'rio',param_type:_infRepTipo,param_value:_infRepValor,param_detail:_infRepDetalhe||null,expires_at:expiresAt,votes_up:1,votes_dn:0,is_active:true});
+        if(error){
+          // Trigger de spam ativo — informa o usuário sem travar o app
+          if(error.message?.includes('duplicate_report')||error.code==='P0001'){
+            btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Enviar informe';
+            showToast('Você já reportou isso recentemente. Aguarde um pouco.');return;
+          }
+          throw error;
+        }
+      }
+    }
+    infFecharOv('inf-ov-rep');showToast('Informe enviado — obrigado!');
+    infCarregarInformes(_infLoc,_infTipoKey);
+  }catch(e){console.error('inf send',e);showToast('Erro ao enviar. Tente novamente.');}
+  btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Enviar informe';
+}
+
+function infBuscarGlobal(q){
+  const dd=document.getElementById('inf-search-dd');
+  if(!q.trim()){dd.classList.remove('show');return;}
+  const qL=q.toLowerCase();
+  let res=INF_SDBDB.filter(x=>x.n.toLowerCase().includes(qL));
+  for(const [,v] of Object.entries(INF_VENUES)){
+    for(const item of (v.itens||[])){
+      if(item.n.toLowerCase().includes(qL)||(item.sub&&item.sub.toLowerCase().includes(qL))){
+        res.push({n:item.n+(item.sub?' ('+item.sub+')':''),t:v.tipo||'bairro'});
+      }
+    }
+  }
+  const _seen=new Set(); res=res.filter(x=>{if(_seen.has(x.n))return false;_seen.add(x.n);return true;}).slice(0,8);
+  dd.innerHTML=res.length?res.map(x=>{const t=INF_TIPOS[x.t]||INF_TIPOS.bairro;return`<div class="inf-sd-item" onclick="infToggleSearch();infAbrirLocal(null,'${x.n}','${x.t}')"><div class="inf-sd-ic" style="background:${t.bg}">${infIconSvg(x.t,t.cor,14)}</div><div><div class="inf-sd-name">${x.n}</div><div class="inf-sd-sub">${t.label}</div></div></div>`;}).join(''):'<div class="inf-sd-empty">Nenhum resultado</d
+
+===== city:'rio' @ 1703789 =====
+— usa a localização já detectada
+// quando o modal abriu (mais rápido que pedir de novo agora).
+function infRelatarPublish(extra){
+  document.getElementById('inf-relatar-title').textContent = 'Publicando…';
+  document.getElementById('inf-relatar-back').style.display = 'none';
+  document.getElementById('inf-relatar-body').innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;padding:24px 10px 8px;text-align:center">
+      <div style="width:40px;height:40px;border-radius:50%;border:3.5px solid #DBEAFE;border-top-color:#2563EB;animation:spin .8s linear infinite;margin-bottom:14px"></div>
+      <div style="font-size:12.5px;color:var(--muted)">Confirmando localização</div>
+    </div>`;
+  infRelatarDoPublish(extra);
+}
+async function infRelatarDoPublish(extra){
+  if (!_supaUser) { closeMo('mo-inf-relatar'); showToast('Faça login pra relatar.', 'error'); return; }
+  const t = (_infRelState.types||{})[_infRelState.type];
+  const expMin = t?.expMin || 30;
+  const row = {
+    user_id:_supaUser.id, type:_infRelState.type, audience:'comunidade', source:'user',
+    lat:_infRelState.lat ?? null, lng:_infRelState.lng ?? null,
+    address:_infRelState.address || null, city:'rio',
+    param_value:extra.param_value ?? null, param_detail:extra.param_detail ?? null,
+    nivel: extra.nivel ?? null,
+    expires_at:new Date(Date.now()+expMin*60000).toISOString(),
+    votes_up:1, votes_dn:0, comments_count:0, status:'ativo'
+  };
+  const { error } = await _SUPA.from('feed_posts').insert(row);
+  setTimeout(()=>{
+    closeMo('mo-inf-relatar');
+    if (error) { console.error('infRelatarDoPublish', error); showToast('Erro ao publicar. Tenta de novo.', 'error'); return; }
+    showToast('Publicado!', 'success');
+    if (_infLoc) infCarregarInformes(_infLoc, _infTipoKey);
+  }, 500);
+}
+function infSetTime(btn,min){
+  document.querySelectorAll('.inf-tp').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  _infMinutos=parseInt(min);infCarregarContagens();
+  if(_infLoc)infCarregarInformes(_infLoc,_infTipoKey);
+}
+function infFecharOv(id){document.getElementById(id).classList.remove('open');}
+function infFiltrarSheet(inp,listId){
+  const v=inp.value.toLowerCase();
+  document.querySelectorAll('#'+listId+' .inf-loc-item').forEach(el=>{const t=el.querySelector('.inf-loc-name')?.textContent.toLowerCase()||'';el.style.display=(!v||t.includes(v))?'':'none';});
+}
+function infIconSvg(tipo,cor,sz){
+  const a=`viewBox="0 0 24 24" width="${sz}" height="${sz}" fill="none" stroke="${cor}" stroke-width="2"`;
+  const m={aero:`<svg ${a}><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>`,term:`<svg ${a}><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,bairro:`<svg ${a}><circle cx="12" cy="10" r="3"/><path d="M12 2a8 8 0 0 1 8 8c0 5.333-8 14-8 14S4 15.333 4 10a8 8 0 0 1 8-8z"/></svg>`,rua:`<svg ${a}><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>`,ev:`<svg ${a}><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>`,tur:`<svg ${a}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`,bar:`<svg ${a}><path d="M17 11H
