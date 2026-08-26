@@ -1,0 +1,35 @@
+name: Inspect Informes functions
+on:
+  push:
+    paths:
+      - '.github/workflows/inspect-informes-functions.yml'
+permissions:
+  contents: write
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract exact functions
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text(encoding='utf-8')
+          keys=['let _infCity','function renderInformes','function infRenderVenueLists','function infCarregarVenuesGPS','function infEscolherCidade','function infAbrirCidade','function infCarregarFeedAgora','function infEnviarReporte']
+          out=[]
+          for k in keys:
+              i=s.find(k)
+              if i<0:
+                  out.append(f'\n===== NOT FOUND: {k} =====\n')
+                  continue
+              a=max(0,i-300); b=min(len(s),i+6500)
+              out.append(f'\n===== {k} @ {i} =====\n{s[a:b]}\n')
+          Path('_informes_functions_probe.txt').write_text(''.join(out),encoding='utf-8')
+          PY
+      - name: Commit probe
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add _informes_functions_probe.txt
+          git commit -m "Capture Informes function contexts"
+          git push
