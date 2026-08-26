@@ -1,0 +1,27 @@
+name: Run journey consolidation review patch
+on:
+  push:
+    paths:
+      - '.github/workflows/run-journey-consolidation-review.yml'
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply patch
+        run: python3 .github/scripts/patch_journey_consolidation_review.py
+      - name: Validate markers
+        run: |
+          grep -q "journeyConsolidatedSources" index.html
+          grep -q "pcb-review-btn" index.html
+          grep -q "_autoTripsByDate" index.html
+          grep -q "canPublishTripKpis" index.html
+      - name: Commit
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add index.html
+          git commit -m 'Consolidate journey trips and keep video review available' || exit 0
+          git push
