@@ -4887,6 +4887,45 @@ function confirmDeleteTrip(date, id) {
 function toggleSessionsView() { S.sessionsExpanded = !S.sessionsExpanded; renderJornada(); }
 function toggleLancView() { S.lancExpanded = !S.lancExpanded; renderJornada(); }
 
+
+// Consolida captura automática + legado/importações sem contar a mesma corrida duas vezes.
+// auto_trips é a fonte operacional principal; day.trips permanece apenas para registros
+// antigos/manuais que ainda não têm correspondente automático.
+function _journeyPlat(v) {
+  v=String(v||'').toLowerCase();
+  return v.includes('99') ? '99' : (v.includes('uber') ? 'uber' : v);
+}
+function _journeyNormAddr(v) {
+  return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
+    .replace(/\b(rua|r\.?|avenida|av\.?|estrada|travessa|rodovia)\b/g,'')
+    .replace(/[^a-z0-9]+/g,' ').trim().slice(0,42);
+}
+function _journeyLegacyMinute(t) {
+  const m=String(t?.time||'').match(/(\d{1,2}):(\d{2})/); return m ? (+m[1])*60+(+m[2]) : null;
+}
+function _journeyAutoMinute(t) {
+  const raw=t?.trip_started_at||t?.accepted_at||t?.platform_history_at; if(!raw) return null;
+  const d=new Date(raw); return isNaN(d) ? null : d.getHours()*60+d.getMinutes();
+}
+function _journeyTripsLikelySame(l,a) {
+  if (_journeyPlat(l?.platform)!==_journeyPlat(a?.platform)) return false;
+  if (l?.platform_transaction_id && a?.platform_transaction_id && l.platform_transaction_id===a.platform_transaction_id) return true;
+  const lm=_journeyLegacyMinute(l), am=_journeyAutoMinute(a);
+  const dt=(lm!=null&&am!=null)?Math.abs(lm-am):999;
+  const lv=parseFloat(l?.value)||0, av=parseFloat(a?.offer_value)||0;
+  const valueClose=lv>0&&av>0&&Math.abs(lv-av)<=0.06;
+  const lo=_journeyNormAddr(l?.origin_full||l?.origin), ao=_journeyNormAddr(a?.origin_address||a?.gps_origin_address);
+  const ld=_journeyNormAddr(l?.dest_full||l?.dest), ad=_journeyNormAddr(a?.dest_address||a?.gps_dest_address);
+  const originClose=lo.length>=6&&ao.length>=6&&(lo.includes(ao)||ao.includes(lo)||lo.slice(0,16)===ao.slice(0,16));
+  const destClose=ld.length>=6&&ad.length>=6&&(ld.includes(ad)||ad.includes(ld)||ld.slice(0,16)===ad.slice(0,16));
+  return (dt<=12 && (valueClose||originClose||destClose)) || (dt<=30 && originClose && destClose);
+}
+function journeyConsolidatedSources(day, autoTrips) {
+  const autos=Array.isArray(autoTrips)?autoTrips:[];
+  const legacy=(day?.trips||[]).filter(l=>!autos.some(a=>_journeyTripsLikelySame(l,a)));
+  return { legacy, autos, count:legacy.length+autos.length };
+}
+
 function renderJornada() {
   if (!S || !DB) return;
   try { updateCustoBanner(); } catch(e) {}
@@ -4907,18 +4946,32 @@ function renderJornada() {
   // refaz a busca em toda chamada de renderJornada, que roda com frequência
   // inclusive a cada tick do timer da jornada ativa). Refresh periódico via
   // _syncTick (a cada 1min) cobre corridas novas capturadas durante o dia.
+  // Cache por DATA. A Jornada é renderizada muitas vezes e as consultas são
+  // assíncronas; um retorno vazio/transitório nunca pode apagar um conjunto
+  // válido que já apareceu na tela (bug: km/R$/h apareciam e logo zeravam).
+  S._autoTripsByDate = S._autoTripsByDate || {};
   if (S.autoTripsDate !== d) {
+    const cachedDay = Array.isArray(S._autoTripsByDate[d]) ? S._autoTripsByDate[d] : null;
     const keepCurrent = S._autoTripsDataDate === d ? (S.autoTrips || []) : [];
     S.autoTripsDate = d;
-    S.autoTrips = keepCurrent;
+    S.autoTrips = cachedDay || keepCurrent;
     loadAutoTripsForDay(d).then(list => {
       if (S.autoTripsDate !== d || !Array.isArray(list)) return; // erro mantém último dado válido
-      S.autoTrips = list;
+      const prev = Array.isArray(S._autoTripsByDate[d]) ? S._autoTripsByDate[d] : (S._autoTripsDataDate === d ? (S.autoTrips||[]) : []);
+      // Consulta válida com dados sempre vence. Vazio só vence se nunca houve
+      // dado válido para esse dia nesta sessão — evita flicker/zero por corrida
+      // assíncrona ou réplica momentaneamente atrasada.
+      const stable = (list.length === 0 && prev.length > 0) ? prev : list;
+      S._autoTripsByDate[d] = stable;
+      S.autoTrips = stable;
       S._autoTripsDataDate = d;
       renderJornada();
     });
+  } else if (Array.isArray(S._autoTripsByDate[d])) {
+    S.autoTrips = S._autoTripsByDate[d];
+    S._autoTripsDataDate = d;
   }
-  day.autoTrips = S.autoTrips || [];
+  day.autoTrips = Array.isArray(S._autoTripsByDate[d]) ? S._autoTripsByDate[d] : (S.autoTrips || []);
   // Recusadas do dia — mesmo padrão de cache do autoTrips acima. Lida aqui
   // (S.declined) e usada dentro de renderJourneyCard(), que roda logo a
   // seguir e populate o card "Total do dia".
@@ -4931,8 +4984,9 @@ function renderJornada() {
       renderJornada();
     });
   }
-  const rev = day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0)
-            + day.autoTrips.reduce((s,t)=>s+(t.offer_value||0),0);
+  const _journeySrc = journeyConsolidatedSources(day, day.autoTrips);
+  const rev = _journeySrc.legacy.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0)
+            + _journeySrc.autos.reduce((s,t)=>s+(parseFloat(t.offer_value)||0),0);
   const exp = day.expenses.reduce((s,e)=>s+(e.amount||0),0);
   setText('d-rev', DB.fRI(rev));
   setText('d-exp', DB.fRI(exp));
@@ -5048,6 +5102,9 @@ function renderJourneyCard(day, isToday) {
   // zerado mesmo com corridas de verdade rodando. Mesma correção que já
   // tinha sido feita em rev/sessionItem/renderMetasDoDia, faltava aqui.
   const autoTripsHoje = day.autoTrips || [];
+  const journeySrc = journeyConsolidatedSources(day, autoTripsHoje);
+  const legacyTripsHoje = journeySrc.legacy;
+  const autoTripsReady = S._autoTripsDataDate === cardDate || Array.isArray(S._autoTripsByDate?.[cardDate]);
 
   // Banner "aguardando confirmação" — pedido do Yuri (16/08/2026), substitui
   // o botão fixo "Importar corridas". Conta corridas que ainda não foram
@@ -5057,22 +5114,24 @@ function renderJourneyCard(day, isToday) {
   // sozinho quando não sobra pendência.
   const pcbEl = document.getElementById('pending-confirm-banner');
   if (pcbEl) {
-    // Não interpreta cache ainda carregando como zero corridas. Durante refresh,
-    // mantém o último estado visual válido do mesmo dia.
-    const autoTripsReady = S._autoTripsDataDate === cardDate;
-    if (autoTripsReady) {
-      const pendingCount = autoTripsHoje.filter(t => t.status !== 'confirmada' || t.value_needs_review === true).length;
-      pcbEl.dataset.dataDate = cardDate;
-      if (pendingCount > 0) {
-        pcbEl.style.display = 'flex';
-        setText('pcb-title', pendingCount + (pendingCount===1 ? ' corrida aguardando confirmação' : ' corridas aguardando confirmação'));
-      } else {
-        pcbEl.style.display = 'none';
-      }
-    } else if (pcbEl.dataset.dataDate && pcbEl.dataset.dataDate !== cardDate) {
-      pcbEl.style.display = 'none';
-      pcbEl.dataset.dataDate = cardDate;
+    // Este card agora é também o caminho MANUAL permanente para revisar ou
+    // reenviar vídeo de qualquer dia selecionado. Não depende de haver pendência.
+    pcbEl.dataset.dataDate = cardDate;
+    pcbEl.style.display = 'flex';
+    const pendingCount = autoTripsReady ? autoTripsHoje.filter(t => t.status !== 'confirmada' || t.value_needs_review === true).length : null;
+    setText('pcb-title', pendingCount > 0
+      ? pendingCount + (pendingCount===1 ? ' corrida aguardando confirmação' : ' corridas aguardando confirmação')
+      : 'Revisar corridas por vídeo');
+    let reviewBtn = pcbEl.querySelector('.pcb-review-btn');
+    if (!reviewBtn) {
+      reviewBtn = document.createElement('button');
+      reviewBtn.type='button'; reviewBtn.className='pcb-review-btn';
+      reviewBtn.style.cssText='margin-left:auto;border:0;background:#fff;color:#B45309;border-radius:10px;padding:8px 10px;font-size:11px;font-weight:800;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.08)';
+      pcbEl.appendChild(reviewBtn);
     }
+    reviewBtn.textContent = pendingCount > 0 ? 'Enviar vídeo' : 'Revisar novamente';
+    reviewBtn.onclick = (ev) => { ev.stopPropagation(); openImportPrecheck(); };
+    pcbEl.onclick = () => openImportPrecheck();
   }
 
   // Barra Online/Buscando passageiro/Em corrida — real, vinda da máquina de
@@ -5086,28 +5145,34 @@ function renderJourneyCard(day, isToday) {
   const jcBd = document.getElementById('jc-breakdown');
   const tdBdRow = document.getElementById('td-bd-row');
 
-  setText('jc-trips', day.trips.length + autoTripsHoje.length);
-  setText('jc-trips2', day.trips.length + autoTripsHoje.length);
-  const aceitasCount = day.trips.length + autoTripsHoje.length;
+  // Só publica os KPIs dependentes de corridas depois que a fonte automática
+  // está pronta. Isso impede o efeito "mostra certo -> zera -> volta".
+  const canPublishTripKpis = autoTripsReady || legacyTripsHoje.length > 0;
   const declinedCount = (S.declined || []).length;
-  setText('jc-aceitas', aceitasCount);
-  setText('jc-recusadas', declinedCount);
-  const corridasSubEl = document.getElementById('jc-corridas-sub');
-  if (corridasSubEl) corridasSubEl.style.display = (aceitasCount>0 || declinedCount>0) ? 'flex' : 'none';
-  const kmAtivo = day.trips.reduce((s,t)=>s+(t.km||0),0)
-                + autoTripsHoje.reduce((s,t)=>s+(parseFloat(t.real_km_trip ?? t.offer_km_trip)||0),0);
-  const kmDesl = Math.max(0, totalKm - kmAtivo);
-  setText('jc-kmativo', kmAtivo.toFixed(1));
-  setText('jc-kmdesl', kmDesl.toFixed(1));
-  const ganhosDia = day.trips.reduce((s,t)=>s+(t.value||0),0)
-                  + autoTripsHoje.reduce((s,t)=>s+(t.offer_value||0),0);
-  const horasDecimal = totalElapsed > 0 ? totalElapsed/3600 : 0;
-  const rsh  = horasDecimal > 0 ? ganhosDia/horasDecimal : null;
-  const rskm = totalKm > 0 ? ganhosDia/totalKm : null;
-  setText('jc-rsh', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
-  setText('jc-rskm', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
-  setText('jc-rsh2', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
-  setText('jc-rskm2', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
+  let rsh = null, rskm = null;
+  if (canPublishTripKpis) {
+    const aceitasCount = journeySrc.count;
+    setText('jc-trips', aceitasCount);
+    setText('jc-trips2', aceitasCount);
+    setText('jc-aceitas', aceitasCount);
+    setText('jc-recusadas', declinedCount);
+    const corridasSubEl = document.getElementById('jc-corridas-sub');
+    if (corridasSubEl) corridasSubEl.style.display = (aceitasCount>0 || declinedCount>0) ? 'flex' : 'none';
+    const kmAtivo = legacyTripsHoje.reduce((s,t)=>s+(parseFloat(t.km)||0),0)
+                  + autoTripsHoje.reduce((s,t)=>s+(parseFloat(t.real_km_trip ?? t.offer_km_trip)||0),0);
+    const kmDesl = Math.max(0, totalKm - kmAtivo);
+    setText('jc-kmativo', kmAtivo.toFixed(1));
+    setText('jc-kmdesl', kmDesl.toFixed(1));
+    const ganhosDia = legacyTripsHoje.reduce((s,t)=>s+(parseFloat(t.value)||0),0)
+                    + autoTripsHoje.reduce((s,t)=>s+(parseFloat(t.offer_value)||0),0);
+    const horasDecimal = totalElapsed > 0 ? totalElapsed/3600 : 0;
+    rsh  = horasDecimal > 0 ? ganhosDia/horasDecimal : null;
+    rskm = totalKm > 0 ? ganhosDia/totalKm : null;
+    setText('jc-rsh', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
+    setText('jc-rskm', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
+    setText('jc-rsh2', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
+    setText('jc-rskm2', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
+  }
   // Cor por indicador — pedido do Yuri (23/07/2026, mockup aprovado):
   // mesmos limiares vermelho/verde que o motorista já ajusta na régua do
   // MōB Flash (Indicadores → R$/km e R$/hora), cada indicador troca de cor
@@ -8252,7 +8317,13 @@ async function confirmImport() {
     _SUPA.from('import_videos').update({ trip_count: toUpdateAuto.length + toPushAuto.length }).eq('id', videoId).then(()=>{}).catch(()=>{});
   }
   window._pendingImportVideoIds = null;
-  if (toUpdateAuto.length || toPushAuto.length) { S.autoTripsDate = null; } // força recarregar no próximo renderJornada
+  if (toUpdateAuto.length || toPushAuto.length) {
+    S._autoTripsByDate = S._autoTripsByDate || {};
+    delete S._autoTripsByDate[S.curDate];
+    S.autoTripsDate = null;
+    S._autoTripsDataDate = null;
+    setTimeout(() => { try { renderJornada(); } catch(e) {} }, 700); // dá tempo da escrita concluir antes do reload
+  }
   DB.saveDay(day); closeMo('mo-import-confirm'); window._pendingTrips=null;
 
   const dateHint = S.curDate !== DB.today()
