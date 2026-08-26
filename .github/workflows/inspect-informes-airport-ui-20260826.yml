@@ -1,0 +1,37 @@
+name: Inspect Informes airport UI
+on:
+  push:
+    paths:
+      - '.github/workflows/inspect-informes-airport-ui-20260826.yml'
+permissions:
+  contents: write
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract focused contexts
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          terms=['inf-bchip-sul','inf-bchip-barra','Aeroportos','aeroporto','Galeão (GIG)','Santos Dumont (SDU)','INF_SDBDB','data-tab="bairros"']
+          out=[]
+          seen=set()
+          for term in terms:
+            for m in re.finditer(re.escape(term),s,re.I):
+              k=(term,m.start())
+              if k in seen: continue
+              seen.add(k)
+              a=max(0,m.start()-1200);b=min(len(s),m.start()+2600)
+              out.append(f'\n===== {term} @ {m.start()} =====\n{s[a:b]}\n')
+          Path('_informes_airport_ui_probe.txt').write_text(''.join(out),encoding='utf-8')
+          PY
+      - name: Commit probe
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add _informes_airport_ui_probe.txt
+          git commit -m "Capture Informes airport UI context" || exit 0
+          git push
