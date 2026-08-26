@@ -2,23 +2,18 @@ from pathlib import Path
 p=Path('index.html')
 s=p.read_text(encoding='utf-8')
 
-# 1) Stable per-date auto_trips cache: never let a transient empty refresh wipe a valid day.
-old="""  if (S.autoTripsDate !== d) {
-    const keepCurrent = S._autoTripsDataDate === d ? (S.autoTrips || []) : [];
-    S.autoTripsDate = d;
-    S.autoTrips = keepCurrent;
-    loadAutoTripsForDay(d).then(list => {
-      if (S.autoTripsDate !== d || !Array.isArray(list)) return; // erro mantém último dado válido
-      S.autoTrips = list;
-      S._autoTripsDataDate = d;
-      renderJornada();
-    });
-  }
-  day.autoTrips = S.autoTrips || [];
-"""
-new="""  // Cache por DATA. A Jornada é renderizada muitas vezes e as consultas são
-  // assíncronas; um retorno vazio/transitório nunca pode apagar um conjunto
-  // válido que já apareceu na tela (bug: km/R$/h apareciam e logo zeravam).
+def replace_range(text,start_marker,end_marker,new,include_end=True,start_at=0):
+    a=text.find(start_marker,start_at)
+    assert a>=0, f'start marker not found: {start_marker[:80]}'
+    b=text.find(end_marker,a)
+    assert b>=0, f'end marker not found: {end_marker[:80]}'
+    if include_end: b+=len(end_marker)
+    return text[:a]+new+text[b:]
+
+# 1) cache estável por data
+if '_autoTripsByDate[d]' not in s:
+    new_auto="""  // Cache por DATA. Um refresh assíncrono vazio nunca apaga dados válidos
+  // que já apareceram na Jornada (corrige o efeito mostra -> zera).
   S._autoTripsByDate = S._autoTripsByDate || {};
   if (S.autoTripsDate !== d) {
     const cachedDay = Array.isArray(S._autoTripsByDate[d]) ? S._autoTripsByDate[d] : null;
@@ -26,11 +21,8 @@ new="""  // Cache por DATA. A Jornada é renderizada muitas vezes e as consultas
     S.autoTripsDate = d;
     S.autoTrips = cachedDay || keepCurrent;
     loadAutoTripsForDay(d).then(list => {
-      if (S.autoTripsDate !== d || !Array.isArray(list)) return; // erro mantém último dado válido
+      if (S.autoTripsDate !== d || !Array.isArray(list)) return;
       const prev = Array.isArray(S._autoTripsByDate[d]) ? S._autoTripsByDate[d] : (S._autoTripsDataDate === d ? (S.autoTrips||[]) : []);
-      // Consulta válida com dados sempre vence. Vazio só vence se nunca houve
-      // dado válido para esse dia nesta sessão — evita flicker/zero por corrida
-      // assíncrona ou réplica momentaneamente atrasada.
       const stable = (list.length === 0 && prev.length > 0) ? prev : list;
       S._autoTripsByDate[d] = stable;
       S.autoTrips = stable;
@@ -41,18 +33,15 @@ new="""  // Cache por DATA. A Jornada é renderizada muitas vezes e as consultas
     S.autoTrips = S._autoTripsByDate[d];
     S._autoTripsDataDate = d;
   }
-  day.autoTrips = Array.isArray(S._autoTripsByDate[d]) ? S._autoTripsByDate[d] : (S.autoTrips || []);
-"""
-assert old in s, 'autoTrips render block not found'
-s=s.replace(old,new,1)
+  day.autoTrips = Array.isArray(S._autoTripsByDate[d]) ? S._autoTripsByDate[d] : (S.autoTrips || []);"""
+    s=replace_range(s,"  if (S.autoTripsDate !== d) {","  day.autoTrips = S.autoTrips || [];",new_auto)
 
-# 2) Add consolidation helpers before renderJornada.
-marker="function renderJornada() {"
-assert marker in s, 'renderJornada marker missing'
-helper=r'''
+# 2) helpers de consolidação
+if 'function journeyConsolidatedSources' not in s:
+    marker='function renderJornada() {'
+    i=s.find(marker); assert i>=0
+    helper=r'''
 // Consolida captura automática + legado/importações sem contar a mesma corrida duas vezes.
-// auto_trips é a fonte operacional principal; day.trips permanece apenas para registros
-// antigos/manuais que ainda não têm correspondente automático.
 function _journeyPlat(v) {
   v=String(v||'').toLowerCase();
   return v.includes('99') ? '99' : (v.includes('uber') ? 'uber' : v);
@@ -89,52 +78,32 @@ function journeyConsolidatedSources(day, autoTrips) {
 }
 
 '''
-s=s.replace(marker,helper+marker,1)
+    s=s[:i]+helper+s[i:]
 
-# 3) Revenue at top of Jornada uses consolidated sources.
-old="""  const rev = day.trips.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0)
-            + day.autoTrips.reduce((s,t)=>s+(t.offer_value||0),0);
-"""
-new="""  const _journeySrc = journeyConsolidatedSources(day, day.autoTrips);
-  const rev = _journeySrc.legacy.reduce((s,t)=>s+(t.value||0),0) + day.revenues.reduce((s,r)=>s+(r.amount||0),0)
-            + _journeySrc.autos.reduce((s,t)=>s+(parseFloat(t.offer_value)||0),0);
-"""
-assert old in s, 'rev block not found'
-s=s.replace(old,new,1)
+# 3) receita consolidada no topo
+if 'const _journeySrc = journeyConsolidatedSources(day, day.autoTrips);' not in s:
+    a=s.find('  const rev = day.trips.reduce'); assert a>=0
+    b=s.find('  const exp =',a); assert b>=0
+    s=s[:a]+"""  const _journeySrc = journeyConsolidatedSources(day, day.autoTrips);
+  const rev = _journeySrc.legacy.reduce((sum,t)=>sum+(parseFloat(t.value)||0),0) + day.revenues.reduce((sum,r)=>sum+(r.amount||0),0)
+            + _journeySrc.autos.reduce((sum,t)=>sum+(parseFloat(t.offer_value)||0),0);
+"""+s[b:]
 
-# 4) In renderJourneyCard derive consolidated sources and stable readiness.
-old="""  const autoTripsHoje = day.autoTrips || [];
+# 4) fontes consolidadas dentro do card
+needle='  const autoTripsHoje = day.autoTrips || [];'
+pos=s.find(needle); assert pos>=0
+if 'const journeySrc = journeyConsolidatedSources(day, autoTripsHoje);' not in s[pos:pos+800]:
+    ins=needle+"\n  const journeySrc = journeyConsolidatedSources(day, autoTripsHoje);\n  const legacyTripsHoje = journeySrc.legacy;\n  const autoTripsReady = S._autoTripsDataDate === cardDate || Array.isArray(S._autoTripsByDate?.[cardDate]);"
+    s=s[:pos]+s[pos:].replace(needle,ins,1)
 
-  // Banner \"aguardando confirmação\""""
-new="""  const autoTripsHoje = day.autoTrips || [];
-  const journeySrc = journeyConsolidatedSources(day, autoTripsHoje);
-  const legacyTripsHoje = journeySrc.legacy;
-  const autoTripsReady = S._autoTripsDataDate === cardDate || Array.isArray(S._autoTripsByDate?.[cardDate]);
-
-  // Banner \"aguardando confirmação\""""
-assert old in s, 'autoTripsHoje block not found'
-s=s.replace(old,new,1)
-
-# 5) Make review card permanently available and support re-upload.
-old="""    // Não interpreta cache ainda carregando como zero corridas. Durante refresh,
-    // mantém o último estado visual válido do mesmo dia.
-    const autoTripsReady = S._autoTripsDataDate === cardDate;
-    if (autoTripsReady) {
-      const pendingCount = autoTripsHoje.filter(t => t.status !== 'confirmada' || t.value_needs_review === true).length;
-      pcbEl.dataset.dataDate = cardDate;
-      if (pendingCount > 0) {
-        pcbEl.style.display = 'flex';
-        setText('pcb-title', pendingCount + (pendingCount===1 ? ' corrida aguardando confirmação' : ' corridas aguardando confirmação'));
-      } else {
-        pcbEl.style.display = 'none';
-      }
-    } else if (pcbEl.dataset.dataDate && pcbEl.dataset.dataDate !== cardDate) {
-      pcbEl.style.display = 'none';
-      pcbEl.dataset.dataDate = cardDate;
-    }
-"""
-new="""    // Este card agora é também o caminho MANUAL permanente para revisar ou
-    // reenviar vídeo de qualquer dia selecionado. Não depende de haver pendência.
+# 5) card de revisão sempre disponível, inclusive reenvio
+banner_pos=s.find("  const pcbEl = document.getElementById('pending-confirm-banner');")
+assert banner_pos>=0
+if 'pcb-review-btn' not in s[banner_pos:banner_pos+5000]:
+    if_start=s.find('  if (pcbEl) {',banner_pos); assert if_start>=0
+    end_marker='\n\n  // Barra Online/Buscando passageiro/Em corrida'
+    if_end=s.find(end_marker,if_start); assert if_end>=0
+    new_if="""  if (pcbEl) {
     pcbEl.dataset.dataDate = cardDate;
     pcbEl.style.display = 'flex';
     const pendingCount = autoTripsReady ? autoTripsHoje.filter(t => t.status !== 'confirmada' || t.value_needs_review === true).length : null;
@@ -151,36 +120,14 @@ new="""    // Este card agora é também o caminho MANUAL permanente para revisa
     reviewBtn.textContent = pendingCount > 0 ? 'Enviar vídeo' : 'Revisar novamente';
     reviewBtn.onclick = (ev) => { ev.stopPropagation(); openImportPrecheck(); };
     pcbEl.onclick = () => openImportPrecheck();
-"""
-assert old in s, 'pending banner block not found'
-s=s.replace(old,new,1)
+  }"""
+    s=s[:if_start]+new_if+s[if_end:]
 
-# 6) KPI block uses consolidated sources; and never writes a transient zero while auto data is loading.
-old="""  setText('jc-trips', day.trips.length + autoTripsHoje.length);
-  setText('jc-trips2', day.trips.length + autoTripsHoje.length);
-  const aceitasCount = day.trips.length + autoTripsHoje.length;
-  const declinedCount = (S.declined || []).length;
-  setText('jc-aceitas', aceitasCount);
-  setText('jc-recusadas', declinedCount);
-  const corridasSubEl = document.getElementById('jc-corridas-sub');
-  if (corridasSubEl) corridasSubEl.style.display = (aceitasCount>0 || declinedCount>0) ? 'flex' : 'none';
-  const kmAtivo = day.trips.reduce((s,t)=>s+(t.km||0),0)
-                + autoTripsHoje.reduce((s,t)=>s+(parseFloat(t.real_km_trip ?? t.offer_km_trip)||0),0);
-  const kmDesl = Math.max(0, totalKm - kmAtivo);
-  setText('jc-kmativo', kmAtivo.toFixed(1));
-  setText('jc-kmdesl', kmDesl.toFixed(1));
-  const ganhosDia = day.trips.reduce((s,t)=>s+(t.value||0),0)
-                  + autoTripsHoje.reduce((s,t)=>s+(t.offer_value||0),0);
-  const horasDecimal = totalElapsed > 0 ? totalElapsed/3600 : 0;
-  const rsh  = horasDecimal > 0 ? ganhosDia/horasDecimal : null;
-  const rskm = totalKm > 0 ? ganhosDia/totalKm : null;
-  setText('jc-rsh', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
-  setText('jc-rskm', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
-  setText('jc-rsh2', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
-  setText('jc-rskm2', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
-"""
-new="""  // Só publica os KPIs dependentes de corridas depois que a fonte automática
-  // está pronta. Isso impede o efeito \"mostra certo -> zera -> volta\".
+# 6) KPIs consolidados e sem zero transitório
+kpi_start=s.find("  setText('jc-trips',",banner_pos); assert kpi_start>=0
+kpi_end=s.find('  // Cor por indicador',kpi_start); assert kpi_end>=0
+if 'canPublishTripKpis' not in s[kpi_start:kpi_end]:
+    new_kpi="""  // Só publica KPIs dependentes de corridas depois que a fonte automática está pronta.
   const canPublishTripKpis = autoTripsReady || legacyTripsHoje.length > 0;
   const declinedCount = (S.declined || []).length;
   let rsh = null, rskm = null;
@@ -192,13 +139,13 @@ new="""  // Só publica os KPIs dependentes de corridas depois que a fonte autom
     setText('jc-recusadas', declinedCount);
     const corridasSubEl = document.getElementById('jc-corridas-sub');
     if (corridasSubEl) corridasSubEl.style.display = (aceitasCount>0 || declinedCount>0) ? 'flex' : 'none';
-    const kmAtivo = legacyTripsHoje.reduce((s,t)=>s+(parseFloat(t.km)||0),0)
-                  + autoTripsHoje.reduce((s,t)=>s+(parseFloat(t.real_km_trip ?? t.offer_km_trip)||0),0);
+    const kmAtivo = legacyTripsHoje.reduce((sum,t)=>sum+(parseFloat(t.km)||0),0)
+                  + autoTripsHoje.reduce((sum,t)=>sum+(parseFloat(t.real_km_trip ?? t.offer_km_trip)||0),0);
     const kmDesl = Math.max(0, totalKm - kmAtivo);
     setText('jc-kmativo', kmAtivo.toFixed(1));
     setText('jc-kmdesl', kmDesl.toFixed(1));
-    const ganhosDia = legacyTripsHoje.reduce((s,t)=>s+(parseFloat(t.value)||0),0)
-                    + autoTripsHoje.reduce((s,t)=>s+(parseFloat(t.offer_value)||0),0);
+    const ganhosDia = legacyTripsHoje.reduce((sum,t)=>sum+(parseFloat(t.value)||0),0)
+                    + autoTripsHoje.reduce((sum,t)=>sum+(parseFloat(t.offer_value)||0),0);
     const horasDecimal = totalElapsed > 0 ? totalElapsed/3600 : 0;
     rsh  = horasDecimal > 0 ? ganhosDia/horasDecimal : null;
     rskm = totalKm > 0 ? ganhosDia/totalKm : null;
@@ -208,22 +155,18 @@ new="""  // Só publica os KPIs dependentes de corridas depois que a fonte autom
     setText('jc-rskm2', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
   }
 """
-assert old in s, 'KPI block not found'
-s=s.replace(old,new,1)
+    s=s[:kpi_start]+new_kpi+s[kpi_end:]
 
-# 7) After video reconciliation, clear only that day's stable cache and reload it.
-old="""  if (toUpdateAuto.length || toPushAuto.length) { S.autoTripsDate = null; } // força recarregar no próximo renderJornada
-"""
-new="""  if (toUpdateAuto.length || toPushAuto.length) {
+# 7) após conciliação por vídeo, invalida somente o dia revisado e recarrega
+old="  if (toUpdateAuto.length || toPushAuto.length) { S.autoTripsDate = null; } // força recarregar no próximo renderJornada"
+if old in s:
+    s=s.replace(old,"""  if (toUpdateAuto.length || toPushAuto.length) {
     S._autoTripsByDate = S._autoTripsByDate || {};
     delete S._autoTripsByDate[S.curDate];
     S.autoTripsDate = null;
     S._autoTripsDataDate = null;
-    setTimeout(() => { try { renderJornada(); } catch(e) {} }, 700); // dá tempo da escrita concluir antes do reload
-  }
-"""
-assert old in s, 'confirmImport cache reset not found'
-s=s.replace(old,new,1)
+    setTimeout(() => { try { renderJornada(); } catch(e) {} }, 700);
+  }""",1)
 
 p.write_text(s,encoding='utf-8')
 print('journey consolidation/review patch applied')
