@@ -7347,32 +7347,29 @@ async function processImportBatch(images, videos, plat) {
   // se sobrepõe), enquanto uma leitura errada por mistura de cartão
   // costuma aparecer uma vez só.
   function resolveTimeConflicts(list) {
-    const groups = new Map();
-    list.forEach(t => {
-      const k = (t.platform || '') + '_' + t.time;
-      (groups.get(k) || groups.set(k, []).get(k)).push(t);
-    });
-    const resolved = [];
-    groups.forEach(items => {
-      if (items.length === 1) { resolved.push(items[0]); return; }
-      const byValue = new Map();
-      items.forEach(t => {
-        const vk = (t.value || 0).toFixed(2);
-        (byValue.get(vk) || byValue.set(vk, []).get(vk)).push(t);
-      });
-      let best = null;
-      byValue.forEach(arr => { if (!best || arr.length > best.length) best = arr; });
-      // dentro do grupo vencedor, prefere o item com endereço mais completo
-      let rep = best[0];
-      best.forEach(t => {
-        const len = (t.originFull || '').length + (t.destFull || '').length;
-        const repLen = (rep.originFull || '').length + (rep.destFull || '').length;
-        if (len > repLen) rep = t;
-      });
-      resolved.push(rep);
-    });
-    return resolved;
-  }
+      const out = [];
+      for(const raw of (list || [])) {
+        const tm = normalizeTime(raw && raw.time);
+        const value = round2(Number(raw && raw.value) || 0);
+        if(!tm || value <= 0) continue;
+        const pay = String(raw && (raw.payment_method || raw.payment) || '').trim().toLowerCase();
+        const cat = String(raw && (raw.category || raw.service) || '').trim().toLowerCase();
+        const duplicate = out.find((x) => {
+          if(normalizeTime(x.time) !== tm) return false;
+          if(Math.abs((Number(x.value) || 0) - value) >= 0.01) return false;
+          const xPay = String(x.payment_method || x.payment || '').trim().toLowerCase();
+          const xCat = String(x.category || x.service || '').trim().toLowerCase();
+          if(pay && xPay && pay !== xPay) return false;
+          if(cat && xCat && cat !== xCat) return false;
+          return true;
+        });
+        if(duplicate) {
+          mergeFields(duplicate, raw);
+          duplicate._enriched = !!(duplicate._enriched || raw._enriched);
+        } else out.push({...raw, time: tm, value});
+      }
+      return out.sort((a,b)=>timeToMinutes(b.time)-timeToMinutes(a.time));
+    }
   const resolvedUnique = resolveTimeConflicts(unique);
   // A 99 exibe recompensa/compensação/taxa no mesmo histórico. Um valor isolado sem
   // km, duração ou endereços é lançamento financeiro, não corrida. Mantém separado
@@ -7405,18 +7402,37 @@ async function processImportBatch(images, videos, plat) {
   // no import (fragmento de detalhe virando corrida "avulsa" por engano).
   details.forEach(d => {
     let cand = null;
-    if (d.time) cand = unique.find(u => u.time === d.time && !u._enriched);
+    const dTime = normalizeTime(d.time);
+    const sameTimeCandidates = dTime ? unique.filter(u => normalizeTime(u.time) === dTime && !u._enriched) : [];
+    if (sameTimeCandidates.length === 1) cand = sameTimeCandidates[0];
+    else if (sameTimeCandidates.length > 1) {
+      const dValue = round2(Number(d.value || d.fare || 0));
+      const dOrigin = _normRoute(d.originFull || d.origin || '');
+      const dDest = _normRoute(d.destFull || d.dest || '');
+      const ranked = sameTimeCandidates.map(u => {
+        let score = 0;
+        if(dValue > 0) score += Math.abs(round2(Number(u.value||0))-dValue) < 0.01 ? 100 : -50;
+        const uOrigin = _normRoute(u.originFull || u.origin || '');
+        const uDest = _normRoute(u.destFull || u.dest || '');
+        if(dOrigin && uOrigin) score += (uOrigin.includes(dOrigin)||dOrigin.includes(uOrigin)) ? 35 : -10;
+        if(dDest && uDest) score += (uDest.includes(dDest)||dDest.includes(uDest)) ? 35 : -10;
+        return {u,score};
+      }).sort((a,b)=>b.score-a.score);
+      if(ranked[0] && ranked[0].score > 0 && (!ranked[1] || ranked[0].score > ranked[1].score)) cand = ranked[0].u;
+    }
     if (!cand && (d.originFull || d.destFull)) {
+      const dOrigin = _normRoute(d.originFull || d.origin || '');
+      const dDest = _normRoute(d.destFull || d.dest || '');
       cand = unique.find(u => !u._enriched &&
-        ((d.originFull && u.originFull === d.originFull) || (d.destFull && u.destFull === d.destFull)));
+        ((dOrigin && _normRoute(u.originFull || u.origin || '').includes(dOrigin)) ||
+         (dDest && _normRoute(u.destFull || u.dest || '').includes(dDest))));
     }
     if (cand) {
       cand._enriched = true;
-      if (d.km != null && d.km > 0)       { cand.km = d.km; cand.kmEstimado = false; }
+      if (d.km != null && d.km > 0) { cand.km = d.km; cand.kmEstimado = false; }
       if (d.duration != null && d.duration > 0) cand.duration = d.duration;
-      // Endereço do detalhe é a linha inteira, sem truncar — prefere ele.
       if (d.originFull) { cand.originFull = d.originFull; cand.origin = d.origin; }
-      if (d.destFull)   { cand.destFull = d.destFull; cand.dest = d.dest; }
+      if (d.destFull) { cand.destFull = d.destFull; cand.dest = d.dest; }
     }
   });
 
@@ -8171,28 +8187,32 @@ function _autoTripLocalTime(at) {
   return String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
 }
 function matchAutoTrip(newT, autoTrips) {
-  return autoTrips.find(at => {
-    const samePlat = (at.platform||'uber') === (newT.platform||'uber');
-    if (!samePlat) return false;
+  let best = null, bestScore = -Infinity;
+  for (const at of (autoTrips || [])) {
+    if ((at.platform||'uber') !== (newT.platform||'uber')) continue;
     const atTime = _autoTripLocalTime(at);
-    const sameTime = atTime && newT.time && atTime === newT.time;
-    const sameVal  = Math.abs((at.offer_value||0)-(newT.value||0)) < 0.02;
-    const sameKm   = newT.km > 0 && at.real_km_trip > 0 && Math.abs((at.real_km_trip||0)-(newT.km||0)) < 0.5;
-    const sameRoute = !!(at.origin_address && newT.origin && at.dest_address && newT.dest
-                       && _normRoute(at.origin_address).includes(_normRoute(newT.origin))
-                       && _normRoute(at.dest_address).includes(_normRoute(newT.dest)));
-    const nearTime = atTime && newT.time && (() => {
-      const [h1,m1] = atTime.split(':').map(Number);
-      const [h2,m2] = newT.time.split(':').map(Number);
-      return Math.abs((h1*60+m1)-(h2*60+m2)) <= 5;
-    })();
-    if (sameTime && sameVal) return true;
-    if (sameTime && sameRoute) return true;
-    if (sameTime && sameKm && newT.km > 0) return true;
-    if (sameVal && nearTime && sameKm) return true;
-    if (sameVal && nearTime && sameRoute) return true;
-    return false;
-  }) || null;
+    if (!atTime || !newT.time) continue;
+    const [h1,m1] = atTime.split(':').map(Number), [h2,m2] = newT.time.split(':').map(Number);
+    const diff = Math.abs((h1*60+m1)-(h2*60+m2));
+    if (diff > 12) continue;
+    const fare = Number(at.offer_value||0), value = Number(newT.value||0);
+    const fareDiff = Math.abs(fare-value);
+    const sameVal = fare > 0 && value > 0 && fareDiff < 0.02;
+    const sameKm = Number(newT.km)>0 && Number(at.real_km_trip)>0 && Math.abs(Number(at.real_km_trip)-Number(newT.km)) < 0.5;
+    const sameRoute = !!(at.origin_address && newT.origin && at.dest_address && newT.dest &&
+      _normRoute(at.origin_address).includes(_normRoute(newT.origin)) && _normRoute(at.dest_address).includes(_normRoute(newT.dest)));
+    const incomplete = at.capture_complete === false || fare <= 0 || at.value_needs_review === true;
+    if (!sameVal && !sameKm && !sameRoute && !incomplete) continue;
+    let score = diff === 0 ? 45 : (diff <= 5 ? 32 : 14);
+    if (sameVal) score += 120;
+    else if (fare > 0 && value > 0) score -= Math.min(100, fareDiff * 8);
+    if (sameKm) score += 55;
+    if (sameRoute) score += 55;
+    if (incomplete) score += 20;
+    if (incomplete && diff <= 5) score += 20;
+    if (score > bestScore) { bestScore = score; best = at; }
+  }
+  return bestScore >= 45 ? best : null;
 }
 
 // ── Reconciliação de sessões × corridas ───────────────────────────────────
