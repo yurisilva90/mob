@@ -17,12 +17,12 @@ jobs:
           from pathlib import Path
           import re
           s=Path('index.html').read_text()
-          for i,b in enumerate(re.findall(r'<script(?:\\s[^>]*)?>(.*?)</script>',s,re.S|re.I)):
+          for i,b in enumerate(re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,re.S|re.I)):
               Path(f'/tmp/mob-{i}.js').write_text(b)
           PY
           for f in /tmp/mob-*.js; do node --check "$f"; done
           grep -q 'await Promise.all(importWrites)' index.html
-          grep -q 'function dedupeVideoHistoryTrips' index.html
+          grep -q 'const financialOnly' index.html
       - name: Commit
         run: |
           git config user.name 'github-actions[bot]'
