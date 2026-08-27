@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mob-v26-live-auto-kpi-refresh';
+const CACHE_NAME = 'mob-v27-stable-journey-kpis';
 const ASSETS = [
   '/',
   '/index.html',

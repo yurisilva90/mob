@@ -4957,6 +4957,12 @@ function renderJornada() {
   // o consolidado precisa reler o dia enquanto a Jornada está visível. Antes,
   // um cache já criado para a data podia permanecer válido no detalhe e antigo
   // no card "Total do dia" até alguma outra ação invalidá-lo.
+  const currentAutoTrips = (S._autoTripsDataDate === d && Array.isArray(S.autoTrips)) ? S.autoTrips : [];
+  if (!Array.isArray(S._autoTripsByDate[d]) && currentAutoTrips.length > 0) {
+    // Se a tela já abriu com dados válidos, eles viram imediatamente o último
+    // conjunto conhecido do dia. Assim uma consulta vazia/transitória não zera KPIs.
+    S._autoTripsByDate[d] = currentAutoTrips;
+  }
   const cachedAutoTrips = Array.isArray(S._autoTripsByDate[d]) ? S._autoTripsByDate[d] : null;
   if (cachedAutoTrips) {
     S.autoTrips = cachedAutoTrips;
@@ -4973,16 +4979,24 @@ function renderJornada() {
     S._autoTripsLoading[d] = true;
     loadAutoTripsForDay(d).then(list => {
       if (!Array.isArray(list)) return;
-      const prev = Array.isArray(S._autoTripsByDate[d]) ? S._autoTripsByDate[d] : [];
+      const prev = Array.isArray(S._autoTripsByDate[d])
+        ? S._autoTripsByDate[d]
+        : ((S._autoTripsDataDate === d && Array.isArray(S.autoTrips)) ? S.autoTrips : []);
       // Uma leitura vazia transitória nunca apaga corridas que já foram vistas.
       const stable = (list.length === 0 && prev.length > 0) ? prev : list;
       S._autoTripsByDate[d] = stable;
       S._autoTripsLastFetch[d] = Date.now();
       if (S.curDate === d) {
+        const fingerprint = rows => JSON.stringify((rows || []).map(t => [
+          t.id || '', t.offer_value ?? null, t.real_km_trip ?? null,
+          t.real_km_pickup ?? null, t.status || '', t.trip_ended_at || ''
+        ]));
+        const changed = fingerprint(stable) !== fingerprint(S.autoTrips || []);
         S.autoTrips = stable;
         S.autoTripsDate = d;
         S._autoTripsDataDate = d;
-        renderJornada();
+        // Evita redesenhar a tela a cada consulta idêntica. Isso elimina a piscada.
+        if (changed) renderJornada();
       }
     }).catch(e => {
       console.warn('[Jornada] refresh auto_trips:', e);
