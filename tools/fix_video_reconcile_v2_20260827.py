@@ -28,13 +28,40 @@ new_resolve="""function resolveTimeConflicts(list) {
         }
       }
       return out.sort((a,b)=>timeToMinutes(b.time)-timeToMinutes(a.time));
-    }
+    }"""
 
-    """
+def function_end(text, start):
+    brace=text.find('{',start)
+    if brace < 0: return -1
+    depth=0
+    quote=None
+    esc=False
+    i=brace
+    while i < len(text):
+        ch=text[i]
+        if quote:
+            if esc:
+                esc=False
+            elif ch=='\\':
+                esc=True
+            elif ch==quote:
+                quote=None
+        else:
+            if ch in ('\"', "'", '`'):
+                quote=ch
+            elif ch=='{':
+                depth+=1
+            elif ch=='}':
+                depth-=1
+                if depth==0:
+                    return i+1
+        i+=1
+    return -1
+
 start=s.find('function resolveTimeConflicts(list)')
-end=s.find('function applyDetails',start)
+end=function_end(s,start) if start>=0 else -1
 if start < 0 or end < 0:
-    raise SystemExit(f'resolve/applyDetails boundaries not found: {start}, {end}')
+    raise SystemExit(f'resolver boundaries not found: {start}, {end}')
 current=s[start:end]
 if 'const out = [];' not in current or 'value <= 0' not in current:
     s=s[:start]+new_resolve+s[end:]
@@ -91,4 +118,4 @@ if s != orig:
     print('video reconciliation v2 applied')
 else:
     print('video reconciliation v2 already applied')
-# boundary-trigger
+# balanced-brace-trigger
