@@ -1206,7 +1206,26 @@ html.dark .hg-mini-tabs button.active,html.dark .hg-category-tabs button.active{
 .jss-trips-head h4{font-size:10.5px;font-weight:800;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em}
 .jss-trips-head span{font-size:11px;font-weight:700;color:var(--muted2)}
 .jss-trips-empty{padding:12px 14px;font-size:12px;color:var(--muted2);text-align:center}
-.jss-act{border:0;background:#F1F5F9;cursor:pointer;color:#64748B;padding:5px;display:flex;align-items:center;border-radius:8px;touch-action:manipulation;flex-shrink:0}.jss-act.del{color:#EF4444;background:#FEF2F2}
+.jss-act{border:0;background:#F1F5F9;cursor:pointer;color:#64748B;padding:5px;display:flex;align-items:center;border-radius:8px;touch-action:manipulation;flex-shrink:0}.jss-act.del{color:#EF4444;background:#FEF2F2}.jss-act.merge{color:#7C3AED;background:#F5F3FF}
+/* ── Mesclar jornadas ── */
+.msel{background:var(--card);border:1.5px solid var(--line);border-radius:15px;padding:12px 13px;display:flex;align-items:center;gap:11px;margin-bottom:8px;cursor:pointer;touch-action:manipulation}
+.msel.picked{border-color:#7C3AED;background:#FAF9FF}
+.msel .chk{width:21px;height:21px;border-radius:7px;border:1.8px solid var(--line);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.msel.picked .chk{background:#7C3AED;border-color:#7C3AED}
+.msel .minfo{flex:1;min-width:0}
+.msel .mrange{font-size:12.5px;font-weight:800}
+.msel .mmeta{font-size:10.5px;color:var(--muted);font-weight:600;margin-top:1px}
+.msel .mstat{text-align:right;flex-shrink:0}
+.msel .mstat b{display:block;font-size:12.5px;font-weight:800}
+.msel .mstat span{font-size:9.5px;color:var(--muted);font-weight:700}
+.mgap-note{display:flex;align-items:center;gap:7px;padding:4px 4px 8px;font-size:10px;color:#94A3B8;font-weight:700}
+.mpreview{background:#F5F3FF;border:1.5px solid #DDD6FE;border-radius:16px;padding:13px 14px;margin-top:6px}
+.mpreview-hd{font-size:10px;font-weight:800;color:#7C3AED;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.mprow{display:flex;justify-content:space-between;font-size:12px;font-weight:700;padding:5px 0;border-bottom:1px solid #E9E4FC}
+.mprow:last-child{border-bottom:0}
+.mprow span{color:var(--muted);font-weight:600}
+.mergebtn{width:100%;height:50px;border-radius:14px;background:#7C3AED;color:#fff;border:0;font-size:14px;font-weight:800;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;font-family:inherit}
+.mergebtn:disabled{background:#E2E8F0;color:#94A3B8;cursor:default}
 .jss-ganhos{font-size:12px;font-weight:800;color:var(--green2)}
 .jss-rate-row{display:none;grid-template-columns:repeat(3,1fr);gap:8px;padding:2px 14px 12px}
 .jss-card.open .jss-rate-row{display:grid}
@@ -2302,6 +2321,20 @@ h1.hd-title{font-family:var(--font-brand)!important}
     <div class="field"><label class="lbl">Hora fim</label><input class="inp" type="time" id="jss-edit-fim" style="height:48px;width:100%;box-sizing:border-box"></div>
     <p style="font-size:11px;color:#B0BEC5;text-align:center;margin-bottom:12px;line-height:1.5">Km ativo e deslocamento são<br>calculados pelas corridas</p>
     <button class="save receita" onclick="saveJss()">Salvar alterações</button>
+  </div>
+</div>
+
+<div class="mo" id="mo-mesclar">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head"><h2>Mesclar jornadas</h2><button class="xbtn" onclick="closeMo('mo-mesclar')">&#x2715;</button></div>
+    <div style="font-size:11px;color:var(--muted);margin:-8px 0 12px" id="mesclar-sub"></div>
+    <div id="mesclar-list"></div>
+    <div id="mesclar-preview"></div>
+    <button class="mergebtn" id="mesclar-btn" disabled onclick="mesclarConfirmar()">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg>
+      <span id="mesclar-btn-lbl">Selecione 2 ou mais</span>
+    </button>
   </div>
 </div>
 
@@ -5460,13 +5493,14 @@ function sessionItem(label, sess, origIdx, dateStr, day, live) {
     ? journeyBreakdownForSession(sess, elapsedSecs, km, autoTrips)
     : computeStatusBreakdown(elapsedSecs, km, autoTrips);
   const bdListId = 'bl-' + cardId;
+  const mergeBtn = !live ? `<button class="jss-act merge" onclick="event.stopPropagation();abrirMesclar('${dateStr}',${origIdx})" title="Mesclar"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg></button>` : '';
   const editBtn = !live ? `<button class="jss-act" onclick="event.stopPropagation();editJss('${dateStr}',${origIdx})" title="Editar"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
         <button class="jss-act del" onclick="event.stopPropagation();deleteJss('${dateStr}',${origIdx})" title="Excluir"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>` : '';
 
   return `<div class="jss-card ${badgeCls}" id="${cardId}">
     <div class="jss-row" onclick="toggleJss('${cardId}')">
       <div class="jss-info">
-        <div class="jss-top"><span class="jss-name">${label}</span><span class="jss-badge ${badgeCls}">${status}</span>${editBtn}</div>
+        <div class="jss-top"><span class="jss-name">${label}</span><span class="jss-badge ${badgeCls}">${status}</span>${mergeBtn}${editBtn}</div>
         <div class="jss-sub">${range} · ${dur}</div>
       </div>
       <div style="text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:2px">
@@ -5586,6 +5620,154 @@ function deleteJss(dateStr, idx) {
     if (S.sec === 'relatorios') renderHome();
     showToast('Sessão excluída');
   }, { confirmLabel: 'Excluir', danger: true, cancelLabel: 'Cancelar' });
+}
+
+// ── Mesclar jornadas (27/08/2026, pedido do Yuri) ──────────────────────────
+// Une 2+ sessões do mesmo dia numa só: soma km e corridas (que já caem
+// dentro do novo intervalo automaticamente, já que tripItem/sessionItem
+// filtram por horário, não por vínculo explícito de sessão — não precisa
+// re-vincular nada), e o intervalo ENTRE as sessões escolhidas vira tempo
+// Online (soma no elapsed, não no km — nenhum km rodou no intervalo).
+// A sessão mais antiga do grupo sobrevive (mantém o id); as outras são
+// removidas de verdade (mesmo padrão de delete real do deleteJss).
+let _mesclarState = { dateStr: null, sessions: [], picked: new Set() };
+
+function abrirMesclar(dateStr, idx) {
+  const day = DB.day(dateStr);
+  if (!day.sessions || !day.sessions.length) return;
+  _mesclarState = { dateStr, sessions: day.sessions.map((s, i) => Object.assign({}, s, { _idx: i })), picked: new Set([idx]) };
+  const dLabel = new Date(dateStr + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' });
+  document.getElementById('mesclar-sub').textContent = dLabel.charAt(0).toUpperCase() + dLabel.slice(1) + ' · selecione 2 ou mais pra juntar';
+  mesclarRenderList();
+  openMo('mo-mesclar');
+}
+
+function mesclarToggle(idx) {
+  if (_mesclarState.picked.has(idx)) _mesclarState.picked.delete(idx);
+  else _mesclarState.picked.add(idx);
+  mesclarRenderList();
+}
+
+function _mesclarTripsNoIntervalo(day, start, end) {
+  const trips = (day.trips || []).filter(t => {
+    let ts = t.ts || 0;
+    if (!ts && t.time) ts = new Date(_mesclarState.dateStr + 'T' + t.time + ':00').getTime();
+    return ts && ts >= start && (!end || ts <= end);
+  });
+  const autoTrips = (day.autoTrips || []).filter(t => {
+    const ts = autoTripTs(t);
+    return ts && ts >= start && (!end || ts <= end);
+  });
+  return { trips, autoTrips };
+}
+
+function mesclarCalcular(sessions) {
+  const sorted = [...sessions].sort((a, b) => (a.start || 0) - (b.start || 0));
+  const newStart = Math.min(...sorted.map(s => s.start || 0));
+  const newEnd = Math.max(...sorted.map(s => s.end || 0));
+  const newKm = sorted.reduce((s, x) => s + (x.km || 0), 0);
+  let gapMs = 0;
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const gap = (sorted[i + 1].start || 0) - (sorted[i].end || 0);
+    if (gap > 0) gapMs += gap;
+  }
+  const sumElapsed = sorted.reduce((s, x) => s + (x.elapsed || 0), 0);
+  const newElapsedSecs = sumElapsed + (gapMs / 1000);
+  return { newStart, newEnd, newKm, newElapsedSecs, sorted };
+}
+
+function mesclarRenderList() {
+  const st = _mesclarState;
+  const day = DB.day(st.dateStr);
+  const sorted = [...st.sessions].sort((a, b) => (a.start || 0) - (b.start || 0));
+  let html = '';
+  sorted.forEach((s, i) => {
+    const picked = st.picked.has(s._idx);
+    const dur = fmtDur((s.elapsed || 0) / 60);
+    const range = fmtHM(s.start || 0) + ' – ' + (s.end ? fmtHM(s.end) : '—');
+    const { trips, autoTrips } = _mesclarTripsNoIntervalo(day, s.start || 0, s.end || 0);
+    const corridas = trips.length + autoTrips.length;
+    const ganhos = trips.reduce((a, t) => a + (t.value || 0), 0) + autoTrips.reduce((a, t) => a + (t.offer_value || 0), 0);
+    html += `<div class="msel ${picked ? 'picked' : ''}" onclick="mesclarToggle(${s._idx})">
+      <div class="chk">${picked ? '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</div>
+      <div class="minfo"><div class="mrange">${range}</div><div class="mmeta">${dur} · ${corridas} corrida${corridas !== 1 ? 's' : ''}</div></div>
+      <div class="mstat"><b>${(s.km || 0).toFixed(1)} km</b><span>${DB.fR(ganhos)}</span></div>
+    </div>`;
+    const next = sorted[i + 1];
+    if (next && s.end && next.start > s.end && picked && st.picked.has(next._idx)) {
+      const gapMin = Math.round((next.start - s.end) / 60000);
+      if (gapMin > 0) html += `<div class="mgap-note"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Intervalo de ${gapMin}min entre elas — vira tempo Online na jornada mesclada</div>`;
+    }
+  });
+  document.getElementById('mesclar-list').innerHTML = html;
+
+  const pickedSessions = sorted.filter(s => st.picked.has(s._idx));
+  const btn = document.getElementById('mesclar-btn');
+  const btnLbl = document.getElementById('mesclar-btn-lbl');
+  const previewEl = document.getElementById('mesclar-preview');
+  if (pickedSessions.length < 2) {
+    btn.disabled = true; btnLbl.textContent = 'Selecione 2 ou mais';
+    previewEl.innerHTML = '';
+    return;
+  }
+  const { newStart, newEnd, newKm, newElapsedSecs } = mesclarCalcular(pickedSessions);
+  const { trips, autoTrips } = _mesclarTripsNoIntervalo(day, newStart, newEnd);
+  const corridas = trips.length + autoTrips.length;
+  const ganhos = trips.reduce((a, t) => a + (t.value || 0), 0) + autoTrips.reduce((a, t) => a + (t.offer_value || 0), 0);
+  previewEl.innerHTML = `<div class="mpreview">
+    <div class="mpreview-hd">Prévia da jornada mesclada</div>
+    <div class="mprow"><span>Novo horário</span><b>${fmtHM(newStart)} – ${fmtHM(newEnd)}</b></div>
+    <div class="mprow"><span>Duração total</span><b>${fmtDur(newElapsedSecs / 60)}</b></div>
+    <div class="mprow"><span>Km rodado</span><b>${newKm.toFixed(1)} km</b></div>
+    <div class="mprow"><span>Corridas</span><b>${corridas} corrida${corridas !== 1 ? 's' : ''}</b></div>
+    <div class="mprow"><span>Ganhos</span><b>${DB.fR(ganhos)}</b></div>
+  </div>`;
+  btn.disabled = false; btnLbl.textContent = `Mesclar ${pickedSessions.length} jornadas`;
+}
+
+function mesclarConfirmar() {
+  const st = _mesclarState;
+  const picked = st.sessions.filter(s => st.picked.has(s._idx));
+  if (picked.length < 2) return;
+  const { newStart, newEnd, sorted } = mesclarCalcular(picked);
+  showConfirm(
+    `Mesclar ${picked.length} jornadas?\n\nAs sessões de ${fmtHM(sorted[0].start)} a ${fmtHM(sorted[sorted.length - 1].end)} viram uma jornada só (${fmtHM(newStart)}–${fmtHM(newEnd)}). Corridas e dados são mantidos, o intervalo entre elas vira tempo Online. As sessões originais são apagadas — essa ação não pode ser desfeita.`,
+    () => mesclarAplicar(),
+    { confirmLabel: 'Mesclar', cancelLabel: 'Cancelar', danger: false }
+  );
+}
+
+function mesclarAplicar() {
+  const st = _mesclarState;
+  const day = DB.day(st.dateStr);
+  if (!day.sessions) return;
+  const picked = st.sessions.filter(s => st.picked.has(s._idx));
+  if (picked.length < 2) return;
+  const { newStart, newEnd, newKm, newElapsedSecs, sorted } = mesclarCalcular(picked);
+  const survivor = sorted[0]; // sessão mais antiga do grupo mantém o id
+  const idsToRemove = sorted.slice(1).map(s => s.id);
+
+  const merged = { id: survivor.id, start: newStart, end: newEnd, km: parseFloat(newKm.toFixed(3)), elapsed: Math.round(newElapsedSecs) };
+
+  day.sessions = day.sessions.filter(s => !idsToRemove.includes(s.id));
+  const survIdx = day.sessions.findIndex(s => s.id === survivor.id);
+  if (survIdx >= 0) day.sessions[survIdx] = merged; else day.sessions.push(merged);
+
+  const totalKm = day.sessions.reduce((s, x) => s + (x.km || 0), 0);
+  const totalElapsed = day.sessions.reduce((s, x) => s + (x.elapsed || 0), 0);
+  day.session = { km: totalKm, elapsed: totalElapsed };
+  DB.saveDay(day);
+
+  SYNC.push('sessions', {
+    id: merged.id, date: st.dateStr, start_ms: merged.start, end_ms: merged.end,
+    km: merged.km, elapsed_secs: merged.elapsed, paused_ms: 0, is_paused: false
+  });
+  idsToRemove.forEach(id => SYNC.del('sessions', { id }));
+
+  closeMo('mo-mesclar');
+  renderJornada();
+  if (S.sec === 'relatorios') renderHome();
+  showToast(picked.length + ' jornadas mescladas');
 }
 
 
