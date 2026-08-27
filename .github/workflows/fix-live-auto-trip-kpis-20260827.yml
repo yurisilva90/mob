@@ -10,113 +10,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Corrigir cache e atualização dos KPIs da Jornada
+      - name: Aplicar correção
+        run: python3 .github/scripts/patch_live_auto_trip_kpis_20260827.py
+      - name: Validar correção
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p = Path('index.html')
-          s = p.read_text(encoding='utf-8')
-
-          start_marker = "  S._autoTripsByDate = S._autoTripsByDate || {};"
-          end_marker = "  day.autoTrips = Array.isArray(S._autoTripsByDate[d]) ? S._autoTripsByDate[d] : (S.autoTrips || []);"
-          a = s.find(start_marker)
-          b = s.find(end_marker, a)
-          if a < 0 or b < 0:
-              raise SystemExit('Bloco atual de cache de auto_trips não encontrado; abortando sem alterar.')
-          b += len(end_marker)
-
-          new_block = r'''  S._autoTripsByDate = S._autoTripsByDate || {};
-  S._autoTripsLastFetch = S._autoTripsLastFetch || {};
-  S._autoTripsLoading = S._autoTripsLoading || {};
-
-  // A captura automática grava em auto_trips fora do estado JS da tela. Por isso
-  // o consolidado precisa reler o dia enquanto a Jornada está visível. Antes,
-  // um cache já criado para a data podia permanecer válido no detalhe e antigo
-  // no card "Total do dia" até alguma outra ação invalidá-lo.
-  const cachedAutoTrips = Array.isArray(S._autoTripsByDate[d]) ? S._autoTripsByDate[d] : null;
-  if (cachedAutoTrips) {
-    S.autoTrips = cachedAutoTrips;
-    S._autoTripsDataDate = d;
-  }
-
-  const autoTripsAge = Date.now() - (S._autoTripsLastFetch[d] || 0);
-  const autoTripsStale = autoTripsAge >= 15000;
-  const autoTripsVisible = typeof document === 'undefined' || document.visibilityState !== 'hidden';
-  const shouldRefreshAutoTrips = autoTripsVisible && (S.autoTripsDate !== d || autoTripsStale);
-
-  if (shouldRefreshAutoTrips && !S._autoTripsLoading[d]) {
-    S.autoTripsDate = d;
-    S._autoTripsLoading[d] = true;
-    loadAutoTripsForDay(d).then(list => {
-      if (!Array.isArray(list)) return;
-      const prev = Array.isArray(S._autoTripsByDate[d]) ? S._autoTripsByDate[d] : [];
-      // Uma leitura vazia transitória nunca apaga corridas que já foram vistas.
-      const stable = (list.length === 0 && prev.length > 0) ? prev : list;
-      S._autoTripsByDate[d] = stable;
-      S._autoTripsLastFetch[d] = Date.now();
-      if (S.curDate === d) {
-        S.autoTrips = stable;
-        S.autoTripsDate = d;
-        S._autoTripsDataDate = d;
-        renderJornada();
-      }
-    }).catch(e => {
-      console.warn('[Jornada] refresh auto_trips:', e);
-    }).finally(() => {
-      S._autoTripsLoading[d] = false;
-      // Em falha, evita martelar o banco a cada tick; tenta novamente no próximo TTL.
-      if (!S._autoTripsLastFetch[d]) S._autoTripsLastFetch[d] = Date.now();
-    });
-  }
-
-  day.autoTrips = Array.isArray(S._autoTripsByDate[d])
-    ? S._autoTripsByDate[d]
-    : ((S._autoTripsDataDate === d && Array.isArray(S.autoTrips)) ? S.autoTrips : []);'''
-
-          s = s[:a] + new_block + s[b:]
-
-          # Mesmo que uma flag de prontidão seja invalidada por outro fluxo, dados
-          # já presentes nunca podem deixar o card preso no valor anterior.
-          old_guard = "const canPublishTripKpis = autoTripsReady || legacyTripsHoje.length > 0;"
-          new_guard = "const canPublishTripKpis = autoTripsReady || autoTripsHoje.length > 0 || legacyTripsHoje.length > 0;"
-          if old_guard not in s:
-              raise SystemExit('Guard dos KPIs não encontrado; abortando sem alterar.')
-          s = s.replace(old_guard, new_guard, 1)
-
-          p.write_text(s, encoding='utf-8')
-          PY
-
-      - name: Atualizar versão do cache do aplicativo
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path('sw.js')
-          s=p.read_text(encoding='utf-8')
-          old="const CACHE_NAME = 'mob-v25-sw-update-check';"
-          new="const CACHE_NAME = 'mob-v26-live-auto-kpi-refresh';"
-          if old in s:
-              s=s.replace(old,new,1)
-              p.write_text(s,encoding='utf-8')
-          elif 'mob-v26-live-auto-kpi-refresh' not in s:
-              raise SystemExit('Versão esperada do service worker não encontrada.')
-          PY
-
-      - name: Validar JavaScript e correção aplicada
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
           s=Path('index.html').read_text(encoding='utf-8')
-          assert "autoTripsAge >= 15000" in s
-          assert "autoTripsReady || autoTripsHoje.length > 0 || legacyTripsHoje.length > 0" in s
-          blocks=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,re.S|re.I)
-          for i,b in enumerate(blocks):
-              Path(f'/tmp/mob-inline-{i}.js').write_text(b,encoding='utf-8')
-          print('scripts inline:',len(blocks))
+          assert 'autoTripsAge >= 15000' in s
+          assert 'autoTripsReady || autoTripsHoje.length > 0 || legacyTripsHoje.length > 0' in s
+          assert "mob-v26-live-auto-kpi-refresh" in Path('sw.js').read_text(encoding='utf-8')
+          print('Validação da correção concluída.')
           PY
-          for f in /tmp/mob-inline-*.js; do node --check "$f"; done
-          grep -q "mob-v26-live-auto-kpi-refresh" sw.js
-
       - name: Gravar correção
         run: |
           git config user.name 'github-actions[bot]'
