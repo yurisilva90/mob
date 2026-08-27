@@ -94,10 +94,7 @@ elif 'const fareDiff = Math.abs(fare - trip.value);' not in s:
     raise SystemExit('auto trip matching score block not found')
 
 if 'RECONCILIAÇÃO OBRIGATÓRIA DO VÍDEO' not in s:
-    anchors=[
-        'Não repita a mesma corrida em frames diferentes.',
-        'Não duplique a mesma corrida em frames diferentes.',
-    ]
+    anchors=['Não repita a mesma corrida em frames diferentes.','Não duplique a mesma corrida em frames diferentes.']
     instruction=" RECONCILIAÇÃO OBRIGATÓRIA DO VÍDEO: trate o vídeo como sequência temporal de uma lista rolável, não como imagens independentes. Reconstrua os cards e mescle leituras parciais do mesmo card. HH:mm NÃO é identificador único: duas corridas podem ocorrer no mesmo minuto; mantenha ambas quando valor, pagamento, categoria ou rota diferirem. Ordene pelo horário textual, nunca pela ordem dos frames. Nunca copie horário de card vizinho. 'Outro', ajustes, taxas, créditos/débitos e valores negativos NÃO são corridas. Normalize valores e endereços, preserve App/Dinheiro e faça reconciliação global antes da resposta."
     for anchor in anchors:
         if anchor in s:
@@ -109,3 +106,4 @@ if s != orig:
     print('video reconciliation v2 applied')
 else:
     print('video reconciliation v2 already applied')
+# final-regression-trigger
