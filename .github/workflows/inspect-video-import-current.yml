@@ -1,0 +1,19 @@
+name: Inspect current video import
+on:
+  push:
+    paths:
+      - '.github/workflows/inspect-video-import-current.yml'
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text()
+          for needle in ['function confirmImport','async function confirmImport','toUpdateAuto','toPushAuto','pendingImportVideoIds']:
+            i=s.find(needle)
+            print('\n===',needle,'@',i,'===')
+            if i>=0: print(s[max(0,i-1500):i+7000])
+          PY
