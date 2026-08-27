@@ -144,4 +144,4 @@ if 'RECONCILIAÇÃO OBRIGATÓRIA DO VÍDEO' not in s:
 if s != orig:
     p.write_text(s,encoding='utf-8'); print('video reconciliation v2 applied')
 else: print('video reconciliation v2 already applied')
-# final-functional-trigger
+# final-validation-trigger-2
