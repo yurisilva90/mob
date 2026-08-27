@@ -1,0 +1,39 @@
+name: Apply video reconciliation v2
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tools/fix_video_reconcile_v2_20260827.py'
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Apply patch
+        run: python tools/fix_video_reconcile_v2_20260827.py
+      - name: Validate JavaScript syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s=Path('index.html').read_text()
+          assert 'VIDEO_RECONCILE_V2' in s
+          assert 'HH:mm is NOT a unique ride id' in s
+          assert 'RECONCILIAÇÃO OBRIGATÓRIA DO VÍDEO' in s
+          assert 'sameTimeCandidates' in s
+          print('validation ok')
+          PY
+      - name: Commit result
+        run: |
+          if git diff --quiet -- index.html; then echo 'No changes'; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'fix: robust video ride reconciliation v2'
+          git push
