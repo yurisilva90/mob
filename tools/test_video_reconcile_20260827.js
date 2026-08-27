@@ -1,7 +1,17 @@
 const fs = require('fs');
 const src = fs.readFileSync('index.html','utf8');
 const start = src.indexOf('function resolveTimeConflicts(list)');
-const end = src.indexOf('function applyDetails', start);
+function functionEnd(text,start){
+  const brace=text.indexOf('{',start); if(start<0||brace<0) return -1;
+  let depth=0, quote=null, esc=false;
+  for(let i=brace;i<text.length;i++){
+    const ch=text[i];
+    if(quote){ if(esc) esc=false; else if(ch==='\\') esc=true; else if(ch===quote) quote=null; }
+    else { if(ch==='"'||ch==="'"||ch==='`') quote=ch; else if(ch==='{') depth++; else if(ch==='}'&&--depth===0) return i+1; }
+  }
+  return -1;
+}
+const end = functionEnd(src,start);
 if(start < 0 || end < 0) throw new Error('resolveTimeConflicts not found');
 const fn = src.slice(start,end);
 function normalizeTime(v){ const m=String(v||'').match(/(\d{1,2}):(\d{2})/); return m ? String(Number(m[1])).padStart(2,'0')+':'+m[2] : ''; }
@@ -27,6 +37,6 @@ if(JSON.stringify(at1011)!==JSON.stringify([7.9,8.6])) throw new Error('two dist
 if(!out.some(x=>x.time==='08:03' && Math.abs(x.value-18.2)<0.001)) throw new Error('08:03 R$18.20 missing');
 if(out.some(x=>Number(x.value)<=0 || String(x.category||'').toLowerCase()==='outro')) throw new Error('financial adjustment leaked into rides');
 for(let i=1;i<out.length;i++) if(timeToMinutes(out[i-1].time)<timeToMinutes(out[i].time)) throw new Error('rides are not sorted by textual time');
-if(!src.includes('const sameTimeCandidates = unique.filter')) throw new Error('same-minute detail disambiguation missing');
-if(!src.includes('const fareDiff = Math.abs(fare - trip.value);')) throw new Error('automatic-trip value matching hardening missing');
+if(!src.includes('const sameTimeCandidates = dTime ? unique.filter')) throw new Error('same-minute detail disambiguation missing');
+if(!src.includes('const fareDiff = Math.abs(fare-value);') || !src.includes('bestScore >= 45')) throw new Error('automatic-trip matching hardening missing');
 console.log('PASS: 13 rides; duplicate frames merged; both 10:11 rides preserved; R$18.20 preserved; -R$16.98 rejected; order validated.');
