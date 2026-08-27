@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'tools/fix_video_reconcile_v2_20260827.py'
+      - 'tools/test_video_reconcile_20260827.js'
 jobs:
   apply:
     runs-on: ubuntu-latest
@@ -16,27 +17,28 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
       - name: Apply patch
         run: python tools/fix_video_reconcile_v2_20260827.py
-      - name: Validate video reconciliation behavior
+      - name: Validate functional rules
         run: |
           python - <<'PY'
           from pathlib import Path
           s=Path('index.html').read_text()
           checks={
-            'global_reconciliation_prompt':'RECONCILIAÇÃO OBRIGATÓRIA DO VÍDEO' in s,
-            'same_minute_not_unique':'HH:mm NÃO é identificador único' in s,
-            'same_time_candidate_matching':'sameTimeCandidates' in s,
-            'reject_financial_adjustments':"'Outro', ajustes, taxas, créditos/débitos" in s,
-            'positive_value_only':'Só devolva corrida com value > 0' in s,
-            'preserve_payment_method':'Preserve app/dinheiro' in s,
-            'sort_by_textual_time':'Ordene pelo horário textual do histórico' in s,
+            'same_minute_resolution':'const out = [];' in s and 'function resolveTimeConflicts(list)' in s,
+            'same_time_candidate_matching':'const sameTimeCandidates = unique.filter' in s,
+            'auto_value_matching':'const fareDiff = Math.abs(fare - trip.value);' in s,
+            'positive_value_only':'if(!tm || value <= 0) continue;' in s,
           }
           print(checks)
           missing=[k for k,v in checks.items() if not v]
           assert not missing, f'missing functional rules: {missing}'
-          print('functional validation ok')
           PY
+      - name: Run 99 history video regression
+        run: node tools/test_video_reconcile_20260827.js
       - name: Commit result
         run: |
           if git diff --quiet -- index.html; then echo 'No changes; code already applied'; exit 0; fi
