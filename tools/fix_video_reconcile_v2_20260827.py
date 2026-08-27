@@ -42,4 +42,4 @@ if s!=orig:
     p.write_text(s,encoding='utf-8'); print('video reconcile v2 applied')
 else:
     print('video reconcile v2 already applied; validating existing code')
-# idempotent trigger 5
+# idempotent trigger 6
