@@ -3,25 +3,6 @@ p=Path('index.html')
 s=p.read_text(encoding='utf-8')
 orig=s
 
-old_resolve="""function resolveTimeConflicts(list) {
-      const byTime = new Map();
-      list.forEach((t) => {
-        const tm = normalizeTime(t.time);
-        if(!tm) return;
-        t.time = tm;
-        const cur = byTime.get(tm);
-        if(!cur) { byTime.set(tm, t); return; }
-        const curScore = rideCompletenessScore(cur) + (cur._enriched ? 3 : 0);
-        const newScore = rideCompletenessScore(t) + (t._enriched ? 3 : 0);
-        if(newScore > curScore) {
-          mergeFields(t, cur);
-          byTime.set(tm, t);
-        } else {
-          mergeFields(cur, t);
-        }
-      });
-      return [...byTime.values()].sort((a,b)=>timeToMinutes(b.time)-timeToMinutes(a.time));
-    }"""
 new_resolve="""function resolveTimeConflicts(list) {
       const out = [];
       for(const raw of (list || [])) {
@@ -47,14 +28,18 @@ new_resolve="""function resolveTimeConflicts(list) {
         }
       }
       return out.sort((a,b)=>timeToMinutes(b.time)-timeToMinutes(a.time));
-    }"""
-if old_resolve in s:
-    s=s.replace(old_resolve,new_resolve,1)
-elif new_resolve not in s:
-    raise SystemExit('resolveTimeConflicts block not found')
+    }
 
-old_detail="""const candidate = unique.find(t => normalizeTime(t.time) === dt && !t._enriched);
-          if(candidate) { mergeFields(candidate, d); candidate._enriched = true; }"""
+    """
+start=s.find('function resolveTimeConflicts(list)')
+end=s.find('function applyDetails',start)
+if start < 0 or end < 0:
+    raise SystemExit(f'resolve/applyDetails boundaries not found: {start}, {end}')
+current=s[start:end]
+if 'const out = [];' not in current or 'value <= 0' not in current:
+    s=s[:start]+new_resolve+s[end:]
+
+old_detail='const candidate = unique.find(t => normalizeTime(t.time) === dt && !t._enriched);\n          if(candidate) { mergeFields(candidate, d); candidate._enriched = true; }'
 new_detail="""const sameTimeCandidates = unique.filter(t => normalizeTime(t.time) === dt && !t._enriched);
           const dv = round2(Number(d.value || d.fare || 0));
           const dPay = String(d.payment_method || d.payment || '').trim().toLowerCase();
@@ -106,4 +91,4 @@ if s != orig:
     print('video reconciliation v2 applied')
 else:
     print('video reconciliation v2 already applied')
-# final-regression-trigger
+# boundary-trigger
