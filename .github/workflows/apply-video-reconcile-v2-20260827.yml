@@ -24,9 +24,10 @@ jobs:
           from pathlib import Path
           s=Path('index.html').read_text()
           assert 'VIDEO_RECONCILE_V2' in s
-          assert 'HH:mm is NOT a unique ride id' in s
+          assert 'HH:mm NÃO é identificador único' in s
           assert 'RECONCILIAÇÃO OBRIGATÓRIA DO VÍDEO' in s
           assert 'sameTimeCandidates' in s
+          assert "'Outro', ajustes, taxas, créditos/débitos" in s
           print('validation ok')
           PY
       - name: Commit result
