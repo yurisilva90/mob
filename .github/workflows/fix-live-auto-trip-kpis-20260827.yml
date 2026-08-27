@@ -1,4 +1,4 @@
-name: Corrigir atualização dos KPIs de corridas automáticas
+name: Corrigir estabilidade dos KPIs da Jornada
 on:
   push:
     paths:
@@ -10,22 +10,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Aplicar correção
-        run: python3 .github/scripts/patch_live_auto_trip_kpis_20260827.py
+      - name: Aplicar correção sem piscada
+        run: python3 .github/scripts/patch_journey_no_flicker_20260827.py
       - name: Validar correção
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
           s=Path('index.html').read_text(encoding='utf-8')
-          assert 'autoTripsAge >= 15000' in s
-          assert 'autoTripsReady || autoTripsHoje.length > 0 || legacyTripsHoje.length > 0' in s
-          assert "mob-v26-live-auto-kpi-refresh" in Path('sw.js').read_text(encoding='utf-8')
-          print('Validação da correção concluída.')
+          assert 'currentAutoTrips.length > 0' in s
+          assert 'const changed = fingerprint(stable)' in s
+          assert 'if (changed) renderJornada();' in s
+          assert 'autoTripsHoje.length > 0' in s
+          assert "mob-v27-stable-journey-kpis" in Path('sw.js').read_text(encoding='utf-8')
+          blocks=re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>',s,re.S|re.I)
+          for i,b in enumerate(blocks):
+              Path(f'/tmp/mob-inline-{i}.js').write_text(b,encoding='utf-8')
+          print('scripts inline:',len(blocks))
           PY
+          for f in /tmp/mob-inline-*.js; do node --check "$f"; done
       - name: Gravar correção
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html sw.js
-          git commit -m 'Refresh automatic trips in Journey KPIs'
+          git commit -m 'Prevent Journey KPI flicker and zeroing'
           git push
