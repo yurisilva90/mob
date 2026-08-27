@@ -13,9 +13,9 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           s=Path('index.html').read_text()
-          for needle in ['normalizeTime(d.time)','_enriched','details.forEach','const candidate = unique','let score = diff;']:
+          for needle in ['function matchAutoTrip','const matchAutoTrip','matchAutoTrip =','details.forEach(d => {','const autoTripsPool']:
             print('\n---',needle,'---')
             pos=s.find(needle)
             print('pos',pos)
-            if pos>=0: print(s[max(0,pos-1200):pos+2500])
+            if pos>=0: print(s[max(0,pos-1800):pos+5000])
           PY
