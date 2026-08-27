@@ -29,8 +29,8 @@ jobs:
           s=Path('index.html').read_text()
           checks={
             'same_minute_resolution':'const out = [];' in s and 'function resolveTimeConflicts(list)' in s,
-            'same_time_candidate_matching':'const sameTimeCandidates = unique.filter' in s,
-            'auto_value_matching':'const fareDiff = Math.abs(fare - trip.value);' in s,
+            'same_time_candidate_matching':'const sameTimeCandidates = dTime ? unique.filter' in s,
+            'auto_value_matching':'const fareDiff = Math.abs(fare-value);' in s and 'bestScore >= 45' in s,
             'positive_value_only':'if(!tm || value <= 0) continue;' in s,
           }
           print(checks)
