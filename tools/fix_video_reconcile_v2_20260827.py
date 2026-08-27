@@ -39,4 +39,4 @@ if 'VIDEO_RECONCILE_V2' not in s:
     if marker in s: s=s.replace(marker,"const VIDEO_RECONCILE_V2='2026-08-27';\n  "+marker,1)
 if s==orig: raise SystemExit('no changes applied')
 p.write_text(s,encoding='utf-8'); print('video reconcile v2 applied')
-# trigger 3
+# trigger 4
