@@ -37,6 +37,9 @@ else: print('detail matcher already changed or needle absent')
 if 'VIDEO_RECONCILE_V2' not in s:
     marker='let videoImportState ='
     if marker in s: s=s.replace(marker,"const VIDEO_RECONCILE_V2='2026-08-27';\n  "+marker,1)
-if s==orig: raise SystemExit('no changes applied')
-p.write_text(s,encoding='utf-8'); print('video reconcile v2 applied')
-# trigger 4
+
+if s!=orig:
+    p.write_text(s,encoding='utf-8'); print('video reconcile v2 applied')
+else:
+    print('video reconcile v2 already applied; validating existing code')
+# idempotent trigger 5
