@@ -8978,12 +8978,30 @@ async function _pullTripsCorrections() {
     // Remove local corridas que foram apagadas direto no banco — só quando
     // a corrida já tinha sido confirmadamente sincronizada antes (_synced),
     // pra nunca arriscar apagar algo criado localmente ainda não enviado.
+    // CORRIGIDO (27/08/2026, relatado pelo Yuri: R$/hora e R$/km zerando e
+    // voltando): essa deleção confiava numa ÚNICA leitura remota — se a
+    // consulta viesse transitoriamente incompleta (rede instável, delay de
+    // consistência logo após um write), apagava uma corrida válida de
+    // verdade, zerando o ganho daquela sessão até a corrida voltar por
+    // outro sync. Mesmo princípio já usado pro autoTrips (comentário acima
+    // em renderJornada: "uma leitura vazia transitória nunca apaga dados
+    // vistos") — só apaga depois de 2 execuções seguidas confirmando a
+    // ausência (2min de intervalo real, já que _syncTick roda a cada 60s).
+    S._tripMissingStreak = S._tripMissingStreak || {};
     const dates = DB.allDates().filter(d => d >= cutoff);
     for (const date of dates) {
       const day = DB.day(date);
       if (!day.trips || !day.trips.length) continue;
       const before = day.trips.length;
-      day.trips = day.trips.filter(t => !(t._synced && t.id && !remoteIds.has(t.id)));
+      day.trips = day.trips.filter(t => {
+        if (!(t._synced && t.id && !remoteIds.has(t.id))) {
+          delete S._tripMissingStreak[t.id];
+          return true;
+        }
+        const streak = (S._tripMissingStreak[t.id] || 0) + 1;
+        S._tripMissingStreak[t.id] = streak;
+        return streak < 2; // mantém na 1ª ausência, só apaga na 2ª confirmada
+      });
       if (day.trips.length !== before) { DB.saveDay(day); changed = true; }
     }
     if (changed) {
