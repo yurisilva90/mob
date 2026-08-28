@@ -2843,41 +2843,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
       </div>
       <div style="font-size:12px;color:#64748B;line-height:1.5;margin:10px 0 14px">Sem isso o card de oferta não aparece automaticamente. Pode ativar depois, se preferir.</div>
 
-      <div style="border:1px solid #E2E8F0;border-radius:14px;padding:4px 14px" id="flash-perms">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #F1F5F9">
-          <div style="flex:1"><div style="font-size:13.5px;font-weight:600;color:#0F172A">Localização</div><div style="font-size:11px;color:#94A3B8;margin-top:1px">Mede km e registra os pontos reais de embarque e destino</div></div>
-          <div id="flash-perm-location" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"></div>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #F1F5F9">
-          <div style="flex:1"><div style="font-size:13.5px;font-weight:600;color:#0F172A">Bateria</div><div style="font-size:11px;color:#94A3B8;margin-top:1px">Evita que o Android interrompa GPS e leitura em segundo plano</div></div>
-          <div id="flash-perm-battery" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"></div>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #F1F5F9">
-          <div style="flex:1">
-            <div style="font-size:13.5px;font-weight:600;color:#0F172A">Acessibilidade</div>
-            <div style="font-size:11px;color:#94A3B8;margin-top:1px">Identifica telas e estados da corrida na Uber/99</div>
-          </div>
-          <div id="flash-perm-a11y" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"></div>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #F1F5F9">
-          <div style="flex:1">
-            <div style="font-size:13.5px;font-weight:600;color:#0F172A">Sobrepor outros apps</div>
-            <div style="font-size:11px;color:#94A3B8;margin-top:1px">Mostra o Flash e o status por cima da Uber/99</div>
-          </div>
-          <div id="flash-perm-overlay" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"></div>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid #F1F5F9">
-          <div style="flex:1"><div style="font-size:13.5px;font-weight:600;color:#0F172A">Acesso às notificações</div><div style="font-size:11px;color:#94A3B8;margin-top:1px">Lê eventos oficiais da Uber/99 e identifica a plataforma da oferta</div></div>
-          <div id="flash-perm-notification" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"></div>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0">
-          <div style="flex:1">
-            <div style="font-size:13.5px;font-weight:600;color:#0F172A">Leitura da tela</div>
-            <div style="font-size:11px;color:#94A3B8;margin-top:1px">Completa dados da oferta que não vierem pelos eventos oficiais</div>
-          </div>
-          <div id="flash-perm-capture" style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"></div>
-        </div>
-      </div>
+      <div style="border:1px solid #E2E8F0;border-radius:14px;padding:4px 14px" id="flash-perms"></div>
 
       <button id="flash-step2-primary" class="btn-p" style="margin-top:16px;background:#22C55E" onclick="flashWizardFinish(true)">Iniciar jornada</button>
       <button id="flash-skip2" class="xbtn" style="width:100%;text-align:center;font-size:12.5px;color:#64748B;font-weight:700;margin-top:12px;background:none;border:0;padding:8px;text-decoration:underline;height:auto" onclick="flashWizardFinish(false)">Iniciar sem o MōB Flash</button>
@@ -11577,11 +11543,39 @@ function renderFlashPermissionWarnings() {
   if (jw) { jw.style.display=missing.length?'flex':'none'; const jt=document.getElementById('journey-perm-warning-text'); if(jt) jt.textContent=txt+' Toque para ativar antes da próxima oferta.'; }
 }
 async function openFlashPermissionSetup() { await openFlashConfig(); _flashWizardShowStep(2); renderFlashPerms(); }
+// Localização/Bateria/Sobrepor outros apps já são pedidas sozinhas na
+// instalação (MainActivity.onCreate chama as 3 automaticamente) — só
+// entram nessa lista se, por algum motivo raro, não tiverem sido
+// ativadas. Mesmo padrão de linha das 3 sempre-visíveis, sem nenhuma
+// distinção visual ou texto explicativo à parte (pedido do Yuri,
+// 27/08/2026 — "pra não trazer distinção").
 function renderFlashPerms() {
-  const ids={location:['flash-perm-location','isLocationReady','openLocationSettings'],battery:['flash-perm-battery','isBatteryExempt','openBatterySettings'],a11y:['flash-perm-a11y','isA11yEnabled','openA11ySettings'],overlay:['flash-perm-overlay','hasOverlay','openOverlaySettings'],notification:['flash-perm-notification','isNotificationAccessEnabled','openNotificationAccessSettings'],capture:['flash-perm-capture','isScreenCaptureActive','requestScreenCapture']};
+  const defs=[
+    ['a11y','Acessibilidade','Identifica telas e estados da corrida na Uber/99','isA11yEnabled','openA11ySettings',true],
+    ['notification','Acesso às notificações','Lê eventos oficiais da Uber/99 e identifica a plataforma da oferta','isNotificationAccessEnabled','openNotificationAccessSettings',true],
+    ['capture','Leitura da tela','Completa dados da oferta que não vierem pelos eventos oficiais','isScreenCaptureActive','requestScreenCapture',true],
+    ['location','Localização','Mede km e registra os pontos reais de embarque e destino','isLocationReady','openLocationSettings',false],
+    ['battery','Bateria','Evita que o Android interrompa GPS e leitura em segundo plano','isBatteryExempt','openBatterySettings',false],
+    ['overlay','Sobrepor outros apps','Mostra o Flash e o status por cima da Uber/99','hasOverlay','openOverlaySettings',false],
+  ];
   const n=window.SmartMobiNative;
   function pillHtml(ok,fixCall){if(ok===null)return '<span style="font-size:11px;color:#94A3B8">— (app precisa atualizar)</span>';if(ok)return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;padding:4px 9px;border-radius:99px;background:#F0FDF4;color:#15803D">&#10003; Ativo</span>';return '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:800;padding:4px 9px;border-radius:99px;background:#FEF3C7;color:#B45309">&bull; Pendente</span><button onclick="'+fixCall+'" style="font-size:11px;font-weight:800;color:#fff;background:#0A2F6B;border:0;border-radius:9px;padding:6px 11px">Ativar</button>';}
-  Object.values(ids).forEach(v=>{const el=document.getElementById(v[0]);if(!el)return;let ok=null;if(n&&typeof n[v[1]]==='function'){try{ok=!!n[v[1]]();}catch(_){}}el.innerHTML=pillHtml(ok,'SmartMobiNative.'+v[2]+'()');});
+  const visible=[];
+  defs.forEach(([key,label,desc,checkFn,fixFn,alwaysShow])=>{
+    let ok=null;
+    if(n&&typeof n[checkFn]==='function'){try{ok=!!n[checkFn]();}catch(_){}}
+    if(!alwaysShow && ok===true) return; // automática e já ativa — some da lista
+    visible.push({label,desc,ok,fixFn});
+  });
+  const el=document.getElementById('flash-perms');
+  if(el){
+    el.innerHTML = visible.map((r,i)=>
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0'+(i<visible.length-1?';border-bottom:1px solid #F1F5F9':'')+'">'
+      +'<div style="flex:1"><div style="font-size:13.5px;font-weight:600;color:#0F172A">'+r.label+'</div><div style="font-size:11px;color:#94A3B8;margin-top:1px">'+r.desc+'</div></div>'
+      +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">'+pillHtml(r.ok,'SmartMobiNative.'+r.fixFn+'()')+'</div>'
+      +'</div>'
+    ).join('');
+  }
   renderFlashPermissionWarnings();
 }
 
