@@ -14925,11 +14925,22 @@ async function feedEnviarComentario(){
       total: Math.max(0,Number(elapsedSec)||0),
       online:{sec:0,km:0,pct:0}, buscando:{sec:0,km:0,pct:0}, corrida:{sec:0,km:0,pct:0}
     };
-    (segments||[]).forEach(seg=>{
+    const list = segments||[];
+    // CORRIGIDO (30/08/2026, relatado pelo Yuri: status batendo errado —
+    // pouco tempo online mas mostrando >50%). Achado real com dado do
+    // banco: um trecho "online" ficou aberto (end_ms nulo) por causa de
+    // um buraco de detecção de ~77min, e como QUALQUER trecho aberto da
+    // sessão viva era esticado até agora(), esse trecho abandonado ia
+    // crescendo pra sempre. Só o trecho com o MAIOR start_ms (o
+    // genuinamente mais recente) pode ser esticado até agora — qualquer
+    // outro trecho aberto (órfão) usa o último sinal visto (last_seen_ms).
+    let latestOpenStart = -1;
+    list.forEach(seg=>{ if(seg.end_ms==null && Number(seg.start_ms)>latestOpenStart) latestOpenStart=Number(seg.start_ms); });
+    list.forEach(seg=>{
       const status = seg.status === 'buscar' ? 'buscando' : seg.status;
       if(!out[status]) return;
       const start = Number(seg.start_ms)||0;
-      const live = !!liveSessionId && seg.session_id === liveSessionId && seg.end_ms == null;
+      const live = !!liveSessionId && seg.session_id === liveSessionId && seg.end_ms == null && start === latestOpenStart;
       const end = segmentEndMs(seg, live);
       const sec = Math.max(0,(end-start)/1000);
       const skm = Number(seg.start_km)||0;
@@ -15190,10 +15201,16 @@ async function feedEnviarComentario(){
   }
   function statusBreakdownRows(rows,elapsedSec,kmTotal,clipStart,clipEnd,liveSessionId){
     const out={total:Math.max(0,Number(elapsedSec)||0),online:{sec:0,km:0,pct:0},buscando:{sec:0,km:0,pct:0},corrida:{sec:0,km:0,pct:0}};
+    // Mesmo fix de breakdownFromSegments (30/08/2026) — só o trecho
+    // genuinamente mais recente (maior start_ms) entre os abertos pode ser
+    // esticado até agora(); trechos abertos órfãos (bug de sessão
+    // interrompida/reiniciada deixando end_ms nulo) usam last_seen_ms.
+    let latestOpenStart=-1;
+    (rows||[]).forEach(seg=>{ if(seg.end_ms==null && Number(seg.start_ms)>latestOpenStart) latestOpenStart=Number(seg.start_ms); });
     (rows||[]).forEach(seg=>{
       const key=seg.status==='buscar'?'buscando':seg.status; if(!out[key])return;
       const rawStart=Number(seg.start_ms)||0;
-      const isLive=!!liveSessionId&&seg.session_id===liveSessionId&&seg.end_ms==null;
+      const isLive=!!liveSessionId&&seg.session_id===liveSessionId&&seg.end_ms==null&&rawStart===latestOpenStart;
       const rawEnd=Number(seg.end_ms||(isLive?Date.now():seg.last_seen_ms)||rawStart);
       if(rawEnd<=rawStart)return;
       const a=Math.max(rawStart,clipStart==null?rawStart:clipStart);
