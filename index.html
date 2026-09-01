@@ -23,7 +23,6 @@ try {
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 
 :root{--font-brand:'Poppins',sans-serif;--font-app:'Inter',system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
@@ -1409,7 +1408,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
       }
     );
   </script>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet"></head>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800;900&display=swap" rel="stylesheet"></head>
 <body style="background:#0F172A">
 <div class="app">
 <!-- ════ TOPBAR (fixed, shared) ════ -->
@@ -5046,28 +5045,14 @@ function renderJornada() {
   renderJourneyCard(day, isToday);
   renderMetasDoDia(day);
 
-  // Sessões do dia (3 mais recentes, ou todas — sessão atual sempre aparece)
-  const sessEl = document.getElementById('sessions-list');
-  const sessToggleBtn = document.getElementById('sessions-toggle');
-  if (sessEl) {
-    const total = (day.sessions||[]).length;
-    // Numera pela ORDEM DE HORÁRIO real (start), não pela ordem em que foi
-    // salva/sincronizada no aparelho — evita "Jornada 2" mostrar um horário
-    // mais tarde que "Jornada 3". origIdx continua apontando pro índice
-    // verdadeiro em day.sessions, então editar/apagar continua certo.
-    const byTime = (day.sessions||[]).map((s,i)=>i)
-      .sort((a,b) => (day.sessions[a].start||0) - (day.sessions[b].start||0));
-    const finishedAll = byTime.slice().reverse()
-      .map((origIdx,ri)=>sessionItem('Jornada '+(total-ri), day.sessions[origIdx], origIdx, S.curDate, day, false));
-    const finishedShown = S.sessionsExpanded ? finishedAll : finishedAll.slice(0,3);
-    const liveRow = (isToday && S.gps.st==='running') ? [sessionItem('Jornada atual', {start:S.gps.start,end:null,km:S.gps.km,elapsed:getElapsed()}, -1, S.curDate, day, true)] : [];
-    const rows = [...liveRow, ...finishedShown];
-    sessEl.innerHTML = rows.length ? rows.join('') : '<div class="empty">Nenhuma sessão registrada</div>';
-  }
-  if (sessToggleBtn) {
-    sessToggleBtn.style.display = (day.sessions||[]).length > 3 ? '' : 'none';
-    sessToggleBtn.innerHTML = S.sessionsExpanded ? 'Ver menos' : 'Ver todas &#8250;';
-  }
+  // CORRIGIDO (01/09/2026): a população de #sessions-list saiu daqui — o
+  // wrapper window.renderJornada (perto do fim do arquivo) sempre chama
+  // renderContinuousSessionList() logo em seguida, que reescreve o MESMO
+  // elemento com uma versão mais completa (cobre jornada que atravessa a
+  // meia-noite, rótulo "· continua"/"· continuação") e já cuida do
+  // sessToggleBtn também. O bloco antigo aqui rodava sempre à toa, sendo
+  // sobrescrito no mesmo ciclo de render — dobrava o custo de montar a
+  // lista (com todas as corridas de cada card) sem nunca aparecer na tela.
   // Corridas: removido daqui (23/07/2026, pedido do Yuri) — já ficam
   // acessíveis dentro do detalhe de cada jornada (seta expande e lista via
   // sessionItem, que já mescla Importadas + Automáticas). Lista de
@@ -5090,8 +5075,13 @@ function renderJornada() {
       lancToggleBtn.innerHTML = S.lancExpanded ? 'Ver menos' : 'Ver todas &#8250;';
     }
   }
-  reapplyOpenTripDetail();
-  reapplyOpenJss();
+  // CORRIGIDO (01/09/2026): reapplyOpenTripDetail()/reapplyOpenJss() saíram
+  // daqui — moveram pro wrapper window.renderJornada, DEPOIS de
+  // renderContinuousSessionList() reescrever #sessions-list. Rodando aqui
+  // (antes dessa reescrita), o card que o usuário tinha aberto (detalhe de
+  // corrida ou sessão expandida) colapsava sozinho a cada render — o que
+  // acontece no mínimo a cada 25s (refresh de auto_trips) e a cada tick de
+  // 1s da barra de status.
 }
 
 function renderJourneyCard(day, isToday) {
@@ -5203,7 +5193,6 @@ function renderJourneyCard(day, isToday) {
   if (canPublishTripKpis) {
     const aceitasCount = journeySrc.count;
     setText('jc-trips', aceitasCount);
-    setText('jc-trips2', aceitasCount);
     setText('jc-aceitas', aceitasCount);
     setText('jc-recusadas', declinedCount);
     const corridasSubEl = document.getElementById('jc-corridas-sub');
@@ -5220,9 +5209,48 @@ function renderJourneyCard(day, isToday) {
     rskm = totalKm > 0 ? ganhosDia/totalKm : null;
     setText('jc-rsh', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
     setText('jc-rskm', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
-    setText('jc-rsh2', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
-    setText('jc-rskm2', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
+  } else {
+    // CORRIGIDO (01/09/2026): ao trocar de dia, esses campos ficavam com o
+    // texto do dia ANTERIOR até a query de auto_trips do novo dia voltar
+    // (alguns segundos) — parecia que o novo dia já tinha esses valores.
+    setText('jc-trips', '—');
+    setText('jc-aceitas', '0');
+    setText('jc-recusadas', '0');
+    const corridasSubEl = document.getElementById('jc-corridas-sub');
+    if (corridasSubEl) corridasSubEl.style.display = 'none';
+    setText('jc-kmativo', '—');
+    setText('jc-kmdesl', '—');
+    setText('jc-rsh', '—');
+    setText('jc-rskm', '—');
   }
+  // CORRIGIDO (01/09/2026): jc-trips2/jc-rsh2/jc-rskm2 (card da sessão
+  // ATIVA, topo da tela) usavam os MESMOS totais do dia inteiro que o card
+  // "Total do dia" logo abaixo — na segunda jornada do dia aparecia "14
+  // corridas" ao lado de "0,0 km" (jc-km já era só da sessão, esses três
+  // não eram). Agora escopados só à sessão viva, mesmo padrão do km:
+  // sessão não rodando = zerado (não mostra sobra do dia).
+  let rsh2 = null, rskm2 = null, trips2 = 0;
+  if (live && canPublishTripKpis) {
+    const sessStart = g.start, sessNow = Date.now();
+    const legacySess = legacyTripsHoje.filter(t => {
+      let ts = t.ts || 0;
+      if (!ts && t.time) ts = new Date(DB.today()+'T'+t.time+':00').getTime();
+      return ts && ts >= sessStart && ts <= sessNow;
+    });
+    const autoSess = autoTripsHoje.filter(t => {
+      const ts = autoTripTs(t);
+      return ts && ts >= sessStart && ts <= sessNow;
+    });
+    trips2 = legacySess.length + autoSess.length;
+    const ganhosSess = legacySess.reduce((s,t)=>s+(parseFloat(t.value)||0),0)
+                      + autoSess.reduce((s,t)=>s+(parseFloat(t.offer_value)||0),0);
+    const horasSess = liveElapsed > 0 ? liveElapsed/3600 : 0;
+    rsh2  = horasSess > 0 ? ganhosSess/horasSess : null;
+    rskm2 = liveKm > 0 ? ganhosSess/liveKm : null;
+  }
+  setText('jc-trips2', trips2);
+  setText('jc-rsh2', rsh2 !== null ? DB.fRI(rsh2) : 'R$0,00');
+  setText('jc-rskm2', rskm2 !== null ? DB.fRI(rskm2) : 'R$0,00');
   // Cor por indicador — pedido do Yuri (23/07/2026, mockup aprovado):
   // mesmos limiares vermelho/verde que o motorista já ajusta na régua do
   // MōB Flash (Indicadores → R$/km e R$/hora), cada indicador troca de cor
@@ -5234,19 +5262,33 @@ function renderJourneyCard(day, isToday) {
   const kmEl2   = document.getElementById('jc-rate-km2');
   const rateCls = rsh !== null ? rateColorClass('rhora', rsh) : '';
   const kmCls   = rskm !== null ? rateColorClass('rkm', rskm) : '';
+  // CORRIGIDO (01/09/2026): rateEl2/kmEl2 (card da sessão) agora usam a cor
+  // derivada de rsh2/rskm2 (sessão), não mais rateCls/kmCls (dia inteiro).
+  const rateCls2 = rsh2 !== null ? rateColorClass('rhora', rsh2) : '';
+  const kmCls2   = rskm2 !== null ? rateColorClass('rkm', rskm2) : '';
   if (rateEl)  rateEl.className  = 'td-rcard ' + rateCls;
   if (kmEl)    kmEl.className    = 'td-rcard ' + kmCls;
-  if (rateEl2) rateEl2.className = 'rate-cell ' + rateCls;
-  if (kmEl2)   kmEl2.className   = 'rate-cell ' + kmCls;
+  if (rateEl2) rateEl2.className = 'rate-cell ' + rateCls2;
+  if (kmEl2)   kmEl2.className   = 'rate-cell ' + kmCls2;
 
   const actions = document.getElementById('jc-actions');
   if (!actions) return;
-  if (!isToday) {
-    actions.innerHTML = '';
-  } else if (state === 'idle') {
-    actions.innerHTML = `<button class="j-round-btn play" onclick="gpsStart()" aria-label="Iniciar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>`;
-  } else if (state === 'running') {
-    actions.innerHTML = '<button class="j-round-btn stop" onclick="confirmStop()" aria-label="Encerrar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"/></svg></button>';
+  // CORRIGIDO (01/09/2026): innerHTML era reescrito 1x/segundo mesmo sem
+  // mudança de estado — gpsUpdate() chama renderJourneyCard a cada tick do
+  // timer, e o estado ('running'/'idle') não muda tick a tick. Só reescreve
+  // quando o cenário (isToday + state) realmente muda.
+  const actionsKey = !isToday ? 'none' : state;
+  if (actions.dataset.state !== actionsKey) {
+    actions.dataset.state = actionsKey;
+    if (!isToday) {
+      actions.innerHTML = '';
+    } else if (state === 'idle') {
+      actions.innerHTML = `<button class="j-round-btn play" onclick="gpsStart()" aria-label="Iniciar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>`;
+    } else if (state === 'running') {
+      actions.innerHTML = '<button class="j-round-btn stop" onclick="confirmStop()" aria-label="Encerrar jornada"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"/></svg></button>';
+    } else {
+      actions.innerHTML = '';
+    }
   }
 }
 
@@ -15455,6 +15497,10 @@ async function feedEnviarComentario(){
     previousRenderJornada();
     try{renderContinuousSessionList();}catch(e){console.warn('[continuous journeys]',e);}
     try{renderContinuousStatusBars();}catch(e){console.warn('[continuous status]',e);}
+    // CORRIGIDO (01/09/2026): reapply* precisa rodar DEPOIS da reescrita
+    // de #sessions-list acima — ver comentário no fim de renderJornada().
+    try{reapplyOpenTripDetail();}catch(e){}
+    try{reapplyOpenJss();}catch(e){}
   };
 
   setInterval(()=>{try{if(S.sec==='jornada')renderContinuousStatusBars();}catch(e){}},1000);
