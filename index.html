@@ -3041,6 +3041,19 @@ function fmtDur(totalMin) {
   return (h > 0 ? h + 'h' + p2(m) : String(m)) + 'm';
 }
 
+// CORRIGIDO (01/09/2026, dado real confirmado: 36 corridas capture_source=
+// 'importada' com real_km_trip=0 exato): "??" só cai no fallback quando o
+// valor é null/undefined — 0 passa direto e nunca usa a estimativa da
+// oferta. Corrida importada grava real_km_trip=0 como sentinela de "não
+// capturado" (não é km de verdade), então precisa do MESMO tratamento de
+// ausência que null já tinha. _effKm trata "> 0" como o único valor real.
+function _effKm(real, offer) {
+  const r = parseFloat(real);
+  if (r > 0) return r;
+  const o = parseFloat(offer);
+  return o > 0 ? o : 0;
+}
+
 // Detalhamento Online/Buscando passageiro/Em corrida — puxado direto da
 // máquina de estados do APK (accepted_at/pickup_started_at/trip_started_at/
 // trip_ended_at, gravados em auto_trips a cada transição real de tela).
@@ -3055,12 +3068,12 @@ function computeStatusBreakdown(elapsedSec, kmTotal, autoTrips) {
     if (t.trip_started_at && t.trip_ended_at) {
       const s = (new Date(t.trip_ended_at) - new Date(t.trip_started_at)) / 1000;
       if (s > 0) corridaSec += s;
-      corridaKm += parseFloat(t.real_km_trip ?? t.offer_km_trip) || 0;
+      corridaKm += _effKm(t.real_km_trip, t.offer_km_trip);
     }
     if (t.pickup_started_at && t.trip_started_at) {
       const s = (new Date(t.trip_started_at) - new Date(t.pickup_started_at)) / 1000;
       if (s > 0) buscandoSec += s;
-      buscandoKm += parseFloat(t.real_km_pickup ?? t.offer_km_pickup) || 0;
+      buscandoKm += _effKm(t.real_km_pickup, t.offer_km_pickup);
     }
   });
   const total = Math.max(0, elapsedSec || 0);
@@ -4450,7 +4463,7 @@ function autoTripsAsTrips(date) {
       time: start ? p2(start.getHours())+':'+p2(start.getMinutes()) : '',
       duration: durMin,
       value: parseFloat(at.offer_value)||0,
-      km: parseFloat(at.real_km_trip ?? at.offer_km_trip) || 0,
+      km: _effKm(at.real_km_trip, at.offer_km_trip),
       dinheiro: !!at.dinheiro,
       origin:'', dest:'', category:''
     };
@@ -5196,7 +5209,7 @@ function renderJourneyCard(day, isToday) {
     const corridasSubEl = document.getElementById('jc-corridas-sub');
     if (corridasSubEl) corridasSubEl.style.display = (aceitasCount>0 || declinedCount>0) ? 'flex' : 'none';
     const kmAtivo = legacyTripsHoje.reduce((s,t)=>s+(parseFloat(t.km)||0),0)
-                  + autoTripsHoje.reduce((s,t)=>s+(parseFloat(t.real_km_trip ?? t.offer_km_trip)||0),0);
+                  + autoTripsHoje.reduce((s,t)=>s+_effKm(t.real_km_trip, t.offer_km_trip),0);
     const kmDesl = Math.max(0, totalKm - kmAtivo);
     setText('jc-kmativo', kmAtivo.toFixed(1));
     setText('jc-kmdesl', kmDesl.toFixed(1));
@@ -5413,7 +5426,7 @@ function sessionItem(label, sess, origIdx, dateStr, day, live) {
   const cardId = 'jss-' + dateStr + '-' + origIdx;
 
   // Corridas desta sessão — filtrar por horário (suporta t.ts e t.time HH:MM)
-  const trips = (day?.trips||[]).filter(t => {
+  const tripsRaw = (day?.trips||[]).filter(t => {
     let ts = t.ts || 0;
     if (!ts && t.time && dateStr) {
       // Construir timestamp a partir de "HH:MM" + data da sessão
@@ -5429,13 +5442,20 @@ function sessionItem(label, sess, origIdx, dateStr, day, live) {
     if (!ts) return false;
     return ts >= startMs && (!endMs || ts <= endMs);
   });
+  // CORRIGIDO (01/09/2026): a mesma corrida pode existir como legado
+  // (manual/importada em day.trips) E como automática (auto_trips) — mesmo
+  // critério de dedup que journeyConsolidatedSources já usa pro card
+  // "Total do dia" (_journeyTripsLikelySame). Sem isso, a corrida contava
+  // 2x aqui (uma vez em cada lista) e 1x no total do dia — divergência
+  // entre o card da sessão e o card do dia.
+  const trips = tripsRaw.filter(l => !autoTrips.some(a => _journeyTripsLikelySame(l, a)));
   const corridas = trips.length + autoTrips.length;
   const ganhos = trips.reduce((s,t)=>s+(t.value||0),0) + autoTrips.reduce((s,t)=>s+(t.offer_value||0),0);
   // Km ativo = soma do km de cada corrida realizada (tempo 'em corrida')
   // Km deslocamento = km total do GPS MENOS o km ativo (tempo rodando sem
   // corrida — indo pro ponto, retornando pra casa, esperando chamado etc.)
   const kmAtivo = trips.reduce((s,t)=>s+(parseFloat(t.km)||0),0)
-                + autoTrips.reduce((s,t)=>s+(parseFloat(t.real_km_trip ?? t.offer_km_trip)||0),0);
+                + autoTrips.reduce((s,t)=>s+_effKm(t.real_km_trip, t.offer_km_trip),0);
   const kmDesloc = Math.max(0, km - kmAtivo);
 
   const horasDecimal = elapsedSecs > 0 ? elapsedSecs/3600 : 0;
@@ -9323,16 +9343,28 @@ async function _closeOrphanSessions() {
     const staleCutoff = Date.now() - 10*60*1000; // 10 min sem checkpoint = órfã
     const orphans = allOpen.filter(o => {
       if (o.id === S.gps.sessionId) return false; // nunca fecha a sessão desta própria instância
-      const lastSeen = o.updated_at ? new Date(o.updated_at).getTime() : 0;
+      // CORRIGIDO (01/09/2026): a coluna é synced_at, não updated_at (que não
+      // existe em public.sessions) — antes lastSeen sempre virava 0 e TODA
+      // sessão aberta era considerada órfã, sem respeitar o cutoff de 10min.
+      const lastSeen = o.synced_at ? new Date(o.synced_at).getTime() : 0;
       return lastSeen < staleCutoff; // só órfã se não recebeu checkpoint recente
     });
     if (!orphans.length) return null;
+    let closedCount = 0;
     for (const o of orphans) {
       const estEnd = o.start_ms + (o.elapsed_secs||0)*1000;
-      await _SUPA.from("sessions").upsert({
-        id: o.id, user_id: _supaUser.id, end_ms: Math.max(estEnd, o.start_ms+60000),
+      // CORRIGIDO (01/09/2026): date e start_ms são NOT NULL em public.sessions
+      // sem default — o upsert antigo enviava só {id,user_id,end_ms,...} e o
+      // Postgres rejeitava com 23502 ANTES de resolver o conflito (o erro era
+      // engolido pelo .catch(()=>{})), então o fechamento nunca acontecia de
+      // verdade. Reenvia date/start_ms (valores que a sessão já tem) junto.
+      const { error } = await _SUPA.from("sessions").upsert({
+        id: o.id, user_id: _supaUser.id, date: o.date, start_ms: o.start_ms,
+        end_ms: Math.max(estEnd, o.start_ms+60000),
         is_paused: false, paused_ms: 0
-      }, {onConflict:"id"}).catch(()=>{});
+      }, {onConflict:"id"});
+      if (error) { console.error('[_closeOrphanSessions] falha ao fechar sessão', o.id, error); continue; }
+      closedCount++;
       // Atualiza também o histórico local do dia, se existir
       try {
         const day = DB.day(o.date);
@@ -9344,8 +9376,8 @@ async function _closeOrphanSessions() {
         }
       } catch(e) {}
     }
-    console.warn(`[_closeOrphanSessions] ${orphans.length} jornada(s) órfã(s) encerrada(s) automaticamente`);
-    return orphans.length;
+    if (closedCount) console.warn(`[_closeOrphanSessions] ${closedCount} jornada(s) órfã(s) encerrada(s) automaticamente`);
+    return closedCount || null;
   } catch(e) { console.error("[_closeOrphanSessions]", e); return null; }
 }
 
@@ -9885,11 +9917,15 @@ async function _persistGpsCloud() {
   const g = S.gps;
   if (!g.sessionId) g.sessionId = DB.uid();
   const snapId = g.sessionId; // capturar antes do await
-  await _SUPA.from('sessions').upsert({
+  // CORRIGIDO (01/09/2026): date/start_ms capturados AQUI (síncrono) — se
+  // gpsStop() rodar enquanto o await abaixo está pendente, g.start vira null
+  // e o segundo upsert (reabertura/tombstone) ficaria sem esses valores.
+  const snapDate = _ymd(g.start), snapStart = g.start;
+  const { error: _upErr } = await _SUPA.from('sessions').upsert({
     id:         snapId,
     user_id:    _supaUser.id,
-    date:       _ymd(g.start), // Jornada contínua: não troca de identidade à meia-noite
-    start_ms:   g.start,
+    date:       snapDate, // Jornada contínua: não troca de identidade à meia-noite
+    start_ms:   snapStart,
     end_ms:     null,
     km:         parseFloat((g.km||0).toFixed(3)),
     elapsed_secs: getElapsed(),
@@ -9897,6 +9933,7 @@ async function _persistGpsCloud() {
     is_paused:  false,
     km_desloc:  null
   }, { onConflict: 'id' });
+  if (_upErr) console.error('[_persistGpsCloud] checkpoint falhou:', _upErr);
   // Guard de corrida: se gpsStop() foi chamado enquanto este await estava
   // pendente, o nosso write (end_ms=null) pode ter chegado ao Supabase
   // DEPOIS do write de fechamento, reabrindo a sessão. Re-aplicar o tombstone.
@@ -9905,8 +9942,11 @@ async function _persistGpsCloud() {
       if (_gcss().has(snapId)) {
         const _cl=JSON.parse(localStorage.getItem('sm_gps_last_closed')||'null');
         const _em=(_cl&&_cl.id===snapId)?_cl.end:Date.now();
-        await _SUPA.from('sessions').upsert({id:snapId,user_id:_supaUser.id,end_ms:_em,is_paused:false,paused_ms:0},{onConflict:'id'});
-        console.log('[_persistGpsCloud] Race condition — fechamento re-aplicado:',snapId);
+        // CORRIGIDO (01/09/2026): mesmo bug — date/start_ms são NOT NULL,
+        // sem eles esse upsert de reabertura falhava (23502) silenciosamente.
+        const { error: _reErr } = await _SUPA.from('sessions').upsert({id:snapId,user_id:_supaUser.id,date:snapDate,start_ms:snapStart,end_ms:_em,is_paused:false,paused_ms:0},{onConflict:'id'});
+        if (_reErr) console.error('[_persistGpsCloud] reabertura(tombstone) falhou:', _reErr);
+        else console.log('[_persistGpsCloud] Race condition — fechamento re-aplicado:',snapId);
       }
     } catch(e) {}
   }
@@ -12533,9 +12573,16 @@ async function showApp() {
   try{restoreGpsSession();} catch(e){console.error('restoreGpsSession:',e);}
   try{renderJornada();}  catch(e){console.error('renderJornada:',e);}
   // Verifica jornadas órfãs (de outra aba/instância que não fechou corretamente)
-  // toda vez que o app abre, não só ao navegar manualmente pra Jornada
+  // toda vez que o app abre, não só ao navegar manualmente pra Jornada.
+  // CORRIGIDO (01/09/2026): recoverOpenJourneyFromCloud roda ANTES e é
+  // aguardado — antes os dois rodavam em paralelo (recover só depois de
+  // 2200ms) e _closeOrphanSessions podia ler/fechar uma sessão órfã antes
+  // dela ser recuperada como jornada ativa (WebView perdeu o marcador local
+  // mas o GpsService nativo continuava rodando de verdade).
   if (_supaUser && navigator.onLine) {
-    _closeOrphanSessions().then(n => { if (n) { renderJornada(); renderHome(); } }).catch(()=>{});
+    recoverOpenJourneyFromCloud().catch(()=>{}).finally(() => {
+      _closeOrphanSessions().then(n => { if (n) { renderJornada(); renderHome(); } }).catch(()=>{});
+    });
   }
   try{syncNavButton();}  catch(e){console.error('syncNavButton:',e);}
   try{renderFin();}      catch(e){console.error('renderFin:',e);}
