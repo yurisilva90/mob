@@ -158,13 +158,22 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
    limiares vermelho/verde que o MōB Flash já usa
    (DB.cfg().flashReader.kpis.rhora/.rkm), aplicada em renderJourneyCard(). */
 .rate-strip{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
-.rate-cell{text-align:center;border-radius:14px;padding:11px 6px;background:rgba(34,197,94,.16);border:1px solid rgba(34,197,94,.4);transition:background .3s,border-color .3s}
-.rate-cell.o{background:rgba(245,158,11,.18);border-color:rgba(245,158,11,.45)}
-.rate-cell.r{background:rgba(239,68,68,.20);border-color:rgba(239,68,68,.5)}
-.rate-cell strong{display:block;font-size:21px;font-weight:800;color:#fff;letter-spacing:-.02em}
+.rate-cell{text-align:center;border-radius:14px;padding:11px 6px;background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.42);transition:background .3s,border-color .3s}
+.rate-cell.o{background:rgba(245,158,11,.16);border-color:rgba(245,158,11,.44)}
+.rate-cell.r{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.48)}
+/* CORRIGIDO (01/09/2026, mockup aprovado): 21px->16,5px — valor de 4
+   dígitos (R$1.250,00) espremia contra a borda da célula, que divide o
+   espaço com o botão redondo de 76px ao lado. */
+.rate-cell strong{display:block;font-size:16.5px;font-weight:800;color:#fff;letter-spacing:-.02em;white-space:nowrap}
 .rate-cell span{display:block;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#86efac;margin-top:2px}
 .rate-cell.o span{color:#fde68a}
 .rate-cell.r span{color:#fca5a5}
+/* CORRIGIDO (01/09/2026, mockup aprovado): estado neutro pra quando ainda
+   não há dado suficiente pro cálculo (tempo/km = 0) — antes ficava com a
+   cor base (verde), sinalizando "bom desempenho" sem ter dado nenhum. */
+.rate-cell.neutral{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.16)}
+.rate-cell.neutral strong{color:rgba(255,255,255,.5)}
+.rate-cell.neutral span{color:rgba(255,255,255,.38)}
 /* Metas do dia: CSS movido pra seção solta (ver .goal-item/.gbar mais
    abaixo, estilo "grande" já existente) — removido daqui em 23/07/2026,
    não fica mais embutido no fundo escuro do card da jornada. */
@@ -261,17 +270,17 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .tk-half strong{display:block;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1;position:relative;z-index:1}
 .tk-half span{display:block;font-size:9.5px;font-weight:800;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.04em;margin-top:6px;position:relative;z-index:1}
 .tk-half .td-wm{top:50%;transform:translateY(-50%);height:150px;width:150px}
-.td-grid3{display:grid;grid-template-columns:repeat(3,1fr);padding-right:56px}
-.td-grid3 .cell{text-align:center}
-.td-grid3 .cell+.cell{border-left:1px solid rgba(255,255,255,.16)}
-.td-grid3 strong{display:block;font-size:18px;font-weight:800;color:#fff;letter-spacing:-.02em}
-.td-grid3 span{display:block;font-size:8.5px;font-weight:800;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.03em;margin-top:5px}
 .td-rates{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:11px}
-.td-rcard{border-radius:12px;padding:8px 6px;text-align:center;border:1.5px solid rgba(34,197,94,.4);background:rgba(34,197,94,.10)}
-.td-rcard.o{border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.10)}
-.td-rcard.r{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.10)}
-.td-rcard strong{display:block;font-size:16px;font-weight:800;color:#fff}
+.td-rcard{border-radius:12px;padding:8px 6px;text-align:center;border:1.5px solid rgba(34,197,94,.42);background:rgba(34,197,94,.14)}
+.td-rcard.o{border-color:rgba(245,158,11,.44);background:rgba(245,158,11,.16)}
+.td-rcard.r{border-color:rgba(239,68,68,.48);background:rgba(239,68,68,.18)}
+.td-rcard strong{display:block;font-size:16px;font-weight:800;color:#fff;white-space:nowrap}
 .td-rcard span{display:block;font-size:8.5px;font-weight:800;color:rgba(255,255,255,.85);text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+/* CORRIGIDO (01/09/2026, mockup aprovado): estado neutro — ver comentário
+   equivalente em .rate-cell.neutral, acima. */
+.td-rcard.neutral{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14)}
+.td-rcard.neutral strong{color:rgba(255,255,255,.45)}
+.td-rcard.neutral span{color:rgba(255,255,255,.35)}
 .td-fin-divider{border-top:1px dashed rgba(255,255,255,.22);margin:0 0 11px}
 .td-fin{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .td-fin .cell{text-align:center}
@@ -3091,11 +3100,19 @@ const STATUS_SEGMENTS = [
   { key: 'online',   label: 'ONLINE',              color: '#22C55E' },
   { key: 'buscando', label: 'BUSCANDO PASSAGEIRO',  color: '#F97316' },
   { key: 'corrida',  label: 'EM CORRIDA',           color: '#3B82F6' },
+  // CORRIGIDO (01/09/2026, mockup aprovado): tempo sem NENHUM segmento
+  // real da timeline nativa (journey_status_segments) cobrindo aquele
+  // intervalo — ver statusBreakdownRows. Não existe em computeStatusBreakdown
+  // (fallback usado quando a timeline real ainda não carregou), por isso
+  // buildSbarHtml/buildSrowsHtml precisam tratar a chave como opcional.
+  { key: 'naoRastreado', label: 'NÃO RASTREADO', color: 'repeating-linear-gradient(45deg,#94A3B8,#94A3B8 4px,#CBD5E1 4px,#CBD5E1 8px)' },
 ];
 
 function buildSbarHtml(bd) {
   return STATUS_SEGMENTS.map(s => {
-    const pct = bd[s.key].pct;
+    const seg = bd[s.key];
+    if (!seg) return '';
+    const pct = seg.pct;
     if (pct <= 0) return '';
     const showText = pct >= 12;
     return `<i style="width:${pct}%;background:${s.color}">${showText ? pct+'%' : ''}</i>`;
@@ -3105,6 +3122,7 @@ function buildSbarHtml(bd) {
 function buildSrowsHtml(bd) {
   return STATUS_SEGMENTS.map(s => {
     const seg = bd[s.key];
+    if (!seg) return '';
     return `<div class="srow"><span class="sdot" style="background:${s.color}"></span><b>${s.label}</b><span class="pct">${seg.pct}%</span><span class="stempo">${fmtDur(seg.sec/60)}</span><span class="skm">${seg.km.toFixed(1)} km</span></div>`;
   }).join('');
 }
@@ -5121,10 +5139,10 @@ function renderJourneyCard(day, isToday) {
   else if (finished.length > 0) cls = 'ended';
   jc.className = 'journey ' + cls;
 
-  setText('jc-status-text',
-    state === 'running' ? 'Online' :
-    finished.length > 0 ? 'Concluído' : 'Iniciar'
-  );
+  // CORRIGIDO (01/09/2026, mockup aprovado): removido o setText em
+  // jc-status-text — o elemento (.j-status) é display:none no CSS e
+  // nenhum outro código lê esse texto; era trabalho à toa rodando a cada
+  // render/tick sem efeito visual nenhum.
   const th = Math.floor(liveElapsed/3600), tm = Math.floor(liveElapsed%3600/60), ts = liveElapsed%60;
   setText('jc-timer', p2(th)+':'+p2(tm)+':'+p2(ts));
   setText('jc-sub',
@@ -5207,8 +5225,8 @@ function renderJourneyCard(day, isToday) {
     const horasDecimal = totalElapsed > 0 ? totalElapsed/3600 : 0;
     rsh  = horasDecimal > 0 ? ganhosDia/horasDecimal : null;
     rskm = totalKm > 0 ? ganhosDia/totalKm : null;
-    setText('jc-rsh', rsh !== null ? DB.fRI(rsh) : 'R$0,00');
-    setText('jc-rskm', rskm !== null ? DB.fRI(rskm) : 'R$0,00');
+    setText('jc-rsh', rsh !== null ? DB.fRI(rsh) : '—');
+    setText('jc-rskm', rskm !== null ? DB.fRI(rskm) : '—');
   } else {
     // CORRIGIDO (01/09/2026): ao trocar de dia, esses campos ficavam com o
     // texto do dia ANTERIOR até a query de auto_trips do novo dia voltar
@@ -5249,23 +5267,26 @@ function renderJourneyCard(day, isToday) {
     rskm2 = liveKm > 0 ? ganhosSess/liveKm : null;
   }
   setText('jc-trips2', trips2);
-  setText('jc-rsh2', rsh2 !== null ? DB.fRI(rsh2) : 'R$0,00');
-  setText('jc-rskm2', rskm2 !== null ? DB.fRI(rskm2) : 'R$0,00');
+  setText('jc-rsh2', rsh2 !== null ? DB.fRI(rsh2) : '—');
+  setText('jc-rskm2', rskm2 !== null ? DB.fRI(rskm2) : '—');
   // Cor por indicador — pedido do Yuri (23/07/2026, mockup aprovado):
   // mesmos limiares vermelho/verde que o motorista já ajusta na régua do
   // MōB Flash (Indicadores → R$/km e R$/hora), cada indicador troca de cor
-  // por conta própria. Sem dado ainda (sessão não rodou tempo/km) fica
-  // neutro (verde), não faz sentido alarmar antes de ter dado de verdade.
+  // por conta própria.
+  // CORRIGIDO (01/09/2026, mockup aprovado): sem dado ainda (sessão não
+  // rodou tempo/km) agora fica NEUTRO (cinza) — antes caía no estilo base
+  // do componente, que é verde, sinalizando "bom desempenho" sem ter dado
+  // nenhum pra calcular.
   const rateEl = document.getElementById('jc-rate-hora');
   const kmEl   = document.getElementById('jc-rate-km');
   const rateEl2 = document.getElementById('jc-rate-hora2');
   const kmEl2   = document.getElementById('jc-rate-km2');
-  const rateCls = rsh !== null ? rateColorClass('rhora', rsh) : '';
-  const kmCls   = rskm !== null ? rateColorClass('rkm', rskm) : '';
+  const rateCls = rsh !== null ? rateColorClass('rhora', rsh) : 'neutral';
+  const kmCls   = rskm !== null ? rateColorClass('rkm', rskm) : 'neutral';
   // CORRIGIDO (01/09/2026): rateEl2/kmEl2 (card da sessão) agora usam a cor
   // derivada de rsh2/rskm2 (sessão), não mais rateCls/kmCls (dia inteiro).
-  const rateCls2 = rsh2 !== null ? rateColorClass('rhora', rsh2) : '';
-  const kmCls2   = rskm2 !== null ? rateColorClass('rkm', rskm2) : '';
+  const rateCls2 = rsh2 !== null ? rateColorClass('rhora', rsh2) : 'neutral';
+  const kmCls2   = rskm2 !== null ? rateColorClass('rkm', rskm2) : 'neutral';
   if (rateEl)  rateEl.className  = 'td-rcard ' + rateCls;
   if (kmEl)    kmEl.className    = 'td-rcard ' + kmCls;
   if (rateEl2) rateEl2.className = 'rate-cell ' + rateCls2;
@@ -15289,7 +15310,7 @@ async function feedEnviarComentario(){
     try{ if(S.sec==='jornada') setTimeout(()=>{renderContinuousSessionList();renderContinuousStatusBars();},0); }catch(e){}
   }
   function statusBreakdownRows(rows,elapsedSec,kmTotal,clipStart,clipEnd,liveSessionId){
-    const out={total:Math.max(0,Number(elapsedSec)||0),online:{sec:0,km:0,pct:0},buscando:{sec:0,km:0,pct:0},corrida:{sec:0,km:0,pct:0}};
+    const out={total:Math.max(0,Number(elapsedSec)||0),online:{sec:0,km:0,pct:0},buscando:{sec:0,km:0,pct:0},corrida:{sec:0,km:0,pct:0},naoRastreado:{sec:0,km:0,pct:0}};
     // Mesmo fix de breakdownFromSegments (30/08/2026) — só o trecho
     // genuinamente mais recente (maior start_ms) entre os abertos pode ser
     // esticado até agora(); trechos abertos órfãos (bug de sessão
@@ -15316,11 +15337,17 @@ async function feedEnviarComentario(){
     const trackedKm=out.online.km+out.buscando.km+out.corrida.km;
     if(out.total<=0) out.total=tracked;
     else {
-      out.online.sec+=Math.max(0,out.total-tracked);
-      out.online.km+=Math.max(0,(Number(kmTotal)||0)-trackedKm);
+      // CORRIGIDO (01/09/2026, mockup aprovado): antes essa sobra ia
+      // direto pra out.online — dado real (30/08/2026): só 74 dos 480min
+      // da sessão tinham segmento real cobrindo, o resto (84%) virava
+      // "Online" sem ser necessariamente isso (podia ser app fechado,
+      // tela não lida, qualquer buraco de rastreamento). Agora vira sua
+      // própria categoria, honesta sobre o que é medido e o que não é.
+      out.naoRastreado.sec+=Math.max(0,out.total-tracked);
+      out.naoRastreado.km+=Math.max(0,(Number(kmTotal)||0)-trackedKm);
     }
     const pct=v=>out.total>0?Math.round(Math.max(0,v)/out.total*100):0;
-    out.online.pct=pct(out.online.sec);out.buscando.pct=pct(out.buscando.sec);out.corrida.pct=pct(out.corrida.sec);
+    out.online.pct=pct(out.online.sec);out.buscando.pct=pct(out.buscando.sec);out.corrida.pct=pct(out.corrida.sec);out.naoRastreado.pct=pct(out.naoRastreado.sec);
     return out;
   }
   window.journeyBreakdownForSession = function(sess,elapsedSec,kmTotal,fallbackAuto){
