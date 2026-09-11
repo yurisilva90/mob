@@ -2062,7 +2062,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
 
     <!-- ═══ ABA: AEROPORTOS ═══ -->
     <div class="inf-panelbody hide" id="inf-tab-aero">
-      <div class="inf-sec-lbl" style="padding-top:2px">Aeroportos em até 120 km</div>
+      <div class="inf-sec-lbl" style="padding-top:2px">Aeroportos em até 200 km</div>
       <div class="inf-vlist" id="inf-vlist-airports"><div class="inf-empty-feed">Localizando aeroportos…</div></div>
     </div>
 
@@ -13321,16 +13321,28 @@ function infDistKm(lat1,lon1,lat2,lon2){
   const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
+const _infBBoxCache = new Map();
 async function infCidadeBBox(city){
-  try{
-    const q=[city?.name,city?.uf,'Brasil'].filter(Boolean).join(', ');
-    const r=await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=br&addressdetails=1&q=${encodeURIComponent(q)}`,{headers:{Accept:'application/json'}});
-    if(!r.ok)throw new Error('nominatim');
-    const d=await r.json();
-    if(!d?.[0]?.boundingbox)return null;
-    const b=d[0].boundingbox.map(Number);
-    return {south:b[0],north:b[1],west:b[2],east:b[3]};
-  }catch(e){return null;}
+  // CORRIGIDO (11/09/2026, pedido do Yuri): Bairros/Rodoviárias/Venues
+  // passaram a pedir o bbox da MESMA cidade ao mesmo tempo — 3 chamadas
+  // simultâneas ao Nominatim, que bloqueia rajada (limite ~1 req/s). Cache
+  // por promise: a 2ª e 3ª chamada reaproveitam a mesma requisição em voo,
+  // em vez de disparar 3 fetches concorrentes.
+  const key=(city?.name||'')+'|'+(city?.uf||'');
+  if(_infBBoxCache.has(key))return _infBBoxCache.get(key);
+  const p=(async()=>{
+    try{
+      const q=[city?.name,city?.uf,'Brasil'].filter(Boolean).join(', ');
+      const r=await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=br&addressdetails=1&q=${encodeURIComponent(q)}`,{headers:{Accept:'application/json'}});
+      if(!r.ok)throw new Error('nominatim');
+      const d=await r.json();
+      if(!d?.[0]?.boundingbox)return null;
+      const b=d[0].boundingbox.map(Number);
+      return {south:b[0],north:b[1],west:b[2],east:b[3]};
+    }catch(e){return null;}
+  })();
+  _infBBoxCache.set(key,p);
+  return p;
 }
 async function infRenderBairrosCidade(lat,lon,city){
   const el=document.getElementById('inf-bairros-dynamic');
@@ -13369,9 +13381,9 @@ async function infRenderBairrosCidade(lat,lon,city){
 }
 async function infRenderAeroportosRaio(lat,lon){
   const el=document.getElementById('inf-vlist-airports');if(!el)return;
-  el.innerHTML='<div class="inf-empty-feed">Buscando aeroportos em até 120 km…</div>';
+  el.innerHTML='<div class="inf-empty-feed">Buscando aeroportos em até 200 km…</div>';
   try{
-    const q=`[out:json][timeout:28];nwr(around:120000,${lat},${lon})[aeroway=aerodrome][name];out center tags 120;`;
+    const q=`[out:json][timeout:28];nwr(around:200000,${lat},${lon})[aeroway=aerodrome][name];out center tags 120;`;
     const r=await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`);
     if(!r.ok)throw new Error('overpass');
     const d=await r.json();
@@ -13379,7 +13391,7 @@ async function infRenderAeroportosRaio(lat,lon){
     for(const e of (d.elements||[])){
       const t=e.tags||{},name=(t.name||'').trim();if(!name)continue;
       const elat=e.lat??e.center?.lat,elon=e.lon??e.center?.lon;if(elat==null||elon==null)continue;
-      const km=infDistKm(lat,lon,elat,elon);if(km>120.5)continue;
+      const km=infDistKm(lat,lon,elat,elon);if(km>200.5)continue;
       const iata=(t.iata||'').trim().toUpperCase(),icao=(t.icao||'').trim().toUpperCase();
       const code=iata||icao;
       const city=t['addr:city']||t['addr:municipality']||t['is_in:city']||t['addr:state']||'';
@@ -13393,7 +13405,7 @@ async function infRenderAeroportosRaio(lat,lon){
     if(useful.length>=2)items=useful;
     items.sort((a,b)=>(Number(b.passenger)-Number(a.passenger))||(a.km-b.km));
     items=items.slice(0,20);
-    if(!items.length){el.innerHTML='<div class="inf-empty-feed">Nenhum aeroporto encontrado em até 120 km</div>';return;}
+    if(!items.length){el.innerHTML='<div class="inf-empty-feed">Nenhum aeroporto encontrado em até 200 km</div>';return;}
     const icon=`<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#0A2F6B" stroke-width="2"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>`;
     el.innerHTML=items.map(a=>{
       const title=a.code?`${a.n} (${a.code})`:a.n;
