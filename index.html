@@ -9002,7 +9002,16 @@ function gpsOnPosition(pos) {
     g.lastFixTime = now;
   }
   setText('jc-km', g.km.toFixed(1));
-  setText('jc-kmtotal', (g.baseKm + g.km).toFixed(1) + ' km');
+  // CORRIGIDO (11/09/2026, pedido do Yuri): g.baseKm é fixado só uma vez
+  // (início/retomada da sessão) e nunca reflete um ajuste manual de "Km
+  // total do dia" (openKmAdjust) feito DURANTE a sessão — por isso o card
+  // "Total do dia" ficava parado até o motorista clicar em Jornada no menu
+  // (o que força renderJourneyCard, que usa a fórmula completa e correta).
+  // Recalcula igual renderJourneyCard faz, sempre, a cada fix de GPS —
+  // elimina a dependência do valor congelado em g.baseKm.
+  const dayNowKt = DB.day(g.forceDate || DB.today());
+  const finishedKmNow = (dayNowKt.sessions || []).reduce((a, x) => a + (x.km || 0), 0);
+  setText('jc-kmtotal', (finishedKmNow + g.km + (dayNowKt.kmAdjust || 0)).toFixed(1) + ' km');
   persistGps();
   if (window.SmartMobiNative && typeof SmartMobiNative.updateFloating === 'function') {
     try { SmartMobiNative.updateFloating(g.km); } catch(e) {}
