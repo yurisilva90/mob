@@ -12278,9 +12278,22 @@ const SYNC = {
   async pushFavs() {
     if (!_supaUser) return;
     try {
+      const items = JSON.parse(localStorage.getItem('sm_inf_favs') || '[]');
+      // CORRIGIDO (11/09/2026, pedido do Yuri): mesmo risco do pushSettings
+      // — upsert substitui a linha inteira. Diferente do cfg, favoritos tem
+      // remoção intencional (desfavoritar), então merge por união ressuscitaria
+      // item removido de propósito. Proteção que cabe aqui: nunca gravar uma
+      // lista VAZIA por cima de uma nuvem que já tinha favoritos — isso só
+      // aconteceria por perda de storage local, nunca por ação do usuário
+      // (o botão "Limpar favoritos" não chama pushFavs hoje).
+      if (items.length === 0) {
+        const { data: existing } = await _SUPA.from('user_favorites')
+          .select('items').eq('user_id', _supaUser.id).maybeSingle();
+        if (existing?.items?.length > 0) return;
+      }
       await _SUPA.from('user_favorites').upsert({
         user_id: _supaUser.id,
-        items: JSON.parse(localStorage.getItem('sm_inf_favs') || '[]'),
+        items,
         synced_at: new Date().toISOString()
       }, { onConflict: 'user_id' });
     } catch(e) { console.error('SYNC.pushFavs', e); }
@@ -12288,9 +12301,21 @@ const SYNC = {
   async pushSettings() {
     if (!_supaUser) return;
     try {
+      // CORRIGIDO (11/09/2026, pedido do Yuri): antes fazia upsert
+      // substituindo a linha inteira — se o cfg local estivesse incompleto
+      // (troca de aparelho, storage limpo, reinstalação) na hora do push,
+      // apagava pra sempre o que já estava salvo na nuvem (foi o que
+      // aconteceu com flashReader: sumiu do local, e o próximo push
+      // qualquer regravou a nuvem já sem essa parte). Agora lê o que já
+      // existe na nuvem primeiro e faz merge raso (campo por campo) antes
+      // de gravar — um cfg local incompleto nunca mais apaga campo que só
+      // existe do lado da nuvem.
+      const { data: existing } = await _SUPA.from('user_settings')
+        .select('data').eq('user_id', _supaUser.id).maybeSingle();
+      const merged = Object.assign({}, existing?.data || {}, DB.cfg() || {});
       await _SUPA.from('user_settings').upsert({
         user_id: _supaUser.id,
-        data: DB.cfg() || {},
+        data: merged,
         synced_at: new Date().toISOString()
       }, { onConflict: 'user_id' });
     } catch(e) { console.error('SYNC.pushSettings', e); }
