@@ -13550,6 +13550,10 @@ async function infCarregarBadgesListagem(){
         html+=`<div class="inf-badge-btn peak"><svg viewBox="0 0 24 24" width="14" height="14" fill="#fff" stroke="none"><path d="M12 2c1 3-2 4-2 7a4 4 0 0 0 8 0c0-1-.5-2-1-2 1 3-1 4-2 4a2 2 0 0 1-2-2c0-2 2-3 2-5-2 0-4 1-5 3-1 2-1 4 0 6a6 6 0 0 0 12-2c0-4-3-6-4-9-1 1-3 3-3 5-1-2-1-3-1-5-2 1-2 3-2 5z"/></svg><span>ALTA</span></div>`;
       }
       const dyn99=(posts||[]).find(p=>p.param_value==='99');
+      const dynUber=(posts||[]).find(p=>p.param_value==='uber');
+      if(dynUber){
+        html+=`<div class="inf-badge-btn dyn"><svg viewBox="0 0 24 24" width="14" height="14" fill="#fff" stroke="none"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><span>Uber: ${esc(dynUber.param_detail||'ativo')}</span></div>`;
+      }
       if(dyn99){
         html+=`<div class="inf-badge-btn dyn"><svg viewBox="0 0 24 24" width="14" height="14" fill="#fff" stroke="none"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><span>99: ${esc(dyn99.param_detail||'ativo')}</span></div>`;
       }
