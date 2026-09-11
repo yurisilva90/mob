@@ -2062,23 +2062,14 @@ h1.hd-title{font-family:var(--font-brand)!important}
 
     <!-- ═══ ABA: AEROPORTOS ═══ -->
     <div class="inf-panelbody hide" id="inf-tab-aero">
-      <div class="inf-sec-lbl" style="padding-top:2px">Aeroportos em até 200 km</div>
+      <div class="inf-sec-lbl" style="padding-top:2px">Aeroportos em até 120 km</div>
       <div class="inf-vlist" id="inf-vlist-airports"><div class="inf-empty-feed">Localizando aeroportos…</div></div>
     </div>
 
     <!-- ═══ ABA: RODOVIÁRIAS ═══ -->
     <div class="inf-panelbody hide" id="inf-tab-rod">
-      <div class="inf-featF" onclick="infAbrirLocal(this,'Rodoviária Novo Rio','term')">
-        <div class="inf-featF-top">
-          <div class="inf-featF-id">
-            <div class="inf-featF-ic" style="background:#EEF2FF"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#6366F1" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
-            <div><div class="inf-featF-name">Rodoviária Novo Rio <svg class="inf-featF-mode" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="4" width="16" height="12" rx="2.5"/><path d="M4 11h16"/><path d="M7.5 16v2M16.5 16v2"/></svg></div><div class="inf-featF-sub">Santo Cristo</div></div>
-          </div>
-          <div class="inf-featF-ct" id="inf-ct-rod">–</div>
-        </div>
-        <div class="inf-featF-mini" id="inf-mini-rod"></div>
-        <div class="inf-featF-arriving"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="4" width="16" height="12" rx="2.5"/><path d="M4 11h16"/><path d="M7.5 16v2M16.5 16v2"/></svg>Chegando: — (em breve via sistema da rodoviária)</div>
-      </div>
+      <div class="inf-sec-lbl" style="padding-top:2px" id="inf-rod-lbl">Rodoviárias</div>
+      <div class="inf-vlist" id="inf-vlist-rod"><div class="inf-empty-feed">Localizando rodoviárias…</div></div>
     </div>
 
     <!-- ═══ ABA: BAIRROS ═══ -->
@@ -13313,9 +13304,10 @@ async function infSyncCidadeAtual(){
     if(city){_infCity=city;localStorage.setItem('sm_inf_city',JSON.stringify(_infCity));const el=document.getElementById('inf-city-name');if(el)el.textContent=city.name;}
     else{const el=document.getElementById('inf-city-name');if(el&&_infCity?.name)el.textContent=_infCity.name;}
     try{await _SUPA?.rpc('ensure_venues_for_region',{p_lat:lat,p_lng:lon});}catch(e){}
-    infRenderNearbyVenueLists(lat,lon);
+    infRenderNearbyVenueLists(lat,lon,_infCity);
     infRenderBairrosCidade(lat,lon,_infCity);
     infRenderAeroportosRaio(lat,lon);
+    infRenderRodoviariasRaio(lat,lon,_infCity);
   },()=>{const el=document.getElementById('inf-city-name');if(el)el.textContent=_infCity?.name||'Escolher cidade';},{enableHighAccuracy:true,timeout:10000,maximumAge:60000});
 }
 
@@ -13377,9 +13369,9 @@ async function infRenderBairrosCidade(lat,lon,city){
 }
 async function infRenderAeroportosRaio(lat,lon){
   const el=document.getElementById('inf-vlist-airports');if(!el)return;
-  el.innerHTML='<div class="inf-empty-feed">Buscando aeroportos em até 200 km…</div>';
+  el.innerHTML='<div class="inf-empty-feed">Buscando aeroportos em até 120 km…</div>';
   try{
-    const q=`[out:json][timeout:28];nwr(around:200000,${lat},${lon})[aeroway=aerodrome][name];out center tags 120;`;
+    const q=`[out:json][timeout:28];nwr(around:120000,${lat},${lon})[aeroway=aerodrome][name];out center tags 120;`;
     const r=await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`);
     if(!r.ok)throw new Error('overpass');
     const d=await r.json();
@@ -13387,7 +13379,7 @@ async function infRenderAeroportosRaio(lat,lon){
     for(const e of (d.elements||[])){
       const t=e.tags||{},name=(t.name||'').trim();if(!name)continue;
       const elat=e.lat??e.center?.lat,elon=e.lon??e.center?.lon;if(elat==null||elon==null)continue;
-      const km=infDistKm(lat,lon,elat,elon);if(km>200.5)continue;
+      const km=infDistKm(lat,lon,elat,elon);if(km>120.5)continue;
       const iata=(t.iata||'').trim().toUpperCase(),icao=(t.icao||'').trim().toUpperCase();
       const code=iata||icao;
       const city=t['addr:city']||t['addr:municipality']||t['is_in:city']||t['addr:state']||'';
@@ -13401,7 +13393,7 @@ async function infRenderAeroportosRaio(lat,lon){
     if(useful.length>=2)items=useful;
     items.sort((a,b)=>(Number(b.passenger)-Number(a.passenger))||(a.km-b.km));
     items=items.slice(0,20);
-    if(!items.length){el.innerHTML='<div class="inf-empty-feed">Nenhum aeroporto encontrado em até 200 km</div>';return;}
+    if(!items.length){el.innerHTML='<div class="inf-empty-feed">Nenhum aeroporto encontrado em até 120 km</div>';return;}
     const icon=`<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#0A2F6B" stroke-width="2"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>`;
     el.innerHTML=items.map(a=>{
       const title=a.code?`${a.n} (${a.code})`:a.n;
@@ -13412,14 +13404,55 @@ async function infRenderAeroportosRaio(lat,lon){
   }catch(e){console.warn('aeroportos 200km',e);el.innerHTML='<div class="inf-empty-feed">Não foi possível carregar os aeroportos agora</div>';}
 }
 
-async function infRenderNearbyVenueLists(lat,lon){
-  const q=`[out:json][timeout:18];(`+
-    `nwr(around:7000,${lat},${lon})[shop=mall][name];`+
-    `nwr(around:1800,${lat},${lon})[amenity~"^(bar|pub|restaurant|cafe|nightclub)$"][name];`+
-    `nwr(around:6000,${lat},${lon})[tourism~"^(hotel|hostel|motel|guest_house)$"][name];`+
-    `nwr(around:10000,${lat},${lon})[amenity~"^(theatre|cinema|arts_centre|events_venue)$"][name];`+
-    `nwr(around:10000,${lat},${lon})[leisure=stadium][name];`+
-    `nwr(around:7000,${lat},${lon})[tourism~"^(museum|attraction|viewpoint|gallery)$"][name];`+
+async function infRenderRodoviariasRaio(lat,lon,city){
+  const el=document.getElementById('inf-vlist-rod');if(!el)return;
+  const lbl=document.getElementById('inf-rod-lbl');
+  if(lbl)lbl.textContent=city?.name?`Rodoviárias de ${city.name}`:'Rodoviárias';
+  el.innerHTML='<div class="inf-empty-feed">Buscando rodoviárias…</div>';
+  try{
+    const bbox=await infCidadeBBox(city);
+    let areaPart;
+    if(bbox){areaPart=`(${bbox.south},${bbox.west},${bbox.north},${bbox.east})`;}
+    else{areaPart=`(around:30000,${lat},${lon})`;}
+    const q=`[out:json][timeout:28];nwr${areaPart}[amenity=bus_station][name];out center tags 80;`;
+    const r=await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`);
+    if(!r.ok)throw new Error('overpass');
+    const d=await r.json();
+    const seen=new Map();
+    for(const e of (d.elements||[])){
+      const t=e.tags||{},name=(t.name||'').trim();if(!name)continue;
+      const elat=e.lat??e.center?.lat,elon=e.lon??e.center?.lon;if(elat==null||elon==null)continue;
+      const km=infDistKm(lat,lon,elat,elon);
+      const bairro=t['addr:suburb']||t['addr:city']||t['is_in:city']||'';
+      const item={n:name,bairro,km};
+      const key=infNormText(name);
+      if(!seen.has(key)||km<seen.get(key).km)seen.set(key,item);
+    }
+    let items=[...seen.values()];
+    items.sort((a,b)=>a.km-b.km);
+    items=items.slice(0,15);
+    if(!items.length){el.innerHTML='<div class="inf-empty-feed">Nenhuma rodoviária encontrada nesta cidade</div>';return;}
+    const icon=`<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#6366F1" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`;
+    el.innerHTML=items.map(a=>{
+      const sub=[a.bairro,a.km<1?`${Math.round(a.km*1000)} m`:`${a.km.toFixed(0)} km`].filter(Boolean).join(' · ');
+      return `<div class="inf-vitem" onclick="infAbrirLocal(this,'${a.n.replace(/'/g,"\\'")}','term')"><div class="inf-vitem-ic" style="background:#EEF2FF">${icon}</div><div><div class="inf-vitem-name">${a.n}</div><div class="inf-vitem-sub">${sub}</div></div><div class="inf-vitem-ct z">–</div></div>`;
+    }).join('');
+    infCarregarContagens();
+  }catch(e){console.warn('rodoviárias cidade',e);el.innerHTML='<div class="inf-empty-feed">Não foi possível carregar as rodoviárias agora</div>';}
+}
+
+async function infRenderNearbyVenueLists(lat,lon,city){
+  const bbox=await infCidadeBBox(city);
+  let areaPart;
+  if(bbox){areaPart=`(${bbox.south},${bbox.west},${bbox.north},${bbox.east})`;}
+  else{areaPart=`(around:15000,${lat},${lon})`;}
+  const q=`[out:json][timeout:22];(`+
+    `nwr${areaPart}[shop=mall][name];`+
+    `nwr${areaPart}[amenity~"^(bar|pub|restaurant|cafe|nightclub)$"][name];`+
+    `nwr${areaPart}[tourism~"^(hotel|hostel|motel|guest_house)$"][name];`+
+    `nwr${areaPart}[amenity~"^(theatre|cinema|arts_centre|events_venue)$"][name];`+
+    `nwr${areaPart}[leisure=stadium][name];`+
+    `nwr${areaPart}[tourism~"^(museum|attraction|viewpoint|gallery)$"][name];`+
     `);out center 300;`;
   try{
     const r=await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`);if(!r.ok)throw new Error('overpass');
@@ -13465,19 +13498,16 @@ function infRenderBairrosTab(){
 }
 
 function infRenderVenueLists(){
-  Object.entries({shoppings:'shoppings',bares:'bares',hoteis:'hoteis',eventos:'eventos',turistico:'turistico'}).forEach(([tabKey,venueKey])=>{
-    const el=document.getElementById('inf-vlist-'+tabKey);if(!el)return;
-    const v=INF_VENUES[venueKey];if(!v)return;
-    const t=INF_TIPOS[v.tipo]||INF_TIPOS.bairro;
-    el.innerHTML=v.itens.map(item=>`<div class="inf-vitem" onclick="infAbrirLocal(this,'${item.n.replace(/'/g,"\\'")}','${v.tipo}')">
-      <div class="inf-vitem-ic" style="background:${t.bg}">${infIconSvg(v.tipo,t.cor,15)}</div>
-      <div><div class="inf-vitem-name">${item.n}</div><div class="inf-vitem-sub">${item.sub||''}</div></div>
-      <div class="inf-vitem-badges" data-vname="${esc(item.n)}"></div>
-      <div class="inf-vitem-ct z">–</div>
-    </div>`).join('');
+  // CORRIGIDO (11/09/2026, pedido do Yuri): antes pintava a lista fixa do
+  // Rio de Janeiro (INF_VENUES.itens) antes do GPS resolver — dava um
+  // "flash" de conteúdo da cidade errada pra quem tá em outro lugar. Agora
+  // só mostra loading; infRenderNearbyVenueLists() (GPS real) ou
+  // infEscolherCidade() (cidade manual) preenchem de verdade, mesmo padrão
+  // que Aeroportos já usava.
+  ['shoppings','bares','hoteis','eventos','turistico'].forEach(cat=>{
+    const el=document.getElementById('inf-vlist-'+cat);
+    if(el) el.innerHTML='<div class="inf-empty-feed">Buscando locais na sua região…</div>';
   });
-  infCarregarContagens();
-  infCarregarBadgesListagem();
 }
 
 // Badges "Alta demanda"/"Tarifa dinâmica" nos itens da listagem —
@@ -13577,7 +13607,7 @@ async function infCarregarContagens(){
       const n=countFor(nome);
       el.textContent=n;el.className='inf-bchip-ct'+(n===0?' z':'');
     });
-    [['gig','Galeão (GIG)'],['sdu','Santos Dumont (SDU)'],['rod','Rodoviária Novo Rio']].forEach(([id,n])=>{
+    [['gig','Galeão (GIG)'],['sdu','Santos Dumont (SDU)']].forEach(([id,n])=>{
       const el=document.getElementById('inf-ct-'+id);if(el)el.textContent=countFor(n);
     });
     Object.entries({sul:INF_BAIRROS.sul,norte:INF_BAIRROS.norte,oeste:INF_BAIRROS.oeste,centro:INF_BAIRROS.centro}).forEach(([z,bs])=>{
@@ -14327,7 +14357,7 @@ async function infEscolherCidade(name, uf){
   try{
     const u=`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=br&q=${encodeURIComponent(name+', '+uf+', Brasil')}`;
     const r=await fetch(u,{headers:{Accept:'application/json'}}),d=await r.json();
-    if(d?.[0]){const lat=Number(d[0].lat),lon=Number(d[0].lon);_infGps={lat,lon,at:Date.now()};infRenderNearbyVenueLists(lat,lon);infRenderBairrosCidade(lat,lon,_infCity);infRenderAeroportosRaio(lat,lon);}
+    if(d?.[0]){const lat=Number(d[0].lat),lon=Number(d[0].lon);_infGps={lat,lon,at:Date.now()};infRenderNearbyVenueLists(lat,lon,_infCity);infRenderBairrosCidade(lat,lon,_infCity);infRenderAeroportosRaio(lat,lon);infRenderRodoviariasRaio(lat,lon,_infCity);}
   }catch(e){}
   try{infCarregarFeedAgora?.();}catch(e){}
 }
