@@ -15444,11 +15444,21 @@ async function feedEnviarComentario(){
         const km=Math.max(0,Number(S.gps.km)||0);
         const trips=currentSessionTrips(day,Number(S.gps.start)||0);
         const ganhos=trips.manual.reduce((a,t)=>a+(Number(t.value)||0),0)+trips.auto.reduce((a,t)=>a+(Number(t.offer_value)||0),0);
+        const rsh2=elapsed>0?ganhos/(elapsed/3600):null;
+        const rskm2=km>0?ganhos/km:null;
         if(typeof setText==='function'){
           setText('jc-trips2',trips.manual.length+trips.auto.length);
-          setText('jc-rsh2',elapsed>0?DB.fRI(ganhos/(elapsed/3600)):'R$0,00');
-          setText('jc-rskm2',km>0?DB.fRI(ganhos/km):'R$0,00');
+          setText('jc-rsh2',rsh2!==null?DB.fRI(rsh2):'R$0,00');
+          setText('jc-rskm2',rskm2!==null?DB.fRI(rskm2):'R$0,00');
         }
+        // CORRIGIDO (12/09/2026): a cor da régua (jc-rate-hora2/jc-rate-km2) só
+        // era atualizada pelo renderJornada (a cada 25-60s) — o número mudava
+        // a cada segundo por aqui, mas a cor ficava até 1min desatualizada se
+        // o valor cruzasse o limiar vermelho/verde nesse meio tempo.
+        const rateEl2=document.getElementById('jc-rate-hora2');
+        const kmEl2=document.getElementById('jc-rate-km2');
+        if(rateEl2) rateEl2.className='rate-cell '+(rsh2!==null?rateColorClass('rhora',rsh2):'neutral');
+        if(kmEl2) kmEl2.className='rate-cell '+(rskm2!==null?rateColorClass('rkm',rskm2):'neutral');
         const native=nativeStatusTimeline();
         const bd=breakdownFromSegments(elapsed,km,native,S.gps.sessionId);
         const jc=document.getElementById('jc-breakdown');
