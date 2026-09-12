@@ -3089,10 +3089,14 @@ function computeStatusBreakdown(elapsedSec, kmTotal, autoTrips) {
   };
 }
 
+// Cores sincronizadas com o overlay nativo (smartmobi-overlay/FloatingWidget.kt) —
+// mudar aqui sem mudar lá (ou vice-versa) deixa a bolinha flutuante com cor
+// diferente da barra de status do app. Quando a escolha de cor virar
+// configurável pelo usuário, os dois lados precisam ler da mesma fonte.
 const STATUS_SEGMENTS = [
-  { key: 'online',   label: 'ONLINE',              color: '#22C55E' },
+  { key: 'online',   label: 'ONLINE',              color: '#FACC15', textColor: '#0F172A' },
   { key: 'buscando', label: 'BUSCANDO PASSAGEIRO',  color: '#F97316' },
-  { key: 'corrida',  label: 'EM CORRIDA',           color: '#3B82F6' },
+  { key: 'corrida',  label: 'EM CORRIDA',           color: '#22C55E' },
   // CORRIGIDO (01/09/2026, mockup aprovado): tempo sem NENHUM segmento
   // real da timeline nativa (journey_status_segments) cobrindo aquele
   // intervalo — ver statusBreakdownRows. Não existe em computeStatusBreakdown
@@ -3108,7 +3112,7 @@ function buildSbarHtml(bd) {
     const pct = seg.pct;
     if (pct <= 0) return '';
     const showText = pct >= 12;
-    return `<i style="width:${pct}%;background:${s.color}">${showText ? pct+'%' : ''}</i>`;
+    return `<i style="width:${pct}%;background:${s.color};color:${s.textColor||'#fff'}">${showText ? pct+'%' : ''}</i>`;
   }).join('');
 }
 
