@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mob-v31-copiloto';
+const CACHE_NAME = 'mob-v32-copiloto-cards';
 const ASSETS = [
   '/',
   '/index.html',
