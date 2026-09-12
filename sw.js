@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mob-v27-stable-journey-kpis';
+const CACHE_NAME = 'mob-v28-jornada-fixes';
 const ASSETS = [
   '/',
   '/index.html',
