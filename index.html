@@ -9131,7 +9131,16 @@ async function _syncTick() {
   await _pullTripsCorrections();
   await _autoSyncLocalData();
   _backfillKmEstimates();
-  await reconcilePlatformSightings();
+  // CORRIGIDO (11/09/2026, pedido do Yuri): reconciliação passiva movida
+  // pro nativo (roda em segundo plano de verdade, sem depender do app
+  // aberto). Função continua definida abaixo, mas não é mais chamada
+  // daqui — evita risco de duas execuções concorrentes (nativa + web)
+  // criando corrida duplicada na mesma corrida.
+  // await reconcilePlatformSightings();
+  // O aviso de "total não bateu" continua no web (é um toast — só faz
+  // sentido com o app aberto pra você ver mesmo), chamado direto, sem
+  // depender de reconcilePlatformSightings ter rodado agora.
+  await checkDailyTotalMatch();
 }
 
 // PEDIDO (11/09/2026, Yuri): captura passiva do Histórico/Ganhos da Uber e
