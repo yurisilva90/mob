@@ -9189,7 +9189,43 @@ async function reconcilePlatformSightings() {
     if (confirmedCount > 0) {
       try { renderJornada(); } catch (e) {}
     }
+    await checkDailyTotalMatch();
   } catch (e) { console.warn('[reconcilePlatformSightings]', e); }
+}
+
+// PEDIDO (11/09/2026, Yuri): "como confirmar se o OCR não embaralhou
+// dados?" — compara o total "Diários" que o app da 99 mostra (capturado
+// na tela Seus ganhos) contra a soma das corridas que o MōB já marcou
+// como confirmada naquele dia. Bateu = sinal forte de que nada se perdeu
+// ou leu errado. Não bateu = avisa, não corrige sozinho (evita mascarar
+// o problema "consertando" um valor que pode estar certo).
+const _dailyTotalChecked = new Set();
+async function checkDailyTotalMatch() {
+  if (!_supaUser) return;
+  const { data: summaries } = await _SUPA.from('platform_daily_summary')
+    .select('*').eq('user_id', _supaUser.id).order('seen_at', { ascending: false }).limit(10);
+  if (!summaries || !summaries.length) return;
+  for (const s of summaries) {
+    const key = s.id;
+    if (_dailyTotalChecked.has(key)) continue;
+    const platKey = s.platform === '99' ? '99' : 'uber';
+    const { data: allTrips } = await _SUPA.from('auto_trips').select('offer_value,status')
+      .eq('user_id', _supaUser.id).ilike('platform', platKey)
+      .gte('trip_started_at', s.trip_date + 'T00:00:00')
+      .lte('trip_started_at', s.trip_date + 'T23:59:59');
+    // Ainda tem corrida não confirmada naquele dia — soma vai ficar curta
+    // por natureza, não é sinal de nada errado ainda. Não marca como
+    // checado: reavalia de novo no próximo tick, quando talvez já tenha
+    // fechado.
+    if ((allTrips || []).some(t => t.status !== 'confirmada')) continue;
+    _dailyTotalChecked.add(key);
+    const soma = (allTrips || []).filter(t => t.status === 'confirmada')
+      .reduce((a, t) => a + (Number(t.offer_value) || 0), 0);
+    const diff = Math.abs(soma - Number(s.total_value));
+    if (diff > 0.10) {
+      showToast(`⚠ Total da ${s.platform === '99' ? '99' : 'Uber'} não bateu: app mostra R$${Number(s.total_value).toFixed(2)}, MōB confirmou R$${soma.toFixed(2)}. Confira as corridas de hoje.`, 'error');
+    }
+  }
 }
 // Migração única: limpa prefixo "Bairro da/do" de corridas já salvas localmente
 (function _migrateBairroNames(){
