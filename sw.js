@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mob-v30-insight-push-voice';
+const CACHE_NAME = 'mob-v31-copiloto';
 const ASSETS = [
   '/',
   '/index.html',
