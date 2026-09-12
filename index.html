@@ -12405,7 +12405,18 @@ function syncFlashConfigToNative() {
 let _supaUser = null;
 let _mobInsightChannel = null;
 let _mobInsightCur = null;
-async function renderMobInsight() {
+let _mobInsightSpokenIds = new Set();
+function speakMobInsight(text) {
+  try {
+    if (!('speechSynthesis' in window)) return;
+    if (DB.cfg().mobInsightVoice === false) return;
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'pt-BR';
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  } catch (e) { console.warn('speakMobInsight:', e); }
+}
+async function renderMobInsight(isNewEvent) {
   const el = document.getElementById('mob-insight-banner');
   if (!el || !_supaUser || !_SUPA) return;
   try {
@@ -12419,11 +12430,16 @@ async function renderMobInsight() {
     if (error) throw error;
     const insight = data && data[0];
     if (!insight) { el.style.display = 'none'; _mobInsightCur = null; return; }
+    const isNew = insight.id !== _mobInsightCur;
     _mobInsightCur = insight.id;
     el.className = 'insight-banner t-' + insight.type;
     el.style.display = 'flex';
     document.getElementById('mob-insight-title').textContent = insight.title;
     document.getElementById('mob-insight-msg').textContent = insight.message;
+    if ((isNewEvent || isNew) && !_mobInsightSpokenIds.has(insight.id)) {
+      _mobInsightSpokenIds.add(insight.id);
+      speakMobInsight(insight.title + '. ' + insight.message);
+    }
   } catch (e) { console.warn('renderMobInsight:', e); }
 }
 async function dismissMobInsight() {
@@ -12440,9 +12456,42 @@ function subscribeMobInsightRealtime() {
   _mobInsightChannel = _SUPA.channel('mob-insight-' + _supaUser.id)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'driver_insights',
       filter: `user_id=eq.${_supaUser.id}` },
-      () => { renderMobInsight(); })
+      () => { renderMobInsight(true); })
     .subscribe();
   setInterval(renderMobInsight, 60000);
+}
+
+const MOB_VAPID_PUBLIC_KEY = 'BE-tovFzGS3WwMRYy1RkbKM-73ZMx6v62SPIaK_lg8HuUSDVS4vb0k7SepOl0ufYrkb0m2p4je8qecyUuIDpiE4';
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+async function subscribePushNotifications() {
+  try {
+    if (!_supaUser || !_SUPA) return;
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    if (Notification.permission === 'denied') return;
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      if (Notification.permission !== 'granted') {
+        const perm = await Notification.requestPermission();
+        if (perm !== 'granted') return;
+      }
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(MOB_VAPID_PUBLIC_KEY)
+      });
+    }
+    const json = sub.toJSON();
+    await _SUPA.from('push_subscriptions').upsert({
+      user_id: _supaUser.id, endpoint: json.endpoint,
+      p256dh: json.keys.p256dh, auth: json.keys.auth,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'endpoint' });
+  } catch (e) { console.warn('subscribePushNotifications:', e); }
 }
 
 // ── SINCRONIZAÇÃO COM SUPABASE ──────────────────────────────────────────
@@ -12988,6 +13037,7 @@ async function showApp() {
   try{restoreGpsSession();} catch(e){console.error('restoreGpsSession:',e);}
   try{renderJornada();}  catch(e){console.error('renderJornada:',e);}
   try{renderMobInsight(); subscribeMobInsightRealtime();} catch(e){console.error('mobInsight:',e);}
+  setTimeout(() => subscribePushNotifications().catch(()=>{}), 4000);
   // Verifica jornadas órfãs (de outra aba/instância que não fechou corretamente)
   // toda vez que o app abre, não só ao navegar manualmente pra Jornada.
   // CORRIGIDO (01/09/2026): recoverOpenJourneyFromCloud roda ANTES e é
@@ -13455,7 +13505,7 @@ if ('serviceWorker' in navigator) {
 // Yuri, 24/07/2026) — pra investigar problema de cache/versão desatualizada
 // sem precisar perguntar "que versão você tá vendo?". IMPORTANTE: manter
 // igual ao CACHE_NAME de sw.js sempre que um dos dois mudar.
-const PWA_VERSION = 'mob-v29-insights';
+const PWA_VERSION = 'mob-v30-insight-push-voice';
 async function reportClientVersion() {
   if (!_supaUser) return;
   try {
