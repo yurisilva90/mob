@@ -2049,7 +2049,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
     <div class="inf-tabs" id="inf-tabs">
       <button class="inf-tab active" data-tab="agora" onclick="infTab('agora')">Agora</button>
       <button class="inf-tab" data-tab="aero" onclick="infTab('aero')">Aeroportos</button>
-      <button class="inf-tab" data-tab="rod" onclick="infTab('rod')">Rodoviárias</button>
+      <button class="inf-tab" data-tab="rod" onclick="infTab('rod')">Terminais</button>
       <button class="inf-tab" data-tab="bairros" onclick="infTab('bairros')">Bairros</button>
       <button class="inf-tab" data-tab="shop" onclick="infTab('shop')">Shoppings</button>
       <button class="inf-tab" data-tab="bares" onclick="infTab('bares')">Bares</button>
@@ -2079,14 +2079,14 @@ h1.hd-title{font-family:var(--font-brand)!important}
 
     <!-- ═══ ABA: AEROPORTOS ═══ -->
     <div class="inf-panelbody hide" id="inf-tab-aero">
-      <div class="inf-sec-lbl" style="padding-top:2px">Aeroportos em até 200 km</div>
+      <div class="inf-sec-lbl" style="padding-top:2px" id="inf-airports-lbl">Aeroportos</div>
       <div class="inf-vlist" id="inf-vlist-airports"><div class="inf-empty-feed">Localizando aeroportos…</div></div>
     </div>
 
-    <!-- ═══ ABA: RODOVIÁRIAS ═══ -->
+    <!-- ═══ ABA: TERMINAIS ═══ -->
     <div class="inf-panelbody hide" id="inf-tab-rod">
-      <div class="inf-sec-lbl" style="padding-top:2px" id="inf-rod-lbl">Rodoviárias</div>
-      <div class="inf-vlist" id="inf-vlist-rod"><div class="inf-empty-feed">Localizando rodoviárias…</div></div>
+      <div class="inf-sec-lbl" style="padding-top:2px" id="inf-rod-lbl">Terminais</div>
+      <div class="inf-vlist" id="inf-vlist-rod"><div class="inf-empty-feed">Localizando terminais…</div></div>
     </div>
 
     <!-- ═══ ABA: BAIRROS ═══ -->
@@ -13534,7 +13534,7 @@ async function infSyncCidadeAtual(){
     try{await _SUPA?.rpc('ensure_venues_for_region',{p_lat:lat,p_lng:lon});}catch(e){}
     infRenderNearbyVenueLists(lat,lon,_infCity);
     infRenderBairrosCidade(lat,lon,_infCity);
-    infRenderAeroportosRaio(lat,lon);
+    infRenderAeroportosRaio(lat,lon,_infCity);
     infRenderRodoviariasRaio(lat,lon,_infCity);
   },()=>{const el=document.getElementById('inf-city-name');if(el)el.textContent=_infCity?.name||'Escolher cidade';},{enableHighAccuracy:true,timeout:10000,maximumAge:60000});
 }
@@ -13607,11 +13607,23 @@ async function infRenderBairrosCidade(lat,lon,city){
     infCarregarContagens();
   }catch(e){console.warn('bairros cidade',e);el.innerHTML='<div class="inf-empty-feed">Não foi possível carregar os bairros agora</div>';}
 }
-async function infRenderAeroportosRaio(lat,lon){
+async function infRenderAeroportosRaio(lat,lon,city){
   const el=document.getElementById('inf-vlist-airports');if(!el)return;
-  el.innerHTML='<div class="inf-empty-feed">Buscando aeroportos em até 200 km…</div>';
+  const lbl=document.getElementById('inf-airports-lbl');
+  if(lbl)lbl.textContent=city?.name?`Aeroportos de ${city.name}`:'Aeroportos';
+  el.innerHTML='<div class="inf-empty-feed">Buscando aeroportos…</div>';
   try{
-    const q=`[out:json][timeout:28];nwr(around:200000,${lat},${lon})[aeroway=aerodrome][name];out center tags 120;`;
+    // margem de ~0,4° em volta do bbox: aeroportos costumam ficar em cidade
+    // vizinha (ex: Guarulhos não é "São Paulo"), bbox puro não pegaria
+    const bbox=await infCidadeBBox(city);
+    let areaPart;
+    if(bbox){
+      const pad=0.4;
+      areaPart=`(${bbox.south-pad},${bbox.west-pad},${bbox.north+pad},${bbox.east+pad})`;
+    } else {
+      areaPart=`(around:100000,${lat},${lon})`;
+    }
+    const q=`[out:json][timeout:25];nwr${areaPart}[aeroway=aerodrome][name];out center tags 120;`;
     const ctrl=new AbortController();
     const to=setTimeout(()=>ctrl.abort(),20000);
     let r;
@@ -13623,7 +13635,7 @@ async function infRenderAeroportosRaio(lat,lon){
     for(const e of (d.elements||[])){
       const t=e.tags||{},name=(t.name||'').trim();if(!name)continue;
       const elat=e.lat??e.center?.lat,elon=e.lon??e.center?.lon;if(elat==null||elon==null)continue;
-      const km=infDistKm(lat,lon,elat,elon);if(km>200.5)continue;
+      const km=infDistKm(lat,lon,elat,elon);
       const iata=(t.iata||'').trim().toUpperCase(),icao=(t.icao||'').trim().toUpperCase();
       const code=iata||icao;
       const city=t['addr:city']||t['addr:municipality']||t['is_in:city']||t['addr:state']||'';
@@ -13637,7 +13649,7 @@ async function infRenderAeroportosRaio(lat,lon){
     if(useful.length>=2)items=useful;
     items.sort((a,b)=>(Number(b.passenger)-Number(a.passenger))||(a.km-b.km));
     items=items.slice(0,20);
-    if(!items.length){el.innerHTML='<div class="inf-empty-feed">Nenhum aeroporto encontrado em até 200 km</div>';return;}
+    if(!items.length){el.innerHTML='<div class="inf-empty-feed">Nenhum aeroporto encontrado nesta cidade</div>';return;}
     const icon=`<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#0A2F6B" stroke-width="2"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>`;
     el.innerHTML=items.map(a=>{
       const title=a.code?`${a.n} (${a.code})`:a.n;
@@ -13646,17 +13658,17 @@ async function infRenderAeroportosRaio(lat,lon){
     }).join('');
     infCarregarContagens();
   }catch(e){
-    console.warn('aeroportos 200km',e);
+    console.warn('aeroportos cidade',e);
     const msg=e.name==='AbortError'?'A busca demorou demais e foi cancelada':'Não foi possível carregar os aeroportos agora';
-    el.innerHTML=`<div class="inf-empty-feed">${msg}<br><a href="javascript:void(0)" onclick="infRenderAeroportosRaio(${lat},${lon})" style="color:#0A2F6B;font-weight:700">Tentar novamente</a></div>`;
+    el.innerHTML=`<div class="inf-empty-feed">${msg}<br><a href="javascript:void(0)" onclick="infRenderAeroportosRaio(${lat},${lon},_infCity)" style="color:#0A2F6B;font-weight:700">Tentar novamente</a></div>`;
   }
 }
 
 async function infRenderRodoviariasRaio(lat,lon,city){
   const el=document.getElementById('inf-vlist-rod');if(!el)return;
   const lbl=document.getElementById('inf-rod-lbl');
-  if(lbl)lbl.textContent=city?.name?`Rodoviárias de ${city.name}`:'Rodoviárias';
-  el.innerHTML='<div class="inf-empty-feed">Buscando rodoviárias…</div>';
+  if(lbl)lbl.textContent=city?.name?`Terminais de ${city.name}`:'Terminais';
+  el.innerHTML='<div class="inf-empty-feed">Buscando terminais…</div>';
   try{
     const bbox=await infCidadeBBox(city);
     let areaPart;
@@ -13679,14 +13691,14 @@ async function infRenderRodoviariasRaio(lat,lon,city){
     let items=[...seen.values()];
     items.sort((a,b)=>a.km-b.km);
     items=items.slice(0,15);
-    if(!items.length){el.innerHTML='<div class="inf-empty-feed">Nenhuma rodoviária encontrada nesta cidade</div>';return;}
+    if(!items.length){el.innerHTML='<div class="inf-empty-feed">Nenhum terminal encontrado nesta cidade</div>';return;}
     const icon=`<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#6366F1" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`;
     el.innerHTML=items.map(a=>{
       const sub=[a.bairro,a.km<1?`${Math.round(a.km*1000)} m`:`${a.km.toFixed(0)} km`].filter(Boolean).join(' · ');
       return `<div class="inf-vitem" onclick="infAbrirLocal(this,'${a.n.replace(/'/g,"\\'")}','term')"><div class="inf-vitem-ic" style="background:#EEF2FF">${icon}</div><div><div class="inf-vitem-name">${a.n}</div><div class="inf-vitem-sub">${sub}</div></div><div class="inf-vitem-ct z">–</div></div>`;
     }).join('');
     infCarregarContagens();
-  }catch(e){console.warn('rodoviárias cidade',e);el.innerHTML='<div class="inf-empty-feed">Não foi possível carregar as rodoviárias agora</div>';}
+  }catch(e){console.warn('terminais cidade',e);el.innerHTML='<div class="inf-empty-feed">Não foi possível carregar os terminais agora</div>';}
 }
 
 async function infRenderNearbyVenueLists(lat,lon,city){
@@ -14609,7 +14621,7 @@ async function infEscolherCidade(name, uf){
   try{
     const u=`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=br&q=${encodeURIComponent(name+', '+uf+', Brasil')}`;
     const r=await fetch(u,{headers:{Accept:'application/json'}}),d=await r.json();
-    if(d?.[0]){const lat=Number(d[0].lat),lon=Number(d[0].lon);_infGps={lat,lon,at:Date.now()};infRenderNearbyVenueLists(lat,lon,_infCity);infRenderBairrosCidade(lat,lon,_infCity);infRenderAeroportosRaio(lat,lon);infRenderRodoviariasRaio(lat,lon,_infCity);}
+    if(d?.[0]){const lat=Number(d[0].lat),lon=Number(d[0].lon);_infGps={lat,lon,at:Date.now()};infRenderNearbyVenueLists(lat,lon,_infCity);infRenderBairrosCidade(lat,lon,_infCity);infRenderAeroportosRaio(lat,lon,_infCity);infRenderRodoviariasRaio(lat,lon,_infCity);}
   }catch(e){}
   try{infCarregarFeedAgora?.();}catch(e){}
 }
