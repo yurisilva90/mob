@@ -9168,7 +9168,12 @@ async function reconcilePlatformSightings() {
         const tMs = t.trip_started_at ? new Date(t.trip_started_at).getTime() : null;
         const sMs = (s.trip_date && s.trip_time) ? new Date(`${s.trip_date}T${s.trip_time}:00`).getTime() : null;
         const diff = (tMs && sMs) ? Math.abs(tMs - sMs) : 20 * 60000;
-        if (diff <= 20 * 60000 && diff < bestDiff) { best = t; bestDiff = diff; }
+        // CORRIGIDO (11/09/2026, pedido do Yuri): 20min era curto demais —
+        // dado real mostrou corridas com até 27min de diferença entre o
+        // horário do Histórico da 99 (provavelmente hora da solicitação)
+        // e o trip_started_at do MōB (hora do aceite ao vivo). 60min dá
+        // folga real sem abrir mão do valor bater exato como trava principal.
+        if (diff <= 60 * 60000 && diff < bestDiff) { best = t; bestDiff = diff; }
       }
       if (best) {
         usedTripIds.add(best.id);
