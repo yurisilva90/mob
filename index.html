@@ -53,7 +53,7 @@ html.dark body{background:var(--bg)}
 /* Cards com gradiente colorido fixo (nao usam variavel) ficam neutros no escuro,
    seguindo a direcao aprovada — cor só em pontos pontuais, nao no fundo todo */
 html.dark .journey.idle,html.dark .journey.ended,html.dark .journey.running,
-html.dark .journey-wrap .td-card{
+html.dark .journey-wrap .td-card,html.dark .journey-wrap{
   background:var(--card);border:1px solid var(--line);box-shadow:none
 }
 html.dark .hero{background:var(--card);border:1px solid var(--line);box-shadow:none}
@@ -185,7 +185,7 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px 8px;text-align:center;box-shadow:0 3px 14px rgba(15,23,42,.06)}.stat .v{font-family:'Inter',system-ui,sans-serif;font-size:15px;font-weight:700;white-space:nowrap}.stat .l{font-size:9px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.04em;margin-top:5px}.green{color:var(--green2)}.red{color:var(--red)}.blue{color:#0A2F6B}
 
 /* ── Journey card (controles embutidos) ── */
-.journey-wrap{margin:0 16px 12px;border-radius:26px;overflow:hidden;box-shadow:0 10px 30px rgba(15,23,42,.10)}
+.journey-wrap{margin:0 16px 12px;border-radius:26px;overflow:hidden;box-shadow:0 10px 30px rgba(15,23,42,.10);background:#0D3A7D}
 .journey{padding:16px;color:#fff;transition:background .25s;box-sizing:border-box}
 .journey.idle{background:var(--blue)}
 .journey.ended{background:var(--blue)}
