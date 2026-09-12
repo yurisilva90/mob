@@ -52,7 +52,8 @@ html.dark{
 html.dark body{background:var(--bg)}
 /* Cards com gradiente colorido fixo (nao usam variavel) ficam neutros no escuro,
    seguindo a direcao aprovada — cor só em pontos pontuais, nao no fundo todo */
-html.dark .journey.idle,html.dark .journey.ended,html.dark .journey.running{
+html.dark .journey.idle,html.dark .journey.ended,html.dark .journey.running,
+html.dark .journey-wrap .td-card{
   background:var(--card);border:1px solid var(--line);box-shadow:none
 }
 html.dark .hero{background:var(--card);border:1px solid var(--line);box-shadow:none}
@@ -174,6 +175,10 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .rate-cell.neutral{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.16)}
 .rate-cell.neutral strong{color:rgba(255,255,255,.5)}
 .rate-cell.neutral span{color:rgba(255,255,255,.38)}
+/* Card sem julgamento de bom/ruim (ex: Ganho) — mesma caixa do neutral, mas
+   com o texto legível (branco cheio), não apagado como o neutral de "sem dado". */
+.rate-cell.plain strong{color:#fff}
+.rate-cell.plain span{color:rgba(255,255,255,.75)}
 /* Metas do dia: CSS movido pra seção solta (ver .goal-item/.gbar mais
    abaixo, estilo "grande" já existente) — removido daqui em 23/07/2026,
    não fica mais embutido no fundo escuro do card da jornada. */
@@ -185,7 +190,11 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .journey.idle{background:var(--blue)}
 .journey.ended{background:var(--blue)}
 .journey.running{background:#15803D}
-.journey-breakdown{background:#fff;padding:14px}
+.journey-breakdown{padding:2px 0 0}
+.journey-breakdown .sbar{background:rgba(255,255,255,.14)}
+.journey-breakdown .sbar-list .srow{border-top:1px solid rgba(255,255,255,.14)}
+.journey-breakdown .sbar-list .srow b,.journey-breakdown .sbar-list .srow .stempo{color:#fff}
+.journey-breakdown .sbar-list .srow .pct,.journey-breakdown .sbar-list .srow .skm{color:rgba(255,255,255,.6)}
 .sbar-wrap{cursor:pointer;touch-action:manipulation}
 .sbar{height:22px;border-radius:8px;overflow:hidden;display:flex;background:#F1F5F9;margin:0;pointer-events:none}
 .sbar i{display:flex;align-items:center;justify-content:center;height:100%;font-size:9.5px;font-weight:800;color:#fff}
@@ -232,10 +241,21 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .km-edit-btn{width:18px;height:18px;border-radius:50%;border:0;background:rgba(255,255,255,.22);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;flex-shrink:0;padding:0}
 .val-edit-btn{width:20px;height:20px;border-radius:7px;border:0;background:#F1F5F9;color:#0A2F6B;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;flex-shrink:0;padding:0}
 .j-actions{flex-shrink:0}
-.j-round-btn{width:76px;height:76px;border-radius:50%;background:#fff;border:0;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;box-shadow:0 6px 16px rgba(0,0,0,.18)}
-.j-round-btn svg{width:61px;height:61px}
+.j-round-btn{width:56px;height:56px;border-radius:50%;background:#fff;border:0;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+.j-round-btn svg{width:24px;height:24px}
 .j-round-btn.play svg{color:#22C55E}
 .j-round-btn.stop svg{color:#EF4444}
+/* Card unificado Jornada + Total do dia (mockup aprovado 12/09/2026) */
+.j-toprow2{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.j-timeblock{flex:1.3;min-width:0}
+.j-timeblock h2{font-family:'Inter',system-ui,sans-serif;font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1;margin:0}
+.j-timeblock p{font-size:10px;font-weight:600;opacity:.85;margin:4px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.j-ministat{text-align:center;flex-shrink:0;min-width:42px}
+.j-ministat strong{display:block;font-family:'Inter',system-ui,sans-serif;font-size:16px;font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1;white-space:nowrap}
+.j-ministat span{display:block;margin-top:4px;opacity:.85;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+.j-cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.jw-seg-split{height:1px;background:rgba(255,255,255,.14)}
+.jw-seg-caption{padding:10px 16px 0;font-size:9.5px;font-weight:800;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.05em}
 .j-btn{height:52px;border:0;border-radius:16px;font-size:14px;font-weight:780;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;touch-action:manipulation;width:100%;position:relative;z-index:2}
 .j-btn svg{width:17px;height:17px}
 .j-btn.solid-light{background:#fff;color:var(--green2)}
@@ -244,7 +264,7 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .j-btn.go{background:#fff;color:var(--green2);width:auto;display:inline-flex;padding:0 32px;font-size:15px}
 
 /* ── Total do dia (redesenho 15/08/2026) ── */
-.td-card{background:#0D3A7D;border-radius:22px;overflow:hidden;box-shadow:0 4px 18px rgba(15,23,42,.08)}
+.td-card{background:#0D3A7D}
 .td-row{position:relative;overflow:hidden;padding:15px 16px;border-top:1px solid rgba(255,255,255,.14)}
 .td-row:first-child{border-top:0}
 .td-wm{position:absolute;color:#fff;opacity:.09;pointer-events:none;z-index:0;top:-18%;height:136%;aspect-ratio:1/1}
@@ -1548,30 +1568,27 @@ h1.hd-title{font-family:var(--font-brand)!important}
   <div class="journey-wrap" id="journey-wrap">
   <div class="journey idle" id="journey-card">
     <div class="j-status" style="display:none"><i></i><span id="jc-status-text">Iniciar</span></div>
-    <div class="j-toprow">
-      <div class="j-current" style="grid-template-columns:1.3fr 1fr 1fr;flex:1">
-        <div><h2 id="jc-timer">00:00:00</h2><p id="jc-sub">Nenhuma sessão iniciada</p></div>
-        <div class="j-km"><strong id="jc-km">0,0</strong><span>Km</span></div>
-        <div class="j-km"><strong id="jc-trips2">0</strong><span>Corridas</span></div>
-      </div>
-    </div>
-    <div class="j-bottomrow">
-      <div class="j-rates2">
-        <div class="rate-cell" id="jc-rate-hora2"><strong id="jc-rsh2">R$0,00</strong><span>R$ / hora</span></div>
-        <div class="rate-cell" id="jc-rate-km2"><strong id="jc-rskm2">R$0,00</strong><span>R$ / km</span></div>
-      </div>
+    <div class="j-toprow2">
+      <div class="j-timeblock"><h2 id="jc-timer">00:00:00</h2><p id="jc-sub">Nenhuma sessão ativa</p></div>
+      <div class="j-ministat"><strong id="jc-km">0,0</strong><span>Km</span></div>
+      <div class="j-ministat"><strong id="jc-trips2">0</strong><span>Corridas</span></div>
       <div class="j-actions" id="jc-actions"></div>
     </div>
-  </div>
-  <div class="journey-breakdown" id="jc-breakdown" style="display:none">
-    <div class="sbar-wrap" onclick="toggleBar('jc-blist')"><div class="sbar" id="jc-bar"></div></div>
-    <div class="sbar-list" id="jc-blist"></div>
-  </div>
+    <div class="j-cards3">
+      <div class="rate-cell neutral plain"><strong id="jc-ganho2">R$0,00</strong><span>Ganho</span></div>
+      <div class="rate-cell" id="jc-rate-hora2"><strong id="jc-rsh2">R$0,00</strong><span>R$ / hora</span></div>
+      <div class="rate-cell" id="jc-rate-km2"><strong id="jc-rskm2">R$0,00</strong><span>R$ / km</span></div>
+    </div>
+    <div class="journey-breakdown" id="jc-breakdown" style="display:none">
+      <div class="sbar-wrap" onclick="toggleBar('jc-blist')"><div class="sbar" id="jc-bar"></div></div>
+      <div class="sbar-list" id="jc-blist"></div>
+    </div>
   </div>
 
-  <div class="section" style="padding:16px 16px 8px"><h2>Total do dia</h2></div>
-  <div style="padding:0 16px 14px">
-    <div class="td-card">
+  <div class="jw-seg-split" id="jc-seg-split"></div>
+  <div class="jw-seg-caption" id="jc-seg-caption">Total do dia</div>
+
+  <div class="td-card">
 
       <div class="td-row">
         <svg class="td-wm right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l1.5-4.5A2 2 0 0 1 6.4 7h11.2a2 2 0 0 1 1.9 1.5L21 13"/><path d="M3 13h18v4a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4z"/><circle cx="7.5" cy="17" r="1.3"/><circle cx="16.5" cy="17" r="1.3"/></svg>
@@ -5118,14 +5135,16 @@ function renderJourneyCard(day, isToday) {
   renderFlashPermissionWarnings();
   const cardDate = day?.date || S.curDate || DB.today();
   // Card de sessão atual (timer/km/botão) só faz sentido em "hoje" — em dia
-  // passado não existe jornada "em andamento" possível, então esse card
-  // some por completo. O restante da função continua rodando igual: os
-  // valores que ela calcula (jc-trips, jc-total, jc-kmtotal, jc-kmativo,
-  // jc-kmdesl, jc-rsh, jc-rskm) agora moram no card "Total do dia" — que é
-  // um elemento IRMÃO de journey-card, não um filho, e precisa continuar
-  // sendo populado em qualquer dia, passado ou presente.
-  const jcWrap = document.getElementById('journey-wrap');
-  if (jcWrap) jcWrap.style.display = isToday ? '' : 'none';
+  // passado não existe jornada "em andamento" possível, então só o
+  // segmento verde/azul (journey-card) some. O restante da função continua
+  // rodando igual: os valores que ela calcula (jc-trips, jc-total,
+  // jc-kmtotal, jc-kmativo, jc-kmdesl, jc-rsh, jc-rskm) moram no card
+  // "Total do dia" — que agora é parte do MESMO card unificado (mockup
+  // aprovado 12/09/2026), mas precisa continuar aparecendo em qualquer dia,
+  // passado ou presente, só sem o segmento de jornada ativa em cima.
+  const jcSplit = document.getElementById('jc-seg-split');
+  if (jc) jc.style.display = isToday ? '' : 'none';
+  if (jcSplit) jcSplit.style.display = isToday ? '' : 'none';
   const g = S.gps;
   const finished = day.sessions || [];
   const finishedElapsed = finished.reduce((s,x)=>s+(x.elapsed||0),0);
@@ -5141,6 +5160,7 @@ function renderJourneyCard(day, isToday) {
   if (state === 'running') cls = 'running';
   else if (finished.length > 0) cls = 'ended';
   jc.className = 'journey ' + cls;
+  setText('jc-seg-caption', state === 'running' ? 'Acumulado do dia (jornada atual inclusa)' : 'Total do dia');
 
   // CORRIGIDO (01/09/2026, mockup aprovado): removido o setText em
   // jc-status-text — o elemento (.j-status) é display:none no CSS e
@@ -5261,7 +5281,7 @@ function renderJourneyCard(day, isToday) {
   // corridas" ao lado de "0,0 km" (jc-km já era só da sessão, esses três
   // não eram). Agora escopados só à sessão viva, mesmo padrão do km:
   // sessão não rodando = zerado (não mostra sobra do dia).
-  let rsh2 = null, rskm2 = null, trips2 = 0;
+  let rsh2 = null, rskm2 = null, trips2 = 0, ganhosSess = 0;
   if (live && canPublishTripKpis) {
     const sessStart = g.start, sessNow = Date.now();
     const legacySess = legacyTripsHoje.filter(t => {
@@ -5274,13 +5294,14 @@ function renderJourneyCard(day, isToday) {
       return ts && ts >= sessStart && ts <= sessNow;
     });
     trips2 = legacySess.length + autoSess.length;
-    const ganhosSess = legacySess.reduce((s,t)=>s+(parseFloat(t.value)||0),0)
-                      + autoSess.reduce((s,t)=>s+(parseFloat(t.offer_value)||0),0);
+    ganhosSess = legacySess.reduce((s,t)=>s+(parseFloat(t.value)||0),0)
+               + autoSess.reduce((s,t)=>s+(parseFloat(t.offer_value)||0),0);
     const horasSess = liveElapsed > 0 ? liveElapsed/3600 : 0;
     rsh2  = horasSess > 0 ? ganhosSess/horasSess : null;
     rskm2 = liveKm > 0 ? ganhosSess/liveKm : null;
   }
   setText('jc-trips2', trips2);
+  setText('jc-ganho2', DB.fR(ganhosSess));
   setText('jc-rsh2', rsh2 !== null ? DB.fRI(rsh2) : '—');
   setText('jc-rskm2', rskm2 !== null ? DB.fRI(rskm2) : '—');
   // Cor por indicador — pedido do Yuri (23/07/2026, mockup aprovado):
@@ -11886,8 +11907,11 @@ function renderFlashPermissionWarnings() {
   const missing=mobMissingFlashPermissions(), txt=_mobPermissionWarningHtml(missing);
   const fw=document.getElementById('flash-perm-warning');
   if (fw) { fw.style.display=missing.length?'flex':'none'; const ft=document.getElementById('flash-perm-warning-text'); if(ft) ft.textContent=txt; }
+  // journey-perm-warning some do card unificado quando não é "hoje" — não
+  // faz sentido pedir permissão pra próxima oferta olhando um dia passado.
   const jw=document.getElementById('journey-perm-warning');
-  if (jw) { jw.style.display=missing.length?'flex':'none'; const jt=document.getElementById('journey-perm-warning-text'); if(jt) jt.textContent=txt+' Toque para ativar antes da próxima oferta.'; }
+  const isToday = S?.curDate === DB.today();
+  if (jw) { jw.style.display=(missing.length && isToday)?'flex':'none'; const jt=document.getElementById('journey-perm-warning-text'); if(jt) jt.textContent=txt+' Toque para ativar antes da próxima oferta.'; }
 }
 async function openFlashPermissionSetup() { await openFlashConfig(); _flashWizardShowStep(2); renderFlashPerms(); }
 // Localização/Bateria/Sobrepor outros apps já são pedidas sozinhas na
@@ -15261,7 +15285,7 @@ async function feedEnviarComentario(){
     if(!el) return;
 
     let journeyActive = false;
-    try { journeyActive = !!(S && S.gps && (S.gps.st === 'running' || S.gps.st === 'paused')); }
+    try { journeyActive = !!(S && S.gps && (S.gps.st === 'running' || S.gps.st === 'paused') && S.curDate === DB.today()); }
     catch(e){}
     if(!journeyActive){ el.style.display='none'; return; }
 
@@ -15444,21 +15468,11 @@ async function feedEnviarComentario(){
         const km=Math.max(0,Number(S.gps.km)||0);
         const trips=currentSessionTrips(day,Number(S.gps.start)||0);
         const ganhos=trips.manual.reduce((a,t)=>a+(Number(t.value)||0),0)+trips.auto.reduce((a,t)=>a+(Number(t.offer_value)||0),0);
-        const rsh2=elapsed>0?ganhos/(elapsed/3600):null;
-        const rskm2=km>0?ganhos/km:null;
         if(typeof setText==='function'){
           setText('jc-trips2',trips.manual.length+trips.auto.length);
-          setText('jc-rsh2',rsh2!==null?DB.fRI(rsh2):'R$0,00');
-          setText('jc-rskm2',rskm2!==null?DB.fRI(rskm2):'R$0,00');
+          setText('jc-rsh2',elapsed>0?DB.fRI(ganhos/(elapsed/3600)):'R$0,00');
+          setText('jc-rskm2',km>0?DB.fRI(ganhos/km):'R$0,00');
         }
-        // CORRIGIDO (12/09/2026): a cor da régua (jc-rate-hora2/jc-rate-km2) só
-        // era atualizada pelo renderJornada (a cada 25-60s) — o número mudava
-        // a cada segundo por aqui, mas a cor ficava até 1min desatualizada se
-        // o valor cruzasse o limiar vermelho/verde nesse meio tempo.
-        const rateEl2=document.getElementById('jc-rate-hora2');
-        const kmEl2=document.getElementById('jc-rate-km2');
-        if(rateEl2) rateEl2.className='rate-cell '+(rsh2!==null?rateColorClass('rhora',rsh2):'neutral');
-        if(kmEl2) kmEl2.className='rate-cell '+(rskm2!==null?rateColorClass('rkm',rskm2):'neutral');
         const native=nativeStatusTimeline();
         const bd=breakdownFromSegments(elapsed,km,native,S.gps.sessionId);
         const jc=document.getElementById('jc-breakdown');
@@ -15773,7 +15787,9 @@ async function feedEnviarComentario(){
     const el=document.getElementById('sessions-list'), toggle=document.getElementById('sessions-toggle');
     if(!el||!S?.curDate)return;
     ensureOverlapSessions(S.curDate);
-    const desc=overlappingJourneyDescriptors(S.curDate).sort((a,b)=>(b.sess.start||0)-(a.sess.start||0));
+    // A jornada ATIVA (desc.live) não aparece mais aqui — o card unificado no
+    // topo da tela já mostra os dados dela (mockup aprovado 12/09/2026).
+    const desc=overlappingJourneyDescriptors(S.curDate).filter(x=>!x.live).sort((a,b)=>(b.sess.start||0)-(a.sess.start||0));
     const shown=S.sessionsExpanded?desc:desc.slice(0,3);
     const html=shown.map(x=>{
       ensureJourneyAutoTrips(x.sess);ensureJourneyStatus(x.sess);
