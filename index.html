@@ -13584,7 +13584,11 @@ async function infRenderAeroportosRaio(lat,lon){
   el.innerHTML='<div class="inf-empty-feed">Buscando aeroportos em até 200 km…</div>';
   try{
     const q=`[out:json][timeout:28];nwr(around:200000,${lat},${lon})[aeroway=aerodrome][name];out center tags 120;`;
-    const r=await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`);
+    const ctrl=new AbortController();
+    const to=setTimeout(()=>ctrl.abort(),20000);
+    let r;
+    try{r=await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`,{signal:ctrl.signal});}
+    finally{clearTimeout(to);}
     if(!r.ok)throw new Error('overpass');
     const d=await r.json();
     const seen=new Map();
@@ -13613,7 +13617,11 @@ async function infRenderAeroportosRaio(lat,lon){
       return `<div class="inf-vitem" onclick="infAbrirLocal(this,'${title.replace(/'/g,"\\'")}','aero')"><div class="inf-vitem-ic" style="background:#EFF6FF">${icon}</div><div><div class="inf-vitem-name">${title}</div><div class="inf-vitem-sub">${sub}</div></div><div class="inf-vitem-ct z">–</div></div>`;
     }).join('');
     infCarregarContagens();
-  }catch(e){console.warn('aeroportos 200km',e);el.innerHTML='<div class="inf-empty-feed">Não foi possível carregar os aeroportos agora</div>';}
+  }catch(e){
+    console.warn('aeroportos 200km',e);
+    const msg=e.name==='AbortError'?'A busca demorou demais e foi cancelada':'Não foi possível carregar os aeroportos agora';
+    el.innerHTML=`<div class="inf-empty-feed">${msg}<br><a href="javascript:void(0)" onclick="infRenderAeroportosRaio(${lat},${lon})" style="color:#0A2F6B;font-weight:700">Tentar novamente</a></div>`;
+  }
 }
 
 async function infRenderRodoviariasRaio(lat,lon,city){
