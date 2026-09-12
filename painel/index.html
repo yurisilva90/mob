@@ -4,33 +4,88 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://jlsrpptslwfhmkvelaro.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
 <title>Painel MōB</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#F1F5F9; --card:#fff; --ink:#0F172A; --muted:#64748B; --line:#E2E8F0;
-    --navy:#0D3A7D; --navy2:#0A2F6B; --green:#16A34A; --red:#DC2626; --orange:#F59E0B;
+    --navy:#0D3A7D; --navy2:#0A2F6B; --green:#16A34A; --red:#DC2626; --orange:#F59E0B; --amber-bg:#FEF3C7; --amber-ink:#B45309;
     --font-brand:'Poppins',sans-serif; --font-app:'Inter',system-ui,sans-serif;
+    --sidebar-w:210px;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){ --bg:#0B1220; --card:#141c2b; --ink:#F1F5F9; --muted:#94A3B8; --line:#242f42; }
   }
   :root[data-theme="dark"]{ --bg:#0B1220; --card:#141c2b; --ink:#F1F5F9; --muted:#94A3B8; --line:#242f42; }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-app);padding-bottom:60px}
-  .topbar{background:var(--navy);color:#fff;padding:18px 20px;display:flex;align-items:center;justify-content:space-between}
-  .topbar h1{font-family:var(--font-brand);font-size:18px;margin:0;font-weight:800;letter-spacing:-.02em}
-  .topbar .who{font-size:12px;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:10px}
-  .topbar button{background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font-app)}
-  .wrap{max-width:920px;margin:0 auto;padding:20px 16px}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-app);font-variant-numeric:tabular-nums}
+  [hidden]{display:none!important}
+
+  /* login */
+  .login-box{max-width:380px;margin:80px auto;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px}
+  .login-box h1{font-family:var(--font-brand);font-size:20px;margin:0 0 4px}
+  .login-box p{color:var(--muted);font-size:12.5px;margin:0 0 20px}
+  .login-box input{width:100%;font-family:var(--font-app);font-size:14px;padding:11px 13px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);margin-bottom:10px}
+  .login-box .err{color:var(--red);font-size:12px;margin-top:8px;min-height:16px}
+  .btn{background:var(--navy);color:#fff;border:0;border-radius:9px;padding:9px 16px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:var(--font-app)}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn-ghost{background:var(--bg);color:var(--ink);border:1px solid var(--line)}
+  .btn-danger{background:#FEF2F2;color:var(--red)}
+
+  /* shell */
+  #view-panel{display:flex;min-height:100vh}
+  .sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--navy2);color:#fff;display:flex;flex-direction:column;position:fixed;top:0;bottom:0}
+  .sidebar .brand{font-family:var(--font-brand);font-size:17px;font-weight:800;padding:20px 18px 14px;letter-spacing:-.02em}
+  .sidebar nav{flex:1;padding:6px 10px}
+  .sidebar a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;color:rgba(255,255,255,.72);text-decoration:none;font-size:13px;font-weight:600;margin-bottom:2px}
+  .sidebar a svg{flex-shrink:0}
+  .sidebar a.active{background:rgba(255,255,255,.12);color:#fff}
+  .sidebar .who{padding:14px 18px;border-top:1px solid rgba(255,255,255,.12);font-size:11.5px;color:rgba(255,255,255,.6)}
+  .sidebar .who button{margin-top:6px;background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:8px;padding:6px 10px;font-size:11.5px;font-weight:700;cursor:pointer;font-family:var(--font-app)}
+  .main{flex:1;margin-left:var(--sidebar-w);padding:26px 28px 60px;max-width:1180px}
+  .main h1{font-family:var(--font-brand);font-size:21px;margin:0 0 18px;letter-spacing:-.02em}
+  .topbar-mobile{display:none}
+
+  @media (max-width:820px){
+    .sidebar{position:static;width:100%;flex-direction:row;align-items:center;padding:0 8px}
+    .sidebar .brand{padding:12px 10px}
+    .sidebar nav{display:flex;padding:0;overflow-x:auto}
+    .sidebar a{white-space:nowrap;margin-bottom:0}
+    .sidebar .who{display:none}
+    #view-panel{flex-direction:column}
+    .main{margin-left:0;padding:18px 14px 50px}
+  }
+
   .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:18px}
-  .card h2{font-size:15px;font-weight:800;margin:0 0 14px;letter-spacing:-.01em}
+  .card h2{font-size:14px;font-weight:800;margin:0 0 14px;letter-spacing:-.01em}
+  .card .card-sub{font-size:11.5px;color:var(--muted);margin:-10px 0 14px}
+  .grid-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:18px}
+
   .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
   .stat{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px}
   .stat strong{display:block;font-size:22px;font-weight:800}
   .stat span{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:700}
+  .stat.accent strong{color:var(--navy)}
+  .stat.good strong{color:var(--green)}
+  .stat.bad strong{color:var(--red)}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:700;padding:0 10px 8px;border-bottom:1px solid var(--line)}
+  td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}
+  tr:last-child td{border-bottom:0}
+  .num{text-align:right;font-variant-numeric:tabular-nums}
+  .tbl-wrap{overflow-x:auto}
+  .name-cell{display:flex;align-items:center;gap:8px}
+  .tag-teste{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;background:var(--amber-bg);color:var(--amber-ink);padding:2px 6px;border-radius:99px;flex-shrink:0}
+  .muted{color:var(--muted)}
+  .pos{color:var(--green);font-weight:700}
+  .neg{color:var(--red);font-weight:700}
+
+  .chart-wrap{position:relative;height:220px}
+
   .tpl-row{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
   .tpl-row .type-badge{display:inline-block;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:3px 9px;border-radius:99px;color:#fff;margin-bottom:10px}
   .tpl-row label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin:10px 0 4px}
@@ -40,14 +95,17 @@
   .tpl-row .row-foot{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
   .tpl-row .saved-txt{font-size:11px;color:var(--green);font-weight:700;opacity:0;transition:opacity .3s}
   .tpl-row .saved-txt.show{opacity:1}
-  .btn{background:var(--navy);color:#fff;border:0;border-radius:9px;padding:9px 16px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:var(--font-app)}
-  .btn:disabled{opacity:.5;cursor:default}
-  .login-box{max-width:380px;margin:80px auto;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px}
-  .login-box h1{font-family:var(--font-brand);font-size:20px;margin:0 0 4px}
-  .login-box p{color:var(--muted);font-size:12.5px;margin:0 0 20px}
-  .login-box input{width:100%;font-family:var(--font-app);font-size:14px;padding:11px 13px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);margin-bottom:10px}
-  .login-box .err{color:var(--red);font-size:12px;margin-top:8px;min-height:16px}
-  [hidden]{display:none!important}
+
+  .com-item{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+  .com-item .com-main{flex:1;min-width:0}
+  .com-item .com-type{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--navy)}
+  .com-item .com-body{font-size:12.5px;margin-top:3px}
+  .com-item .com-meta{font-size:10.5px;color:var(--muted);margin-top:4px}
+  .com-item.inactive{opacity:.55}
+  .seg{display:flex;gap:6px;margin-bottom:14px}
+  .seg button{flex:0 0 auto;background:var(--bg);border:1px solid var(--line);color:var(--muted);font-size:12px;font-weight:700;padding:7px 14px;border-radius:99px;cursor:pointer;font-family:var(--font-app)}
+  .seg button.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .empty-txt{color:var(--muted);font-size:12.5px;padding:6px 2px}
 </style>
 </head>
 <body>
@@ -68,28 +126,105 @@
 </div>
 
 <div id="view-panel" hidden>
-  <div class="topbar">
-    <h1>Painel MōB</h1>
-    <div class="who"><span id="who-email"></span><button onclick="doLogout()">Sair</button></div>
+  <div class="sidebar">
+    <div class="brand">Painel MōB</div>
+    <nav id="nav-links">
+      <a href="#geral" data-sec="geral">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        Visão geral
+      </a>
+      <a href="#motoristas" data-sec="motoristas">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+        Motoristas
+      </a>
+      <a href="#financeiro" data-sec="financeiro">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Financeiro
+      </a>
+      <a href="#comunidade" data-sec="comunidade">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 11.5a8.4 8.4 0 0 1-8.9 8.4 8.5 8.5 0 0 1-4-1L3 20l1.1-5A8.4 8.4 0 1 1 21 11.5Z"/></svg>
+        Comunidade
+      </a>
+      <a href="#copiloto" data-sec="copiloto">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        Copiloto
+      </a>
+    </nav>
+    <div class="who">
+      <span id="who-email"></span>
+      <div><button onclick="doLogout()">Sair</button></div>
+    </div>
   </div>
-  <div class="wrap">
 
-    <div class="card">
-      <h2>Visão geral de hoje</h2>
-      <div class="stat-grid" id="stats-grid">
-        <div class="stat"><strong>—</strong><span>Carregando…</span></div>
+  <div class="main">
+
+    <section id="sec-geral" class="sec">
+      <h1>Visão geral de hoje</h1>
+      <div class="card">
+        <div class="stat-grid" id="stats-grid">
+          <div class="stat"><strong>—</strong><span>Carregando…</span></div>
+        </div>
       </div>
-    </div>
+      <div class="card">
+        <h2>Atividade ao longo do dia</h2>
+        <div class="card-sub">Corridas e jornadas abertas por hora, hoje</div>
+        <div class="chart-wrap"><canvas id="chart-hourly"></canvas></div>
+      </div>
+    </section>
 
-    <div class="card">
-      <h2>Dicas do Copiloto</h2>
-      <div id="tpl-list"></div>
-    </div>
+    <section id="sec-motoristas" class="sec" hidden>
+      <h1>Motoristas</h1>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>Motorista</th><th>Cidade</th><th class="num">Jornadas</th><th class="num">Km</th>
+              <th class="num">Corridas</th><th class="num">Faturamento</th><th class="num">Saldo</th><th>Última atividade</th>
+            </tr></thead>
+            <tbody id="drivers-tbody"><tr><td colspan="8" class="empty-txt">Carregando…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="sec-financeiro" class="sec" hidden>
+      <h1>Financeiro</h1>
+      <div class="grid-cards" id="fin-cards"></div>
+      <div class="card">
+        <h2>Faturamento — últimos 14 dias</h2>
+        <div class="chart-wrap"><canvas id="chart-financeiro"></canvas></div>
+      </div>
+    </section>
+
+    <section id="sec-comunidade" class="sec" hidden>
+      <h1>Comunidade</h1>
+      <div class="seg" id="com-seg">
+        <button data-tab="feed" class="active">Feed</button>
+        <button data-tab="informes">Informes</button>
+      </div>
+      <div class="card">
+        <div id="com-list"><div class="empty-txt">Carregando…</div></div>
+      </div>
+    </section>
+
+    <section id="sec-copiloto" class="sec" hidden>
+      <h1>Copiloto</h1>
+      <div class="card">
+        <h2>Dicas geradas hoje, por tipo</h2>
+        <div class="stat-grid" id="copiloto-stats"></div>
+      </div>
+      <div class="card">
+        <h2>Textos das dicas</h2>
+        <div class="card-sub">Personalizações futuras de comportamento (novos tipos de dica, regras de disparo) entram aqui também.</div>
+        <div id="tpl-list"></div>
+      </div>
+    </section>
 
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3" integrity="sha384-l8ah+VgaWtk1mvOe9VC+OirC6qHFF4yH7l7mKRidV9MSti3E9F463bMp6ZVN4kuC" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" integrity="sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt" crossorigin="anonymous"></script>
 <script>
 const _SUPA = supabase.createClient(
   'https://jlsrpptslwfhmkvelaro.supabase.co',
@@ -126,7 +261,33 @@ async function doLogout(){
 }
 
 function fmtRate(v){ return 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtNum(v, dec){ return Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:dec||0,maximumFractionDigits:dec||0}); }
+function fmtDateTime(v){ return v ? new Date(v).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—'; }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+/* ---------- navegação ---------- */
+const SECTIONS = ['geral','motoristas','financeiro','comunidade','copiloto'];
+let currentSection = null;
+function navigate(){
+  let sec = (location.hash || '#geral').slice(1);
+  if(!SECTIONS.includes(sec)) sec = 'geral';
+  currentSection = sec;
+  document.querySelectorAll('#nav-links a').forEach(a => a.classList.toggle('active', a.dataset.sec === sec));
+  document.querySelectorAll('.sec').forEach(s => s.hidden = (s.id !== 'sec-' + sec));
+  loadSection(sec);
+}
+window.addEventListener('hashchange', navigate);
+
+const loaded = {};
+function loadSection(sec){
+  if(sec === 'geral'){ loadStats(); loadHourlyChart(); return; }
+  if(sec === 'motoristas'){ loadDrivers(); return; }
+  if(sec === 'financeiro'){ loadFinanceiro(); return; }
+  if(sec === 'comunidade'){ loadComunidade(); return; }
+  if(sec === 'copiloto'){ loadCopilotoStats(); loadTemplates(); return; }
+}
+
+/* ---------- Visão geral ---------- */
 async function loadStats(){
   const { data, error } = await _SUPA.rpc('admin_get_stats');
   const el = document.getElementById('stats-grid');
@@ -141,7 +302,143 @@ async function loadStats(){
     ['Dicas do Copiloto hoje', data.copiloto_dicas_hoje],
     ['Pushes enviados hoje', data.copiloto_push_enviados_hoje],
   ];
-  el.innerHTML = rows.map(([label,val])=>`<div class="stat"><strong>${val ?? 0}</strong><span>${label}</span></div>`).join('');
+  el.innerHTML = rows.map(([label,val])=>`<div class="stat"><strong>${val ?? 0}</strong><span>${esc(label)}</span></div>`).join('');
+}
+
+let chartHourly = null;
+async function loadHourlyChart(){
+  const { data, error } = await _SUPA.rpc('admin_hourly_activity');
+  const canvas = document.getElementById('chart-hourly');
+  if(error || !data) return;
+  const labels = data.map(r => r.hora + 'h');
+  const corridas = data.map(r => r.corridas);
+  const jornadas = data.map(r => r.jornadas_abertas);
+  if(chartHourly) chartHourly.destroy();
+  chartHourly = new Chart(canvas, {
+    type: 'bar',
+    data: { labels, datasets: [
+      { label: 'Corridas', data: corridas, backgroundColor: '#0D3A7D', borderRadius: 4, maxBarThickness: 18 },
+      { label: 'Jornadas abertas', data: jornadas, backgroundColor: '#16A34A', borderRadius: 4, maxBarThickness: 18 },
+    ]},
+    options: { responsive:true, maintainAspectRatio:false, scales:{ y:{ beginAtZero:true, ticks:{precision:0} } }, plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{size:11} } } } }
+  });
+}
+
+/* ---------- Motoristas ---------- */
+async function loadDrivers(){
+  const { data, error } = await _SUPA.rpc('admin_list_drivers');
+  const tbody = document.getElementById('drivers-tbody');
+  if(error){ tbody.innerHTML = `<tr><td colspan="8" class="empty-txt">Erro ao carregar: ${esc(error.message)}</td></tr>`; return; }
+  if(!data || !data.length){ tbody.innerHTML = '<tr><td colspan="8" class="empty-txt">Nenhum motorista ainda.</td></tr>'; return; }
+  window._driversCache = data;
+  tbody.innerHTML = data.map(d => `<tr>
+    <td><div class="name-cell">${esc(d.name || d.email || 'Sem nome')}${d.is_test_driver ? '<span class="tag-teste">Teste</span>' : ''}</div></td>
+    <td class="muted">${esc(d.city || '—')}</td>
+    <td class="num">${fmtNum(d.jornadas_total)}</td>
+    <td class="num">${fmtNum(d.km_total,1)}</td>
+    <td class="num">${fmtNum(d.corridas_total)}</td>
+    <td class="num">${fmtRate(d.faturamento_corridas)}</td>
+    <td class="num ${Number(d.saldo)>=0?'pos':'neg'}">${fmtRate(d.saldo)}</td>
+    <td class="muted">${fmtDateTime(d.last_active_at)}</td>
+  </tr>`).join('');
+}
+
+/* ---------- Financeiro ---------- */
+async function loadFinanceiro(){
+  const drivers = window._driversCache || (await _SUPA.rpc('admin_list_drivers')).data || [];
+  const reais = drivers.filter(d => !d.is_test_driver);
+  const faturamento = reais.reduce((s,d)=>s+Number(d.faturamento_corridas||0),0);
+  const despesas = reais.reduce((s,d)=>s+Number(d.despesas_total||0),0);
+  const corridas = reais.reduce((s,d)=>s+Number(d.corridas_total||0),0);
+  const saldo = reais.reduce((s,d)=>s+Number(d.saldo||0),0);
+  const ticket = corridas > 0 ? faturamento / corridas : 0;
+  document.getElementById('fin-cards').innerHTML = `
+    <div class="card" style="margin:0"><div class="stat accent"><strong>${fmtRate(faturamento)}</strong><span>Faturamento total</span></div></div>
+    <div class="card" style="margin:0"><div class="stat bad"><strong>${fmtRate(despesas)}</strong><span>Despesas totais</span></div></div>
+    <div class="card" style="margin:0"><div class="stat ${saldo>=0?'good':'bad'}"><strong>${fmtRate(saldo)}</strong><span>Saldo</span></div></div>
+    <div class="card" style="margin:0"><div class="stat"><strong>${fmtRate(ticket)}</strong><span>Ticket médio</span></div></div>
+  `;
+  const { data: daily, error } = await _SUPA.rpc('admin_financeiro_daily', { days: 14 });
+  if(error || !daily) return;
+  const labels = daily.map(r => new Date(r.data).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}));
+  const canvas = document.getElementById('chart-financeiro');
+  if(window._chartFin) window._chartFin.destroy();
+  window._chartFin = new Chart(canvas, {
+    type: 'line',
+    data: { labels, datasets: [
+      { label: 'Faturamento', data: daily.map(r=>r.faturamento), borderColor:'#0D3A7D', backgroundColor:'rgba(13,58,125,.08)', fill:true, tension:.3 },
+      { label: 'Despesas', data: daily.map(r=>r.despesas), borderColor:'#DC2626', backgroundColor:'rgba(220,38,38,.06)', fill:true, tension:.3 },
+    ]},
+    options: { responsive:true, maintainAspectRatio:false, scales:{ y:{ beginAtZero:true } }, plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{size:11} } } } }
+  });
+}
+
+/* ---------- Comunidade ---------- */
+let comTab = 'feed';
+document.getElementById('com-seg').addEventListener('click', e => {
+  const btn = e.target.closest('button[data-tab]');
+  if(!btn) return;
+  comTab = btn.dataset.tab;
+  document.querySelectorAll('#com-seg button').forEach(b => b.classList.toggle('active', b === btn));
+  loadComunidade();
+});
+
+async function loadComunidade(){
+  const list = document.getElementById('com-list');
+  list.innerHTML = '<div class="empty-txt">Carregando…</div>';
+  if(comTab === 'feed'){
+    const { data, error } = await _SUPA.rpc('admin_list_feed_posts', { limit_n: 100 });
+    if(error){ list.innerHTML = `<div class="empty-txt">Erro: ${esc(error.message)}</div>`; return; }
+    if(!data || !data.length){ list.innerHTML = '<div class="empty-txt">Nenhum post ainda.</div>'; return; }
+    list.innerHTML = data.map(p => `<div class="com-item ${p.status!=='ativo'?'inactive':''}">
+      <div class="com-main">
+        <div class="com-type">${esc(p.type)}${p.status!=='ativo' ? ' · encerrado' : ''}</div>
+        <div class="com-body">${esc(p.body || p.param_value || '(sem texto)')}</div>
+        <div class="com-meta">${esc(p.driver_name || 'Sem nome')}${p.is_test_driver?' · teste':''} · ${esc(p.city||'—')} · ${fmtDateTime(p.created_at)} · 👍${p.votes_up||0} 👎${p.votes_dn||0}</div>
+      </div>
+      ${p.status==='ativo' ? `<button class="btn btn-danger" onclick="moderateFeed('${p.id}', this)">Encerrar</button>` : ''}
+    </div>`).join('');
+  } else {
+    const { data, error } = await _SUPA.rpc('admin_list_informes', { limit_n: 100 });
+    if(error){ list.innerHTML = `<div class="empty-txt">Erro: ${esc(error.message)}</div>`; return; }
+    if(!data || !data.length){ list.innerHTML = '<div class="empty-txt">Nenhum informe ainda.</div>'; return; }
+    list.innerHTML = data.map(i => `<div class="com-item ${!i.is_active?'inactive':''}">
+      <div class="com-main">
+        <div class="com-type">${esc(i.location_name || i.param_type)}${!i.is_active ? ' · inativo' : ''}</div>
+        <div class="com-body">${esc(i.param_type)}: ${esc(i.param_value || '—')}</div>
+        <div class="com-meta">${esc(i.driver_name || 'Sem nome')}${i.is_test_driver?' · teste':''} · ${esc(i.city||'—')} · ${fmtDateTime(i.created_at)} · 👍${i.votes_up||0} 👎${i.votes_dn||0}</div>
+      </div>
+      ${i.is_active ? `<button class="btn btn-danger" onclick="moderateInforme('${i.id}', this)">Desativar</button>` : ''}
+    </div>`).join('');
+  }
+}
+
+async function moderateFeed(id, btn){
+  btn.disabled = true;
+  const { error } = await _SUPA.rpc('admin_moderate_feed_post', { p_id: id });
+  if(error){ alert('Erro: ' + error.message); btn.disabled = false; return; }
+  loadComunidade();
+}
+async function moderateInforme(id, btn){
+  btn.disabled = true;
+  const { error } = await _SUPA.rpc('admin_moderate_informe', { p_id: id });
+  if(error){ alert('Erro: ' + error.message); btn.disabled = false; return; }
+  loadComunidade();
+}
+
+/* ---------- Copiloto ---------- */
+async function loadCopilotoStats(){
+  const { data, error } = await _SUPA.rpc('admin_get_stats');
+  const el = document.getElementById('copiloto-stats');
+  if(error || !data){ el.innerHTML = '<div class="stat"><strong>—</strong><span>Erro</span></div>'; return; }
+  const porTipo = data.copiloto_por_tipo_hoje || {};
+  const rows = [
+    ['Média baixa', porTipo.baixa_media || 0],
+    ['Parado esperando', porTipo.ponto_sugerido || 0],
+    ['Horário de pico', porTipo.pico_espera || 0],
+    ['Pushes enviados', data.copiloto_push_enviados_hoje || 0],
+  ];
+  el.innerHTML = rows.map(([label,val])=>`<div class="stat"><strong>${val}</strong><span>${esc(label)}</span></div>`).join('');
 }
 
 async function loadTemplates(){
@@ -150,16 +447,16 @@ async function loadTemplates(){
   if(error){ el.innerHTML = '<p style="color:var(--muted);font-size:12.5px">Erro ao carregar.</p>'; return; }
   el.innerHTML = (data||[]).map(row=>{
     const meta = TYPE_META[row.type] || { label: row.type, color:'#64748B', hint:'' };
-    return `<div class="tpl-row" data-type="${row.type}">
-      <span class="type-badge" style="background:${meta.color}">${meta.label}</span>
+    return `<div class="tpl-row" data-type="${esc(row.type)}">
+      <span class="type-badge" style="background:${meta.color}">${esc(meta.label)}</span>
       <label>Título</label>
-      <input class="f-title" value="${row.title.replace(/"/g,'&quot;')}">
+      <input class="f-title" value="${esc(row.title)}">
       <label>Mensagem</label>
-      <textarea class="f-message">${row.message}</textarea>
-      <div class="hint">${meta.hint}</div>
+      <textarea class="f-message">${esc(row.message)}</textarea>
+      <div class="hint">${esc(meta.hint)}</div>
       <div class="row-foot">
         <span class="saved-txt">Salvo!</span>
-        <button class="btn" onclick="saveTemplate('${row.type}', this)">Salvar</button>
+        <button class="btn" onclick="saveTemplate('${esc(row.type)}', this)">Salvar</button>
       </div>
     </div>`;
   }).join('');
@@ -181,6 +478,7 @@ async function saveTemplate(type, btn){
   setTimeout(()=>savedTxt.classList.remove('show'), 1800);
 }
 
+/* ---------- boot ---------- */
 async function boot(){
   const { data: { session } } = await _SUPA.auth.getSession();
   if(!session){ show('view-login'); return; }
@@ -188,8 +486,7 @@ async function boot(){
   if(error || !isAdmin){ show('view-denied'); return; }
   document.getElementById('who-email').textContent = session.user.email;
   show('view-panel');
-  loadStats();
-  loadTemplates();
+  navigate();
 }
 
 boot();
