@@ -9148,11 +9148,20 @@ async function reconcilePlatformSightings() {
     if (e1 || !sightings || !sightings.length) return;
 
     const dates = [...new Set(sightings.map(s => s.trip_date).filter(Boolean))];
+    // PEDIDO (11/09/2026, Yuri): a Uber não mostra data por corrida no
+    // Histórico, só "HH:MM" — a captura assume o dia atual do aparelho,
+    // que pode estar errado se o motorista rolou pra trás no histórico
+    // (viu corrida de ontem, mas ficou marcada como hoje). ±1 dia de
+    // folga na busca de candidatos evita criar corrida DUPLICADA quando
+    // a data да leitura não bate com a data real do auto_trip que já existe.
+    const addDays = (iso, n) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+    const dtFrom = dates.length ? addDays(dates[0], -1) : DB.today();
+    const dtTo = dates.length ? addDays(dates[dates.length - 1], 1) : DB.today();
     const { data: trips, error: e2 } = await _SUPA.from('auto_trips').select('*')
       .eq('user_id', _supaUser.id)
       .neq('status', 'confirmada')
-      .gte('trip_started_at', dates.length ? dates[0]+'T00:00:00' : DB.today()+'T00:00:00')
-      .lte('trip_started_at', (dates.length ? dates[dates.length-1] : DB.today())+'T23:59:59');
+      .gte('trip_started_at', dtFrom + 'T00:00:00')
+      .lte('trip_started_at', dtTo + 'T23:59:59');
     if (e2) return;
 
     const processedIds = [];
@@ -9162,14 +9171,27 @@ async function reconcilePlatformSightings() {
       processedIds.push(s.id);
       const plat = s.platform === '99' ? '99' : 'uber';
       let best = null, bestDiff = Infinity;
+      // PEDIDO (11/09/2026, Yuri): horário do aceite + endereço são o sinal
+      // forte pra bater a corrida — valor NÃO precisa bater exato (a 99
+      // pode ajustar o final por desvio/espera/trecho mais curto, até uns
+      // R$20 de diferença é normal). Comparação de horário por HORA DO DIA
+      // (não data+hora completos) porque a data da leitura pode estar
+      // errada (Uber não mostra data por corrida, só "HH:MM" — se o
+      // motorista rolou pra trás no histórico, a leitura fica marcada com
+      // o dia de hoje mesmo sendo de ontem).
+      const sTimeParts = (s.trip_time || '').split(':').map(Number);
+      const sMinOfDay = (sTimeParts.length === 2 && !isNaN(sTimeParts[0])) ? sTimeParts[0] * 60 + sTimeParts[1] : null;
       for (const t of (trips || [])) {
         if (usedTripIds.has(t.id)) continue;
         if ((t.platform || '').toLowerCase() !== plat) continue;
-        const valOk = Math.abs((Number(t.offer_value) || 0) - (Number(s.value) || 0)) < 0.05;
+        const valOk = Math.abs((Number(t.offer_value) || 0) - (Number(s.value) || 0)) < 20;
         if (!valOk) continue;
-        const tMs = t.trip_started_at ? new Date(t.trip_started_at).getTime() : null;
-        const sMs = (s.trip_date && s.trip_time) ? new Date(`${s.trip_date}T${s.trip_time}:00`).getTime() : null;
-        const diff = (tMs && sMs) ? Math.abs(tMs - sMs) : 20 * 60000;
+        if (sMinOfDay == null || !t.trip_started_at) continue;
+        const td = new Date(t.trip_started_at);
+        const tMinOfDay = td.getHours() * 60 + td.getMinutes();
+        let diffMin = Math.abs(tMinOfDay - sMinOfDay);
+        if (diffMin > 720) diffMin = 1440 - diffMin; // vira-noite (23:58 vs 00:02)
+        const diff = diffMin * 60000;
         // CORRIGIDO (11/09/2026, pedido do Yuri): 60min tava mascarando um
         // bug real de parsing (valor vazando pra corrida errada, já
         // corrigido no app). Volta pra janela apertada — se o parser tá
