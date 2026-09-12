@@ -544,6 +544,15 @@ label.lbl{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.
 .pcb-title{font-size:12px;font-weight:800;color:#fff;line-height:1.35}
 .pcb-sub{font-size:10.5px;color:rgba(255,255,255,.7);margin-top:2px;font-weight:600}
 .pcb-chev{color:rgba(255,255,255,.55);flex-shrink:0}
+.insight-banner{display:flex;align-items:flex-start;gap:10px;border-radius:16px;padding:12px 14px;margin:0 16px 12px;color:#fff}
+.insight-banner.t-baixa_media{background:linear-gradient(135deg,#B91C1C,#DC2626)}
+.insight-banner.t-ponto_sugerido{background:linear-gradient(135deg,#0A2F6B,#0D3E8C)}
+.insight-banner.t-pico_espera{background:linear-gradient(135deg,#15803D,#16A34A)}
+.insight-ico{width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.insight-txt{flex:1;min-width:0}
+.insight-title{font-size:12px;font-weight:800;line-height:1.3}
+.insight-msg{font-size:11.5px;color:rgba(255,255,255,.88);margin-top:3px;line-height:1.4}
+.insight-x{background:none;border:0;color:rgba(255,255,255,.7);font-size:14px;cursor:pointer;flex-shrink:0;padding:2px}
 /* ── Financeiro specific ── */
 .wrap{padding:12px 16px}.period{display:flex;gap:4px;margin-bottom:14px}.period button{flex:1;padding:9px 6px;border-radius:16px;border:1.5px solid var(--line);background:#F8FAFC;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;touch-action:manipulation}.period button.on{background:rgba(14,165,233,.1);border-color:rgba(14,165,233,.3);color:#0A2F6B}.hero{background:linear-gradient(135deg,#0F172A,#0EA5E9);border-radius:28px;padding:22px 20px;color:#fff;box-shadow:0 10px 28px rgba(15,23,42,.08)}.heroTop .label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;opacity:.75;font-weight:700;margin-bottom:6px}.heroTop .amount{font-size:42px;font-weight:900;letter-spacing:-.06em;line-height:1}.heroTop .sub{font-size:12px;opacity:.75;margin-top:4px}.heroGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:16px;background:rgba(255,255,255,.1);border-radius:16px;overflow:hidden}.heroCell{padding:12px;text-align:center;border-right:1px solid rgba(255,255,255,.12)}.heroCell:last-child{border-right:none}.heroCell strong{font-size:18px;font-weight:800;display:block;margin-bottom:3px}.heroCell span{font-size:11px;opacity:.75}
 .card{background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:0 2px 10px rgba(15,23,42,.05)}.cardPad{padding:16px}.cardHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.cardHead h2{font-size:16px;font-weight:700;letter-spacing:-.03em}.cardHead a,.cardHead button{font-size:12px;color:#0A2F6B;font-weight:700;background:none;border:none;cursor:pointer}
@@ -1563,6 +1572,15 @@ h1.hd-title{font-family:var(--font-brand)!important}
       <div class="pcb-sub">Toque para enviar o vídeo do histórico</div>
     </div>
     <svg class="pcb-chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+  </div>
+
+  <div class="insight-banner" id="mob-insight-banner" style="display:none">
+    <div class="insight-ico"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#fff" stroke-width="2"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg></div>
+    <div class="insight-txt">
+      <div class="insight-title" id="mob-insight-title"></div>
+      <div class="insight-msg" id="mob-insight-msg"></div>
+    </div>
+    <button class="insight-x" onclick="dismissMobInsight()">&#x2715;</button>
   </div>
 
   <div class="journey-wrap" id="journey-wrap">
@@ -12385,6 +12403,47 @@ function syncFlashConfigToNative() {
 // SUPABASE AUTH — email + senha
 // ══════════════════════════════════════════════
 let _supaUser = null;
+let _mobInsightChannel = null;
+let _mobInsightCur = null;
+async function renderMobInsight() {
+  const el = document.getElementById('mob-insight-banner');
+  if (!el || !_supaUser || !_SUPA) return;
+  try {
+    const { data, error } = await _SUPA.from('driver_insights')
+      .select('id,type,title,message')
+      .eq('user_id', _supaUser.id)
+      .is('dismissed_at', null)
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1);
+    if (error) throw error;
+    const insight = data && data[0];
+    if (!insight) { el.style.display = 'none'; _mobInsightCur = null; return; }
+    _mobInsightCur = insight.id;
+    el.className = 'insight-banner t-' + insight.type;
+    el.style.display = 'flex';
+    document.getElementById('mob-insight-title').textContent = insight.title;
+    document.getElementById('mob-insight-msg').textContent = insight.message;
+  } catch (e) { console.warn('renderMobInsight:', e); }
+}
+async function dismissMobInsight() {
+  const id = _mobInsightCur;
+  const el = document.getElementById('mob-insight-banner');
+  if (el) el.style.display = 'none';
+  if (!id || !_SUPA) return;
+  try { await _SUPA.from('driver_insights').update({ dismissed_at: new Date().toISOString() }).eq('id', id); }
+  catch (e) { console.warn('dismissMobInsight:', e); }
+}
+function subscribeMobInsightRealtime() {
+  if (!_supaUser || !_SUPA) return;
+  if (_mobInsightChannel) { try { _SUPA.removeChannel(_mobInsightChannel); } catch (e) {} }
+  _mobInsightChannel = _SUPA.channel('mob-insight-' + _supaUser.id)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'driver_insights',
+      filter: `user_id=eq.${_supaUser.id}` },
+      () => { renderMobInsight(); })
+    .subscribe();
+  setInterval(renderMobInsight, 60000);
+}
 
 // ── SINCRONIZAÇÃO COM SUPABASE ──────────────────────────────────────────
 // Push: grava cada alteração local também na nuvem (silencioso, não trava a UI).
@@ -12928,6 +12987,7 @@ async function showApp() {
   try{renderHome();}    catch(e){console.error('renderHome:',e);}
   try{restoreGpsSession();} catch(e){console.error('restoreGpsSession:',e);}
   try{renderJornada();}  catch(e){console.error('renderJornada:',e);}
+  try{renderMobInsight(); subscribeMobInsightRealtime();} catch(e){console.error('mobInsight:',e);}
   // Verifica jornadas órfãs (de outra aba/instância que não fechou corretamente)
   // toda vez que o app abre, não só ao navegar manualmente pra Jornada.
   // CORRIGIDO (01/09/2026): recoverOpenJourneyFromCloud roda ANTES e é
@@ -13395,7 +13455,7 @@ if ('serviceWorker' in navigator) {
 // Yuri, 24/07/2026) — pra investigar problema de cache/versão desatualizada
 // sem precisar perguntar "que versão você tá vendo?". IMPORTANTE: manter
 // igual ao CACHE_NAME de sw.js sempre que um dos dois mudar.
-const PWA_VERSION = 'mob-v28-jornada-fixes';
+const PWA_VERSION = 'mob-v29-insights';
 async function reportClientVersion() {
   if (!_supaUser) return;
   try {

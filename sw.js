@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mob-v28-jornada-fixes';
+const CACHE_NAME = 'mob-v29-insights';
 const ASSETS = [
   '/',
   '/index.html',
