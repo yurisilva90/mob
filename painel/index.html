@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Painel MōB</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F1F5F9; --card:#fff; --ink:#0F172A; --muted:#64748B; --line:#E2E8F0;
+    --navy:#0D3A7D; --navy2:#0A2F6B; --green:#16A34A; --red:#DC2626; --orange:#F59E0B;
+    --font-brand:'Poppins',sans-serif; --font-app:'Inter',system-ui,sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --bg:#0B1220; --card:#141c2b; --ink:#F1F5F9; --muted:#94A3B8; --line:#242f42; }
+  }
+  :root[data-theme="dark"]{ --bg:#0B1220; --card:#141c2b; --ink:#F1F5F9; --muted:#94A3B8; --line:#242f42; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-app);padding-bottom:60px}
+  .topbar{background:var(--navy);color:#fff;padding:18px 20px;display:flex;align-items:center;justify-content:space-between}
+  .topbar h1{font-family:var(--font-brand);font-size:18px;margin:0;font-weight:800;letter-spacing:-.02em}
+  .topbar .who{font-size:12px;color:rgba(255,255,255,.75);display:flex;align-items:center;gap:10px}
+  .topbar button{background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font-app)}
+  .wrap{max-width:920px;margin:0 auto;padding:20px 16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:18px}
+  .card h2{font-size:15px;font-weight:800;margin:0 0 14px;letter-spacing:-.01em}
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+  .stat{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px}
+  .stat strong{display:block;font-size:22px;font-weight:800}
+  .stat span{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:700}
+  .tpl-row{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+  .tpl-row .type-badge{display:inline-block;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:3px 9px;border-radius:99px;color:#fff;margin-bottom:10px}
+  .tpl-row label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin:10px 0 4px}
+  .tpl-row input, .tpl-row textarea{width:100%;font-family:var(--font-app);font-size:13px;padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);resize:vertical}
+  .tpl-row textarea{min-height:56px}
+  .tpl-row .hint{font-size:10.5px;color:var(--muted);margin-top:4px}
+  .tpl-row .row-foot{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+  .tpl-row .saved-txt{font-size:11px;color:var(--green);font-weight:700;opacity:0;transition:opacity .3s}
+  .tpl-row .saved-txt.show{opacity:1}
+  .btn{background:var(--navy);color:#fff;border:0;border-radius:9px;padding:9px 16px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:var(--font-app)}
+  .btn:disabled{opacity:.5;cursor:default}
+  .login-box{max-width:380px;margin:80px auto;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:28px}
+  .login-box h1{font-family:var(--font-brand);font-size:20px;margin:0 0 4px}
+  .login-box p{color:var(--muted);font-size:12.5px;margin:0 0 20px}
+  .login-box input{width:100%;font-family:var(--font-app);font-size:14px;padding:11px 13px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);margin-bottom:10px}
+  .login-box .err{color:var(--red);font-size:12px;margin-top:8px;min-height:16px}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<div id="view-login" class="login-box">
+  <h1>Painel MōB</h1>
+  <p>Acesso restrito. Entre com sua conta MōB.</p>
+  <input id="lg-email" type="email" placeholder="Email" autocomplete="username">
+  <input id="lg-pass" type="password" placeholder="Senha" autocomplete="current-password">
+  <button class="btn" style="width:100%" onclick="doLogin()">Entrar</button>
+  <div class="err" id="lg-err"></div>
+</div>
+
+<div id="view-denied" class="login-box" hidden>
+  <h1>Sem acesso</h1>
+  <p>Sua conta não tem permissão de administrador neste painel.</p>
+  <button class="btn" onclick="doLogout()">Sair</button>
+</div>
+
+<div id="view-panel" hidden>
+  <div class="topbar">
+    <h1>Painel MōB</h1>
+    <div class="who"><span id="who-email"></span><button onclick="doLogout()">Sair</button></div>
+  </div>
+  <div class="wrap">
+
+    <div class="card">
+      <h2>Visão geral de hoje</h2>
+      <div class="stat-grid" id="stats-grid">
+        <div class="stat"><strong>—</strong><span>Carregando…</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Dicas do Copiloto</h2>
+      <div id="tpl-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3" integrity="sha384-l8ah+VgaWtk1mvOe9VC+OirC6qHFF4yH7l7mKRidV9MSti3E9F463bMp6ZVN4kuC" crossorigin="anonymous"></script>
+<script>
+const _SUPA = supabase.createClient(
+  'https://jlsrpptslwfhmkvelaro.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impsc3JwcHRzbHdmaG1rdmVsYXJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NjYxNzIsImV4cCI6MjA4OTQ0MjE3Mn0.4gD4dKx05QaOAAkY1gAx2HuH_CN31Xg3kkDMdvZ4kh0',
+  { auth: { persistSession: true, autoRefreshToken: true } }
+);
+
+const TYPE_META = {
+  baixa_media: { label: 'Média baixa', color: '#DC2626', hint: 'Frase curta. Os valores de hoje/histórico aparecem em cards separados, não precisam estar no texto.' },
+  ponto_sugerido: { label: 'Parado esperando', color: '#0D3A7D', hint: 'Use %1$s onde entram os lugares próximos encontrados (ex: "Shopping X, Terminal Y").' },
+  pico_espera: { label: 'Horário de pico', color: '#16A34A', hint: 'Use %1$s onde entra "fim de semana" ou "dia de semana".' }
+};
+
+function show(id){
+  ['view-login','view-denied','view-panel'].forEach(v=>{
+    document.getElementById(v).hidden = (v!==id);
+  });
+}
+
+async function doLogin(){
+  const email = document.getElementById('lg-email').value.trim();
+  const pass = document.getElementById('lg-pass').value;
+  const errEl = document.getElementById('lg-err');
+  errEl.textContent = '';
+  if(!email||!pass){ errEl.textContent='Preencha email e senha'; return; }
+  const { error } = await _SUPA.auth.signInWithPassword({ email, password: pass });
+  if(error){ errEl.textContent = 'Email ou senha inválidos'; return; }
+  await boot();
+}
+
+async function doLogout(){
+  await _SUPA.auth.signOut();
+  show('view-login');
+}
+
+function fmtRate(v){ return 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+async function loadStats(){
+  const { data, error } = await _SUPA.rpc('admin_get_stats');
+  const el = document.getElementById('stats-grid');
+  if(error || !data){ el.innerHTML = '<div class="stat"><strong>—</strong><span>Erro ao carregar</span></div>'; return; }
+  const rows = [
+    ['Motoristas reais', data.usuarios_total],
+    ['Contas de teste', data.usuarios_teste],
+    ['Jornadas abertas agora', data.jornadas_abertas_agora],
+    ['Corridas hoje', data.corridas_hoje],
+    ['Informes ativos', data.informes_ativos],
+    ['Posts no Feed hoje', data.feed_posts_hoje],
+    ['Dicas do Copiloto hoje', data.copiloto_dicas_hoje],
+    ['Pushes enviados hoje', data.copiloto_push_enviados_hoje],
+  ];
+  el.innerHTML = rows.map(([label,val])=>`<div class="stat"><strong>${val ?? 0}</strong><span>${label}</span></div>`).join('');
+}
+
+async function loadTemplates(){
+  const { data, error } = await _SUPA.from('insight_templates').select('*').order('type');
+  const el = document.getElementById('tpl-list');
+  if(error){ el.innerHTML = '<p style="color:var(--muted);font-size:12.5px">Erro ao carregar.</p>'; return; }
+  el.innerHTML = (data||[]).map(row=>{
+    const meta = TYPE_META[row.type] || { label: row.type, color:'#64748B', hint:'' };
+    return `<div class="tpl-row" data-type="${row.type}">
+      <span class="type-badge" style="background:${meta.color}">${meta.label}</span>
+      <label>Título</label>
+      <input class="f-title" value="${row.title.replace(/"/g,'&quot;')}">
+      <label>Mensagem</label>
+      <textarea class="f-message">${row.message}</textarea>
+      <div class="hint">${meta.hint}</div>
+      <div class="row-foot">
+        <span class="saved-txt">Salvo!</span>
+        <button class="btn" onclick="saveTemplate('${row.type}', this)">Salvar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function saveTemplate(type, btn){
+  const row = btn.closest('.tpl-row');
+  const title = row.querySelector('.f-title').value.trim();
+  const message = row.querySelector('.f-message').value.trim();
+  btn.disabled = true;
+  const { data:{ user } } = await _SUPA.auth.getUser();
+  const { error } = await _SUPA.from('insight_templates')
+    .update({ title, message, updated_at: new Date().toISOString(), updated_by: user?.id })
+    .eq('type', type);
+  btn.disabled = false;
+  if(error){ alert('Erro ao salvar: ' + error.message); return; }
+  const savedTxt = row.querySelector('.saved-txt');
+  savedTxt.classList.add('show');
+  setTimeout(()=>savedTxt.classList.remove('show'), 1800);
+}
+
+async function boot(){
+  const { data: { session } } = await _SUPA.auth.getSession();
+  if(!session){ show('view-login'); return; }
+  const { data: isAdmin, error } = await _SUPA.rpc('is_admin_user');
+  if(error || !isAdmin){ show('view-denied'); return; }
+  document.getElementById('who-email').textContent = session.user.email;
+  show('view-panel');
+  loadStats();
+  loadTemplates();
+}
+
+boot();
+</script>
+</body>
+</html>
