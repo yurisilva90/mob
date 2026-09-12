@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mob-v29-insights';
+const CACHE_NAME = 'mob-v30-insight-push-voice';
 const ASSETS = [
   '/',
   '/index.html',
@@ -45,8 +45,24 @@ self.addEventListener('fetch', event => {
 });
 
 self.addEventListener('push', event => {
-  const data = event.data ? event.data.text() : 'MoB';
-  event.waitUntil(self.registration.showNotification('MōB', {
-    body: data, icon: '/icon-192.png', badge: '/icon-192.png'
+  let title = 'MōB', body = 'Você tem uma novidade';
+  try {
+    const data = event.data ? event.data.json() : null;
+    if (data) { title = data.title || title; body = data.body || body; }
+  } catch (e) {
+    if (event.data) body = event.data.text();
+  }
+  event.waitUntil(self.registration.showNotification(title, {
+    body, icon: '/icon-192.png', badge: '/icon-192.png', vibrate: [120, 60, 120]
   }));
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const c of list) { if ('focus' in c) return c.focus(); }
+      if (self.clients.openWindow) return self.clients.openWindow('/');
+    })
+  );
 });
