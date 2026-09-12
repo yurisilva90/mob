@@ -9129,6 +9129,67 @@ async function _syncTick() {
   await _pullTripsCorrections();
   await _autoSyncLocalData();
   _backfillKmEstimates();
+  await reconcilePlatformSightings();
+}
+
+// PEDIDO (11/09/2026, Yuri): captura passiva do Histórico/Ganhos da Uber e
+// da 99 (lida pelo app nativo enquanto o motorista só consulta ganhos,
+// sem precisar gravar vídeo) — cruza contra auto_trips e marca 'confirmada'
+// quando bate. O banner "aguardando confirmação" e o badge "Confirmada" já
+// existiam pro fluxo de vídeo (16/08/2026) — não precisou mudar nada ali,
+// só alimentar com essa fonte nova.
+async function reconcilePlatformSightings() {
+  if (!_supaUser) return;
+  try {
+    const { data: sightings, error: e1 } = await _SUPA.from('platform_trip_sightings')
+      .select('*').eq('user_id', _supaUser.id).is('processed_at', null).limit(200);
+    if (e1 || !sightings || !sightings.length) return;
+
+    const dates = [...new Set(sightings.map(s => s.trip_date).filter(Boolean))];
+    const { data: trips, error: e2 } = await _SUPA.from('auto_trips').select('*')
+      .eq('user_id', _supaUser.id)
+      .neq('status', 'confirmada')
+      .gte('trip_started_at', dates.length ? dates[0]+'T00:00:00' : DB.today()+'T00:00:00')
+      .lte('trip_started_at', (dates.length ? dates[dates.length-1] : DB.today())+'T23:59:59');
+    if (e2) return;
+
+    const processedIds = [];
+    let confirmedCount = 0;
+    const usedTripIds = new Set();
+    for (const s of sightings) {
+      processedIds.push(s.id);
+      const plat = s.platform === '99' ? '99' : 'uber';
+      let best = null, bestDiff = Infinity;
+      for (const t of (trips || [])) {
+        if (usedTripIds.has(t.id)) continue;
+        if ((t.platform || '').toLowerCase() !== plat) continue;
+        const valOk = Math.abs((Number(t.offer_value) || 0) - (Number(s.value) || 0)) < 0.05;
+        if (!valOk) continue;
+        const tMs = t.trip_started_at ? new Date(t.trip_started_at).getTime() : null;
+        const sMs = (s.trip_date && s.trip_time) ? new Date(`${s.trip_date}T${s.trip_time}:00`).getTime() : null;
+        const diff = (tMs && sMs) ? Math.abs(tMs - sMs) : 20 * 60000;
+        if (diff <= 20 * 60000 && diff < bestDiff) { best = t; bestDiff = diff; }
+      }
+      if (best) {
+        usedTripIds.add(best.id);
+        const { error: eU } = await _SUPA.from('auto_trips').update({
+          status: 'confirmada', value_needs_review: false, data_quality_flag: null,
+          platform_history_at: s.seen_at,
+          observation: 'Confirmada automaticamente pela leitura do Histórico/Ganhos do app (sem vídeo).'
+        }).eq('id', best.id);
+        if (!eU) {
+          confirmedCount++;
+          await _SUPA.from('platform_trip_sightings').update({ matched_auto_trip_id: best.id }).eq('id', s.id);
+        }
+      }
+    }
+    if (processedIds.length) {
+      await _SUPA.from('platform_trip_sightings').update({ processed_at: new Date().toISOString() }).in('id', processedIds);
+    }
+    if (confirmedCount > 0) {
+      try { renderJornada(); } catch (e) {}
+    }
+  } catch (e) { console.warn('[reconcilePlatformSightings]', e); }
 }
 // Migração única: limpa prefixo "Bairro da/do" de corridas já salvas localmente
 (function _migrateBairroNames(){
