@@ -3011,7 +3011,7 @@ h1.hd-title{font-family:var(--font-brand)!important}
 <div class="mo ctr" id="mo-widget">
   <div class="sheet ctr" style="max-width:380px;max-height:88vh;overflow-y:auto">
     <div class="sheet-head"><h2>Painel (Bolinha)</h2><button class="xbtn" onclick="closeMo('mo-widget')">&#x2715;</button></div>
-    <div style="font-size:12px;color:#64748B;line-height:1.5;margin-bottom:14px">Escolha o que aparece na bolinha enquanto você dirige, a ordem e o tamanho dela. Máximo de 4 informações ativas ao mesmo tempo.</div>
+    <div style="font-size:12px;color:#64748B;line-height:1.5;margin-bottom:14px">Escolha o que aparece na bolinha enquanto você dirige, a ordem e o tamanho dela.</div>
 
     <div id="widget-preview-wrap" style="background:#0c0c10;border-radius:14px;padding:20px 10px;display:flex;justify-content:center;margin-bottom:16px"></div>
 
@@ -12653,7 +12653,6 @@ const WIDGET_FIELD_DEFS = {
   rpkm:       { label: 'Ganho por Km',       kind: 'grade', kpi: 'rkm',   sample: 0.77 },
   km:         { label: 'Km rodado',          kind: 'km' },
 };
-const WIDGET_MAX_ACTIVE = 4;
 const WIDGET_DEFAULT = {
   sizeScale: 100,
   showStatus: true, showTime: true, showKm: true,
@@ -12736,9 +12735,6 @@ function widgetToggleStatus(el) {
   if (!el.checked && _widgetActiveCount() <= 1) {
     el.checked = true; showToast('Mantenha ao menos 1 informação ativada'); return;
   }
-  if (el.checked && _widgetActiveCount() >= WIDGET_MAX_ACTIVE) {
-    el.checked = false; showToast('Máximo de ' + WIDGET_MAX_ACTIVE + ' informações ativas'); return;
-  }
   widgetDraft.showStatus = el.checked;
   renderWidgetPreview();
 }
@@ -12747,9 +12743,6 @@ function widgetToggle(key, el) {
   const showKey = _widgetShowKey(key);
   if (!el.checked && _widgetActiveCount() <= 1) {
     el.checked = true; showToast('Mantenha ao menos 1 informação ativada'); return;
-  }
-  if (el.checked && _widgetActiveCount() >= WIDGET_MAX_ACTIVE) {
-    el.checked = false; showToast('Máximo de ' + WIDGET_MAX_ACTIVE + ' informações ativas'); return;
   }
   widgetDraft[showKey] = el.checked;
   renderWidgetPreview();
