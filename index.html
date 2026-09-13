@@ -4921,6 +4921,14 @@ function autoTripItem(t) {
   } else if (t.offer_dinamico > 0) {
     extras.push(`<span class="tap-legend-wrap chip chip-d" onclick="showTapLegend(event,'Tarifa dinâmica: +${DB.fR(t.offer_dinamico).replace(/'/g,"")}')"><svg viewBox="0 0 24 24" width="9" height="9" fill="currentColor"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg><strong>${DB.fR(t.offer_dinamico)}</strong></span>`);
   }
+  // PEDIDO (13/09/2026, Yuri): "segunda confirmação" da corrida contra o
+  // Histórico/Ganhos oficial da Uber/99 — quando o valor é corrigido pelo
+  // valor oficial (em vez de só marcar confirmada por baixo), mostra um
+  // chip visível na lista. Confiança vem de mostrar a mudança, não escondê-la.
+  if (t.observation && t.observation.indexOf('valor ajustado') !== -1) {
+    const obsTxt = t.observation.replace(/'/g, '').replace(/"/g, '');
+    extras.push(`<span class="tap-legend-wrap chip" style="background:#FFFBEB;color:#92400E;border:1px solid #FDE68A" onclick="showTapLegend(event,'${obsTxt}')">⚠ Valor ajustado</span>`);
+  }
   const statusCls = t.status==='confirmada' ? 'conf' : 'estim';
   const statusTxt = t.status==='confirmada' ? 'Confirmada' : 'Aguardando confirmação';
   const realDurTrip = (t.trip_started_at && t.trip_ended_at) ? (new Date(t.trip_ended_at)-new Date(t.trip_started_at))/60000 : null;
