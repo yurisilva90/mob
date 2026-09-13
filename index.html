@@ -4929,6 +4929,13 @@ function autoTripItem(t) {
     const obsTxt = t.observation.replace(/'/g, '').replace(/"/g, '');
     extras.push(`<span class="tap-legend-wrap chip" style="background:#FFFBEB;color:#92400E;border:1px solid #FDE68A" onclick="showTapLegend(event,'${obsTxt}')">⚠ Valor ajustado</span>`);
   }
+  // PEDIDO (14/09/2026): mesma transparência do "valor ajustado", mas pra
+  // corrida que a captura ao vivo salvou SEM valor nenhum (captura_incompleta)
+  // e só ganhou o valor depois, pela leitura do Histórico/Ganhos.
+  if (t.observation && t.observation.indexOf('Valor preenchido') !== -1) {
+    const obsTxt = t.observation.replace(/'/g, '').replace(/"/g, '');
+    extras.push(`<span class="tap-legend-wrap chip" style="background:#FFFBEB;color:#92400E;border:1px solid #FDE68A" onclick="showTapLegend(event,'${obsTxt}')">⚠ Valor preenchido</span>`);
+  }
   const statusCls = t.status==='confirmada' ? 'conf' : 'estim';
   const statusTxt = t.status==='confirmada' ? 'Confirmada' : 'Aguardando confirmação';
   const realDurTrip = (t.trip_started_at && t.trip_ended_at) ? (new Date(t.trip_ended_at)-new Date(t.trip_started_at))/60000 : null;
