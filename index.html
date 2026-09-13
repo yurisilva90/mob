@@ -10370,6 +10370,15 @@ function gpsUpdate() {
   // de meia-noite tem que ser detectada mesmo se ele estiver olhando outro
   // dia no momento.
   checkMidnightCrossing();
+  // CORRIGIDO (14/09/2026, caso real do Yuri: bolinha mostrando km/tempo
+  // certos mas Ganho/R$-hora sempre R$ 0,00 — justamente quando ele saía do
+  // MōB pra usar Uber/99, o momento em que a bolinha mais importa). Antes
+  // só empurrava o ganho pro nativo dentro de gpsOnPosition (callback de
+  // fix de GPS) — se o GPS demorasse a dar um novo fix, o ganho ficava
+  // parado. gpsUpdate já roda a cada 1s de forma independente (é o mesmo
+  // tick que atualiza tempo/km na tela), então empurra o ganho aqui também,
+  // sem depender de fix de localização nenhum.
+  pushLiveWidgetEarnings();
   // Só atualiza os elementos visuais se o usuário estiver vendo hoje.
   // Se navegar para outro dia, o timer continua rodando internamente mas
   // não sobrescreve o card que está mostrando dados daquele dia.
