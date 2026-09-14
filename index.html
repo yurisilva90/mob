@@ -9385,24 +9385,40 @@ async function _pullTripsCorrections() {
     }
   } catch(e) { console.warn('[_pullTripsCorrections]', e); }
 }
+// Trava de reentrância: achado ao vivo (14/09) que _syncTick não tinha
+// nenhuma proteção contra rodar de novo antes da rodada anterior terminar.
+// Isso é inofensivo na maioria dos dias (upsert é idempotente), mas quando
+// uma rodada demora mais que os 60s do intervalo — por exemplo, no primeiro
+// dia rodando a correção de impressão digital das corridas, que precisa
+// reenviar TODO o histórico de 30 dias uma única vez — o próximo tick
+// começa em cima do anterior sem a menor necessidade, multiplicando o
+// número de escritas por 3-4x à toa (foi exatamente o que consumiu de
+// uma vez a cota horária da tabela trips na conta do Yuri).
+let _syncTickRunning = false;
 async function _syncTick() {
-  // ORDEM CRÍTICA: pull primeiro, push depois. Se o push rodasse antes,
-  // ele reenviaria o valor local (potencialmente errado/desatualizado)
-  // pro banco ANTES do celular ter chance de buscar uma correção feita
-  // direto no banco — criando um ciclo onde a correção nunca 'gruda'.
-  await _pullTripsCorrections();
-  await _autoSyncLocalData();
-  _backfillKmEstimates();
-  // CORRIGIDO (11/09/2026, pedido do Yuri): reconciliação passiva movida
-  // pro nativo (roda em segundo plano de verdade, sem depender do app
-  // aberto). Função continua definida abaixo, mas não é mais chamada
-  // daqui — evita risco de duas execuções concorrentes (nativa + web)
-  // criando corrida duplicada na mesma corrida.
-  // await reconcilePlatformSightings();
-  // O aviso de "total não bateu" continua no web (é um toast — só faz
-  // sentido com o app aberto pra você ver mesmo), chamado direto, sem
-  // depender de reconcilePlatformSightings ter rodado agora.
-  await checkDailyTotalMatch();
+  if (_syncTickRunning) return;
+  _syncTickRunning = true;
+  try {
+    // ORDEM CRÍTICA: pull primeiro, push depois. Se o push rodasse antes,
+    // ele reenviaria o valor local (potencialmente errado/desatualizado)
+    // pro banco ANTES do celular ter chance de buscar uma correção feita
+    // direto no banco — criando um ciclo onde a correção nunca 'gruda'.
+    await _pullTripsCorrections();
+    await _autoSyncLocalData();
+    _backfillKmEstimates();
+    // CORRIGIDO (11/09/2026, pedido do Yuri): reconciliação passiva movida
+    // pro nativo (roda em segundo plano de verdade, sem depender do app
+    // aberto). Função continua definida abaixo, mas não é mais chamada
+    // daqui — evita risco de duas execuções concorrentes (nativa + web)
+    // criando corrida duplicada na mesma corrida.
+    // await reconcilePlatformSightings();
+    // O aviso de "total não bateu" continua no web (é um toast — só faz
+    // sentido com o app aberto pra você ver mesmo), chamado direto, sem
+    // depender de reconcilePlatformSightings ter rodado agora.
+    await checkDailyTotalMatch();
+  } finally {
+    _syncTickRunning = false;
+  }
 }
 
 // PEDIDO (11/09/2026, Yuri): captura passiva do Histórico/Ganhos da Uber e
