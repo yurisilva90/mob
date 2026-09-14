@@ -16000,6 +16000,26 @@ async function feedVotar(postId,vote,btn){
   }catch(e){console.warn('feed voto',e);}
 }
 
+// Recarga do feed agrupada. O aviso de tempo real do Feed não tem filtro: TODO
+// celular com o Feed aberto é avisado de TODO post de TODO motorista. Antes
+// daqui, cada aviso disparava na hora uma releitura completa do feed — com 300
+// motoristas online e 5 posts por minuto, isso são 1.500 consultas por minuto
+// vindas só desta tela, todas no mesmo instante. Agora vários avisos seguidos
+// viram UMA releitura, no máximo uma a cada 10s, e com um atraso sorteado de
+// até 3s pra que os celulares não batam todos no mesmo segundo.
+let _feedReloadTimer=null, _feedLastReloadMs=0;
+const FEED_RELOAD_MIN_MS=10000;
+function feedScheduleReload(){
+  if(_feedReloadTimer)return; // já tem uma releitura marcada, esta entra nela
+  const desde=Date.now()-_feedLastReloadMs;
+  const espera=Math.max(0,FEED_RELOAD_MIN_MS-desde)+Math.floor(Math.random()*3000);
+  _feedReloadTimer=setTimeout(()=>{
+    _feedReloadTimer=null; _feedLastReloadMs=Date.now();
+    // Se o Feed não está mais na tela, nem consulta — o próximo abrir carrega.
+    if(!_feedChannel)return;
+    feedLoadPosts();
+  },espera);
+}
 function feedSubscribeRealtime(){
   feedUnsubscribeRealtime();
   if(!_SUPA)return;
@@ -16007,13 +16027,16 @@ function feedSubscribeRealtime(){
     _feedChannel=_SUPA.channel('feed-home')
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'feed_posts'},payload=>{
         if(payload.new?.user_id!==_supaUser?.id) showToast('Novo alerta no feed!','info');
-        feedLoadPosts();
+        feedScheduleReload();
       })
       .subscribe();
   }catch(e){console.warn('feed realtime',e);}
 }
 function feedUnsubscribeRealtime(){
   if(_feedChannel){try{_SUPA?.removeChannel(_feedChannel);}catch(e){}}_feedChannel=null;
+  // Cancela releitura marcada — sair da tela não deve deixar uma consulta
+  // agendada pra disparar depois, sem ninguém olhando.
+  if(_feedReloadTimer){clearTimeout(_feedReloadTimer);_feedReloadTimer=null;}
 }
 
 /* ── Composer ── */
