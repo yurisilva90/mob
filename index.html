@@ -9220,6 +9220,18 @@ async function _autoSyncLocalData() {
       let dayChanged = false;
       for (const t of (day.trips||[])) {
         if (!t.id) continue;
+        // Impressão digital dos campos que vão pro banco. Se nada mudou desde
+        // o último envio bem-sucedido, não reenvia. Antes daqui, TODA corrida
+        // dos últimos 30 dias era reenviada em cada auto-sync — centenas de
+        // escritas repetidas por rodada, sem nenhum dado novo. Usar a
+        // impressão digital (e não um "já sincronizei") é o que garante que
+        // uma correção feita no celular depois do primeiro envio ainda suba:
+        // se qualquer valor muda, a digital muda e a corrida é reenviada.
+        const fp = [t.platform,t.time,t.duration,t.origin,t.dest,t.value,t.km,
+          t.category,t.surge,t.airport,t.dinamico,t.tip,t.source,t.dinheiro,
+          t.pedagio,t.pedagioValor,t.originFull,t.destFull,t.serviceFee,
+          t.taxaZero,t.kmEstimado].join('|');
+        if (t._synced && t._syncFp === fp) continue;
         const { error } = await _SUPA.from('trips').upsert({
           id:t.id, user_id:_supaUser.id, date,
           platform:t.platform||'uber', time:t.time||null,
@@ -9234,7 +9246,9 @@ async function _autoSyncLocalData() {
         }, {onConflict:'id'});
         // Marca como confirmadamente sincronizada — só depois disso é seguro
         // remover local se sumir do banco (ver _pullTripsCorrections)
-        if (!error && !t._synced) { t._synced = true; dayChanged = true; }
+        if (!error && (!t._synced || t._syncFp !== fp)) {
+          t._synced = true; t._syncFp = fp; dayChanged = true;
+        }
       }
       if (dayChanged) DB.saveDay(day);
     }
@@ -9585,7 +9599,7 @@ function updateNetStatus() {
 window.addEventListener("offline", updateNetStatus);
 window.addEventListener("online", async () => {
   _netSyncing = true; updateNetStatus();
-  try { await SYNC.flushQueue(); await reconcileJornadaHoje(); } catch(e) {}
+  try { await SYNC.flushQueue(true); await reconcileJornadaHoje(); } catch(e) {}
   _netSyncing = false; updateNetStatus();
   try { renderJornada(); } catch(e) {}
 });
@@ -9927,7 +9941,7 @@ async function recoverOpenJourneyFromCloud() {
     syncNavButton(); requestWakeLock();
     try{renderJornada()}catch(e){} try{renderHome()}catch(e){}
     // Corrige imediatamente o snapshot defasado da sessão na nuvem.
-    _persistGpsCloud().catch(()=>{});
+    _persistGpsCloud(true).catch(()=>{});
     console.warn('[recoverOpenJourneyFromCloud] jornada aberta recuperada',ss.id,'km',bestKm);
     return true;
   } catch(e) {
@@ -10400,8 +10414,24 @@ function persistGps() {
   _persistGpsCloud().catch(()=>{});
 }
 
-async function _persistGpsCloud() {
+// Intervalo mínimo entre checkpoints da jornada na nuvem. Sem esta trava,
+// cada leitura de GPS (até 1 por segundo) virava uma escrita no banco — ~3.600
+// escritas por hora, por motorista, só pra atualizar km e tempo de uma linha
+// que ninguém lê em tempo real. O estado local continua sendo salvo em cada
+// leitura (é ele que a tela usa); a nuvem é rede de segurança pra recuperar
+// jornada aberta depois de um fechamento inesperado, e 25 segundos de atraso
+// nela não muda nada. `force` ignora a trava nos momentos em que o valor tem
+// que estar exato na hora (recuperação de jornada, encerramento).
+let _gpsCloudLastAttempt = 0;
+const GPS_CLOUD_MIN_INTERVAL_MS = 25000;
+async function _persistGpsCloud(force) {
   if (!_supaUser || !S.gps.start || S.gps.st === 'idle') return;
+  if (!force && Date.now() - _gpsCloudLastAttempt < GPS_CLOUD_MIN_INTERVAL_MS) return;
+  // Marca a TENTATIVA, não o sucesso. Marcar só no sucesso foi exatamente o
+  // erro que gerou a tempestade de requisições no incidente de 13/09: com o
+  // banco instável, nenhuma tentativa "contava" e o app tentava de novo a
+  // cada leitura de GPS, justo quando o banco menos aguentava.
+  _gpsCloudLastAttempt = Date.now();
   // Defesa contra instância fantasma: se outra aba/instância desta MESMA
   // origem já encerrou a jornada (apagou o marcador local), esta instância
   // deve se autodestruir em vez de continuar fazendo checkpoint de uma
@@ -13041,6 +13071,7 @@ function syncNotifConfigToNative() {
 // ══════════════════════════════════════════════
 let _supaUser = null;
 let _mobInsightChannel = null;
+let _mobInsightPollTimer = null;
 let _mobInsightCur = null;
 let _mobInsightSpokenIds = new Set();
 function speakMobInsight(text) {
@@ -13140,7 +13171,13 @@ function subscribeMobInsightRealtime() {
       filter: `user_id=eq.${_supaUser.id}` },
       () => { renderMobInsight(true); })
     .subscribe();
-  setInterval(renderMobInsight, 60000);
+  // Limpa o timer anterior antes de criar outro. Sem isso, cada vez que esta
+  // função rodava de novo (novo login, reconexão, troca de usuário) deixava
+  // para trás um setInterval órfão que continuava consultando o banco pra
+  // sempre — os timers acumulavam e o número de consultas por minuto crescia
+  // sozinho. Foi uma das causas da sobrecarga do banco em 13/09.
+  if (_mobInsightPollTimer) { try { clearInterval(_mobInsightPollTimer); } catch (e) {} }
+  _mobInsightPollTimer = setInterval(renderMobInsight, 60000);
 }
 
 const MOB_VAPID_PUBLIC_KEY = 'BE-tovFzGS3WwMRYy1RkbKM-73ZMx6v62SPIaK_lg8HuUSDVS4vb0k7SepOl0ufYrkb0m2p4je8qecyUuIDpiE4';
@@ -13238,35 +13275,67 @@ const SYNC = {
   },
   // Tenta reenviar tudo que ficou pendente, na ordem em que foi criado. O que
   // funcionar sai da fila; o que falhar de novo fica pra proxima tentativa.
-  async flushQueue() {
+  // Espera crescente entre rodadas quando alguma coisa falha. Antes daqui a
+  // fila era reenviada a cada 30s para sempre, sem trégua: se o problema era o
+  // próprio banco sobrecarregado (13/09), cada celular continuava batendo de
+  // 30 em 30 segundos e atrapalhava a recuperação.
+  _flushNextMs: 0,
+  _flushRunning: false,
+  async flushQueue(force) {
     if (!_supaUser || !navigator.onLine) return;
+    if (this._flushRunning) return;
+    if (!force && Date.now() < this._flushNextMs) return;
     const q = DB.syncQueue();
     if (!q.length) return;
+    this._flushRunning = true;
     const remaining = [];
-    for (const op of q) {
-      try {
-        if (op.type === 'push') {
-          await _SUPA.from(op.table).upsert(Object.assign({}, op.row, {
-            user_id: _supaUser.id, synced_at: new Date().toISOString()
-          }));
-        } else if (op.type === 'del') {
-          let dq = _SUPA.from(op.table).delete();
-          Object.entries(op.match).forEach(([k, v]) => { dq = dq.eq(k, v); });
-          await dq;
-        } else if (op.type === 'pushCats') {
-          await _SUPA.from('categories').upsert({
-            user_id: _supaUser.id, cat_key: op.key, items: DB.cats(op.key) || DEFAULT_CATS[op.key] || [],
-            goals: DB.objGoals(op.key) || {},
-            synced_at: new Date().toISOString()
-          });
+    let anyFail = false;
+    try {
+      for (const op of q) {
+        // ATENÇÃO: o cliente do Supabase NÃO lança exceção quando o banco
+        // recusa a escrita — ele DEVOLVE o erro. O código antigo só olhava
+        // exceção, então qualquer recusa do banco (permissão, dado inválido,
+        // limite de escrita) era tratada como sucesso e a operação saía da
+        // fila em silêncio: o dado do motorista era perdido pra sempre sem
+        // nenhum aviso. É o oposto do que a fila existe pra fazer.
+        let err = null;
+        try {
+          if (op.type === 'push') {
+            ({ error: err } = await _SUPA.from(op.table).upsert(Object.assign({}, op.row, {
+              user_id: _supaUser.id, synced_at: new Date().toISOString()
+            })));
+          } else if (op.type === 'del') {
+            let dq = _SUPA.from(op.table).delete();
+            Object.entries(op.match).forEach(([k, v]) => { dq = dq.eq(k, v); });
+            ({ error: err } = await dq);
+          } else if (op.type === 'pushCats') {
+            ({ error: err } = await _SUPA.from('categories').upsert({
+              user_id: _supaUser.id, cat_key: op.key, items: DB.cats(op.key) || DEFAULT_CATS[op.key] || [],
+              goals: DB.objGoals(op.key) || {},
+              synced_at: new Date().toISOString()
+            }));
+          }
+        } catch (e) { err = e; }
+        if (err) {
+          anyFail = true;
+          op._tries = (op._tries || 0) + 1;
+          op._lastErr = String((err && err.message) || err).slice(0, 200);
+          console.error('SYNC.flushQueue falhou', op.type, op.table || op.key, op._tries + 'ª tentativa:', op._lastErr);
+          // Fica na fila. Nunca descartamos sozinhos — dado do motorista só
+          // sai da fila quando o banco confirma que recebeu.
+          remaining.push(op);
         }
-      } catch (e) {
-        console.error('SYNC.flushQueue retry falhou', op, e);
-        remaining.push(op);
       }
+    } finally {
+      DB.saveSyncQueue(remaining);
+      const piorTentativa = remaining.reduce((m, o) => Math.max(m, o._tries || 0), 0);
+      // 30s, 1min, 2min, 4min… até um teto de 10min.
+      this._flushNextMs = anyFail
+        ? Date.now() + Math.min(30000 * Math.pow(2, Math.max(0, piorTentativa - 1)), 600000)
+        : 0;
+      this._flushRunning = false;
+      this._updateBadge();
     }
-    DB.saveSyncQueue(remaining);
-    this._updateBadge();
   },
   async pushFavs() {
     if (!_supaUser) return;
@@ -13313,21 +13382,40 @@ const SYNC = {
       }, { onConflict: 'user_id' });
     } catch(e) { console.error('SYNC.pushSettings', e); }
   },
+  // Traz TODAS as linhas do usuário, em blocos de 1000. Sem isso o Supabase
+  // corta a resposta em 1000 linhas SEM AVISAR: um motorista com mais de 1000
+  // despesas (ou jornadas, ou lançamentos) simplesmente não recebia o resto do
+  // histórico — e não aparecia erro nenhum na tela indicando que faltava dado.
+  // Só a busca de corridas já era paginada; todas as outras não eram.
+  async _pullAllRows(table, uid) {
+    const all = [];
+    let from = 0;
+    while (true) {
+      const { data: chunk, error } = await _SUPA.from(table).select('*')
+        .eq('user_id', uid).range(from, from + 999);
+      if (error) { console.error('[pullAll] ' + table + ':', error.message); return { data: all, error }; }
+      if (!chunk || !chunk.length) break;
+      all.push(...chunk);
+      if (chunk.length < 1000) break;
+      from += 1000;
+    }
+    return { data: all };
+  },
   async pullAll() {
     if (!_supaUser) return;
     const uid = _supaUser.id;
     try {
       const [trips, expenses, revenues, sessions, planJ, cats, dayMeta, eventsRes, settingsRes, favsRes] = await Promise.all([
-        (async () => { let all=[],from=0; while(true) { const {data:chunk,error} = await _SUPA.from('trips').select('*').eq('user_id',uid).range(from,from+999);if(error||!chunk||!chunk.length) break; all.push(...chunk); if(chunk.length<1000) break; from+=1000; } return {data:all}; })(),
-        _SUPA.from('expenses').select('*').eq('user_id', uid),
-        _SUPA.from('revenues').select('*').eq('user_id', uid),
-        _SUPA.from('sessions').select('*').eq('user_id', uid),
-        _SUPA.from('plan_jornada').select('*').eq('user_id', uid),
-        _SUPA.from('categories').select('*').eq('user_id', uid),
-        _SUPA.from('day_meta').select('*').eq('user_id', uid),
-        _SUPA.from('events').select('*').eq('user_id', uid),
-        _SUPA.from('user_settings').select('*').eq('user_id', uid),
-        _SUPA.from('user_favorites').select('*').eq('user_id', uid)
+        this._pullAllRows('trips', uid),
+        this._pullAllRows('expenses', uid),
+        this._pullAllRows('revenues', uid),
+        this._pullAllRows('sessions', uid),
+        this._pullAllRows('plan_jornada', uid),
+        this._pullAllRows('categories', uid),
+        this._pullAllRows('day_meta', uid),
+        this._pullAllRows('events', uid),
+        this._pullAllRows('user_settings', uid),
+        this._pullAllRows('user_favorites', uid)
       ]);
       const byDate = {};
       const _dirty = new Set();
@@ -14161,7 +14249,8 @@ setInterval(function() {
 // ── Fila de sincronizacao: tenta reenviar o que ficou pendente quando a
 // conexao voltar, e periodicamente como rede de seguranca (sinal fraco pode
 // nao disparar o evento 'online' de forma confiavel).
-window.addEventListener('online', () => { SYNC.flushQueue().catch(()=>{}); });
+// A conexão acabou de voltar: reenvia na hora, sem esperar o backoff.
+window.addEventListener('online', () => { SYNC.flushQueue(true).catch(()=>{}); });
 setInterval(() => { SYNC.flushQueue().catch(()=>{}); }, 30000);
 
 // ── Service worker: registra, força checagem de atualização e recarrega
@@ -14728,27 +14817,60 @@ function infAbrirNoMapa(){
 // ── Metadados dos 4 tipos de informe manual (Fiscalização/Trânsito/
 // Alerta/Lotação — Demanda e Dinâmico são automáticos, não aparecem
 // aqui como relato de usuário) ──────────────────────────────────────
+// CORRIGIDO (14/09/2026, bug achado pelo Yuri: informe de Lotação
+// aparecendo com o símbolo de Blitz). Este mapa tinha só 4 tipos, mas
+// feed_posts.type tem 8 em uso na produção — e o padrão de quem não
+// estava no mapa era justamente `blitz`. Resultado medido no banco: 102
+// dos 120 informes (dinamico/demanda/fila/acidente/fiscalizacao) eram
+// desenhados com escudo azul e rótulo "Fiscalização".
+// Duas regras que valem pra sempre aqui:
+// 1. `blitz` e `fiscalizacao` são o MESMO conceito com dois nomes (a barra
+//    "Relatar agora" grava 'blitz', o resto do sistema grava
+//    'fiscalizacao') — ficam idênticos de propósito, não por acaso.
+// 2. O padrão de tipo desconhecido é NEUTRO ('Informe'), nunca blitz:
+//    um tipo novo no banco não pode virar aviso falso de fiscalização na
+//    tela do motorista.
 const INF_POST_META = {
-  blitz:    {label:'Fiscalização', color:'#2563EB', bg:'#DBEAFE'},
-  transito: {label:'Trânsito',     color:'#EA580C', bg:'#FFEDD5'},
-  risco:    {label:'Alerta',       color:'#DC2626', bg:'#FEF2F2'},
-  lotacao:  {label:'Lotação',      color:'#7C3AED', bg:'#F5F3FF'}
+  blitz:        {label:'Fiscalização', color:'#2563EB', bg:'#DBEAFE'},
+  fiscalizacao: {label:'Fiscalização', color:'#2563EB', bg:'#DBEAFE'},
+  transito:     {label:'Trânsito',     color:'#EA580C', bg:'#FFEDD5'},
+  risco:        {label:'Alerta',       color:'#DC2626', bg:'#FEF2F2'},
+  lotacao:      {label:'Lotação',      color:'#7C3AED', bg:'#F5F3FF'},
+  demanda:      {label:'Demanda',      color:'#16A34A', bg:'#DCFCE7'},
+  fila:         {label:'Fila',         color:'#0891B2', bg:'#CFFAFE'},
+  acidente:     {label:'Acidente',     color:'#B91C1C', bg:'#FEE2E2'},
+  dinamico:     {label:'Dinâmico',     color:'#CA8A04', bg:'#FEF9C3'},
+  outro:        {label:'Informe',      color:'#475569', bg:'#F1F5F9'}
 };
 const INF_TRANSITO_LBL = ['Parado','Muito lento','Lento','Moderado','Fluindo','Livre'];
 const INF_DISLIKE_REASONS = {
-  blitz:    ['Não existe','Já saiu'],
-  transito: ['Mudou','Não é assim'],
-  lotacao:  ['Mudou','Não é assim'],
-  risco:    ['Não existe','Já foi liberado']
+  blitz:        ['Não existe','Já saiu'],
+  fiscalizacao: ['Não existe','Já saiu'],
+  transito:     ['Mudou','Não é assim'],
+  lotacao:      ['Mudou','Não é assim'],
+  risco:        ['Não existe','Já foi liberado'],
+  demanda:      ['Mudou','Não é assim'],
+  fila:         ['Mudou','Não é assim'],
+  acidente:     ['Não existe','Já foi liberado'],
+  dinamico:     ['Não está mais','Valor diferente']
 };
 function infPostIconSvg(type){
   const icons = {
     blitz: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+    fiscalizacao: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
     transito: '<rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/>',
     risco: '<path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/>',
-    lotacao: '<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>'
+    // Lotação: multidão. Antes era um relógio (herdado por engano) — quem
+    // olhava rápido lia como "espera", não como "local cheio".
+    lotacao: '<path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="3.5"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.5a3.5 3.5 0 0 1 0 6.8"/>',
+    demanda: '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
+    fila: '<circle cx="4" cy="6" r="1.6"/><circle cx="4" cy="12" r="1.6"/><circle cx="4" cy="18" r="1.6"/><line x1="9" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="9" y1="18" x2="21" y2="18"/>',
+    acidente: '<circle cx="12" cy="12" r="9"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',
+    dinamico: '<path d="M13 2 3 14h7l-1 8 10-12h-7z"/>',
+    outro: '<circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><line x1="12" y1="7.7" x2="12" y2="7.9"/>'
   };
-  return icons[type] || icons.blitz;
+  // Padrão NEUTRO de propósito — ver comentário em INF_POST_META.
+  return icons[type] || icons.outro;
 }
 function infPostTitle(p){
   if (p.type === 'transito') { const n = p.nivel ?? 0; return `${n} · ${INF_TRANSITO_LBL[n]||''}`; }
@@ -14781,7 +14903,7 @@ function infAvatarsHtml(p, reactorsMap){
   return html;
 }
 function infPostRowHtml(p, reactorsMap){
-  const meta = INF_POST_META[p.type] || INF_POST_META.blitz;
+  const meta = INF_POST_META[p.type] || INF_POST_META.outro;
   const ageMin = Math.max(0, Math.round((Date.now()-new Date(p.created_at))/60000));
   const ageStr = ageMin<1 ? 'agora' : ageMin+'min';
   const distTxt = p._distM!=null ? Math.round(p._distM)+'m · ' : '';
@@ -15695,7 +15817,21 @@ const FEED_TYPES = {
   dinamico: {label:'Dinâmico',     color:'#F59E0B', expMin:30,
     icon:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>'},
   fila:     {label:'Fila',         color:'#7C3AED', expMin:45,
-    icon:'<path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>'}
+    icon:'<path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>'},
+  // CORRIGIDO (14/09/2026, bug achado pelo Yuri): estes três tipos existem
+  // em feed_posts na produção mas não estavam aqui, e o padrão de tipo
+  // desconhecido era `blitz` — então um informe de Lotação aparecia no
+  // feed como "Blitz", com escudo azul. Mesmo defeito que o INF_POST_META.
+  fiscalizacao: {label:'Fiscalização', color:'#2563EB', expMin:60,
+    icon:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'},
+  lotacao:  {label:'Lotação',      color:'#9333EA', expMin:60,
+    icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9.5" cy="7" r="3.5"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.5a3.5 3.5 0 0 1 0 6.8"/>'},
+  acidente: {label:'Acidente',     color:'#B91C1C', expMin:45,
+    icon:'<circle cx="12" cy="12" r="9"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>'},
+  // Padrão NEUTRO pra tipo desconhecido. Nunca voltar a usar `blitz` aqui:
+  // um tipo novo no banco não pode virar aviso falso de fiscalização.
+  outro:    {label:'Informe',      color:'#475569', expMin:45,
+    icon:'<circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><line x1="12" y1="7.7" x2="12" y2="7.9"/>'}
 };
 
 let _feedFilter = '';
@@ -15809,7 +15945,7 @@ function feedRenderList(){
 }
 
 function feedPostCardHtml(p){
-  const t=FEED_TYPES[p.type]||FEED_TYPES.blitz;
+  const t=FEED_TYPES[p.type]||FEED_TYPES.outro;
   const isOwn = _supaUser && p.user_id===_supaUser.id;
   const cfg = DB.cfg();
   const myName = isOwn ? (cfg.name||'Você') : ((_feedNames[p.user_id]&&_feedNames[p.user_id].name)||'Motorista MōB');
@@ -15934,7 +16070,7 @@ async function feedPublicar(){
   const body=(document.getElementById('feed-cp-text').value||'').trim().slice(0,180);
   const btn=document.getElementById('feed-cp-post-btn');
   if(btn){btn.disabled=true;btn.textContent='Publicando…';}
-  const t=FEED_TYPES[_feedCpType]||FEED_TYPES.blitz;
+  const t=FEED_TYPES[_feedCpType]||FEED_TYPES.outro;
   const expiresAt=new Date(Date.now()+t.expMin*60000).toISOString();
   const row={
     user_id:_supaUser.id, type:_feedCpType, body:body||null,
