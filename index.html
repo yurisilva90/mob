@@ -12967,15 +12967,28 @@ function pushLiveWidgetEarnings() {
   const g = S.gps;
   if (!g || !g.start) return;
   try {
-    const dateStr = DB.today();
-    const day = DB.day(g.forceDate || dateStr);
+    const d = g.forceDate || DB.today();
+    const day = DB.day(d);
     const startMs = g.start;
     const tripsRaw = (day && day.trips || []).filter(t => {
       let ts = t.ts || 0;
-      if (!ts && t.time) ts = new Date(dateStr + 'T' + t.time + ':00').getTime();
+      if (!ts && t.time) ts = new Date(d + 'T' + t.time + ':00').getTime();
       return ts && ts >= startMs;
     });
-    const autoTrips = (day && day.autoTrips || []).filter(t => {
+    // CORRIGIDO (14/09/2026, achado pelo Yuri: tela principal mostrando
+    // "R$ 8,36" de ganho, bolinha mostrando "R$ 0,00" ao mesmo tempo).
+    // DB.day() sempre devolve um objeto NOVO, lido puro do armazenamento
+    // local — "day.autoTrips" só existe na cópia que renderJornada() mutou
+    // em memória depois de buscar do banco; aqui, numa chamada
+    // independente (chamada a cada segundo por gpsUpdate, de qualquer
+    // tela), day.autoTrips nunca existiu. Resultado: TODA corrida
+    // capturada automaticamente — que é praticamente toda corrida, o
+    // lançamento manual é a exceção — ficava de fora da soma da bolinha,
+    // que então mostrava sempre R$0,00 mesmo com corridas reais no dia.
+    // Corrigido lendo do MESMO cache que a tela principal usa de verdade.
+    const autoTripsList = Array.isArray(S._autoTripsByDate && S._autoTripsByDate[d]) ? S._autoTripsByDate[d]
+      : ((S._autoTripsDataDate === d && Array.isArray(S.autoTrips)) ? S.autoTrips : []);
+    const autoTrips = autoTripsList.filter(t => {
       const ts = autoTripTs(t);
       return ts && ts >= startMs;
     });
